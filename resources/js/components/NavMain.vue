@@ -1,27 +1,94 @@
 <script setup lang="ts">
-import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue'
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem
+} from '@/components/ui/sidebar'
+import { type NavItem } from '@/types'
+import { Link, usePage } from '@inertiajs/vue3'
 
-defineProps<{
-    items: NavItem[];
-}>();
+const props = defineProps<{
+  items: NavItem[]
+}>()
 
-const page = usePage();
+const page = usePage()
+const openMenus = ref<string[]>([])
+
+function toggleMenu(title: string) {
+  if (openMenus.value.includes(title)) {
+    openMenus.value = openMenus.value.filter(t => t !== title)
+  } else {
+    openMenus.value.push(title)
+  }
+}
 </script>
 
 <template>
-    <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>Platform</SidebarGroupLabel>
-        <SidebarMenu>
-            <SidebarMenuItem v-for="item in items" :key="item.title">
-                <SidebarMenuButton as-child :is-active="item.href === page.url" :tooltip="item.title">
-                    <Link :href="item.href">
-                        <component :is="item.icon" />
-                        <span>{{ item.title }}</span>
-                    </Link>
-                </SidebarMenuButton>
+  <SidebarGroup class="px-2 py-0">
+    <SidebarGroupLabel>Application V-1.0.0</SidebarGroupLabel>
+    <SidebarMenu>
+      <template v-for="item in props.items" :key="item.title">
+        <SidebarMenuItem>
+          <!-- Simple item -->
+          <SidebarMenuButton
+            v-if="!item.children"
+            as-child
+            :is-active="item.href === page.url"
+            :tooltip="item.title"
+          >
+            <Link :href="item.href">
+              <component :is="item.icon" />
+              <span>{{ item.title }}</span>
+            </Link>
+          </SidebarMenuButton>
+
+          <!-- Parent item with children -->
+          <div
+            v-else
+            class="flex items-center cursor-pointer px-3 py-2 rounded"
+            @click="toggleMenu(item.title)"
+          >
+            <component :is="item.icon" class="w-5 h-5 mr-2" />
+            <span class="flex-1">{{ item.title }}</span>
+            <svg
+              class="w-4 h-4 transition-transform"
+              :class="{ 'rotate-90': openMenus.includes(item.title) }"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+
+          <!-- Child links -->
+          <div
+            v-if="item.children"
+            v-show="openMenus.includes(item.title)"
+            class="ml-6 mt-1 space-y-1"
+          >
+            <SidebarMenuItem
+              v-for="child in item.children"
+              :key="child.title"
+            >
+              <SidebarMenuButton
+                as-child
+                :is-active="child.href === page.url"
+                :tooltip="child.title"
+              >
+                <Link :href="child.href">
+                  <component :is="child.icon" />
+                  <span>{{ child.title }}</span>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
-        </SidebarMenu>
-    </SidebarGroup>
+          </div>
+        </SidebarMenuItem>
+      </template>
+    </SidebarMenu>
+  </SidebarGroup>
 </template>
