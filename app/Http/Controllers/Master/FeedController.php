@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class FeedController extends Controller
 {
@@ -12,7 +13,7 @@ class FeedController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('library/feed/Feed');
     }
 
     /**

@@ -25,7 +25,7 @@ const mainNavItems: NavItem[] = [
       },
       {
         title: 'User Role Management',
-        href: '/user-role-management',
+        href: '/user-role',
         icon: User
       }
     ]
@@ -36,11 +36,11 @@ const mainNavItems: NavItem[] = [
     children: [
       { title: 'Feed', href: '/feed', icon: BookOpen },
       { title: 'Unit', href: '/unit', icon: BookOpen },
-      { title: 'Shade', href: '/shade', icon: BookOpen },
+      { title: 'Shed', href: '/shed', icon: BookOpen },
       { title: 'Vaccine', href: '/vaccine', icon: BookOpen },
       { title: 'Medicine', href: '/medicine', icon: BookOpen },
       { title: 'Compnay Location', href: '/location', icon: BookOpen },
-      { title: 'Bird Type', href: '/bird-type', icon: BookOpen },
+      { title: 'Chick Type', href: '/chick-type', icon: BookOpen },
       { title: 'Feed Type', href: '/feed-type', icon: BookOpen },
     ]
   }

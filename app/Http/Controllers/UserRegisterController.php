@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class UserRegisterController extends Controller
 {
@@ -11,7 +12,7 @@ class UserRegisterController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('user/register/Register');
     }
 
     /**
