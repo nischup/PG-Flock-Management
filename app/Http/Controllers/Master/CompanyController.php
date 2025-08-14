@@ -6,14 +6,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class LocationController extends Controller
+class CompanyController  extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return Inertia::render('library/companyLocation/Location');
+        return Inertia::render('library/company/Company');
     }
 
     /**
