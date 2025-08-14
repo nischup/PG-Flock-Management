@@ -1,18 +1,40 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use App\Models\Company;
+use App\Models\Shed;
+use Illuminate\Support\Facades\Hash;
+
 
 class UserRegisterController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Inertia::render('user/register/Register');
+       
+
+
+        $users = User::query()
+            ->with(['roles', 'permissions', 'company', 'shed'])
+             ->visibleFor()
+            ->when($request->search, fn($q) => $q->where('name', 'like', "%{$request->search}%"))
+            ->paginate($request->per_page ?? 10)
+            ->withQueryString();
+
+
+        return Inertia::render('user/register/Register', [
+            'users' => $users,
+            'filters' => $request->only(['search', 'per_page']),
+        ]);
+
+
     }
 
     /**
@@ -20,7 +42,12 @@ class UserRegisterController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('user/register/Create', [
+            'roles' => Role::all(),
+            'permissions' => Permission::all(),
+            'companies' => Company::all(),  // new
+            'sheds' => Shed::all(),         // new
+        ]);
     }
 
     /**
@@ -28,7 +55,33 @@ class UserRegisterController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
+
+
+        $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'role' => 'required|string|exists:roles,name',
+                'permissions' => 'nullable|array',
+                'permissions.*' => 'string|exists:permissions,name',
+            ]);
+
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    // You need to set a password or generate one here
+                    'password' => Hash::make('12345678'), // Replace with actual password handling
+                ]);
+
+                // Assign role
+                $user->syncRoles($request->role ? [$request->role] : []);
+
+                // Assign direct permissions if any
+                if ($request->has('permissions')) {
+                    $user->syncPermissions($request->permissions ?? []);
+                }
+
+                return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
     /**
@@ -42,17 +95,41 @@ class UserRegisterController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(User $user)
     {
-        //
+        return Inertia::render('user/register/Edit', [
+            'user' => $user,
+            'roles' => Role::all(),
+            'permissions' => Permission::all(),
+            'userPermissions' => $user->getDirectPermissions()->pluck('name'),
+            'userRole' => $user->roles->pluck('name')->first(), // 👈 this line is key
+            'companies' => Company::all(['id', 'name']),
+            'sheds' => Shed::all(['id', 'name']),        // <-- send sheds
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, User $user)
     {
-        //
+        $request->validate([
+            'roles' => 'array',
+            'roles.*' => 'string|exists:roles,name',
+            'permissions' => 'array',
+            'permissions.*' => 'string|exists:permissions,name',         // new
+        ]);
+
+        // Update company_id and shed_id
+        $user->update([
+            'company_id' => $request->company_id,
+            'shed_id' => $request->shed_id,
+        ]);
+
+        $user->syncRoles($request->role ? [$request->role] : []);
+        $user->syncPermissions($request->permissions ?? []);
+
+        return redirect()->route('users.index')->with('success', 'User updated');
     }
 
     /**

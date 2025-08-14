@@ -1,31 +1,121 @@
 <script setup lang="ts">
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-
-import DeleteUser from '@/components/DeleteUser.vue';
-import HeadingSmall from '@/components/HeadingSmall.vue';
-import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
-import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { type BreadcrumbItem, type User } from '@/types';
+import { Head, Link, router } from '@inertiajs/vue3';
+import FilterControls from '@/components/FilterControls.vue';
+import Pagination from '@/components/Pagination.vue';
+import { useListFilters } from '@/composables/useListFilters';
+import { useNotifier } from '@/composables/useNotifier';
+import { type BreadcrumbItem } from '@/types';
+
+
+const props = defineProps<{
+  roles: {
+    data: Array<{ id: number; code: string }>;
+    meta: { current_page: number; last_page: number };
+  };
+  filters: { search?: string; per_page?: number; page?: number };
+}>();
+
+useListFilters({
+  routeName: '/user-role',
+  filters: props.filters,
+});
+
+
+const {confirmDelete } = useNotifier();
+
+const deleteRole = (id: number) => {
+  confirmDelete({
+    url: `/user-role/${id}`,
+    text: 'This will permanently delete the role.',
+    successMessage: 'Role has been deleted.',
+  });
+};
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'User Role',
-        href: '/user/role',
+        href: '/user-role',
     },
 ];
 
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="User Role" />
-        <div class="px-4 py-6">
-            <Heading title="Page 1 data heading" description="Laravel explore to new era" />
-            <h1> welocme to role page </h1>
+  <Head title="Roles" />
+
+  <AppLayout :breadcrumbs="breadcrumbs">
+    <div class="p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <div>
+          <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">Roles</h1>
         </div>
-    </AppLayout>
+        <Link
+          href="/user-role/create"
+          class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-yellow-600 text-white text-sm font-semibold rounded shadow transition"
+        >
+          + Add Role
+        </Link>
+      </div>
+
+      <!-- Filters -->
+      <FilterControls routeName="/user-role" :filters="props.filters" />
+
+      <!-- Table -->
+      <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+            <tr>
+              <th class="px-6 py-3 text-left font-semibold">Name</th>
+              <th class="px-6 py-3 text-left font-semibold">Permissions</th>
+              <th class="px-6 py-3 text-left font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            <tr
+              v-for="role in roles.data"
+              :key="role.id"
+              class="hover:bg-gray-50 dark:hover:bg-gray-800"
+            >
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
+                {{ role.name }}
+              </td>
+              <td class="px-6 py-4">
+                <span
+                  v-for="perm in role.permissions"
+                  :key="perm.id"
+                  class="inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-0.5 rounded-full text-xs mr-1 mb-1"
+                >
+                  {{ perm.name }}
+                </span>
+              </td>
+              <td class="px-6 py-4 flex gap-4 items-center">
+                <Link
+                  :href="`/user-role/${role.id}/edit`"
+                  class="text-indigo-600 hover:underline font-medium"
+                >
+                  Edit
+                </Link>
+                <button
+                  @click="deleteRole(role.id)"
+                  class="text-red-600 hover:underline font-medium"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+            <tr v-if="roles.data.length === 0">
+              <td colspan="3" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
+                No roles found.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <Pagination :meta="roles.meta" class="mt-6" />
+    </div>
+  </AppLayout>
 </template>
