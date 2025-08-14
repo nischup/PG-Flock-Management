@@ -9,6 +9,7 @@ use App\Http\Controllers\Master\ChickTypeController;
 use App\Http\Controllers\Master\FeedController;
 use App\Http\Controllers\Master\FeedTypeController;
 use App\Http\Controllers\Master\LocationController;
+use App\Http\Controllers\Master\CompanyController;
 use App\Http\Controllers\Master\MedicineController;
 use App\Http\Controllers\Master\ShedController;
 use App\Http\Controllers\Master\UnitController;
@@ -32,7 +33,7 @@ Route::get('doc-receive', [DOCReceiveController::class, 'index'])->name('doc-rec
 Route::get('chick-type', [ChickTypeController::class, 'index'])->name('chick-type');
 Route::get('feed', [FeedController::class, 'index'])->name('feed');
 Route::get('feed-type', [FeedTypeController::class, 'index'])->name('feed-type');
-Route::get('location', [LocationController::class, 'index'])->name('location');
+Route::get('company', [CompanyController::class, 'index'])->name('company');
 Route::get('medicine', [MedicineController::class, 'index'])->name('medicine');
 Route::get('shed', [ShedController::class, 'index'])->name('shed');
 Route::get('unit', [UnitController::class, 'index'])->name('medicine');
