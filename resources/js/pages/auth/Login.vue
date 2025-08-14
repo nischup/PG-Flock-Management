@@ -27,7 +27,7 @@ const submit = () => {
 };
 </script>
 
-<template>
+<template id="bg-banner" >
     <AuthBase title="Log in to your account" description="Enter your email and password below to log in">
         <Head title="Log in" />
 
@@ -91,3 +91,13 @@ const submit = () => {
         </form>
     </AuthBase>
 </template>
+
+<style scoped>
+
+    #bg-banner{
+        background-image: url('pghomebanner.jpg');
+        background-size: cover;
+        background-position: center;
+    }
+
+</style>

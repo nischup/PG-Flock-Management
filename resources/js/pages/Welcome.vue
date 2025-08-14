@@ -1,51 +1,118 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import InputError from '@/components/InputError.vue';
+import TextLink from '@/components/TextLink.vue';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import AuthBase from '@/layouts/AuthLayout.vue';
+import { Head, useForm } from '@inertiajs/vue3';
+import { LoaderCircle } from 'lucide-vue-next';
+
+defineProps<{
+    status?: string;
+    canResetPassword: boolean;
+}>();
+
+const form = useForm({
+    email: '',
+    password: '',
+    remember: false,
+});
+
+const submit = () => {
+    form.post(route('login'), {
+        onFinish: () => form.reset('password'),
+    });
+};
 </script>
 
 <template>
-    <Head title="Welcome">
-        <link rel="preconnect" href="https://rsms.me/" />
-        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-    </Head>
-    <div class="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]">
-        <header class="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl">
-            <nav class="flex items-center justify-end gap-4">
-                <Link
-                    v-if="$page.props.auth.user"
-                    :href="route('dashboard')"
-                    class="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                >
-                    Dashboard
-                </Link>
-                <template v-else>
-                    <Link
-                        :href="route('login')"
-                        class="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
-                    >
-                        Log in
-                    </Link>
-                    <Link
-                        :href="route('register')"
-                        class="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                    >
-                        Register
-                    </Link>
-                </template>
-            </nav>
-        </header>
-        <div class="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0" id="bg-banner">
-            
+  <div id="bg-banner" class="flex min-h-screen flex-col items-center justify-center p-6 lg:p-8 text-[#1b1b18] dark:text-white relative">
+    
+    <!-- Optional overlay for readability -->
+    <div class="absolute inset-0 bg-black/40 z-0"></div>
+
+    <AuthBase class="bg-transparent p-0 shadow-none relative z-10" 
+              title="PG-FLOCK-MANAGEMNT" 
+              description="Enter your email and password below to log in">
+      
+      <Head title="Log in" />
+
+      <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-400 z-10">
+        {{ status }}
+      </div>
+
+      <form @submit.prevent="submit" class="flex flex-col gap-6 z-10">
+        <div class="grid gap-6">
+
+          <div class="grid gap-2">
+            <Label for="email">Email address</Label>
+            <Input
+              id="email"
+              type="email"
+              required
+              autofocus
+              :tabindex="1"
+              autocomplete="email"
+              v-model="form.email"
+              placeholder="email@example.com"
+            />
+            <InputError :message="form.errors.email" />
+          </div>
+
+          <div class="grid gap-2">
+            <div class="flex items-center justify-between">
+              <Label for="password">Password</Label>
+              <TextLink v-if="canResetPassword" :href="route('password.request')" class="text-sm" :tabindex="5">
+                Forgot password?
+              </TextLink>
+            </div>
+            <Input
+              id="password"
+              type="password"
+              required
+              :tabindex="2"
+              autocomplete="current-password"
+              v-model="form.password"
+              placeholder="Password"
+            />
+            <InputError :message="form.errors.password" />
+          </div>
+
+          <div class="flex items-center justify-between">
+            <Label for="remember" class="flex items-center space-x-3">
+              <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
+              <span>Remember me</span>
+            </Label>
+          </div>
+
+          <Button type="submit" class="mt-4 w-full bg-chicken" :tabindex="4" :disabled="form.processing">
+            <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
+            Log in
+          </Button>
+
         </div>
-     
-    </div>
+
+        <!-- Optional sign-up link -->
+        <!--
+        <div class="text-center text-sm text-white/80 mt-4">
+          Don't have an account?
+          <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink>
+        </div>
+        -->
+      </form>
+
+    </AuthBase>
+  </div>
 </template>
 
 <style scoped>
-
-    #bg-banner{
-        background-image: url('pghomebanner.jpg');
-        background-size: cover;
-        background-position: center;
-    }
+#bg-banner {
+  background-image: url('pghomebanner.jpg');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
 
 </style>
