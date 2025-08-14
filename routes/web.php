@@ -13,6 +13,7 @@ use App\Http\Controllers\Master\MedicineController;
 use App\Http\Controllers\Master\ShedController;
 use App\Http\Controllers\Master\UnitController;
 use App\Http\Controllers\Master\VaccineController;
+use App\Http\Controllers\DOC\DOCReceiveController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -26,6 +27,7 @@ require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 
 Route::get('user-register', [UserRegisterController::class, 'index'])->name('user-register');
+Route::get('doc-receive', [DOCReceiveController::class, 'index'])->name('doc-receive');
 //Route::get('user-role', [UserRoleController::class, 'index'])->name('user-role');
 Route::get('chick-type', [ChickTypeController::class, 'index'])->name('chick-type');
 Route::get('feed', [FeedController::class, 'index'])->name('feed');

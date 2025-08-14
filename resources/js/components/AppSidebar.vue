@@ -23,7 +23,7 @@ const mainNavItems: NavItem[] = [
     children: [
       {
         title: 'DOC Receive',
-        href: '/doc-reciive',
+        href: '/doc-receive',
         icon: BabyChick
       },
       {
