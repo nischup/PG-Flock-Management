@@ -15,18 +15,19 @@ const form = useForm({
   name: '',
   email: '',
   role: '',
+  password: '',
   permissions: [],
   company_id: 0,
   shed_id: 0,
 });
 
 function submit() {
-  form.post('/users', { preserveScroll: true });
+  form.post('/user-register', { preserveScroll: true });
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Users', href: '/users' },
-  { title: 'Add User', href: '/users/create' },
+  { title: 'Users', href: '/user-register' },
+  { title: 'Add User', href: '/user-register/create' },
 ];
 
 // Group permissions by prefix before "."
@@ -93,7 +94,7 @@ function toggleSelectAll(group: string) {
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold">Add User</h2>
         <Link
-          href="/users"
+          href="/user-register/create"
           class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
         >
           ← Back
@@ -113,6 +114,18 @@ function toggleSelectAll(group: string) {
           <label class="block mb-1 font-medium">Email</label>
           <input v-model="form.email" type="email" class="w-full border rounded px-3 py-2" />
           <div v-if="form.errors.email" class="text-red-500 text-sm">{{ form.errors.email }}</div>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block mb-1 font-medium">Password</label>
+          <input
+            v-model="form.password"
+            type="password"
+            class="w-full border rounded px-3 py-2"
+            placeholder="Enter password"
+          />
+          <div v-if="form.errors.password" class="text-red-500 text-sm">{{ form.errors.password }}</div>
         </div>
 
         <!-- Company -->
@@ -156,13 +169,14 @@ function toggleSelectAll(group: string) {
               @click="toggleGroup(group)"
             >
               <span class="capitalize font-semibold">{{ group }}</span>
-              <div @click.stop>
+              <label class="inline-flex items-center space-x-2" @click.stop>
                 <input
                   type="checkbox"
                   :checked="isGroupAllSelected(group)"
-                  @change="toggleSelectAll(group)"
+                  @change="toggleSelectAll(group)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600"
                 />
-              </div>
+                  <span class="text-sm text-gray-600 dark:text-gray-300">Select All</span>
+                </label>
             </div>
 
             <!-- Group Permissions -->
@@ -181,7 +195,7 @@ function toggleSelectAll(group: string) {
 
         <button
           type="submit"
-          class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-md"
+          class="bg-chicken hover:bg-yellow-600 text-white px-5 py-2 rounded-md"
         >
           Create User
         </button>

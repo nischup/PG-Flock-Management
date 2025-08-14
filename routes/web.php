@@ -25,7 +25,7 @@ Route::get('dashboard', function () {
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 
-Route::get('user-register', [UserRegisterController::class, 'index'])->name('user-register');
+//Route::get('user-register', [UserRegisterController::class, 'index'])->name('user-register');
 //Route::get('user-role', [UserRoleController::class, 'index'])->name('user-role');
 Route::get('chick-type', [ChickTypeController::class, 'index'])->name('chick-type');
 Route::get('feed', [FeedController::class, 'index'])->name('feed');

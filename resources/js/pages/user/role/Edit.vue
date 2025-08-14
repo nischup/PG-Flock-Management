@@ -1,23 +1,20 @@
 <script setup lang="ts">
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { ref, computed, reactive, watch } from 'vue';
+import { ref, computed } from 'vue';
 import type { BreadcrumbItem } from '@/types';
 
-// Same flexible type as before
-type PermInput = string | { id: number | string; name: string; [k: string]: any };
-
+// Props from Inertia
 const props = defineProps<{
-  role: { id: number | string; name: string; permissions: PermInput[] };
-  permissions: PermInput[] | Record<string, PermInput[]>;
+  role: { id: number; name: string };
+  permissions: { id: number; name: string }[];
+  rolePermissions: string[]; // Existing permissions
 }>();
 
-// Pre-fill form
+// Form state
 const form = useForm({
   name: props.role.name || '',
-  permissions: props.role.permissions.map(p =>
-    typeof p === 'string' ? p : p.name
-  ),
+  permissions: props.rolePermissions || [], // pre-selected permissions
 });
 
 // Breadcrumbs
@@ -26,66 +23,66 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Edit', href: `/user-role/${props.role.id}/edit` },
 ];
 
-// Flatten props.permissions into array
-const flatPermissions = computed<PermInput[]>(() => {
-  return Array.isArray(props.permissions)
-    ? props.permissions
-    : Object.values(props.permissions).flat();
-});
-
-// Extract name safely
-function getPermName(p: PermInput): string {
-  if (typeof p === 'string') return p;
-  if (p && typeof p === 'object' && typeof p.name === 'string') return p.name;
-  return '';
-}
-
-// Group permissions
+// Group permissions by module (prefix before ".")
 const groupedPermissions = computed(() => {
-  const groups: Record<string, { key: string; action: string }[]> = {};
-  for (const item of flatPermissions.value) {
-    const full = getPermName(item);
-    if (!full) continue;
-    const [module = 'other', action = 'unknown'] = full.split('.');
-    if (!groups[module]) groups[module] = [];
-    groups[module].push({ key: full, action });
-  }
+  const groups: Record<string, { id: number; name: string; label: string }[]> = {};
+  props.permissions.forEach((perm) => {
+    const [prefix, action] = perm.name.split('.');
+    if (!groups[prefix]) groups[prefix] = [];
+    groups[prefix].push({
+      id: perm.id,
+      name: perm.name,
+      label: formatLabel(action, prefix),
+    });
+  });
   return groups;
 });
 
-// Pretty action label
-function formatAction(s: string) {
-  return s.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+// Label formatting
+function formatLabel(action: string, prefix: string) {
+  const map: Record<string, string> = {
+    view: `View ${capitalize(prefix)}`,
+    create: `Create ${capitalize(prefix)}`,
+    edit: `Edit ${capitalize(prefix)}`,
+    delete: `Delete ${capitalize(prefix)}`,
+  };
+  return map[action] || `${capitalize(action)} ${capitalize(prefix)}`;
+}
+
+// Capitalize first letter
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 // Accordion states
-const openAccordion = reactive<Record<string, boolean>>({});
-watch(groupedPermissions, (gp) => {
-  const modules = Object.keys(gp);
-  modules.forEach((m, i) => {
-    if (!(m in openAccordion)) openAccordion[m] = i === 0;
-  });
-}, { immediate: true });
+const expandedGroups = ref<string[]>([]);
+function toggleGroup(group: string) {
+  expandedGroups.value.includes(group)
+    ? (expandedGroups.value = expandedGroups.value.filter((g) => g !== group))
+    : expandedGroups.value.push(group);
+}
+function isGroupExpanded(group: string) {
+  return expandedGroups.value.includes(group);
+}
 
-// Toggle all in module
-function toggleModule(module: string) {
-  const moduleKeys = groupedPermissions.value[module].map(p => p.key);
-  const allSelected = moduleKeys.every(k => form.permissions.includes(k));
-  if (allSelected) {
-    form.permissions = form.permissions.filter(k => !moduleKeys.includes(k));
+// Select all / deselect all per group
+function isGroupAllSelected(group: string) {
+  const perms = groupedPermissions.value[group]?.map((p) => p.name) || [];
+  return perms.length > 0 && perms.every((p) => form.permissions.includes(p));
+}
+
+function toggleSelectAll(group: string) {
+  const perms = groupedPermissions.value[group]?.map((p) => p.name) || [];
+  if (isGroupAllSelected(group)) {
+    form.permissions = form.permissions.filter((p) => !perms.includes(p));
   } else {
-    form.permissions = Array.from(new Set([...form.permissions, ...moduleKeys]));
+    form.permissions = Array.from(new Set([...form.permissions, ...perms]));
   }
 }
 
-// Is all selected in module?
-function isModuleAllSelected(module: string) {
-  return groupedPermissions.value[module].every(p => form.permissions.includes(p.key));
-}
-
 // Submit update
-function submit() {
-  form.put(`/roles/${props.role.id}`); 
+function updateRole() {
+  form.put(`/user-role/${props.role.id}`, { preserveScroll: true });
 }
 </script>
 
@@ -105,58 +102,45 @@ function submit() {
       </div>
 
       <!-- Form -->
-      <form @submit.prevent="submit" class="space-y-6 bg-white dark:bg-gray-900 shadow p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+      <form @submit.prevent="updateRole" class="space-y-6 bg-white dark:bg-gray-900 shadow p-6 rounded-xl border border-gray-200 dark:border-gray-700">
         <!-- Role Name -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Role Name</label>
+          <label class="block text-sm font-medium mb-1">Role Name</label>
           <input
             v-model="form.name"
             type="text"
-            class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-2"
+            class="w-full rounded-md border border-gray-300 dark:border-gray-700 px-4 py-2"
           />
           <div v-if="form.errors.name" class="text-red-500 text-sm mt-1">{{ form.errors.name }}</div>
         </div>
 
-        <!-- Accordions -->
-        <div v-for="(perms, module) in groupedPermissions" :key="module" class="mb-4 border rounded-md">
-          <!-- Accordion Header -->
-          <div
-            class="flex justify-between items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 cursor-pointer"
-            @click="openAccordion[module] = !openAccordion[module]"
-          >
-            <span class="font-medium capitalize">{{ module }}</span>
-            <label class="inline-flex items-center space-x-2" @click.stop>
-              <input
-                type="checkbox"
-                :checked="isModuleAllSelected(module)"
-                @change.prevent="toggleModule(module)"
-                class="rounded border-gray-300 dark:border-gray-600 text-indigo-600"
-              />
-              <span class="text-sm text-gray-600 dark:text-gray-300">Select All</span>
-            </label>
-          </div>
-
-          <!-- Accordion Body -->
-          <div v-show="openAccordion[module]" class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-            <div v-for="perm in perms" :key="perm.key">
-              <label class="inline-flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  v-model="form.permissions"
-                  :value="perm.key"
-                  class="rounded border-gray-300 dark:border-gray-600 text-indigo-600"
-                />
-                <span class="text-gray-700 dark:text-gray-200">{{ formatAction(perm.action) }}</span>
+        <!-- Permissions Accordion -->
+        <div>
+          <label class="block text-sm font-medium mb-2">Permissions</label>
+          <div v-for="(perms, group) in groupedPermissions" :key="group" class="border rounded mb-2 overflow-hidden">
+            <!-- Header -->
+            <div class="flex justify-between items-center px-4 py-2 bg-gray-100 cursor-pointer"
+                 @click="toggleGroup(group)">
+              <span class="capitalize font-semibold">{{ group }}</span>
+              <label class="inline-flex items-center space-x-2" @click.stop>
+                <input type="checkbox" :checked="isGroupAllSelected(group)" @change="toggleSelectAll(group)" class="rounded border-gray-300 text-indigo-600" />
+                <span class="text-sm text-gray-600">Select All</span>
               </label>
             </div>
+
+            <!-- Body -->
+            <div v-show="isGroupExpanded(group)" class="px-4 py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              <div v-for="perm in perms" :key="perm.id" class="flex items-center space-x-2">
+                <input type="checkbox" :value="perm.name" v-model="form.permissions" class="rounded border-gray-300 text-indigo-600" />
+                <span>{{ perm.label }}</span>
+              </div>
+            </div>
           </div>
+          <div v-if="form.errors.permissions" class="text-red-500 text-sm mt-1">{{ form.errors.permissions }}</div>
         </div>
 
         <!-- Submit -->
-        <button
-          type="submit"
-          class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-md font-medium"
-        >
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-md font-medium">
           Update Role
         </button>
       </form>

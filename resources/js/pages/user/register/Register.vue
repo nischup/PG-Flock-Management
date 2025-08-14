@@ -33,7 +33,7 @@ const { confirmDelete } = useNotifier();
 
 const deleteUser = (id: number) => {
   confirmDelete({
-    url: `/users/${id}`,
+    url: `/user-register/${id}`,
     text: 'This will permanently delete the user.',
     successMessage: 'User has been deleted.',
   });
@@ -53,7 +53,7 @@ const breadcrumbs: BreadcrumbItem[] = [
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">Users</h1>
         <Link
-          href="/users/create"
+          href="/user-register/create"
           class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded shadow transition"
         >
           + Add User
@@ -108,7 +108,7 @@ const breadcrumbs: BreadcrumbItem[] = [
               </td>
               <td class="px-6 py-4 flex gap-4 items-center">
                 <Link
-                  :href="`/users/${user.id}/edit`"
+                  :href="`/user-register/${user.id}/edit`"
                   class="text-indigo-600 hover:underline font-medium"
                 >
                   Edit

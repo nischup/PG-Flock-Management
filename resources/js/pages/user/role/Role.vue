@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import FilterControls from '@/components/FilterControls.vue';
 import Pagination from '@/components/Pagination.vue';
 import { useListFilters } from '@/composables/useListFilters';
 import { useNotifier } from '@/composables/useNotifier';
-import { type BreadcrumbItem } from '@/types';
-
+import type { BreadcrumbItem } from '@/types';
+import { usePage } from '@inertiajs/vue3'
 
 const props = defineProps<{
   roles: {
-    data: Array<{ id: number; code: string }>;
+    data: Array<{
+      id: number;
+      name: string;
+      permissions: { id: number; name: string }[];
+    }>;
     meta: { current_page: number; last_page: number };
   };
   filters: { search?: string; per_page?: number; page?: number };
@@ -21,37 +25,33 @@ useListFilters({
   filters: props.filters,
 });
 
+const { confirmDelete } = useNotifier();
 
-const {confirmDelete } = useNotifier();
+const { auth } = usePage().props
+const permissions = auth.user ? auth.user.permissions : []
 
-const deleteRole = (id: number) => {
+
+function deleteRole(id: number) {
   confirmDelete({
     url: `/user-role/${id}`,
     text: 'This will permanently delete the role.',
     successMessage: 'Role has been deleted.',
   });
-};
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'User Role',
-        href: '/user-role',
-    },
+  { title: 'User Role', href: '/user-role' },
 ];
-
 </script>
 
 <template>
   <Head title="Roles" />
-
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <div>
-          <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">Roles</h1>
-        </div>
-        <Link
+        <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">Roles</h1>
+        <Link v-if="permissions.includes('role.create')"
           href="/user-role/create"
           class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-yellow-600 text-white text-sm font-semibold rounded shadow transition"
         >
@@ -60,9 +60,9 @@ const breadcrumbs: BreadcrumbItem[] = [
       </div>
 
       <!-- Filters -->
-      <FilterControls routeName="/user-role" :filters="props.filters" />
+      <FilterControls :filters="props.filters" routeName="/user-role" />
 
-      <!-- Table -->
+      <!-- Roles Table -->
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
@@ -92,14 +92,14 @@ const breadcrumbs: BreadcrumbItem[] = [
               </td>
               <td class="px-6 py-4 flex gap-4 items-center">
                 <Link
-                  :href="`/user-role/${role.id}/edit`"
+                  :href="`/user-role/${role.id}/edit`" v-if="permissions.includes('role.edit')"
                   class="text-indigo-600 hover:underline font-medium"
                 >
                   Edit
                 </Link>
                 <button
                   @click="deleteRole(role.id)"
-                  class="text-red-600 hover:underline font-medium"
+                  class="text-red-600 hover:underline font-medium" v-if="permissions.includes('role.delete')"
                 >
                   Delete
                 </button>
