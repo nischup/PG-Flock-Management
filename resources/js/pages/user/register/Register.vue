@@ -6,7 +6,7 @@ import Pagination from '@/components/Pagination.vue';
 import { useListFilters } from '@/composables/useListFilters';
 import { useNotifier } from '@/composables/useNotifier';
 import { type BreadcrumbItem } from '@/types';
-
+import { usePermissions } from '@/composables/usePermissions'
 const props = defineProps<{
   users: {
     data: Array<{
@@ -18,7 +18,12 @@ const props = defineProps<{
       company?: { id: number; name: string } | null;
       shed?: { id: number; name: string } | null;
     }>;
-    meta: { current_page: number; last_page: number };
+    meta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    };
   };
   filters: { search?: string; per_page?: number };
 }>();
@@ -30,6 +35,7 @@ useListFilters({
 
 
 const { confirmDelete } = useNotifier();
+const { permissions, can } = usePermissions();
 
 const deleteUser = (id: number) => {
   confirmDelete({
@@ -52,7 +58,7 @@ const breadcrumbs: BreadcrumbItem[] = [
       <!-- Header -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">Users</h1>
-        <Link
+        <Link v-if="can('user.create')"
           href="/user-register/create"
           class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded shadow transition"
         >
@@ -60,9 +66,8 @@ const breadcrumbs: BreadcrumbItem[] = [
         </Link>
       </div>
 
-      <!-- Filters -->
-      <FilterControls routeName="/users                                                                                                                         " :filters="props.filters" />
-
+        <!-- Filters -->
+      <FilterControls :filters="props.filters" routeName="/user-register" />  
       <!-- Table -->
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
@@ -107,7 +112,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </span>
               </td>
               <td class="px-6 py-4 flex gap-4 items-center">
-                <Link
+                <Link v-if="can('user.edit')"
                   :href="`/user-register/${user.id}/edit`"
                   class="text-indigo-600 hover:underline font-medium"
                 >
@@ -115,9 +120,9 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </Link>
                 <button
                   @click="deleteUser(user.id)"
-                  class="text-red-600 hover:underline font-medium"
+                  class="text-red-600 hover:underline font-medium" v-if="can('user.delete')"
                 >
-                  Delete
+                  Inactive
                 </button>
               </td>
             </tr>

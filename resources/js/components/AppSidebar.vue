@@ -9,19 +9,10 @@ import { BookOpen, Folder, LayoutGrid, User, Users } from 'lucide-vue-next'
 import AppLogo from './AppLogo.vue'
 import { BabyChick } from '@/icons/BabyChick'
 import { BabyChickMultiple } from '@/icons/BabyChickMultiple'
-
+import { usePermissions } from '@/composables/usePermissions';
 
 const page = usePage();
-// Convert permissions object/collection to array
-const permissions = page.props.auth?.user?.permissions
-  ? Object.values(page.props.auth.user.permissions)
-  : [];
-
-// Now this works
-function can(permission?: string) {
-  if (!permission) return true;
-  return permissions.includes(permission);
-}
+const { permissions, can } = usePermissions();
 const mainNavItems: NavItem[] = [
   {
     title: 'Dashboard',
@@ -84,9 +75,21 @@ const mainNavItems: NavItem[] = [
   }
 ]
 
-// Filter menus by permission
-const filteredMainNavItems = mainNavItems.filter(item => can(item.permission));
-//const filteredFooterNavItems = footerNavItems.filter(item => can(item.permission));
+const filteredMainNavItems = mainNavItems
+  .map(item => {
+    // If parent has children, filter children by permission
+    if (item.children) {
+      const filteredChildren = item.children.filter(child => can(child.permission));
+      if (filteredChildren.length === 0) return null; // no child has permission => hide parent
+      return { ...item, children: filteredChildren };
+    }
+    // If parent itself has a permission key
+    if (can(item.permission)) return item;
+
+    // If parent has no children and no permission => keep by default
+    return item.permission ? null : item;
+  })
+  .filter(Boolean) as NavItem[];
 
 </script>
 

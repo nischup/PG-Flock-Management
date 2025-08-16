@@ -19,20 +19,19 @@ class UserRegisterController extends Controller
     public function index(Request $request)
     {
        
-
-
-        $users = User::query()
+        
+       $users = User::query()
             ->with(['roles', 'permissions', 'company', 'shed'])
-             ->visibleFor()
+            ->visibleFor()
             ->when($request->search, fn($q) => $q->where('name', 'like', "%{$request->search}%"))
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
-
 
         return Inertia::render('user/register/Register', [
             'users' => $users,
             'filters' => $request->only(['search', 'per_page']),
         ]);
+
 
 
     }
@@ -64,7 +63,7 @@ class UserRegisterController extends Controller
                 'role' => 'required|string|exists:roles,name',
                 'permissions' => 'nullable|array',
                 'permissions.*' => 'string|exists:permissions,name',
-                'password' => 'required|string|min:8|confirmed',
+                'password' => 'required|string|min:8',
             ]);
 
                 $user = User::create([
@@ -119,7 +118,7 @@ class UserRegisterController extends Controller
             'roles.*' => 'string|exists:roles,name',
             'permissions' => 'array',
             'permissions.*' => 'string|exists:permissions,name', 
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => 'nullable|string|min:8',
         ]);
 
         $updateData = [
@@ -143,8 +142,10 @@ class UserRegisterController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(User $user)
     {
-        //
+        $user->delete();
+
+        return redirect()->route('user-role.index')->with('success', 'User deleted.');
     }
 }

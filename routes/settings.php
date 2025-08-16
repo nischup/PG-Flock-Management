@@ -27,7 +27,7 @@ Route::middleware('auth')->group(function () {
     
 
     Route::resource('user-role', UserRoleController::class)->except(['show']);
-
+    
     
     Route::get('/user-register', [UserRegisterController::class, 'index'])->middleware('permission:user.view')->name('users.index');
     Route::get('/user-register/create', [UserRegisterController::class, 'create'])->middleware('permission:user.create')->name('users.create');

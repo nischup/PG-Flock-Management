@@ -39,27 +39,35 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $user = $request->user();
+
+        // if ($user) {
+        //     $user->load('roles.permissions', 'permissions'); // eager load
+        //     $roles = $user->getRoleNames();
+        //     $permissions = $user->getAllPermissions()->pluck('name');
+        // } else {
+        //     $roles = [];
+        //     $permissions = [];
+        // }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user
+                    ? [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'roles' => $user->getRoleNames(),
+                        'permissions' => $user->getAllPermissions()->pluck('name'),
+                    ]
+                    : null,
             ],
             'ziggy' => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
-            ],'
-            auth' => [
-                'user' => $request->user()
-                    ? [
-                        'id' => $request->user()->id,
-                        'name' => $request->user()->name,
-                        'email' => $request->user()->email,
-                        'roles' => $request->user()->getRoleNames(),        // Add roles here
-                        'permissions' => $request->user()->getAllPermissions()->pluck('name'), // Add permissions here
-                    ]
-                    : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

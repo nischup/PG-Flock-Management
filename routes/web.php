@@ -3,8 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-use App\Http\Controllers\UserRegisterController;
-use App\Http\Controllers\UserRoleController;
+//use App\Http\Controllers\UserRegisterController;
+//use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\Master\ChickTypeController;
 use App\Http\Controllers\Master\FeedController;
 use App\Http\Controllers\Master\FeedTypeController;
