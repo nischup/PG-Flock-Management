@@ -4,12 +4,24 @@ import NavMain from '@/components/NavMain.vue'
 import NavUser from '@/components/NavUser.vue'
 import { Sidebar,SidebarContent,SidebarFooter,SidebarHeader,SidebarMenu,SidebarMenuButton,SidebarMenuItem } from '@/components/ui/sidebar'
 import { type NavItem } from '@/types'
-import { Link } from '@inertiajs/vue3'
+import { Link,usePage } from '@inertiajs/vue3'
 import { BookOpen, Folder, LayoutGrid, User, Users } from 'lucide-vue-next'
 import AppLogo from './AppLogo.vue'
 import { BabyChick } from '@/icons/BabyChick'
 import { BabyChickMultiple } from '@/icons/BabyChickMultiple'
 
+
+const page = usePage();
+// Convert permissions object/collection to array
+const permissions = page.props.auth?.user?.permissions
+  ? Object.values(page.props.auth.user.permissions)
+  : [];
+
+// Now this works
+function can(permission?: string) {
+  if (!permission) return true;
+  return permissions.includes(permission);
+}
 const mainNavItems: NavItem[] = [
   {
     title: 'Dashboard',
@@ -45,12 +57,14 @@ const mainNavItems: NavItem[] = [
       {
         title: 'User Register',
         href: '/user-register',
-        icon: User
+        icon: User,
+        permission: 'user.view',
       },
       {
         title: 'User Role Management',
         href: '/user-role',
-        icon: User
+        icon: User,
+        permission: 'role.view',
       }
     ]
   },
@@ -63,12 +77,16 @@ const mainNavItems: NavItem[] = [
       { title: 'Shed', href: '/shed', icon: BookOpen },
       { title: 'Vaccine', href: '/vaccine', icon: BookOpen },
       { title: 'Medicine', href: '/medicine', icon: BookOpen },
-      { title: 'Compnay Location', href: '/location', icon: BookOpen },
+      { title: 'Company', href: '/company', icon: BookOpen },
       { title: 'Chicks Type', href: '/chick-type', icon: BookOpen },
       { title: 'Feed Type', href: '/feed-type', icon: BookOpen },
     ]
   }
 ]
+
+// Filter menus by permission
+const filteredMainNavItems = mainNavItems.filter(item => can(item.permission));
+//const filteredFooterNavItems = footerNavItems.filter(item => can(item.permission));
 
 </script>
 
@@ -89,7 +107,7 @@ const mainNavItems: NavItem[] = [
 
     <!-- Main Navigation -->
     <SidebarContent>
-      <NavMain :items="mainNavItems" />
+      <NavMain :items="filteredMainNavItems" />
     </SidebarContent>
 
     <!-- Footer Navigation -->

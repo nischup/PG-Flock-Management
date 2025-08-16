@@ -77,7 +77,7 @@ class UserRoleController extends Controller
        return Inertia::render('user/role/Edit', [
             'role' => $role,
             'permissions' => Permission::all(),
-            'rolePermissions' => $role->permissions->pluck('name')->toArray(), // 👈 Only names
+            'rolePermissions' => $role->permissions->pluck('name'), // 👈 Only names
         ]);
     }
 
