@@ -46,7 +46,7 @@ const Revenue = [{ name: 'Revenue', data: [17000000, 120000000, 1100000000, 1600
                     :series="Hatching"
                     :labels="chartLabels"
                     type="line"
-                    title="Daily Hatching"
+                    title="Daily Hatchable Egg"
                     />
                 </div>
                 <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
