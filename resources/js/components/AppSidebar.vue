@@ -20,22 +20,22 @@ const mainNavItems: NavItem[] = [
     icon: LayoutGrid
   },
   {
-    title: 'DOC',
+    title: 'Parent Stock (PS)',
     icon: BabyChickMultiple ,
     iconClass: 'text-yellow-500',
     children: [
       {
-        title: 'DOC Receive',
-        href: '/doc-receive',
+        title: 'PS Receive',
+        href: '/ps-receive',
         icon: BabyChick
       },
       {
-        title: 'DOC Lab Test',
+        title: 'PS Lab Test',
         href: '/doc-lab-test',
         icon: BabyChick
       },
       {
-        title: 'DOC Factory Receive',
+        title: 'PS Factory Receive',
         href: '/user-role',
         icon: BabyChick
       }

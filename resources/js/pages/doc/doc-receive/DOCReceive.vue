@@ -71,7 +71,7 @@ function submit() {
           <h2 class="text-xl font-semibold">Master Information</h2>
           <div class="grid grid-cols-3 gap-6">
             <div class="flex flex-col mb-4">
-              <Label>Shipment Type ID</Label>
+              <Label>Shipment Type</Label>
               <select
                 v-model="form.shipment_type_id"
                 class="mt-2 border rounded px-3 py-2"
@@ -82,7 +82,7 @@ function submit() {
               <InputError :message="form.errors.shipment_type_id" class="mt-1" />
             </div>
             <div class="flex flex-col mb-4">
-              <Label>Invoice No</Label>
+              <Label>PI No</Label>
               <Input v-model="form.invoice_no" type="text" placeholder="Enter Invoice No" class="mt-2" />
               <InputError :message="form.errors.invoice_no" class="mt-1" />
             </div>
@@ -97,8 +97,8 @@ function submit() {
               <InputError :message="form.errors.lc_no" class="mt-1" />
             </div>
             <div class="flex flex-col mb-4">
-              <Label>Supplier ID</Label>
-              <Input v-model="form.supplier_id" type="number" placeholder="Enter Supplier ID" class="mt-2" />
+              <Label>Supplier Name</Label>
+              <Input v-model="form.supplier_id" type="number" placeholder="Enter Supplier" class="mt-2" />
               <InputError :message="form.errors.supplier_id" class="mt-1" />
             </div>
             <div class="flex flex-col mb-4">
@@ -220,10 +220,10 @@ function submit() {
 
           <!-- Male Section -->
           <div v-if="activeTab === 'male'" class="grid grid-cols-3 gap-4">
-            <div class="flex flex-col mb-2"><Label>Box</Label><Input v-model="form.doc_male_box" type="number" class="mt-2" /><InputError :message="form.errors.doc_male_box" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Approx Qty</Label><Input v-model="form.doc_male_approximate_qty" type="number" class="mt-2" /><InputError :message="form.errors.doc_male_approximate_qty" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Total Qty</Label><Input v-model="form.doc_male_totalqty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_male_totalqty" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Challan Qty</Label><Input v-model="form.doc_male_challan_qty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_male_challan_qty" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Male Box</Label><Input v-model="form.doc_male_box" type="number" class="mt-2" /><InputError :message="form.errors.doc_male_box" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Approx. Chicks Qty (Per Box)</Label><Input v-model="form.doc_male_approximate_qty" type="number" class="mt-2" /><InputError :message="form.errors.doc_male_approximate_qty" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Approx Total Chicks Qty</Label><Input v-model="form.doc_male_totalqty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_male_totalqty" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Challan Box Qty</Label><Input v-model="form.doc_male_challan_qty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_male_challan_qty" class="mt-1" /></div>
             <div class="flex flex-col mb-2"><Label>Rate</Label><Input v-model="form.doc_male_rate" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_male_rate" class="mt-1" /></div>
             <div class="flex flex-col mb-2"><Label>Value Total</Label><Input v-model="form.doc_male_value_total" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_male_value_total" class="mt-1" /></div>
           </div>

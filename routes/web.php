@@ -24,7 +24,7 @@ Route::get('dashboard', function () {
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 
-Route::get('doc-receive', [DOCReceiveController::class, 'index'])->name('doc-receive');
+Route::get('ps-receive', [DOCReceiveController::class, 'index'])->name('doc-receive');
 Route::get('chick-type', [ChickTypeController::class, 'index'])->name('chick-type');
 Route::get('feed', [FeedController::class, 'index'])->name('feed');
 Route::get('feed-type', [FeedTypeController::class, 'index'])->name('feed-type');
