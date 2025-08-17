@@ -60,7 +60,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">Users</h1>
         <Link v-if="can('user.create')"
           href="/user-register/create"
-          class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded shadow transition"
+          class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"
         >
           + Add User
         </Link>
