@@ -44,8 +44,8 @@ class PermissionSeeder extends Seeder
         $user = User::firstOrCreate(
             ['email' => 'provita@mail.com'], // unique field
             [
-                'name'       => 'Super Admin',
-                'password'   => Hash::make('12345678'), // change this to secure password
+                'name'       => 'PG Admin',
+                'password'   => Hash::make('password'), // change this to secure password
                 'company_id' => 1,
                 'shed_id'    => 1,
             ]
