@@ -24,11 +24,6 @@ Route::get('dashboard', function () {
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 
-<<<<<<< HEAD
-//Route::get('user-register', [UserRegisterController::class, 'index'])->name('user-register');
-//Route::get('user-role', [UserRoleController::class, 'index'])->name('user-role');
-=======
->>>>>>> b72e876851bf3ee7340f8d19e76d542138d5ecb6
 Route::get('doc-receive', [DOCReceiveController::class, 'index'])->name('doc-receive');
 Route::get('chick-type', [ChickTypeController::class, 'index'])->name('chick-type');
 Route::get('feed', [FeedController::class, 'index'])->name('feed');
