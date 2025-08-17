@@ -19,8 +19,7 @@ return new class extends Migration
 
             // Male chicks
             $table->integer('doc_male_box')->default(0);
-            $table->integer('doc_male_totalboxqty')->default(0);
-            $table->integer('doc_male_box_approximate_qty')->default(0);
+            $table->integer('doc_male_approximate_qty')->default(0);
             $table->double('doc_male_totalqty')->default(0);
             $table->double('doc_male_challan_qty')->default(0);
             $table->double('doc_male_rate')->default(0);
@@ -28,11 +27,14 @@ return new class extends Migration
 
             // Female chicks
             $table->integer('doc_female_box')->default(0);
-            $table->integer('doc_totalboxqty')->default(0);
-            $table->integer('doc_box_approximate_qty')->default(0);
-            $table->double('doc_totalqty')->default(0);
+            $table->integer('doc_female_approximate_qty')->default(0);
+            $table->double('doc_female_totalqty')->default(0);
             $table->double('doc_challan_qty')->default(0);
             $table->double('doc_female_rate')->default(0);
+            $table->double('doc_female_value_total')->default(0);
+
+            // Total Calculation
+            $table->double('doc_totalbox')->default(0);
             $table->double('doc_value_total')->default(0);
 
             $table->timestamps();
