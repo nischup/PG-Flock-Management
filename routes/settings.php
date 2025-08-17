@@ -24,19 +24,17 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('settings/Appearance');
     })->name('appearance');
 
-    Route::resource('user-role', UserRoleController::class)->only([
-    'index', 'create', 'store', 'edit', 'update', 'destroy'
-]);
+    
 
-
-
-
-    Route::get('/users', [UserRegisterController::class, 'index'])->middleware('permission:user.view')->name('users.index');
-    Route::get('/users/create', [UserRegisterController::class, 'create'])->middleware('permission:user.create')->name('users.create');
-    Route::post('/users', [UserRegisterController::class, 'store'])->middleware('permission:user.create')->name('users.store');
-    Route::get('/users/{user}/edit', [UserRegisterController::class, 'edit'])->name('users.edit');
-    Route::put('/users/{user}', [UserRegisterController::class, 'update'])->name('users.update');
-    Route::delete('/users/{user}', [UserRegisterController::class, 'destroy'])->middleware('permission:user.delete')->name('users.destroy');
+    Route::resource('user-role', UserRoleController::class)->except(['show']);
+    
+    
+    Route::get('/user-register', [UserRegisterController::class, 'index'])->middleware('permission:user.view')->name('users.index');
+    Route::get('/user-register/create', [UserRegisterController::class, 'create'])->middleware('permission:user.create')->name('users.create');
+    Route::post('/user-register', [UserRegisterController::class, 'store'])->middleware('permission:user.create')->name('users.store');
+    Route::get('/user-register/{user}/edit', [UserRegisterController::class, 'edit'])->middleware('permission:user.edit')->name('users.edit');
+    Route::put('/user-register/{user}', [UserRegisterController::class, 'update'])->middleware('permission:user.edit')->name('users.update');
+    Route::delete('/user-register/{user}', [UserRegisterController::class, 'destroy'])->middleware('permission:user.delete')->name('users.destroy');
 
 
 

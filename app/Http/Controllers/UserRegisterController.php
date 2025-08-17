@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use App\Models\Company;
-use App\Models\Shed;
+use App\Models\Master\Company;
+use App\Models\Master\Shed;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -19,20 +19,19 @@ class UserRegisterController extends Controller
     public function index(Request $request)
     {
        
-
-
-        $users = User::query()
+        
+       $users = User::query()
             ->with(['roles', 'permissions', 'company', 'shed'])
-             ->visibleFor()
+            ->visibleFor()
             ->when($request->search, fn($q) => $q->where('name', 'like', "%{$request->search}%"))
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
-
 
         return Inertia::render('user/register/Register', [
             'users' => $users,
             'filters' => $request->only(['search', 'per_page']),
         ]);
+
 
 
     }
@@ -64,13 +63,14 @@ class UserRegisterController extends Controller
                 'role' => 'required|string|exists:roles,name',
                 'permissions' => 'nullable|array',
                 'permissions.*' => 'string|exists:permissions,name',
+                'password' => 'required|string|min:8',
             ]);
 
                 $user = User::create([
                     'name' => $request->name,
                     'email' => $request->email,
                     // You need to set a password or generate one here
-                    'password' => Hash::make('12345678'), // Replace with actual password handling
+                    'password' => Hash::make($request->password), // Replace with actual password handling
                 ]);
 
                 // Assign role
@@ -117,14 +117,21 @@ class UserRegisterController extends Controller
             'roles' => 'array',
             'roles.*' => 'string|exists:roles,name',
             'permissions' => 'array',
-            'permissions.*' => 'string|exists:permissions,name',         // new
+            'permissions.*' => 'string|exists:permissions,name', 
+            'password' => 'nullable|string|min:8',
         ]);
 
-        // Update company_id and shed_id
-        $user->update([
+        $updateData = [
             'company_id' => $request->company_id,
             'shed_id' => $request->shed_id,
-        ]);
+        ];
+
+        // Only update password if a new one is provided
+        if ($request->filled('password')) {
+            $updateData['password'] = Hash::make($request->password);
+        }
+
+        $user->update($updateData);
 
         $user->syncRoles($request->role ? [$request->role] : []);
         $user->syncPermissions($request->permissions ?? []);
@@ -135,8 +142,10 @@ class UserRegisterController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(User $user)
     {
-        //
+        $user->delete();
+
+        return redirect()->route('user-role.index')->with('success', 'User deleted.');
     }
 }

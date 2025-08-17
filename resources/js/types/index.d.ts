@@ -15,6 +15,7 @@ export interface NavItem {
     href: string;
     icon?: LucideIcon;
     isActive?: boolean;
+    permission?: string;  // add this line
 }
 
 export type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
@@ -38,5 +39,6 @@ export interface User {
     company?: number; // add this
     shed?: number;    // add this
 }
+
 
 export type BreadcrumbItemType = BreadcrumbItem;

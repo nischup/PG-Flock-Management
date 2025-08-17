@@ -1,27 +1,20 @@
-
 import { ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 
-const search = ref('');
-const perPage = ref(10);
-const page = ref(1);
-const routeName = ref('');
-
 export function useListFilters(options?: {
-  routeName?: string;
-  filters?: { search?: string; per_page?: number; page?: number };
+  routeName?: string; 
+  filters?: { search?: string; per_page?: number; page?: number }; 
   extraParams?: Record<string, any>;
 }) {
-  if (options?.routeName) routeName.value = options.routeName;
+  const search = ref(options?.filters?.search ?? '');
+  const perPage = ref(options?.filters?.per_page ?? 10);
+  const page = ref(options?.filters?.page ?? 1);
+  const routeName = ref(options?.routeName ?? '');
 
-  if (options?.filters) {
-    search.value = options.filters.search ?? '';
-    perPage.value = options.filters.per_page ?? 10;
-    page.value = options.filters.page ?? 1;
-  }
-
+  // Watch each filter individually
   watch([search, perPage, page], () => {
     if (!routeName.value) return;
+
     router.get(routeName.value, {
       search: search.value,
       per_page: perPage.value,
@@ -31,7 +24,7 @@ export function useListFilters(options?: {
       preserveState: true,
       replace: true,
     });
-  });
+  }, { immediate: false });
 
   return { search, perPage, page };
 }

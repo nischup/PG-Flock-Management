@@ -8,7 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Traits\CompanyShedFilter;
-
+use App\Models\Master\Company;
+use App\Models\Master\Shed;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */

@@ -15,16 +15,16 @@ interface Unit {
 }
 
 const units = ref<Unit[]>([
-  { id: 1, name: 'Kilogram', created_at: '2025-08-01', status: 'Active' },
+  { id: 1, name: 'KG', created_at: '2025-08-01', status: 'Active' },
   { id: 2, name: 'Gram', created_at: '2025-08-02', status: 'Active' },
   { id: 3, name: 'Liter', created_at: '2025-08-03', status: 'Deactivated' },
   { id: 4, name: 'Milliliter', created_at: '2025-08-04', status: 'Active' },
   { id: 5, name: 'Packet', created_at: '2025-08-05', status: 'Deactivated' },
   { id: 6, name: 'Box', created_at: '2025-08-06', status: 'Active' },
   { id: 7, name: 'Dozen', created_at: '2025-08-07', status: 'Active' },
-  { id: 8, name: 'Piece', created_at: '2025-08-08', status: 'Deactivated' },
+  { id: 8, name: 'PCS', created_at: '2025-08-08', status: 'Deactivated' },
   { id: 9, name: 'Meter', created_at: '2025-08-09', status: 'Active' },
-  { id: 10, name: 'Centimeter', created_at: '2025-08-10', status: 'Active' },
+  { id: 10, name: 'CM', created_at: '2025-08-10', status: 'Active' },
 ]);
 
 const showModal = ref(false);
