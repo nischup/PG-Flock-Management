@@ -4,6 +4,7 @@ use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\UserRegisterController;
+use App\Http\Controllers\Ps\PsReceiveController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -25,7 +26,7 @@ Route::middleware('auth')->group(function () {
     })->name('appearance');
 
     
-
+    Route::resource('ps-receive', PsReceiveController::class)->except(['show']);
     Route::resource('user-role', UserRoleController::class)->except(['show']);
     
     
