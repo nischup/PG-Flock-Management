@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
+import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue'
 import HeadingSmall from '@/components/HeadingSmall.vue'
 import { Button } from '@/components/ui/button'
@@ -10,30 +11,26 @@ import { Label } from '@/components/ui/label'
 interface Shed {
   id: number
   name: string
-  status: number        // 1 = Active, 0 = Deactivated
+  status: number        // 1 = Active, 0 = Inactive
   created_at: string
 }
 
 const props = defineProps<{ sheds: Shed[] }>()
 const sheds = ref<Shed[]>([...props.sheds])
 
-// UI state
+// Modal state
 const showModal = ref(false)
 const editingShed = ref<Shed | null>(null)
-const openDropdownId = ref<number | null>(null)
-const message = ref<string | null>(null)
 
-// Modal form (for Add/Edit only)
+// Modal form (Add/Edit)
 const form = useForm({
   name: '',
   status: 1,
 })
 
-// ---------- Draggable modal ----------
+// Draggable modal
 const modalRef = ref<HTMLElement | null>(null)
-let offsetX = 0
-let offsetY = 0
-let isDragging = false
+let offsetX = 0, offsetY = 0, isDragging = false
 
 const startDrag = (event: MouseEvent) => {
   if (!modalRef.value) return
@@ -59,7 +56,7 @@ const stopDrag = () => {
   document.removeEventListener('mouseup', stopDrag)
 }
 
-// ---------- Modal open/reset ----------
+// Open modal
 const openModal = (shed: Shed | null = null) => {
   if (shed) {
     editingShed.value = shed
@@ -73,6 +70,7 @@ const openModal = (shed: Shed | null = null) => {
   showModal.value = true
 }
 
+// Reset form
 const resetForm = () => {
   form.reset()
   form.status = 1
@@ -80,10 +78,10 @@ const resetForm = () => {
   showModal.value = false
 }
 
-// ---------- Create/Update via modal ----------
+// Submit (Create/Update)
 const submit = () => {
   if (!form.name.trim()) {
-    form.setError('name', 'The shed name is required.')
+    Swal.fire('Validation Error', 'The shed name is required.', 'warning')
     return
   }
 
@@ -95,54 +93,60 @@ const submit = () => {
         if (i !== -1) {
           sheds.value[i] = { ...sheds.value[i], name: form.name, status: form.status }
         }
-        message.value = 'Shed updated successfully'
+        Swal.fire('Success!', 'Shed updated successfully.', 'success')
         resetForm()
       },
+      onError: () => {
+        Swal.fire('Error!', 'Failed to update shed.', 'error')
+      }
     })
   } else {
     form.post(route('shed.store'), {
       preserveScroll: true,
       onSuccess: (page) => {
-        // If your controller returns the full list, you can refresh from props:
+        // Update local list if controller returns sheds
         if ((page as any).props?.sheds) {
           sheds.value = (page as any).props.sheds
         } else {
-          // Or optimistically push (depends on your controller response)
           sheds.value.unshift({
-            id: Date.now(), // temp id if not returned
+            id: Date.now(),
             name: form.name,
             status: form.status,
             created_at: new Date().toISOString(),
           })
         }
-        message.value = 'Shed created successfully'
+        Swal.fire('Success!', 'Shed created successfully.', 'success')
         resetForm()
       },
+      onError: () => {
+        Swal.fire('Error!', 'Failed to create shed.', 'error')
+      }
     })
   }
 }
 
-// ---------- Dropdown helpers ----------
+// Dropdown for actions
+const openDropdownId = ref<number | null>(null)
 const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
 }
 
-// ---------- FIX: Toggle status via dropdown (use router.put with explicit data) ----------
+// Toggle status
 const toggleStatus = (shed: Shed) => {
   const newStatus = shed.status === 1 ? 0 : 1
 
   router.put(
     route('shed.update', shed.id),
-    { name: shed.name, status: newStatus }, // send explicit payload
+    { name: shed.name, status: newStatus },
     {
       preserveScroll: true,
       onSuccess: () => {
         const i = sheds.value.findIndex(s => s.id === shed.id)
         if (i !== -1) sheds.value[i].status = newStatus
-        message.value = newStatus === 1 ? 'Shed activated' : 'Shed deactivated'
+        Swal.fire('Updated!', newStatus === 1 ? 'Shed activated' : 'Shed Inactive', 'success')
       },
       onError: () => {
-        message.value = 'Could not update status'
+        Swal.fire('Error!', 'Could not update status.', 'error')
       },
       onFinish: () => {
         openDropdownId.value = null
@@ -151,23 +155,36 @@ const toggleStatus = (shed: Shed) => {
   )
 }
 
-// ---------- Delete ----------
+// Delete shed
 const deleteShed = (shed: Shed) => {
-  if (!confirm('Are you sure you want to delete this shed?')) return
-
-  router.delete(route('shed.destroy', shed.id), {
-    preserveScroll: true,
-    onSuccess: () => {
-      sheds.value = sheds.value.filter(s => s.id !== shed.id)
-      message.value = 'Shed deleted successfully'
-    },
-    onFinish: () => {
-      openDropdownId.value = null
-    },
+  Swal.fire({
+    title: 'Are you sure?',
+    text: `You are about to delete shed "${shed.name}"!`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      router.delete(route('shed.destroy', shed.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+          sheds.value = sheds.value.filter(s => s.id !== shed.id)
+          Swal.fire('Deleted!', 'Shed has been deleted.', 'success')
+        },
+        onError: () => {
+          Swal.fire('Error!', 'Could not delete shed.', 'error')
+        },
+        onFinish: () => {
+          openDropdownId.value = null
+        },
+      })
+    }
   })
 }
 
-// Breadcrumbs (same style as Feed)
+// Breadcrumbs
 const breadcrumbs = [
   { title: 'Master Setup', href: '/master-setup' },
   { title: 'Shed', href: '/master-setup/shed' },
@@ -179,9 +196,6 @@ const breadcrumbs = [
     <Head title="Sheds" />
 
     <div class="px-4 py-6">
-      <!-- Flash message -->
-      <div v-if="message" class="p-2 mb-3 text-white bg-green-500 rounded">{{ message }}</div>
-
       <!-- Header -->
       <div class="flex items-center justify-between mb-4">
         <HeadingSmall title="Sheds List" />
@@ -207,7 +221,7 @@ const breadcrumbs = [
             <td class="p-2 border">{{ shed.name }}</td>
             <td class="p-2 border">
               <span :class="shed.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-                {{ shed.status === 1 ? 'Active' : 'Deactivated' }}
+                {{ shed.status === 1 ? 'Active' : 'Inactive' }}
               </span>
             </td>
             <td class="p-2 border">{{ shed.created_at }}</td>
@@ -224,7 +238,7 @@ const breadcrumbs = [
               >
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(shed)">✏ Edit</button>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(shed)">
-                  {{ shed.status === 1 ? 'Deactivate' : 'Activate' }}
+                  {{ shed.status === 1 ? 'Inactive' : 'Activate' }}
                 </button>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" @click="deleteShed(shed)">
                   🗑 Delete
@@ -236,7 +250,7 @@ const breadcrumbs = [
       </table>
     </div>
 
-    <!-- Draggable Modal (same design as Feed) -->
+    <!-- Draggable Modal -->
     <div
       v-if="showModal"
       class="fixed inset-0 z-50 flex justify-center pt-6"
@@ -247,7 +261,6 @@ const breadcrumbs = [
         class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl"
         style="top: 100px; position: absolute;"
       >
-        <!-- Header (drag handle) -->
         <div
           class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move"
           @mousedown="startDrag"
@@ -264,7 +277,6 @@ const breadcrumbs = [
           </button>
         </div>
 
-        <!-- Body -->
         <div class="p-4 space-y-4">
           <div>
             <Label for="name" class="mb-2">Shed Name</Label>
@@ -276,12 +288,11 @@ const breadcrumbs = [
             <Label for="status" class="mb-2">Status</Label>
             <select v-model="form.status" id="status" class="w-full border rounded p-2">
               <option :value="1">Active</option>
-              <option :value="0">Deactivated</option>
+              <option :value="0">Inactive</option>
             </select>
           </div>
         </div>
 
-        <!-- Footer -->
         <div class="flex justify-end p-4 border-t border-gray-200">
           <Button class="bg-gray-300 text-black mr-2" @click="resetForm">Cancel</Button>
           <Button class="bg-chicken text-white" @click="submit">
