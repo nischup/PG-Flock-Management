@@ -1,19 +1,19 @@
 <?php
 
-namespace App\Http\Controllers\DOC;
+namespace App\Http\Controllers\Ps;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class DOCReceiveController extends Controller
+class PsReceiveController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-         return Inertia::render('doc/doc-receive/DOCReceive');
+         return Inertia::render('ps/ps-receive/PsReceive');
     }
 
     /**

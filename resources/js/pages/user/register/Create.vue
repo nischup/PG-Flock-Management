@@ -108,7 +108,7 @@ function toggleSelectAll(group: string) {
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold">Add User</h2>
         <Link
-          href="/user-register/create"
+          href="/user-register"
           class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
         >
           ← Back

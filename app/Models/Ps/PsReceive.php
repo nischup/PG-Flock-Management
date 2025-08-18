@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Models\Doc;
+namespace App\Models\Ps;
 
 use Illuminate\Database\Eloquent\Model;
 
-class DocChickCount extends Model
+class PsReceive extends Model
 {
     //
 }

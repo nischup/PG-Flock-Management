@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('doc_receives', function (Blueprint $table) {
+        Schema::create('ps_receives', function (Blueprint $table) {
             $table->id();
             $table->tinyInteger('shipment_type_id');
-            $table->string('invoice_no')->nullable();
+            $table->string('pi_no')->nullable();
+            $table->date('pi_date')->nullable();
             $table->string('order_no')->nullable();
+            $table->date('order_date')->nullable();
             $table->string('lc_no')->nullable();
+            $table->date('lc_date')->nullable();
             $table->tinyInteger('supplier_id')->default(0);
             $table->tinyInteger('breed_type')->default(0);
             $table->tinyInteger('country_of_origin')->default(0);
@@ -34,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('doc_receives');
+        Schema::dropIfExists('ps_receives');
     }
 };

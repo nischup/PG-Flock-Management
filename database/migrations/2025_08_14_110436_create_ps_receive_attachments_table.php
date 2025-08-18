@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('doc_receive_attachments', function (Blueprint $table) {
+        Schema::create('ps_receive_attachments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('doc_receive_id')
-                  ->constrained('doc_receives')
+            $table->foreignId('ps_receive_id')
+                  ->constrained('ps_receives')
                   ->onDelete('cascade'); // delete attachments if DOC deleted
             $table->string('file_path')->nullable(); // where the file is stored
             $table->string('file_type')->nullable(); // e.g. pdf, jpg, docx
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('doc_receive_attachments');
+        Schema::dropIfExists('ps_receive_attachments');
     }
 };

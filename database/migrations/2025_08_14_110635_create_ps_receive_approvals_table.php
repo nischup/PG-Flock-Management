@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-     Schema::create('doc_receive_approvals', function (Blueprint $table) {
+     Schema::create('ps_receive_approvals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('doc_receive_id')
-                  ->constrained('doc_receives')
+            $table->foreignId('ps_receive_id')
+                  ->constrained('ps_receives')
                   ->onDelete('cascade'); // delete approval records if DOC deleted
             $table->foreignId('approved_by')
                   ->constrained('users')
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('doc_receive_approvals');
+        Schema::dropIfExists('ps_receive_approvals');
     }
 };

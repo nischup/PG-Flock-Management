@@ -12,7 +12,7 @@ import { type BreadcrumbItem } from '@/types'
 
 // Breadcrumb
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'DOC Receive', href: '/doc/doc-receive' },
+  { title: 'PS Receive', href: '/doc/doc-receive' },
 ]
 
 // Active tab state
@@ -21,9 +21,12 @@ const activeTab = ref<'male' | 'female'>('male')
 // Form data
 const form = useForm({
   shipment_type_id: 2,
-  invoice_no: '',
+  pi_no: '',
+  pi_date: '', 
   order_no: '',
+  order_date: '',
   lc_no: '',
+  lc_date: '', 
   supplier_id: '',
   breed_type: '',
   country_of_origin: '',
@@ -68,7 +71,7 @@ function submit() {
 
         <!-- Master Section -->
         <div class="space-y-6">
-          <h2 class="text-xl font-semibold">Master Information</h2>
+          <h2 class="text-xl font-semibold">PS Information</h2>
           <div class="grid grid-cols-3 gap-6">
             <div class="flex flex-col mb-4">
               <Label>Shipment Type</Label>
@@ -83,18 +86,33 @@ function submit() {
             </div>
             <div class="flex flex-col mb-4">
               <Label>PI No</Label>
-              <Input v-model="form.invoice_no" type="text" placeholder="Enter Invoice No" class="mt-2" />
-              <InputError :message="form.errors.invoice_no" class="mt-1" />
+              <Input v-model="form.pi_no" type="text" placeholder="Enter PI No" class="mt-2" />
+              <InputError :message="form.errors.pi_no" class="mt-1" />
+            </div>
+            <div class="flex flex-col mb-4">
+              <Label>PI Date</Label>
+              <Input v-model="form.pi_date" type="date" class="mt-2" />
+              <InputError :message="form.errors.pi_date" class="mt-1" />
             </div>
             <div class="flex flex-col mb-4">
               <Label>Order No</Label>
               <Input v-model="form.order_no" type="text" placeholder="Enter Order No" class="mt-2" />
               <InputError :message="form.errors.order_no" class="mt-1" />
             </div>
+            <div class="flex flex-col mb-4">
+              <Label>Order Date</Label>
+              <Input v-model="form.order_date" type="date" class="mt-2" />
+              <InputError :message="form.errors.order_date" class="mt-1" />
+            </div>
             <div v-if="form.shipment_type_id != 2" class="flex flex-col mb-4">
               <Label>LC No</Label>
               <Input v-model="form.lc_no" type="text" placeholder="Enter LC No" class="mt-2" />
               <InputError :message="form.errors.lc_no" class="mt-1" />
+            </div>
+            <div v-if="form.shipment_type_id != 2" class="flex flex-col mb-4">
+              <Label>LC Date</Label>
+              <Input v-model="form.lc_date" type="date" class="mt-2" />
+              <InputError :message="form.errors.lc_date" class="mt-1" />
             </div>
             <div class="flex flex-col mb-4">
               <Label>Supplier Name</Label>
