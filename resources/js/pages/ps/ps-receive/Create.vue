@@ -9,10 +9,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { type BreadcrumbItem } from '@/types'
+import FileUploader from '@/components/FileUploader.vue'
+import axios from 'axios'
+
 
 // Breadcrumb
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'PS Receive', href: '/doc/doc-receive' },
+  { title: 'PS Receive', href: '/ps/ps-receive' },
 ]
 
 // Active tab state
@@ -35,29 +38,71 @@ const form = useForm({
   file: [], // file upload
 
   // Male
-  doc_male_box: 0,
-  doc_male_approximate_qty: 0,
-  doc_male_totalqty: 0,
-  doc_male_challan_qty: 0,
-  doc_male_rate: 0,
-  doc_male_value_total: 0,
+  ps_male_box: 0,
+  ps_male_approximate_qty: 0,
+  ps_male_totalqty: 0,
+  ps_male_challan_qty: 0,
+  ps_male_rate: 0,
+  ps_male_value_total: 0,
 
   // Female
-  doc_female_box: 0,
-  doc_female_approximate_qty: 0,
-  doc_female_totalqty: 0,
-  doc_challan_qty: 0,
-  doc_female_rate: 0,
-  doc_female_value_total: 0,
+  ps_female_box: 0,
+  ps_female_approximate_qty: 0,
+  ps_female_totalqty: 0,
+  ps_challan_qty: 0,
+  ps_female_rate: 0,
+  ps_female_value_total: 0,
 
   // Totals
-  doc_totalbox: 0,
-  doc_value_total: 0,
+  ps_totalbox: 0,
+  ps_value_total: 0,
 })
 
+
+
+
 function submit() {
-  form.post(route('ps-receives.store'))
+
+    console.log(form.file);
+
+  const formData = new FormData();
+
+  for (const key in form) {
+    const value = form[key as keyof typeof form];
+
+    if (key === 'file') {
+      // Append each File to FormData
+      (value as File[]).forEach((f) => {
+        formData.append('file[]', f);
+      });
+    } else {
+      // Convert numbers to string before appending
+      formData.append(key, value != null ? String(value) : '');
+    }
+  }
+
+  // Use Inertia to post
+  form.post(route('ps-receive.store'), {
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onSuccess: () => {
+      form.reset();
+      // Optional: show a success notification
+    },
+    onError: () => {
+      // Optional: handle validation errors
+    },
+  });
 }
+
+
+
+
+
+
+
+
+
 </script>
 
 <template>
@@ -65,7 +110,7 @@ function submit() {
     <Head title="PS Receive" />
 
     <div class="px-4 py-6 space-y-8">
-      <!-- <HeadingSmall title="DOC Receive Entry" description="Record shipment and chick details" /> -->
+      <!-- <HeadingSmall title="ps Receive Entry" description="Record shipment and chick details" /> -->
 
       <form @submit.prevent="submit" class="space-y-8" enctype="multipart/form-data">
 
@@ -160,50 +205,18 @@ function submit() {
               <textarea v-model="form.remarks" class="w-full border rounded px-3 py-2 mt-2" placeholder="Enter any remarks"></textarea>
               <InputError :message="form.errors.remarks" class="mt-1" />
             </div>
+            <!-- File upload section -->
             <div class="flex flex-col mb-4 col-span-3">
-                <Label>Upload Files</Label>
-                
-                <!-- File input -->
-                <Input
-                    type="file"
-                    multiple
+                <FileUploader
+                    v-model="form.file"
+                    label="Upload Files"
+                    :max-files="3"
                     accept=".jpg,.jpeg,.png,.pdf"
-                    class="mt-2 w-1/2"
-                    @change="e => {
-                    const selectedFiles = Array.from(e.target.files)
-                    // Limit total files to 3
-                    const remainingSlots = 3 - form.file.length
-                    if (remainingSlots <= 0) return
-                    form.file.push(...selectedFiles.slice(0, remainingSlots))
-                    }"
-                />
-
-                <!-- Note -->
-                <p class="text-sm text-gray-500 mt-1">You can upload up to 3 files. Supported file types: jpg, jpeg, png, pdf.</p>
-
-                <!-- Display selected file names side by side -->
-                <div class="flex flex-wrap gap-2 mt-2">
-                    <div
-                    v-for="(f, index) in form.file"
-                    :key="index"
-                    class="bg-gray-200 text-gray-800 px-2 py-1 rounded flex items-center space-x-1"
-                    >
-                    <span class="text-sm">{{ f.name }}</span>
-                    <button
-                        type="button"
-                        @click="form.file.splice(index, 1)"
-                        class="text-red-500 font-bold hover:text-red-700"
-                    >
-                        ✕
-                    </button>
-                    </div>
-                </div>
-
+                    wrapper-class="flex flex-col mb-4 col-span-3"
+                    />
                 <InputError :message="form.errors.file" class="mt-1" />
-                </div>
-
-
-          </div>
+            </div>
+            </div>
         </div>
 
         <!-- Chick Counts Tabs -->
@@ -238,22 +251,22 @@ function submit() {
 
           <!-- Male Section -->
           <div v-if="activeTab === 'male'" class="grid grid-cols-3 gap-4">
-            <div class="flex flex-col mb-2"><Label>Male Box</Label><Input v-model="form.doc_male_box" type="number" class="mt-2" /><InputError :message="form.errors.doc_male_box" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Approx. Chicks Qty (Per Box)</Label><Input v-model="form.doc_male_approximate_qty" type="number" class="mt-2" /><InputError :message="form.errors.doc_male_approximate_qty" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Approx Total Chicks Qty</Label><Input v-model="form.doc_male_totalqty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_male_totalqty" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Challan Box Qty</Label><Input v-model="form.doc_male_challan_qty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_male_challan_qty" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Rate</Label><Input v-model="form.doc_male_rate" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_male_rate" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Value Total</Label><Input v-model="form.doc_male_value_total" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_male_value_total" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Male Box</Label><Input v-model="form.ps_male_box" type="number" class="mt-2" /><InputError :message="form.errors.ps_male_box" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Approx. Chicks Qty (Per Box)</Label><Input v-model="form.ps_male_approximate_qty" type="number" class="mt-2" /><InputError :message="form.errors.ps_male_approximate_qty" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Approx Total Chicks Qty</Label><Input v-model="form.ps_male_totalqty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.ps_male_totalqty" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Challan Box Qty</Label><Input v-model="form.ps_male_challan_qty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.ps_male_challan_qty" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Rate</Label><Input v-model="form.ps_male_rate" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.ps_male_rate" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Value Total</Label><Input v-model="form.ps_male_value_total" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.ps_male_value_total" class="mt-1" /></div>
           </div>
 
           <!-- Female Section -->
           <div v-if="activeTab === 'female'" class="grid grid-cols-3 gap-4">
-            <div class="flex flex-col mb-2"><Label>Box</Label><Input v-model="form.doc_female_box" type="number" class="mt-2" /><InputError :message="form.errors.doc_female_box" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Approx Qty</Label><Input v-model="form.doc_female_approximate_qty" type="number" class="mt-2" /><InputError :message="form.errors.doc_female_approximate_qty" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Total Qty</Label><Input v-model="form.doc_female_totalqty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_female_totalqty" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Challan Qty</Label><Input v-model="form.doc_challan_qty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_challan_qty" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Rate</Label><Input v-model="form.doc_female_rate" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_female_rate" class="mt-1" /></div>
-            <div class="flex flex-col mb-2"><Label>Value Total</Label><Input v-model="form.doc_female_value_total" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.doc_female_value_total" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Box</Label><Input v-model="form.ps_female_box" type="number" class="mt-2" /><InputError :message="form.errors.ps_female_box" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Approx Qty</Label><Input v-model="form.ps_female_approximate_qty" type="number" class="mt-2" /><InputError :message="form.errors.ps_female_approximate_qty" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Total Qty</Label><Input v-model="form.ps_female_totalqty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.ps_female_totalqty" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Challan Qty</Label><Input v-model="form.ps_challan_qty" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.ps_challan_qty" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Rate</Label><Input v-model="form.ps_female_rate" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.ps_female_rate" class="mt-1" /></div>
+            <div class="flex flex-col mb-2"><Label>Value Total</Label><Input v-model="form.ps_female_value_total" type="number" step="0.01" class="mt-2" /><InputError :message="form.errors.ps_female_value_total" class="mt-1" /></div>
           </div>
         </div>
 
@@ -261,13 +274,13 @@ function submit() {
         <div class="grid grid-cols-2 gap-4 items-center">
           <div class="flex flex-col mb-2">
             <Label>Total Box</Label>
-            <Input v-model="form.doc_totalbox" type="number" step="0.01" class="mt-2" />
-            <InputError :message="form.errors.doc_totalbox" class="mt-1" />
+            <Input v-model="form.ps_totalbox" type="number" step="0.01" class="mt-2" />
+            <InputError :message="form.errors.ps_totalbox" class="mt-1" />
           </div>
           <div class="flex flex-col mb-2">
             <Label>Total Value</Label>
-            <Input v-model="form.doc_value_total" type="number" step="0.01" class="mt-2" />
-            <InputError :message="form.errors.doc_value_total" class="mt-1" />
+            <Input v-model="form.ps_value_total" type="number" step="0.01" class="mt-2" />
+            <InputError :message="form.errors.ps_value_total" class="mt-1" />
           </div>
         </div>
 
