@@ -13,7 +13,7 @@ class ShedController extends Controller
      */
     public function index()
     {
-        return Inertia::render('library/shed/Shed');
+        return Inertia::render('library/shed/List');
     }
 
     /**

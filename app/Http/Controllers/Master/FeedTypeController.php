@@ -13,7 +13,7 @@ class FeedTypeController extends Controller
      */
     public function index()
     {
-        return Inertia::render('library/feedType/Feedtype');
+        return Inertia::render('library/feedType/List');
     }
 
     /**

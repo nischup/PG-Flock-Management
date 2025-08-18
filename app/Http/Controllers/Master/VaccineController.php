@@ -13,7 +13,7 @@ class VaccineController extends Controller
      */
     public function index()
     {
-        return Inertia::render('library/vaccine/Vaccine');
+        return Inertia::render('library/vaccine/List');
     }
 
     /**

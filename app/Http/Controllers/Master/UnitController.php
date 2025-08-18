@@ -13,7 +13,7 @@ class UnitController extends Controller
      */
     public function index()
     {
-         return Inertia::render('library/unit/Unit');
+         return Inertia::render('library/unit/List');
     }
 
     /**

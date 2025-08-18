@@ -21,6 +21,7 @@ const feeds = ref<Feed[]>([
   { id: 3, feed_type: 'Broiler', feed_name: 'Finisher Feed', created_at: '2025-08-03', status: 'Deactivated' }
 ]);
 
+// Modal + form state
 const showModal = ref(false);
 const editingFeed = ref<Feed | null>(null);
 const openDropdownId = ref<number | null>(null);
@@ -31,7 +32,37 @@ const form = useForm({
   status: 'Active'
 });
 
-// Add or Update Feed
+// For draggable modal
+const modalRef = ref<HTMLElement | null>(null);
+let offsetX = 0;
+let offsetY = 0;
+let isDragging = false;
+
+const startDrag = (event: MouseEvent) => {
+  if (!modalRef.value) return;
+  isDragging = true;
+  const rect = modalRef.value.getBoundingClientRect();
+  offsetX = event.clientX - rect.left;
+  offsetY = event.clientY - rect.top;
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('mouseup', stopDrag);
+};
+
+const onDrag = (event: MouseEvent) => {
+  if (!isDragging || !modalRef.value) return;
+  modalRef.value.style.left = `${event.clientX - offsetX}px`;
+  modalRef.value.style.top = `${event.clientY - offsetY}px`;
+  modalRef.value.style.position = 'absolute';
+  modalRef.value.style.margin = '0'; // prevent centering
+};
+
+const stopDrag = () => {
+  isDragging = false;
+  document.removeEventListener('mousemove', onDrag);
+  document.removeEventListener('mouseup', stopDrag);
+};
+
+// Save or Update feed
 const submit = () => {
   if (!form.feed_name.trim()) {
     form.setError('feed_name', 'The feed name is required.');
@@ -39,10 +70,12 @@ const submit = () => {
   }
 
   if (editingFeed.value) {
+    // Update
     editingFeed.value.feed_type = form.feed_type as 'Broiler' | 'Layer';
     editingFeed.value.feed_name = form.feed_name;
     editingFeed.value.status = form.status as 'Active' | 'Deactivated';
   } else {
+    // Add new
     feeds.value.push({
       id: feeds.value.length + 1,
       feed_type: form.feed_type as 'Broiler' | 'Layer',
@@ -52,13 +85,19 @@ const submit = () => {
     });
   }
 
+  resetForm();
+};
+
+// Reset form
+const resetForm = () => {
   form.reset();
   form.feed_type = 'Broiler';
+  form.status = 'Active';
   editingFeed.value = null;
   showModal.value = false;
 };
 
-// Edit Feed
+// Edit feed
 const editFeed = (feed: Feed) => {
   editingFeed.value = feed;
   form.feed_type = feed.feed_type;
@@ -68,13 +107,13 @@ const editFeed = (feed: Feed) => {
   openDropdownId.value = null;
 };
 
-// Toggle Active / Deactivated
+// Toggle Active/Deactivated
 const toggleStatus = (feed: Feed) => {
   feed.status = feed.status === 'Active' ? 'Deactivated' : 'Active';
   openDropdownId.value = null;
 };
 
-// Toggle dropdown menu
+// Toggle dropdown
 const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id;
 };
@@ -90,10 +129,11 @@ const breadcrumbs = [
   <AppLayout :breadcrumbs="breadcrumbs">
     <Head title="Feeds" />
     <div class="px-4 py-6">
+      <!-- Header -->
       <div class="flex items-center justify-between mb-4">
         <HeadingSmall title="Feeds List" />
         <Button class="bg-chicken hover:bg-yellow-600 text-white" @click="showModal = true">
-          Add New Feed
+          + Add New
         </Button>
       </div>
 
@@ -132,10 +172,7 @@ const breadcrumbs = [
                 class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10"
               >
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="editFeed(feed)">✏ Edit</button>
-                <button
-                  class="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  @click="toggleStatus(feed)"
-                >
+                <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(feed)">
                   {{ feed.status === 'Active' ? 'Deactivate' : 'Activate' }}
                 </button>
               </div>
@@ -145,51 +182,69 @@ const breadcrumbs = [
       </table>
     </div>
 
-    <!-- Modal -->
-<div v-if="showModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center">
-  <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-    <h2 class="text-lg font-bold mb-4">{{ editingFeed ? 'Edit Feed' : 'Add Feed' }}</h2>
-
-    <!-- Feed Type -->
-    <Label for="feed_type" class="mb-1 block">Feed Type</Label>
-    <select
-      v-model="form.feed_type"
-      id="feed_type"
-      class="mb-3 border border-gray-300 rounded-lg px-3 py-2 w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+    <!-- Vue Modal (draggable + shaded border) -->
+    <div
+      v-if="showModal"
+      class="fixed inset-0 z-50 flex justify-center pt-6"
+      @click.self="showModal = false"
     >
-      <option value="Broiler">Broiler</option>
-      <option value="Layer">Layer</option>
-    </select>
+      <div
+        ref="modalRef"
+        class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl"
+        style="top: 100px; position: absolute;"
+      >
+        <!-- Modal header (drag handle) -->
+        <div
+          class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move"
+          @mousedown="startDrag"
+        >
+          <h3 class="text-xl font-semibold text-gray-900">
+            {{ editingFeed ? 'Edit Feed' : 'Add New Feed' }}
+          </h3>
+          <button
+            type="button"
+            class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center"
+            @click="resetForm"
+          >
+            ✕
+          </button>
+        </div>
 
-    <!-- Feed Name -->
-    <Label for="feed_name" class="mb-1 block">Feed Name</Label>
-    <Input
-      v-model="form.feed_name"
-      id="feed_name"
-      placeholder="Enter feed name"
-      class="mb-3 border border-gray-300 rounded-lg px-3 py-2 w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
-    />
-    <div v-if="form.errors.feed_name" class="text-red-500 text-sm mb-3">
-      {{ form.errors.feed_name }}
+        <!-- Modal body -->
+        <div class="p-4 space-y-4">
+          <div>
+            <Label for="feed_type" class="mb-2">Feed Type</Label>
+            <select v-model="form.feed_type" id="feed_type" class="w-full border rounded p-2">
+              <option value="Broiler">Broiler</option>
+              <option value="Layer">Layer</option>
+            </select>
+          </div>
+
+          <div>
+            <Label for="feed_name" class="mb-2">Feed Name</Label>
+            <Input v-model="form.feed_name" id="feed_name" />
+            <span v-if="form.errors.feed_name" class="text-red-600 text-sm">{{ form.errors.feed_name }}</span>
+          </div>
+
+          <div>
+            <Label for="status" class="mb-2">Status</Label>
+            <select v-model="form.status" id="status" class="w-full border rounded p-2">
+              <option value="Active">Active</option>
+              <option value="Deactivated">Deactivated</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="flex justify-end p-4 border-t border-gray-200">
+          <Button class="bg-gray-300 text-black mr-2" @click="resetForm">
+            Cancel
+          </Button>
+          <Button class="bg-chicken text-white" @click="submit">
+            {{ editingFeed ? 'Update' : 'Save' }}
+          </Button>
+        </div>
+      </div>
     </div>
-
-    <!-- Status -->
-    <Label for="status" class="mb-1 block">Status</Label>
-    <select
-      v-model="form.status"
-      id="status"
-      class="mb-4 border border-gray-300 rounded-lg px-3 py-2 w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
-    >
-      <option value="Active">Active</option>
-      <option value="Deactivated">Deactivated</option>
-    </select>
-
-    <!-- Buttons -->
-    <div class="flex justify-end gap-2">
-      <Button variant="secondary" @click="showModal = false; editingFeed = null">Cancel</Button>
-      <Button @click="submit">{{ editingFeed ? 'Update' : 'Save' }}</Button>
-    </div>
-  </div>
-</div>
   </AppLayout>
 </template>

@@ -13,7 +13,7 @@ class FeedController extends Controller
      */
     public function index()
     {
-        return Inertia::render('library/feed/Feed');
+        return Inertia::render('library/feed/List');
     }
 
     /**

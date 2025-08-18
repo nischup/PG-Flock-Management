@@ -13,7 +13,7 @@ class ChickTypeController extends Controller
      */
     public function index()
     {
-        return Inertia::render('library/chickType/ChickType');
+        return Inertia::render('library/chickType/List');
     }
 
     /**
