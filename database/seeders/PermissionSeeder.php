@@ -20,15 +20,14 @@ class PermissionSeeder extends Seeder
             'role.create',
             'role.edit',
             'role.delete',
-            
 
-            'report.view',
-            'report.generate',
-            'doc-receive.view',
-            'doc-receive.create',
-            'doc-receive.edit',
-            'doc-receive.delete', 
+            'ps.receive.view',
+            'ps.receive.create',
+            'ps.receive.edit',
+            'ps.receive.delete',
         ];
+
+        
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
@@ -40,21 +39,21 @@ class PermissionSeeder extends Seeder
         // Assign all permissions to SuperAdmin
         $superAdminRole->syncPermissions(Permission::all());
 
-        // 🔹 Create default SuperAdmin user with company_id=1 and shed_id=1
-        $user = User::firstOrCreate(
-            ['email' => 'provita@mail.com'], // unique field
-            [
+        $userExists = User::role('superadmin')->exists();
+
+        if (!$userExists) {
+            // Create default SuperAdmin user if none exists
+            $user = User::create([
                 'name'       => 'PG Admin',
-                'password'   => Hash::make('password'), // change this to secure password
+                'email'      => 'provita@mail.com',
+                'password'   => Hash::make('12345678'), // ⚠️ change to secure password
                 'company_id' => 1,
                 'shed_id'    => 1,
-            ]
-        );
+            ]);
 
-        // Assign role to the user
-        if ($user) {
             $user->assignRole($superAdminRole);
         }
+
         
     }
 }
