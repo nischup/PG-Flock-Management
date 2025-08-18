@@ -3,7 +3,7 @@ import { Head, useForm, Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { ref, computed } from 'vue';
 import type { BreadcrumbItem } from '@/types';
-
+import InputError from '@/components/InputError.vue';
 const props = defineProps({
   user: Object,             // User object
   roles: Array,             // All roles
@@ -118,14 +118,15 @@ function update() {
         <div>
           <label class="block text-sm font-medium mb-1">Name</label>
           <input v-model="form.name" type="text" class="w-full rounded-md border border-gray-300 dark:border-gray-700 px-4 py-2" />
-          <div v-if="form.errors.name" class="text-red-500 text-sm mt-1">{{ form.errors.name }}</div>
+          
+          <InputError :message="form.errors.name" class="mt-1" />
         </div>
 
         <!-- Email -->
         <div>
           <label class="block text-sm font-medium mb-1">Email</label>
           <input v-model="form.email" type="email" class="w-full rounded-md border border-gray-300 dark:border-gray-700 px-4 py-2" />
-          <div v-if="form.errors.email" class="text-red-500 text-sm mt-1">{{ form.errors.email }}</div>
+          <InputError :message="form.errors.email" class="mt-1" />
         </div>
         <!-- Password -->
         <div>
@@ -136,7 +137,7 @@ function update() {
             placeholder="New password"
             class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-2"
           />
-          <div v-if="form.errors.password" class="text-red-500 text-sm mt-1">{{ form.errors.password }}</div>
+          <InputError :message="form.errors.password" class="mt-1" />
         </div>
         <!-- Company -->
         <div>
@@ -145,7 +146,7 @@ function update() {
             <option value="0">-- All Company --</option>
             <option v-for="c in companies" :key="c.id" :value="c.id">{{ c.name }}</option>
           </select>
-          <div v-if="form.errors.company_id" class="text-red-500 text-sm mt-1">{{ form.errors.company_id }}</div>
+          <InputError :message="form.errors.company_id" class="mt-1" />
         </div>
 
         <!-- Shed -->
@@ -155,7 +156,7 @@ function update() {
             <option value="0">-- All Shed --</option>
             <option v-for="s in sheds" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
-          <div v-if="form.errors.shed_id" class="text-red-500 text-sm mt-1">{{ form.errors.shed_id }}</div>
+           <InputError :message="form.errors.shed_id" class="mt-1" />
         </div>
 
         <!-- Role -->
@@ -165,7 +166,7 @@ function update() {
             <option value="">-- Select Role --</option>
             <option v-for="r in roles" :key="r.id" :value="r.name">{{ r.name }}</option>
           </select>
-          <div v-if="form.errors.role" class="text-red-500 text-sm mt-1">{{ form.errors.role }}</div>
+          <InputError :message="form.errors.role" class="mt-1" />
         </div>
 
         <!-- Permissions Accordion -->
@@ -190,7 +191,7 @@ function update() {
               </div>
             </div>
           </div>
-          <div v-if="form.errors.permissions" class="text-red-500 text-sm mt-1">{{ form.errors.permissions }}</div>
+          <InputError :message="form.errors.permissions" class="mt-1" />
         </div>
 
         <!-- Submit -->

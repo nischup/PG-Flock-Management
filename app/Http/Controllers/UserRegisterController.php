@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -9,18 +10,14 @@ use Spatie\Permission\Models\Role;
 use App\Models\Master\Company;
 use App\Models\Master\Shed;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UserRegisterController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-       
-        
-       $users = User::query()
+        $users = User::query()
             ->with(['roles', 'permissions', 'company', 'shed'])
             ->visibleFor()
             ->when($request->search, fn($q) => $q->where('name', 'like', "%{$request->search}%"))
@@ -31,70 +28,55 @@ class UserRegisterController extends Controller
             'users' => $users,
             'filters' => $request->only(['search', 'per_page']),
         ]);
-
-
-
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return Inertia::render('user/register/Create', [
             'roles' => Role::all(),
             'permissions' => Permission::all(),
-            'companies' => Company::all(),  // new
-            'sheds' => Shed::all(),         // new
+            'companies' => Company::all(),
+            'sheds' => Shed::all(),
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        
-
-
         $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email',
-                'role' => 'required|string|exists:roles,name',
-                'permissions' => 'nullable|array',
-                'permissions.*' => 'string|exists:permissions,name',
-                'password' => 'required|string|min:8',
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:users,email',
+            'role'        => 'required|string|exists:roles,name',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string|exists:permissions,name',
+            'password'    => 'required|string|min:8',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $user = User::create([
+                'name'     => $request->name,
+                'email'    => $request->email,
+                'password' => Hash::make($request->password),
+                'company_id' => $request->company_id,
+                'shed_id'    => $request->shed_id,
             ]);
 
-                $user = User::create([
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    // You need to set a password or generate one here
-                    'password' => Hash::make($request->password), // Replace with actual password handling
-                ]);
+            $user->syncRoles([$request->role]);
+            $user->syncPermissions($request->permissions ?? []);
 
-                // Assign role
-                $user->syncRoles($request->role ? [$request->role] : []);
+            DB::commit();
 
-                // Assign direct permissions if any
-                if ($request->has('permissions')) {
-                    $user->syncPermissions($request->permissions ?? []);
-                }
+            return redirect()->route('users.index')
+                ->with('success', 'User created successfully.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('User create failed', ['error' => $e->getMessage()]);
 
-                return redirect()->route('users.index')->with('success', 'User created successfully.');
+            return back()->withErrors(['general' => 'Failed to create user. Please try again.']);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(User $user)
     {
         return Inertia::render('user/register/Edit', [
@@ -102,50 +84,66 @@ class UserRegisterController extends Controller
             'roles' => Role::all(),
             'permissions' => Permission::all(),
             'userPermissions' => $user->getDirectPermissions()->pluck('name'),
-            'userRole' => $user->roles->pluck('name')->first(), // 👈 this line is key
+            'userRole' => $user->roles->pluck('name')->first(),
             'companies' => Company::all(['id', 'name']),
-            'sheds' => Shed::all(['id', 'name']),        // <-- send sheds
+            'sheds' => Shed::all(['id', 'name']),
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'roles' => 'array',
-            'roles.*' => 'string|exists:roles,name',
+            'role' => 'required|string|exists:roles,name',
             'permissions' => 'array',
-            'permissions.*' => 'string|exists:permissions,name', 
+            'permissions.*' => 'string|exists:permissions,name',
             'password' => 'nullable|string|min:8',
         ]);
 
-        $updateData = [
-            'company_id' => $request->company_id,
-            'shed_id' => $request->shed_id,
-        ];
+        try {
+            DB::beginTransaction();
 
-        // Only update password if a new one is provided
-        if ($request->filled('password')) {
-            $updateData['password'] = Hash::make($request->password);
+            $updateData = [
+                'company_id' => $request->company_id,
+                'shed_id'    => $request->shed_id,
+            ];
+
+            if ($request->filled('password')) {
+                $updateData['password'] = Hash::make($request->password);
+            }
+
+            $user->update($updateData);
+            $user->syncRoles([$request->role]);
+            $user->syncPermissions($request->permissions ?? []);
+
+            DB::commit();
+
+            return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('User update failed', ['error' => $e->getMessage()]);
+
+            return back()->withErrors(['general' => 'Failed to update user. Please try again.']);
         }
-
-        $user->update($updateData);
-
-        $user->syncRoles($request->role ? [$request->role] : []);
-        $user->syncPermissions($request->permissions ?? []);
-
-        return redirect()->route('users.index')->with('success', 'User updated');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(User $user)
     {
+        try {
         $user->delete();
 
-        return redirect()->route('user-role.index')->with('success', 'User deleted.');
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'User deleted successfully.']);
+        }
+
+        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+    } catch (\Throwable $e) {
+        Log::error('User delete failed', ['error' => $e->getMessage()]);
+
+        if (request()->wantsJson()) {
+            return response()->json(['success' => false, 'message' => 'Failed to delete user.'], 500);
+        }
+
+        return back()->withErrors(['general' => 'Failed to delete user.']);
+     }
     }
 }

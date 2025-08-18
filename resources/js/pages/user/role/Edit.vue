@@ -3,7 +3,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { ref, computed, reactive, watch } from 'vue';
 import type { BreadcrumbItem } from '@/types';
-
+import InputError from '@/components/InputError.vue';
 // Props from backend
 const props = defineProps<{
   role: { id: number; name: string };
@@ -99,7 +99,7 @@ function updateRole() {
         <div>
           <label class="block text-sm font-medium mb-1">Role Name</label>
           <input v-model="form.name" type="text" class="w-full rounded border px-3 py-2" />
-          <div v-if="form.errors.name" class="text-red-500 text-sm">{{ form.errors.name }}</div>
+          <InputError :message="form.errors.name" class="mt-1" />
         </div>
 
         <!-- Permissions -->
@@ -132,7 +132,8 @@ function updateRole() {
             </div>
           </div>
 
-          <div v-if="form.errors.permissions" class="text-red-500 text-sm">{{ form.errors.permissions }}</div>
+          
+          <InputError :message="form.errors.permissions" class="mt-1" />
         </div>
 
         <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded">

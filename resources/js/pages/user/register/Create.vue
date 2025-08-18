@@ -3,7 +3,8 @@ import { Head, useForm, Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { ref, computed } from 'vue';
 import { type BreadcrumbItem } from '@/types';
-
+import InputError from '@/components/InputError.vue';
+import { useNotifier } from "@/composables/useNotifier"
 const props = defineProps({
   roles: Array,
   permissions: Array, // [{ id: 1, name: 'user.view' }, { id: 2, name: 'user.edit' }]
@@ -21,8 +22,21 @@ const form = useForm({
   shed_id: 0,
 });
 
+const { showSuccess, showError } = useNotifier(); // auto-shows flash messages
+
 function submit() {
-  form.post('/user-register', { preserveScroll: true });
+  form.post(route('users.store'), {
+    onSuccess: () => {
+      showSuccess('User created successfully.');
+    },
+    onError: () => {
+      if (form.errors.general) {
+        showError(form.errors.general);
+      } else {
+        showError('Validation failed. Please check the form.');
+      }
+    },
+  });
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -106,14 +120,15 @@ function toggleSelectAll(group: string) {
         <div>
           <label class="block mb-1 font-medium">Name</label>
           <input v-model="form.name" type="text" class="w-full border rounded px-3 py-2" />
-          <div v-if="form.errors.name" class="text-red-500 text-sm">{{ form.errors.name }}</div>
+          
+          <InputError :message="form.errors.name" class="mt-1" />
         </div>
 
         <!-- Email -->
         <div>
           <label class="block mb-1 font-medium">Email</label>
           <input v-model="form.email" type="email" class="w-full border rounded px-3 py-2" />
-          <div v-if="form.errors.email" class="text-red-500 text-sm">{{ form.errors.email }}</div>
+          <InputError :message="form.errors.email" class="mt-1" />
         </div>
 
         <!-- Password -->
@@ -125,7 +140,7 @@ function toggleSelectAll(group: string) {
             class="w-full border rounded px-3 py-2"
             placeholder="Enter password"
           />
-          <div v-if="form.errors.password" class="text-red-500 text-sm">{{ form.errors.password }}</div>
+          <InputError :message="form.errors.password" class="mt-1" />
         </div>
 
         <!-- Company -->

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
+import InputError from '@/components/InputError.vue';
 import { ref, computed, reactive, watch } from 'vue';
 import type { BreadcrumbItem } from '@/types';
-
+import { useNotifier } from "@/composables/useNotifier"
 // Accept flexible shapes coming from Spatie
 type PermInput = string | { id: number | string; name: string; [k: string]: any };
 
@@ -85,9 +86,22 @@ function isModuleAllSelected(module: string) {
   return groupedPermissions.value[module].every(p => form.permissions.includes(p.key));
 }
 
-// Submit
+
+const { showSuccess, showError } = useNotifier(); // auto-shows flash messages
+
 function submit() {
-  form.post('/user-role'); // backend: validate permissions.* exists:permissions,name and syncPermissions($request->permissions)
+  form.post(route('user-role.store'), {
+    onSuccess: () => {
+      showSuccess('User created successfully.');
+    },
+    onError: () => {
+      if (form.errors.general) {
+        showError(form.errors.general);
+      } else {
+        showError('Validation failed. Please check the form.');
+      }
+    },
+  });
 }
 </script>
 
@@ -116,7 +130,7 @@ function submit() {
             type="text"
             class="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-2"
           />
-          <div v-if="form.errors.name" class="text-red-500 text-sm mt-1">{{ form.errors.name }}</div>
+          <InputError :message="form.errors.name" class="mt-1" />
         </div>
 
         <!-- Accordions per module -->

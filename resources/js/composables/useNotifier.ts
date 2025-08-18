@@ -1,10 +1,13 @@
 // resources/js/Composables/useNotifier.ts
 import Swal from 'sweetalert2';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
+import { watch } from 'vue';
 
 type AlertIcon = 'success' | 'info' | 'error' | 'warning' | 'question';
 
 export function useNotifier() {
+  const page = usePage();
+
   const showAlert = ({
     title = '',
     text = '',
@@ -78,6 +81,20 @@ export function useNotifier() {
       }
     });
   };
+
+  // 🔹 Auto show flash messages from Laravel
+  watch(
+    () => page.props.flash,
+    (flash) => {
+      if (flash?.success) {
+        showSuccess(flash.success);
+      }
+      if (flash?.error) {
+        showError(flash.error);
+      }
+    },
+    { deep: true, immediate: true }
+  );
 
   return {
     showAlert,
