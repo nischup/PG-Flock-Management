@@ -13,7 +13,15 @@ class ShedController extends Controller
     public function index()
     {
         try {
-            $sheds = Shed::orderBy('id', 'desc')->get()->toArray();
+            // Get all sheds as array
+            $sheds = Shed::orderBy('id', 'desc')->get()->map(function($shed) {
+                return [
+                    'id' => $shed->id,
+                    'name' => $shed->name,
+                    'status' => $shed->status,
+                    'created_at' => $shed->created_at->format('Y-m-d H:i:s'),
+                ];
+            })->toArray();
 
             return Inertia::render('library/shed/List', [
                 'sheds' => $sheds,
@@ -32,9 +40,17 @@ class ShedController extends Controller
         ]);
 
         try {
-            Shed::create($request->all());
+            $shed = Shed::create($request->all());
 
-            return redirect()->route('shed.index')->with('success', 'Shed created successfully!');
+            // Return new shed as array
+            $newShed = [
+                'id' => $shed->id,
+                'name' => $shed->name,
+                'status' => $shed->status,
+                'created_at' => $shed->created_at->format('Y-m-d H:i:s'),
+            ];
+
+            return redirect()->route('shed.index')->with('success', 'Shed created successfully!')->with('newShed', $newShed);
         } catch (\Exception $e) {
             Log::error('Shed store error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->with('error', 'Failed to create shed.');
@@ -51,7 +67,14 @@ class ShedController extends Controller
         try {
             $shed->update($request->all());
 
-            return redirect()->route('shed.index')->with('success', 'Shed updated successfully!');
+            $updatedShed = [
+                'id' => $shed->id,
+                'name' => $shed->name,
+                'status' => $shed->status,
+                'created_at' => $shed->created_at->format('Y-m-d H:i:s'),
+            ];
+
+            return redirect()->route('shed.index')->with('success', 'Shed updated successfully!')->with('updatedShed', $updatedShed);
         } catch (\Exception $e) {
             Log::error('Shed update error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->with('error', 'Failed to update shed.');
@@ -62,7 +85,6 @@ class ShedController extends Controller
     {
         try {
             $shed->delete();
-
             return redirect()->route('shed.index')->with('success', 'Shed deleted successfully!');
         } catch (\Exception $e) {
             Log::error('Shed delete error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
