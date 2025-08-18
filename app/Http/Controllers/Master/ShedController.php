@@ -5,62 +5,47 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Master\Shed;
 
 class ShedController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return Inertia::render('library/shed/List');
+        $sheds = Shed::orderBy('id', 'desc')->get();
+
+        return Inertia::render('library/shed/List', [
+            'sheds' => $sheds,
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name'   => 'required|string|max:200',
+            'status' => 'required|in:0,1',
+        ]);
+
+        Shed::create($request->all());
+
+        return redirect()->route('shed.index')->with('success', 'Shed deleted successfully!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(Request $request, Shed $shed)
     {
-        //
+        $request->validate([
+            'name'   => 'required|string|max:200',
+            'status' => 'required|in:0,1',
+        ]);
+
+        $shed->update($request->all());
+
+       return redirect()->route('shed.index')->with('success', 'Shed deleted successfully!');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function destroy(Shed $shed)
     {
-        //
-    }
+        $shed->delete();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->route('shed.index')->with('success', 'Shed deleted successfully!');
     }
 }
