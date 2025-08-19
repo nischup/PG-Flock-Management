@@ -30,7 +30,8 @@ Route::get('chick-type', [ChickTypeController::class, 'index'])->name('chick-typ
 Route::get('feed', [FeedController::class, 'index'])->name('feed');
 Route::get('feed-type', [FeedTypeController::class, 'index'])->name('feed-type');
 Route::get('company', [CompanyController::class, 'index'])->name('company');
-Route::get('medicine', [MedicineController::class, 'index'])->name('medicine');
+Route::resource('medicine', MedicineController::class);
+
 Route::resource('shed', ShedController::class);
 
 Route::get('unit', [UnitController::class, 'index'])->name('medicine');
