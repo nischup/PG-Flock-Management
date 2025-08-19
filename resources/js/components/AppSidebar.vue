@@ -31,11 +31,11 @@ const mainNavItems: NavItem[] = [
       },
       {
         title: 'PS Lab Test',
-        href: '/doc-lab-test',
+        href: '/ps-lab-test',
         icon: BabyChick
       },
       {
-        title: 'PS Factory Receive',
+        title: 'PS Firm Receive',
         href: '/user-role',
         icon: BabyChick
       }
