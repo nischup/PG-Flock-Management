@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class ShedController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
             // Get all sheds as array
@@ -25,6 +25,7 @@ class ShedController extends Controller
 
             return Inertia::render('library/shed/List', [
                 'sheds' => $sheds,
+                'filters' => $request->only(['search', 'per_page', 'page'])
             ]);
         } catch (\Exception $e) {
             Log::error('Shed index error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);

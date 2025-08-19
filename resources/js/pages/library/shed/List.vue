@@ -7,6 +7,10 @@ import HeadingSmall from '@/components/HeadingSmall.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useNotifier } from '@/composables/useNotifier'
+import { useListFilters } from '@/composables/useListFilters';
+import { usePermissions } from '@/composables/usePermissions';
+
 
 interface Shed {
   id: number
@@ -15,7 +19,17 @@ interface Shed {
   created_at: string
 }
 
-const props = defineProps<{ sheds: Shed[] }>()
+const props = defineProps<{ sheds: Shed[];
+  filters: { search?: string; per_page?: number; page?: number };
+}>()
+
+useListFilters({
+  routeName: '/shed',
+  filters: props.filters,
+});
+
+const { can } = usePermissions();
+
 const sheds = ref<Shed[]>([...props.sheds])
 
 // Modal state
@@ -77,11 +91,10 @@ const resetForm = () => {
   editingShed.value = null
   showModal.value = false
 }
-
+useNotifier();
 // Submit (Create/Update)
 const submit = () => {
   if (!form.name.trim()) {
-    Swal.fire('Validation Error', 'The shed name is required.', 'warning')
     return
   }
 
@@ -93,11 +106,9 @@ const submit = () => {
         if (i !== -1) {
           sheds.value[i] = { ...sheds.value[i], name: form.name, status: form.status }
         }
-        Swal.fire('Success!', 'Shed updated successfully.', 'success')
         resetForm()
       },
       onError: () => {
-        Swal.fire('Error!', 'Failed to update shed.', 'error')
       }
     })
   } else {
@@ -115,11 +126,9 @@ const submit = () => {
             created_at: new Date().toISOString(),
           })
         }
-        Swal.fire('Success!', 'Shed created successfully.', 'success')
         resetForm()
       },
       onError: () => {
-        Swal.fire('Error!', 'Failed to create shed.', 'error')
       }
     })
   }
@@ -143,7 +152,6 @@ const toggleStatus = (shed: Shed) => {
       onSuccess: () => {
         const i = sheds.value.findIndex(s => s.id === shed.id)
         if (i !== -1) sheds.value[i].status = newStatus
-        Swal.fire('Updated!', newStatus === 1 ? 'Shed activated' : 'Shed Inactive', 'success')
       },
       onError: () => {
         Swal.fire('Error!', 'Could not update status.', 'error')
@@ -156,33 +164,33 @@ const toggleStatus = (shed: Shed) => {
 }
 
 // Delete shed
-const deleteShed = (shed: Shed) => {
-  Swal.fire({
-    title: 'Are you sure?',
-    text: `You are about to delete shed "${shed.name}"!`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      router.delete(route('shed.destroy', shed.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-          sheds.value = sheds.value.filter(s => s.id !== shed.id)
-          Swal.fire('Deleted!', 'Shed has been deleted.', 'success')
-        },
-        onError: () => {
-          Swal.fire('Error!', 'Could not delete shed.', 'error')
-        },
-        onFinish: () => {
-          openDropdownId.value = null
-        },
-      })
-    }
-  })
-}
+// const deleteShed = (shed: Shed) => {
+//   Swal.fire({
+//     title: 'Are you sure?',
+//     text: `You are about to delete shed "${shed.name}"!`,
+//     icon: 'warning',
+//     showCancelButton: true,
+//     confirmButtonColor: '#d33',
+//     cancelButtonColor: '#3085d6',
+//     confirmButtonText: 'Yes, delete it!',
+//   }).then((result) => {
+//     if (result.isConfirmed) {
+//       router.delete(route('shed.destroy', shed.id), {
+//         preserveScroll: true,
+//         onSuccess: () => {
+//           sheds.value = sheds.value.filter(s => s.id !== shed.id)
+//           Swal.fire('Deleted!', 'Shed has been deleted.', 'success')
+//         },
+//         onError: () => {
+//           Swal.fire('Error!', 'Could not delete shed.', 'error')
+//         },
+//         onFinish: () => {
+//           openDropdownId.value = null
+//         },
+//       })
+//     }
+//   })
+// }
 
 // Breadcrumbs
 const breadcrumbs = [
@@ -194,15 +202,18 @@ const breadcrumbs = [
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
     <Head title="Sheds" />
-
+    <!-- Filters -->
+      <FilterControls :filters="props.filters" routeName="/shed" />
     <div class="px-4 py-6">
       <!-- Header -->
       <div class="flex items-center justify-between mb-4">
         <HeadingSmall title="Sheds List" />
-        <Button class="bg-chicken hover:bg-yellow-600 text-white" @click="openModal()">
+        <Button v-if="can('shed.create')" class="bg-chicken hover:bg-yellow-600 text-white" @click="openModal()">
           + Add New
         </Button>
       </div>
+
+
 
       <!-- Table -->
       <table class="w-full border">
@@ -240,9 +251,9 @@ const breadcrumbs = [
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(shed)">
                   {{ shed.status === 1 ? 'Inactive' : 'Activate' }}
                 </button>
-                <button class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" @click="deleteShed(shed)">
+                <!-- <button class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" @click="deleteShed(shed)">
                   🗑 Delete
-                </button>
+                </button> -->
               </div>
             </td>
           </tr>
@@ -300,6 +311,8 @@ const breadcrumbs = [
           </Button>
         </div>
       </div>
+
+
     </div>
   </AppLayout>
 </template>

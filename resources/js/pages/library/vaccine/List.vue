@@ -1,88 +1,190 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
-import HeadingSmall from '@/components/HeadingSmall.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { Head, useForm, router } from '@inertiajs/vue3'
+import Swal from 'sweetalert2'
+import AppLayout from '@/layouts/AppLayout.vue'
+import HeadingSmall from '@/components/HeadingSmall.vue'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useNotifier } from '@/composables/useNotifier'
+import { usePermissions } from '@/composables/usePermissions'
+import { useListFilters } from '@/composables/useListFilters'
 
 interface Vaccine {
-  id: number;
-  name: string;
-  created_at: string;
-  status: 'Active' | 'Deactivated';
+  id: number
+  name: string
+  status: number // 1 = Active, 0 = Deactivated
+  created_at: string
 }
 
-const vaccines = ref<Vaccine[]>([
-  { id: 1, name: 'Newcastle', created_at: '2025-08-01', status: 'Active' },
-  { id: 2, name: 'Fowl Pox', created_at: '2025-08-02', status: 'Active' }
-]);
+const props = defineProps<{
+  vaccines: Vaccine[]
+  filters: { search?: string; per_page?: number; page?: number }
+}>()
 
-const showModal = ref(false);
-const editingVaccine = ref<Vaccine | null>(null);
+useListFilters({
+  routeName: '/vaccine',
+  filters: props.filters,
+})
 
+const { can } = usePermissions()
+const vaccines = ref<Vaccine[]>([...props.vaccines])
+
+// Modal state
+const showModal = ref(false)
+const editingVaccine = ref<Vaccine | null>(null)
+
+// Form
 const form = useForm({
   name: '',
-  status: 'Active'
-});
+  status: 1,
+})
 
-// Add or Update Vaccine
-const submit = () => {
-  if (!form.name.trim()) {
-    form.setError('name', 'The vaccine name is required.');
-    return;
+// Draggable modal
+const modalRef = ref<HTMLElement | null>(null)
+let offsetX = 0, offsetY = 0, isDragging = false
+
+const startDrag = (event: MouseEvent) => {
+  if (!modalRef.value) return
+  isDragging = true
+  const rect = modalRef.value.getBoundingClientRect()
+  offsetX = event.clientX - rect.left
+  offsetY = event.clientY - rect.top
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+}
+
+const onDrag = (event: MouseEvent) => {
+  if (!isDragging || !modalRef.value) return
+  modalRef.value.style.left = `${event.clientX - offsetX}px`
+  modalRef.value.style.top = `${event.clientY - offsetY}px`
+  modalRef.value.style.position = 'absolute'
+  modalRef.value.style.margin = '0'
+}
+
+const stopDrag = () => {
+  isDragging = false
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+}
+
+// Open modal
+const openModal = (vaccine: Vaccine | null = null) => {
+  if (vaccine) {
+    editingVaccine.value = vaccine
+    form.name = vaccine.name
+    form.status = vaccine.status
+  } else {
+    editingVaccine.value = null
+    form.reset()
+    form.status = 1
   }
+  showModal.value = true
+}
+
+// Reset form
+const resetForm = () => {
+  form.reset()
+  form.status = 1
+  editingVaccine.value = null
+  showModal.value = false
+}
+
+useNotifier()
+
+// Submit (Create/Update)
+const submit = () => {
+  if (!form.name.trim()) return
 
   if (editingVaccine.value) {
-    editingVaccine.value.name = form.name;
-    editingVaccine.value.status = form.status as 'Active' | 'Deactivated';
+    form.put(route('vaccine.update', editingVaccine.value.id), {
+      preserveScroll: true,
+      onSuccess: () => {
+        const i = vaccines.value.findIndex(v => v.id === editingVaccine.value!.id)
+        if (i !== -1) {
+          vaccines.value[i] = { ...vaccines.value[i], name: form.name, status: form.status }
+        }
+        resetForm()
+      },
+    })
   } else {
-    vaccines.value.push({
-      id: vaccines.value.length + 1,
-      name: form.name,
-      created_at: new Date().toISOString().slice(0, 10),
-      status: form.status as 'Active' | 'Deactivated'
-    });
+    form.post(route('vaccine.store'), {
+      preserveScroll: true,
+      onSuccess: (page) => {
+        if ((page as any).props?.vaccines) vaccines.value = (page as any).props.vaccines
+        else {
+          vaccines.value.unshift({
+            id: Date.now(),
+            name: form.name,
+            status: form.status,
+            created_at: new Date().toISOString(),
+          })
+        }
+        resetForm()
+      },
+    })
   }
+}
 
-  form.reset();
-  editingVaccine.value = null;
-  showModal.value = false;
-};
+// Dropdown for actions
+const openDropdownId = ref<number | null>(null)
+const toggleDropdown = (id: number) => {
+  openDropdownId.value = openDropdownId.value === id ? null : id
+}
 
-// Edit Vaccine
-const editVaccine = (vaccine: Vaccine) => {
-  editingVaccine.value = vaccine;
-  form.name = vaccine.name;
-  form.status = vaccine.status;
-  showModal.value = true;
-};
+// Close dropdown on outside click
+const closeDropdown = (event: MouseEvent) => {
+  if (!(event.target as HTMLElement).closest('.relative.inline-block')) {
+    openDropdownId.value = null
+  }
+}
 
-// Toggle Active / Deactivated
+onMounted(() => document.addEventListener('click', closeDropdown))
+onBeforeUnmount(() => document.removeEventListener('click', closeDropdown))
+
+// Toggle status
 const toggleStatus = (vaccine: Vaccine) => {
-  vaccine.status = vaccine.status === 'Active' ? 'Deactivated' : 'Active';
-};
+  const newStatus = vaccine.status === 1 ? 0 : 1
+
+  router.put(
+    route('vaccine.update', vaccine.id),
+    { name: vaccine.name, status: newStatus },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        const i = vaccines.value.findIndex(v => v.id === vaccine.id)
+        if (i !== -1) vaccines.value[i].status = newStatus
+      },
+      onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
+      onFinish: () => openDropdownId.value = null,
+    }
+  )
+}
 
 // Breadcrumbs
 const breadcrumbs = [
   { title: 'Master Setup', href: '/master-setup' },
-  { title: 'Vaccine', href: '/master-setup/vaccine' }
-];
+  { title: 'Vaccine', href: '/master-setup/vaccine' },
+]
 </script>
 
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
     <Head title="Vaccines" />
+
     <div class="px-4 py-6">
       <div class="flex items-center justify-between mb-4">
         <HeadingSmall title="Vaccine List" />
-        <Button class="bg-chicken hover:bg-yellow-600 text-white" @click="showModal = true">
-          Add New Vaccine
+        <Button
+          v-if="can('vaccine.create')"
+          class="bg-chicken hover:bg-yellow-600 text-white"
+          @click="openModal()"
+        >
+          + Add New
         </Button>
       </div>
 
-      <!-- Vaccine Table -->
       <table class="w-full border">
         <thead>
           <tr class="bg-gray-100">
@@ -98,54 +200,59 @@ const breadcrumbs = [
             <td class="p-2 border">{{ index + 1 }}</td>
             <td class="p-2 border">{{ vaccine.name }}</td>
             <td class="p-2 border">
-              <span :class="vaccine.status === 'Active' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-                {{ vaccine.status }}
+              <span :class="vaccine.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+                {{ vaccine.status === 1 ? 'Active' : 'Deactivated' }}
               </span>
             </td>
             <td class="p-2 border">{{ vaccine.created_at }}</td>
-            <td class="p-2 border relative">
-              <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="editVaccine(vaccine)">
-                Edit
-              </Button>
-              <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white ml-1" @click="toggleStatus(vaccine)">
-                {{ vaccine.status === 'Active' ? 'Deactivate' : 'Activate' }}
-              </Button>
+            <td class="p-2 border">
+              <div class="relative inline-block text-left">
+                <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click.stop="toggleDropdown(vaccine.id)">
+                  Actions ▼
+                </Button>
+
+                <div v-if="openDropdownId === vaccine.id" class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10" @click.stop>
+                  <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(vaccine)">✏ Edit</button>
+                  <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(vaccine)">
+                    {{ vaccine.status === 1 ? 'Inactive' : 'Activate' }}
+                  </button>
+                </div>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 class="text-lg font-bold mb-4">{{ editingVaccine ? 'Edit Vaccine' : 'Add Vaccine' }}</h2>
+    <!-- Draggable Modal -->
+    <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6 bg-black/30" @click.self="resetForm">
+      <div ref="modalRef" class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl" style="top: 100px; position: absolute;">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move" @mousedown="startDrag">
+          <h3 class="text-xl font-semibold text-gray-900">{{ editingVaccine ? 'Edit Vaccine' : 'Add New Vaccine' }}</h3>
+          <button type="button" class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center" @click="resetForm">
+            ✕
+          </button>
+        </div>
 
-        <!-- Vaccine Name -->
-        <Label for="name" class="mb-1 block">Name</Label>
-        <Input
-          v-model="form.name"
-          id="name"
-          placeholder="Enter vaccine name"
-          class="mb-3 border border-gray-300 rounded-lg px-3 py-2 w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
-        />
-        <div v-if="form.errors.name" class="text-red-500 text-sm mb-3">{{ form.errors.name }}</div>
+        <div class="p-4 space-y-4">
+          <div>
+            <Label for="name" class="mb-2">Vaccine Name</Label>
+            <Input v-model="form.name" id="name" />
+            <span v-if="form.errors.name" class="text-red-600 text-sm">{{ form.errors.name }}</span>
+          </div>
 
-        <!-- Status -->
-        <Label for="status" class="mb-1 block">Status</Label>
-        <select
-          v-model="form.status"
-          id="status"
-          class="mb-4 border border-gray-300 rounded-lg px-3 py-2 w-full text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
-        >
-          <option value="Active">Active</option>
-          <option value="Deactivated">Deactivated</option>
-        </select>
+          <div>
+            <Label for="status" class="mb-2">Status</Label>
+            <select v-model="form.status" id="status" class="w-full border rounded p-2">
+              <option :value="1">Active</option>
+              <option :value="0">Deactivated</option>
+            </select>
+          </div>
+        </div>
 
-        <!-- Buttons -->
-        <div class="flex justify-end gap-2">
-          <Button variant="secondary" @click="showModal = false; editingVaccine = null">Cancel</Button>
-          <Button @click="submit">{{ editingVaccine ? 'Update' : 'Save' }}</Button>
+        <div class="flex justify-end p-4 border-t border-gray-200">
+          <Button class="bg-gray-300 text-black mr-2" @click="resetForm">Cancel</Button>
+          <Button class="bg-chicken text-white" @click="submit">{{ editingVaccine ? 'Update' : 'Save' }}</Button>
         </div>
       </div>
     </div>

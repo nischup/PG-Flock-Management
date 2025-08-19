@@ -33,4 +33,4 @@ Route::get('medicine', [MedicineController::class, 'index'])->name('medicine');
 Route::resource('shed', ShedController::class);
 
 Route::get('unit', [UnitController::class, 'index'])->name('medicine');
-Route::get('vaccine', [VaccineController::class, 'index'])->name('vaccine');
+Route::resource('vaccine', VaccineController::class);

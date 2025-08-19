@@ -25,9 +25,20 @@ class PermissionSeeder extends Seeder
             'ps.receive.create',
             'ps.receive.edit',
             'ps.receive.delete',
+
+            'shed.view',
+            'shed.create',
+            'shed.edit',
+            'shed.delete',
+
+            'vaccine.view',
+            'vaccine.create',
+            'vaccine.edit',
+            'vaccine.delete',
+
         ];
 
-        
+
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
@@ -54,7 +65,7 @@ class PermissionSeeder extends Seeder
             $user->assignRole($superAdminRole);
         }
 
-        
+
     }
 }
 
