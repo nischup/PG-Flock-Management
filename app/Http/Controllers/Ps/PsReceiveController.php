@@ -22,7 +22,7 @@ class PsReceiveController extends Controller
             )
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
-
+        
         return Inertia::render('ps/ps-receive/PsReceive', [
             'psReceives' => $psReceives,
             'filters' => $request->only(['search', 'per_page']),
@@ -38,37 +38,32 @@ class PsReceiveController extends Controller
     {
             
         // $request->validate([
-        //     'shipment_type_id' => 'required|integer',
-        //     'pi_no' => 'nullable|string|max:255',
-        //     'pi_date' => 'nullable|date',
-        //     'order_no' => 'nullable|string|max:255',
-        //     'order_date' => 'nullable|date',
-        //     'lc_no' => 'nullable|string|max:255',
-        //     'lc_date' => 'nullable|date',
-        //     'supplier_id' => 'nullable|integer',
-        //     'breed_type' => 'nullable|integer',
-        //     'country_of_origin' => 'nullable|integer',
-        //     'transport_type' => 'nullable|integer',
-        //     'remarks' => 'nullable|string',
+        //     // Main PS Receive
+        //     //'shipment_type_id'   => 'required|integer|exists:shipment_types,id',
+        //     'shipment_type_id'   => 'required|integer',
+        //     'pi_no'              => 'required|string|max:50',
+        //     'pi_date'            => 'required|date',
+        //     'order_no'           => 'nullable|string|max:50',
+        //     'order_date'         => 'nullable|date',
+        //     'lc_no'              => 'nullable|string|max:50',
+        //     'lc_date'            => 'nullable|date',
+        //     //'supplier_id'        => 'required|integer|exists:suppliers,id',
+        //     'supplier_id'        => 'required|integer',
+        //     'breed_type'         => 'required|integer',
+        //     'country_of_origin'  => 'required|integer',
+        //     'transport_type'     => 'required|integer',
+        //     'remarks'            => 'nullable|string|max:500',
 
-        //     // Chick counts
-        //     'ps_male_box' => 'required|integer|min:0',
-        //     'ps_male_approximate_qty' => 'required|integer|min:0',
-        //     'ps_male_totalqty' => 'required|numeric|min:0',
-        //     'ps_male_challan_qty' => 'required|numeric|min:0',
-        //     'ps_male_rate' => 'required|numeric|min:0',
-        //     'ps_male_value_total' => 'required|numeric|min:0',
-        //     'ps_female_box' => 'required|integer|min:0',
-        //     'ps_female_approximate_qty' => 'required|integer|min:0',
-        //     'ps_female_totalqty' => 'required|numeric|min:0',
-        //     'ps_challan_qty' => 'required|numeric|min:0',
-        //     'ps_female_rate' => 'required|numeric|min:0',
-        //     'ps_female_value_total' => 'required|numeric|min:0',
-        //     'ps_totalbox' => 'required|numeric|min:0',
-        //     'ps_value_total' => 'required|numeric|min:0',
-
-        //     // Files
-        //     'file.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        //     // Chick Counts
+        //     'ps_male_rec_box'    => 'required|numeric|min:0',
+        //     'ps_male_qty'        => 'required|numeric|min:0',
+        //     'ps_female_rec_box'  => 'required|numeric|min:0',
+        //     'ps_female_qty'      => 'required|numeric|min:0',
+        //     'ps_total_qty'       => 'required|numeric|min:0',
+        //     'ps_total_re_box_qty'=> 'required|numeric|min:0',
+        //     'ps_challan_box_qty' => 'required|numeric|min:0',
+        //     'ps_gross_weight'    => 'required|numeric|min:0',
+        //     'ps_net_weight'      => 'required|numeric|min:0', // net ≤ gross
         // ]);
 
         try {
@@ -92,27 +87,19 @@ class PsReceiveController extends Controller
                 'created_by' =>Auth::id()
             ]);
 
-            // 2️⃣ Create chick counts
             $psReceive->chickCounts()->create([
-                'ps_male_box' => (int) $request->ps_male_box,
-                'ps_male_approximate_qty' => (int) $request->ps_male_approximate_qty,
-                'ps_male_totalqty' => (float) $request->ps_male_totalqty,
-                'ps_male_challan_qty' => (float) $request->ps_male_challan_qty,
-                'ps_male_rate' => (float) $request->ps_male_rate,
-                'ps_male_value_total' => (float) $request->ps_male_value_total,
-                'ps_female_box' => (int) $request->ps_female_box,
-                'ps_female_approximate_qty' => (int) $request->ps_female_approximate_qty,
-                'ps_female_totalqty' => (float) $request->ps_female_totalqty,
-                'ps_challan_qty' => (float) $request->ps_challan_qty,
-                'ps_female_rate' => (float) $request->ps_female_rate,
-                'ps_female_value_total' => (float) $request->ps_female_value_total,
-                'ps_totalbox' => (float) $request->ps_totalbox,
-                'ps_value_total' => (float) $request->ps_value_total,
+                'ps_male_rec_box'=>(float)$request->ps_male_rec_box,
+                'ps_male_qty'=>(float)$request->ps_male_qty,
+                'ps_female_rec_box'=>(float)$request->ps_female_rec_box,
+                'ps_female_qty'=>(float)$request->ps_female_qty,
+                'ps_total_qty'=>(float)$request->ps_total_qty,
+                'ps_total_re_box_qty'=>(float)$request->ps_total_re_box_qty,
+                'ps_challan_box_qty'=>(float)$request->ps_challan_box_qty,
+                'ps_gross_weight'=>(float)$request->ps_gross_weight,
+                'ps_net_weight'=>(float)$request->ps_net_weight,
             ]);
 
-            // 3️⃣ Store uploaded files
-
-            dd($request->hasFile('file'));
+           
             if ($request->hasFile('file')) {
                 foreach ($request->file('file') as $uploadedFile) {
                     $path = $uploadedFile->store('ps_receive_files'); // storage/app/ps_receive_files

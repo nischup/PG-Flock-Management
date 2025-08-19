@@ -17,25 +17,19 @@ return new class extends Migration
                   ->constrained('ps_receives')
                   ->onDelete('cascade');
 
-            // Male chicks
-            $table->integer('ps_male_box')->default(0);
-            $table->integer('ps_male_approximate_qty')->default(0);
-            $table->double('ps_male_totalqty')->default(0);
-            $table->double('ps_male_challan_qty')->default(0);
-            $table->double('ps_male_rate')->default(0);
-            $table->double('ps_male_value_total')->default(0);
+                $table->unsignedInteger('ps_male_rec_box')->default(0);
+                $table->decimal('ps_male_qty', 12, 2)->default(0);
 
-            // Female chicks
-            $table->integer('ps_female_box')->default(0);
-            $table->integer('ps_female_approximate_qty')->default(0);
-            $table->double('ps_female_totalqty')->default(0);
-            $table->double('ps_challan_qty')->default(0);
-            $table->double('ps_female_rate')->default(0);
-            $table->double('ps_female_value_total')->default(0);
+                // Female chicks
+                $table->unsignedInteger('ps_female_rec_box')->default(0);
+                $table->decimal('ps_female_qty', 12, 2)->default(0);
 
-            // Total Calculation
-            $table->double('ps_totalbox')->default(0);
-            $table->double('ps_value_total')->default(0);
+                // Total Calculation
+                $table->decimal('ps_total_qty', 12, 2)->default(0);
+                $table->unsignedInteger('ps_total_re_box_qty')->default(0);
+                $table->unsignedInteger('ps_challan_box_qty')->default(0);
+                $table->decimal('ps_gross_weight', 10, 2)->default(0);
+                $table->decimal('ps_net_weight', 10, 2)->default(0);
 
             $table->timestamps();
         });

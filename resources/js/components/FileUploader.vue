@@ -15,13 +15,16 @@ const emit = defineEmits(['update:modelValue'])
 // Internal files state
 const files = ref<(File | string)[]>([...props.modelValue])
 
-// Watch internal files and emit changes to parent
-watch(files, (newFiles) => {
-  emit('update:modelValue', newFiles)  // <--- THIS IS KEY
-})
-watch(() => props.modelValue, (newValue) => {
-  files.value = [...newValue] // sync parent changes back
-})
+// Sync parent changes to internal files without causing recursion
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    // Only update if different reference to prevent recursive updates
+    if (newValue !== files.value) {
+      files.value = [...newValue]
+    }
+  }
+)
 
 // Helpers
 function isFile(f: any): f is File {
@@ -38,6 +41,7 @@ function getFileName(file: File | string) {
   return 'file'
 }
 
+// Formatted accept string for display
 const formattedAccept = computed(() => {
   if (!props.accept) return ''
   return props.accept.split(',').map(f => f.replace('.', '')).join(', ')
@@ -53,11 +57,13 @@ function handleFilesChange(event: Event) {
   if (remaining <= 0) return
 
   files.value.push(...selectedFiles.slice(0, remaining))
+  emit('update:modelValue', files.value) // <-- emit immediately
 }
 
 // Remove a file
 function removeFile(index: number) {
   files.value.splice(index, 1)
+  emit('update:modelValue', files.value) // <-- emit immediately
 }
 </script>
 

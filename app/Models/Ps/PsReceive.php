@@ -23,6 +23,7 @@ class PsReceive extends Model
         'created_by',
         'updated_by',
         'status',
+        'created_at',
     ];
 
 
@@ -30,6 +31,7 @@ class PsReceive extends Model
         'pi_date' => 'date',
         'order_date' => 'date',
         'lc_date' => 'date',
+        'created_at'=> 'date',
     ];
 
     public function attachments()
