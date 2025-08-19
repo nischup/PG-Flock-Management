@@ -36,6 +36,11 @@ class PermissionSeeder extends Seeder
             'vaccine.edit',
             'vaccine.delete',
 
+            'medicine.view',
+            'medicine.create',
+            'medicine.edit',
+            'medicine.delete',
+
         ];
 
 
