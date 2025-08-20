@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Master\ChickType;
 
 class ChickTypeController extends Controller
 {
@@ -13,7 +14,20 @@ class ChickTypeController extends Controller
      */
     public function index()
     {
-        return Inertia::render('library/chickType/List');
+
+        $chickTypes = ChickType::orderBy('id', 'desc')->get()->map(function ($item) {
+        return [
+            'id' => $item->id,
+            'name' => $item->name,
+            'status' => $item->status,
+            'created_at' => $item->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $item->updated_at->format('Y-m-d H:i:s'),
+        ];
+    });
+
+        return Inertia::render('library/chickType/List', [
+            'chickTypes' => $chickTypes
+        ]);
     }
 
     /**
@@ -21,7 +35,7 @@ class ChickTypeController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('library/chickType/Create');
     }
 
     /**
@@ -29,7 +43,18 @@ class ChickTypeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name'   => 'required|string|max:200',
+            'status' => 'nullable|integer',
+        ]);
+
+        ChickType::create([
+            'name'   => $request->name,
+            'status' => $request->status ?? 1,
+        ]);
+
+        return redirect()->route('chick-type.index')
+            ->with('success', 'Chick Type created successfully.');
     }
 
     /**
@@ -37,7 +62,11 @@ class ChickTypeController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $chickType = ChickType::findOrFail($id);
+
+        return Inertia::render('library/chickType/Show', [
+            'chickType' => $chickType
+        ]);
     }
 
     /**
@@ -45,7 +74,11 @@ class ChickTypeController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $chickType = ChickType::findOrFail($id);
+
+        return Inertia::render('library/chickType/Edit', [
+            'chickType' => $chickType
+        ]);
     }
 
     /**
@@ -53,7 +86,20 @@ class ChickTypeController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'name'   => 'required|string|max:200',
+            'status' => 'nullable|integer',
+        ]);
+
+        $chickType = ChickType::findOrFail($id);
+
+        $chickType->update([
+            'name'   => $request->name,
+            'status' => $request->status ?? 1,
+        ]);
+
+        return redirect()->route('chick-type.index')
+            ->with('success', 'Chick Type updated successfully.');
     }
 
     /**
@@ -61,6 +107,10 @@ class ChickTypeController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $chickType = ChickType::findOrFail($id);
+        $chickType->delete();
+
+        return redirect()->route('chick-type.index')
+            ->with('success', 'Chick Type deleted successfully.');
     }
 }

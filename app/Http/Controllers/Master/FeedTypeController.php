@@ -5,23 +5,28 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Master\FeedType;
 
 class FeedTypeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Inertia::render('library/feedType/List');
-    }
+        $query = FeedType::query();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        // Filtering (search)
+        if ($request->has('search') && $request->search != '') {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $feedTypes = $query->orderBy('id', 'desc')->get();
+
+        return Inertia::render('library/feedType/List', [
+            'feedTypes' => $feedTypes,
+            'filters'   => $request->only(['search', 'per_page', 'page']),
+        ]);
     }
 
     /**
@@ -29,23 +34,14 @@ class FeedTypeController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        $validated = $request->validate([
+            'name'   => 'required|string|max:200',
+            'status' => 'required|integer|in:0,1',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        FeedType::create($validated);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        return redirect()->back()->with('success', 'Feed Type created successfully!');
     }
 
     /**
@@ -53,7 +49,16 @@ class FeedTypeController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $feedType = FeedType::findOrFail($id);
+
+        $validated = $request->validate([
+            'name'   => 'required|string|max:200',
+            'status' => 'required|integer|in:0,1',
+        ]);
+
+        $feedType->update($validated);
+
+        return redirect()->back()->with('success', 'Feed Type updated successfully!');
     }
 
     /**
@@ -61,6 +66,9 @@ class FeedTypeController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $feedType = FeedType::findOrFail($id);
+        $feedType->delete();
+
+        return redirect()->back()->with('success', 'Feed Type deleted successfully!');
     }
 }

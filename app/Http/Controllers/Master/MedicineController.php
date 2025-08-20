@@ -12,29 +12,31 @@ class MedicineController extends Controller
 {
     public function index()
     {
-        $medicines = Medicine::orderBy('id', 'desc')->get()->map(function($m) {
-            return [
-                'id' => $m->id,
-                'name' => $m->name,
-                'status' => $m->status == 1 ? 'Active' : 'Deactivated',
-                'created_at' => $m->created_at->format('Y-m-d H:i:s'),
-            ];
-        });
+        try {
+            $medicines = Medicine::orderBy('id', 'desc')->get();
 
-        return Inertia::render('library/medicine/List', [
-            'medicines' => $medicines,
-        ]);
+            return Inertia::render('library/medicine/List', [
+                'medicines' => $medicines, // Vue will use status 0/1 directly
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Medicine index error: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Failed to fetch medicines.');
+        }
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:200',
+        $validated = $request->validate([
+            'name'   => 'required|string|max:200',
             'status' => 'required|in:0,1',
         ]);
 
         try {
-            Medicine::create($request->all());
+            Medicine::create([
+                'name'   => $validated['name'],
+                'status' => (int) $validated['status'],
+            ]);
+
             return redirect()->route('medicine.index')->with('success', 'Medicine created successfully');
         } catch (\Exception $e) {
             Log::error('Medicine store error: '.$e->getMessage());
@@ -44,13 +46,17 @@ class MedicineController extends Controller
 
     public function update(Request $request, Medicine $medicine)
     {
-        $request->validate([
-            'name' => 'required|string|max:200',
+        $validated = $request->validate([
+            'name'   => 'required|string|max:200',
             'status' => 'required|in:0,1',
         ]);
 
         try {
-            $medicine->update($request->all());
+            $medicine->update([
+                'name'   => $validated['name'],
+                'status' => (int) $validated['status'],
+            ]);
+
             return redirect()->route('medicine.index')->with('success', 'Medicine updated successfully');
         } catch (\Exception $e) {
             Log::error('Medicine update error: '.$e->getMessage());
