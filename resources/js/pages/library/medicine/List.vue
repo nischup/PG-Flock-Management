@@ -8,26 +8,29 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useNotifier } from '@/composables/useNotifier'
-import { useListFilters } from '@/composables/useListFilters';
-import { usePermissions } from '@/composables/usePermissions';
+import { useListFilters } from '@/composables/useListFilters'
+import { usePermissions } from '@/composables/usePermissions'
 
+// Medicine interface
 interface Medicine {
   id: number
   name: string
-  status: number        // 1 = Active, 0 = Deactivated
+  status: number
   created_at: string
 }
 
-const props = defineProps<{ medicines: Medicine[];
-  filters: { search?: string; per_page?: number; page?: number };
+// Props
+const props = defineProps<{
+  medicines: Medicine[]
+  filters: { search?: string; per_page?: number; page?: number }
 }>()
 
 useListFilters({
   routeName: '/medicine',
   filters: props.filters,
-});
+})
 
-const { can } = usePermissions();
+const { can } = usePermissions()
 
 const medicines = ref<Medicine[]>([...props.medicines])
 
@@ -35,7 +38,7 @@ const medicines = ref<Medicine[]>([...props.medicines])
 const showModal = ref(false)
 const editingMedicine = ref<Medicine | null>(null)
 
-// Modal form (Add/Edit)
+// Form
 const form = useForm({
   name: '',
   status: 1,
@@ -43,7 +46,9 @@ const form = useForm({
 
 // Draggable modal
 const modalRef = ref<HTMLElement | null>(null)
-let offsetX = 0, offsetY = 0, isDragging = false
+let offsetX = 0,
+  offsetY = 0,
+  isDragging = false
 
 const startDrag = (event: MouseEvent) => {
   if (!modalRef.value) return
@@ -90,7 +95,8 @@ const resetForm = () => {
   editingMedicine.value = null
   showModal.value = false
 }
-useNotifier();
+
+useNotifier()
 
 // Submit (Create/Update)
 const submit = () => {
@@ -102,7 +108,11 @@ const submit = () => {
       onSuccess: () => {
         const i = medicines.value.findIndex(m => m.id === editingMedicine.value!.id)
         if (i !== -1) {
-          medicines.value[i] = { ...medicines.value[i], name: form.name, status: form.status }
+          medicines.value[i] = {
+            ...medicines.value[i],
+            name: form.name,
+            status: form.status,
+          }
         }
         resetForm()
       },
@@ -156,16 +166,46 @@ const toggleStatus = (medicine: Medicine) => {
   )
 }
 
+// Delete medicine
+const deleteMedicine = (medicine: Medicine) => {
+  Swal.fire({
+    title: 'Are you sure?',
+    text: `You are about to delete medicine "${medicine.name}"!`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      router.delete(route('medicine.destroy', medicine.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+          medicines.value = medicines.value.filter(m => m.id !== medicine.id)
+          Swal.fire('Deleted!', 'Medicine has been deleted.', 'success')
+        },
+        onError: () => {
+          Swal.fire('Error!', 'Could not delete medicine.', 'error')
+        },
+        onFinish: () => {
+          openDropdownId.value = null
+        },
+      })
+    }
+  })
+}
+
 // Breadcrumbs
 const breadcrumbs = [
-  { title: 'Master Setup', href: '/master-setup' },
-  { title: 'Medicine', href: '/master-setup/medicine' },
+  { title: 'Library', href: '/library' },
+  { title: 'Medicine', href: '/library/medicine' },
 ]
 </script>
 
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
     <Head title="Medicines" />
+
     <!-- Filters -->
     <FilterControls :filters="props.filters" routeName="/medicine" />
 
@@ -173,7 +213,11 @@ const breadcrumbs = [
       <!-- Header -->
       <div class="flex items-center justify-between mb-4">
         <HeadingSmall title="Medicines List" />
-        <Button v-if="can('medicine.create')" class="bg-chicken hover:bg-yellow-600 text-white" @click="openModal()">
+        <Button
+          v-if="can('medicine.create')"
+          class="bg-chicken hover:bg-yellow-600 text-white"
+          @click="openModal()"
+        >
           + Add New
         </Button>
       </div>
@@ -194,8 +238,10 @@ const breadcrumbs = [
             <td class="p-2 border">{{ index + 1 }}</td>
             <td class="p-2 border">{{ medicine.name }}</td>
             <td class="p-2 border">
-              <span :class="medicine.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-                {{ medicine.status === 1 ? 'Active' : 'Deactivated' }}
+              <span
+                :class="medicine.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'"
+              >
+                {{ medicine.status === 1 ? 'Active' : 'Inactive' }}
               </span>
             </td>
             <td class="p-2 border">{{ medicine.created_at }}</td>
@@ -210,9 +256,14 @@ const breadcrumbs = [
                 class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10"
                 @click.stop
               >
-                <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(medicine)">✏ Edit</button>
+                <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(medicine)">
+                  ✏ Edit
+                </button>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(medicine)">
                   {{ medicine.status === 1 ? 'Deactivate' : 'Activate' }}
+                </button>
+                <button class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" @click="deleteMedicine(medicine)">
+                  🗑 Delete
                 </button>
               </div>
             </td>
@@ -225,12 +276,12 @@ const breadcrumbs = [
     <div
       v-if="showModal"
       class="fixed inset-0 z-50 flex justify-center pt-6"
-      @click.self="resetForm"
+      @click.self="showModal = false"
     >
       <div
         ref="modalRef"
         class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl"
-        style="top: 100px; position: absolute;"
+        style="top: 100px; position: absolute"
       >
         <div
           class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move"
@@ -259,7 +310,7 @@ const breadcrumbs = [
             <Label for="status" class="mb-2">Status</Label>
             <select v-model="form.status" id="status" class="w-full border rounded p-2">
               <option :value="1">Active</option>
-              <option :value="0">Deactivated</option>
+              <option :value="0">Inactive</option>
             </select>
           </div>
         </div>

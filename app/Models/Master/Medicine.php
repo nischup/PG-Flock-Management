@@ -8,7 +8,12 @@ class Medicine extends Model
 {
     protected $fillable = ['name', 'status'];
 
-    // Human-readable status accessor
+    // Always cast status to integer (0/1)
+    protected $casts = [
+        'status' => 'integer',
+    ];
+
+    // Optional accessor for display if you need text in blade
     public function getStatusTextAttribute()
     {
         return $this->status == 1 ? 'Active' : 'Deactivated';

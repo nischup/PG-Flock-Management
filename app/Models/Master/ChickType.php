@@ -6,5 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class ChickType extends Model
 {
-    //
+    protected $table = 'chick_types';
+
+    protected $fillable = [
+        'name',
+        'status',
+    ];
 }

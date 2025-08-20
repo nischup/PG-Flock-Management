@@ -26,15 +26,21 @@ require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 
 
-Route::get('chick-type', [ChickTypeController::class, 'index'])->name('chick-type');
+// Route::get('chick-type', [ChickTypeController::class, 'index'])->name('chick-type');
+Route::resource('chick-type', ChickTypeController::class);
+
 Route::get('feed', [FeedController::class, 'index'])->name('feed');
 Route::get('feed-type', [FeedTypeController::class, 'index'])->name('feed-type');
-Route::get('company', [CompanyController::class, 'index'])->name('company');
+// Route::get('company', [CompanyController::class, 'index'])->name('company');
+Route::resource('company', CompanyController::class);
+
 Route::resource('medicine', MedicineController::class);
 
 Route::resource('shed', ShedController::class);
 
 Route::get('unit', [UnitController::class, 'index'])->name('medicine');
-Route::get('vaccine', [VaccineController::class, 'index'])->name('vaccine');
+// Route::get('vaccine', [VaccineController::class, 'index'])->name('vaccine');
+Route::resource('vaccine', VaccineController::class);
+
 Route::post('/labtest/getdata', [PsLabTestController::class, 'getData'])->name('labtest.getdata');
 Route::resource('ps-lab-test', PsLabTestController::class);

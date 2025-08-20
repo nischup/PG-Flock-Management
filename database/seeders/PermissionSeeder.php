@@ -41,6 +41,17 @@ class PermissionSeeder extends Seeder
             'medicine.edit',
             'medicine.delete',
 
+            'chick-type.view',
+            'chick-type.create',
+            'chick-type.edit',
+            'chick-type.delete',
+
+            'company.view',
+            'company.create',
+            'company.edit',
+            'company.delete',
+
+
         ];
 
 
