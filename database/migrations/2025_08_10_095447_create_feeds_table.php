@@ -6,22 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('feeds', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 200);
+            $table->unsignedBigInteger('feed_type_id'); // keep column
+            $table->string('feed_name', 200);
             $table->tinyInteger('status')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('feeds');

@@ -5,62 +5,101 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Master\Feed;
+use App\Models\Master\FeedType;
 
 class FeedController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return Inertia::render('library/feed/List');
+        $feeds = Feed::orderBy('id', 'desc')->get();
+        $feedTypes = FeedType::where('status', 1)->orderBy('name')->get();
+
+        return Inertia::render('library/feed/List', [
+            'feeds' => $feeds->map(function ($feed) {
+                return [
+                    'id' => $feed->id,
+                    'feed_type_id' => $feed->feed_type_id,
+                    'feed_type_name' => $feed->feedType->name ?? '',
+                    'feed_name' => $feed->feed_name,
+                    'status' => $feed->status,
+                    'created_at' => $feed->created_at->format('Y-m-d'),
+                ];
+            })->toArray(),
+            'feedTypes' => $feedTypes->map(function ($ft) {
+                return [
+                    'id' => $ft->id,
+                    'name' => $ft->name,
+                ];
+            })->toArray(),
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'feed_type_id' => 'required',
+            'feed_name' => 'required|string|max:200',
+            'status' => 'required|integer|in:0,1',
+        ]);
+
+        $feed = Feed::create($validated);
+        $feed->load('feedType');
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'feed' => [
+                    'id' => $feed->id,
+                    'feed_type_id' => $feed->feed_type_id,
+                    'feed_type_name' => $feed->feedType->name ?? '',
+                    'feed_name' => $feed->feed_name,
+                    'status' => $feed->status,
+                    'created_at' => $feed->created_at->format('Y-m-d'),
+                ]
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Feed created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $feed = Feed::findOrFail($id);
+
+        $validated = $request->validate([
+            'feed_type_id' => 'required',
+            'feed_name' => 'required|string|max:200',
+            'status' => 'required|integer|in:0,1',
+        ]);
+
+        $feed->update($validated);
+        $feed->load('feedType');
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'feed' => [
+                    'id' => $feed->id,
+                    'feed_type_id' => $feed->feed_type_id,
+                    'feed_type_name' => $feed->feedType->name ?? '',
+                    'feed_name' => $feed->feed_name,
+                    'status' => $feed->status,
+                    'created_at' => $feed->created_at->format('Y-m-d'),
+                ]
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Feed updated successfully.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function destroy(Request $request, $id)
     {
-        //
-    }
+        $feed = Feed::findOrFail($id);
+        $feed->delete();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->back()->with('success', 'Feed deleted successfully.');
     }
 }

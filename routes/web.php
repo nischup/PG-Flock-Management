@@ -29,7 +29,8 @@ require __DIR__.'/auth.php';
 // Route::get('chick-type', [ChickTypeController::class, 'index'])->name('chick-type');
 Route::resource('chick-type', ChickTypeController::class);
 
-Route::get('feed', [FeedController::class, 'index'])->name('feed');
+// Route::get('feed', [FeedController::class, 'index'])->name('feed');
+Route::resource('feed', FeedController::class);
 // Route::get('feed-type', [FeedTypeController::class, 'index'])->name('feed-type');
 Route::resource('feed-type', FeedTypeController::class);
 

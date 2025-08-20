@@ -56,6 +56,11 @@ class PermissionSeeder extends Seeder
             'feed-type.edit',
             'feed-type.delete',
 
+            'feed.view',
+            'feed.create',
+            'feed.edit',
+            'feed.delete',
+
             'ps-lab-test.view',
             'ps-lab-test.create',
             'ps-lab-test.edit',
