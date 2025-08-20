@@ -17,8 +17,14 @@ const props = defineProps<{
       pi_no: string
       receive_date: string
       supplier: { id: number; name: string } | null
-      quantity: number
       remarks?: string | null
+
+      // Chick counts (hasOne)
+      chick_counts?: {
+        id: number
+        ps_total_qty: number
+        ps_total_re_box_qty: number
+      } | null
     }>
     meta: {
       current_page: number
@@ -67,6 +73,7 @@ const defaultForm = {
   breed_type: '',
   country_of_origin: '',
   transport_type: '',
+  ps_receive_id: null,
   lab_type: 'Gov Lab',
   remarks: '',
   status: 1,
@@ -78,7 +85,11 @@ const defaultForm = {
   ps_total_re_box_qty: 0,
   ps_challan_box_qty: 0,
   ps_gross_weight: 0,
-  ps_net_weight: 0
+  ps_net_weight: 0,
+  // new fields for lab test
+  female_qty: 0,
+  male_qty: 0,
+  total_qty: 0,
 }
 
 const form = useForm({ ...defaultForm })
@@ -111,11 +122,11 @@ const stopDrag = () => {
 
 // Open modal and fetch data
 const openModal = (id: number) => {
-  form.get(`/ps-receive/${id}/edit`, {
+  form.get(`/ps-receive/${id}/data`, {
     preserveState: true,
     onSuccess: (page) => {
       const psReceive = page.props.psReceive ?? {}
-      Object.assign(form, { ...defaultForm, ...psReceive })
+      Object.assign(form, { ...defaultForm, ...psReceive, ps_receive_id: id  })
       modalTitle.value = 'Lab test'
       showModal.value = true
     }
@@ -126,6 +137,10 @@ const openModal = (id: number) => {
 const saveForm = () => {
   form.post('/ps-receive/storelab')
   showModal.value = false
+}
+
+function updateTotalQty() {
+  form.total_qty = Number(form.female_qty) + Number(form.male_qty);
 }
 </script>
 
@@ -154,7 +169,8 @@ const saveForm = () => {
               <th class="px-6 py-3 text-left font-semibold">PI No</th>
               <th class="px-6 py-3 text-left font-semibold">Receive Date</th>
               <th class="px-6 py-3 text-left font-semibold">Supplier</th>
-              <th class="px-6 py-3 text-left font-semibold">Quantity</th>
+              <th class="px-6 py-3 text-left font-semibold">Total Quantity</th>
+              <th class="px-6 py-3 text-left font-semibold">Total Box</th>
               <th class="px-6 py-3 text-left font-semibold">Remarks</th>
               <th class="px-6 py-3 text-left font-semibold">Actions</th>
             </tr>
@@ -164,12 +180,19 @@ const saveForm = () => {
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.pi_no }}</td>
               <td class="px-6 py-4 text-gray-600 dark:text-gray-300">{{ dayjs(item.receive_date).format('YYYY-MM-DD') }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.supplier?.name ?? 'N/A' }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.quantity }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.chick_counts?.ps_total_qty ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.chick_counts?.ps_total_re_box_qty ?? '-' }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.remarks ?? '-' }}</td>
               <td class="px-6 py-4 flex gap-4 items-center">
-                <button v-if="can('ps.receive.edit')" class="text-indigo-600 hover:underline font-medium">Edit</button>
+                <Link
+                  v-if="can('ps.receive.edit')"
+                  :href="`/ps-receive/${item.id}/edit`"
+                  class="text-indigo-600 hover:underline font-medium"
+                >
+                  Edit
+                </Link>
                 <button v-if="can('ps.receive.delete')" @click="deleteReceive(item.id)" class="text-red-600 hover:underline font-medium">Delete</button>
-                <button v-if="can('ps.receive.edit')" @click="openModal(item.id)" class="text-indigo-600 hover:underline font-medium">
+                <button  @click="openModal(item.id)" class="text-indigo-600 hover:underline font-medium">
                   Lab Test
                 </button>
              
@@ -181,7 +204,6 @@ const saveForm = () => {
           </tbody>
         </table>
       </div>
-
       <Pagination :meta="props.psReceives?.meta ?? {}" class="mt-6" />
     </div>
 
@@ -222,18 +244,34 @@ const saveForm = () => {
             </select>
           </div>
           <div>
-            <label>Female Qty</label>
+            <label>Female Receive Qty</label>
             <input v-model="form.ps_female_qty" type="number" class="w-full border p-2" />
           </div>
 
           <div>
-            <label>Male Qty</label>
+            <label>Male Receive Qty</label>
             <input v-model="form.ps_male_qty" type="number" class="w-full border p-2" />
           </div>
 
           <div>
-            <label>Total Qty</label>
+            <label>Receive Total Qty</label>
             <input v-model="form.ps_total_qty" type="number" class="w-full border p-2" />
+          </div>
+
+
+          <div>
+            <label>Lab Female Qty</label>
+            <input v-model.number="form.female_qty" type="number" class="w-full border p-2" @input="updateTotalQty" />
+          </div>
+
+          <div>
+            <label>Lab Male Qty</label>
+            <input v-model.number="form.male_qty" type="number" class="w-full border p-2" @input="updateTotalQty" />
+          </div>
+
+          <div>
+            <label>Lab Total Qty</label>
+            <input v-model.number="form.total_qty" type="number" class="w-full border p-2" disabled />
           </div>
 
           <div>

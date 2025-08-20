@@ -5,6 +5,7 @@ use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\UserRegisterController;
 use App\Http\Controllers\Ps\PsReceiveController;
+use App\Http\Controllers\Ps\PsFirmReceiveController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -27,6 +28,8 @@ Route::middleware('auth')->group(function () {
 
     
     Route::resource('ps-receive', PsReceiveController::class)->except(['show']);
+    Route::resource('ps-firm-receive', PsFirmReceiveController::class)->except(['show']);
+    Route::get('/ps-receive/{id}/data', [PsReceiveController::class, 'getData']);
     Route::post('ps-receive/storelab', [PsReceiveController::class, 'storelab']);
     Route::resource('user-role', UserRoleController::class)->except(['show']);
     

@@ -19,10 +19,10 @@ Schema::create('ps_firm_receives', function (Blueprint $table) {
                 ->onDelete('cascade');
 
             $table->string('job_no')->nullable();
-            $table->unsignedTinyInteger('receiving_company_id')->nullable();
-            $table->unsignedInteger('female_box_qty')->nullable();
-            $table->unsignedInteger('male_box_qty')->nullable();
-            $table->unsignedInteger('total_box_qty')->nullable();
+            $table->unsignedTinyInteger('receiving_company_id')->default(0);
+            $table->unsignedInteger('firm_female_box_qty')->default(0);
+            $table->unsignedInteger('firm_male_box_qty')->default(0);
+            $table->unsignedInteger('firm_total_box_qty')->default(0);
             $table->string('remarks')->nullable();
             $table->unsignedTinyInteger('created_by')->nullable();
             $table->unsignedTinyInteger('updated_by')->nullable();

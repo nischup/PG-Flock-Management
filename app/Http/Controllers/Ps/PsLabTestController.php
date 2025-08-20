@@ -15,18 +15,21 @@ class PsLabTestController extends Controller
      */
     public function index(Request $request)
     {
-         $psReceives = PsReceive::query()
-            ->when($request->search, fn($q) => 
-                $q->where('pi_no', 'like', "%{$request->search}%")
-                  ->orWhere('order_no', 'like', "%{$request->search}%")
-            )
-            ->paginate($request->per_page ?? 10)
-            ->withQueryString();
+         $labTests = PsLabTest::with('psReceive') // eager-load parent
+                ->when($request->search, fn($q) =>
+                    $q->whereHas('psReceive', fn($q2) =>
+                        $q2->where('pi_no', 'like', "%{$request->search}%")
+                        ->orWhere('order_no', 'like', "%{$request->search}%")
+                    )
+                )
+                ->paginate($request->per_page ?? 10)
+                ->withQueryString();
 
-        return Inertia::render('ps/ps-lab-test/List', [
-            'psReceives' => $psReceives,
-            'filters' => $request->only(['search', 'per_page']),
-        ]);
+            
+            return Inertia::render('ps/ps-lab-test/List', [
+                'labTests' => $labTests,
+                'filters' => $request->only(['search', 'per_page']),
+            ]);
     }
 
     /**
@@ -91,25 +94,25 @@ class PsLabTestController extends Controller
         //     'notes' => 'nullable|string',
         // ]);
 
-        // $labTest = PsLabTest::updateOrCreate(
-        //     ['ps_receive_id' => $request->ps_receive_id],
-        //     [
-        //         'lab_type' => $request->lab_type,
-        //         'female_qty' => $request->female_qty,
-        //         'male_qty' => $request->male_qty,
-        //         'total_qty' => $request->female_qty + $request->male_qty,
-        //         'notes' => $request->notes,
-        //     ]
-        // );
-            dd("ok");
         $labTest = PsLabTest::updateOrCreate(
-            ['ps_receive_id' => 1],
+            ['ps_receive_id' => $request->ps_receive_id],
             [
-                'lab_type' => 1,
-                'female_qty' => 1,
-                'male_qty' => 1,
-                'total_qty' => 1 + 1,
-                'notes' => "test",
+                'lab_type' => $request->lab_type,
+                'female_qty' => $request->female_qty,
+                'male_qty' => $request->male_qty,
+                'total_qty' => $request->female_qty + $request->male_qty,
+                'notes' => $request->notes,
+            ]
+        );
+
+        $labTest = PsLabTest::updateOrCreate(
+            ['ps_receive_id' => $request->ps_receive_id],
+            [
+                'lab_type' => $request->lab_type,
+                'female_qty' => $request->female_qty,
+                'male_qty' => $request->male_qty,
+                'total_qty' => $request->female_qty + $request->male_qty,
+                'notes' => $request->notes,
             ]
         );
 

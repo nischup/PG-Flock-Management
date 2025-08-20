@@ -36,7 +36,7 @@ const mainNavItems: NavItem[] = [
       },
       {
         title: 'PS Firm Receive',
-        href: '/user-role',
+        href: '/ps-firm-receive',
         icon: BabyChick
       }
     ]

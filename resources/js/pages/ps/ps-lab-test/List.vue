@@ -5,139 +5,131 @@ import FilterControls from '@/components/FilterControls.vue';
 import Pagination from '@/components/Pagination.vue';
 import { useListFilters } from '@/composables/useListFilters';
 import { useNotifier } from '@/composables/useNotifier';
-import { type BreadcrumbItem } from '@/types';
 import { usePermissions } from '@/composables/usePermissions';
+import type { BreadcrumbItem } from '@/types';
+import dayjs from 'dayjs';
 
 const props = defineProps<{
-  psReceives: {
+  labTests: {
     data: Array<{
       id: number;
-      pi_no: string;
-      receive_date: string;
-      supplier: { id: number; name: string } | null;
-      quantity: number;
-      remarks?: string | null;
+      lab_type: string;
+      female_qty: number;
+      male_qty: number;
+      total_qty: number;
+      notes?: string;
+      status: number;
+      ps_receive?: {
+        id: number;
+        pi_no: string;
+        order_no: string;
+        created_at: string;
+      } | null;
     }>;
-    meta: {
-      current_page: number;
-      last_page: number;
-      per_page: number;
-      total: number;
-    };
+    meta: any;
   };
-  filters: { search?: string; per_page?: number };
+  filters: { search?: string; per_page?: number; page?: number };
 }>();
 
 useListFilters({
-  routeName: '/ps-receive',
+  routeName: '/ps-lab-test',
   filters: props.filters,
 });
 
 const { confirmDelete } = useNotifier();
 const { can } = usePermissions();
 
-const deleteReceive = (id: number) => {
+function deleteLabTest(id: number) {
   confirmDelete({
-    url: `/ps-receive/${id}`,
-    text: 'This will permanently delete the record.',
-    successMessage: 'PS Receive deleted.',
+    url: `/ps-lab-test/${id}`,
+    text: 'This will permanently delete the lab test record.',
+    successMessage: 'Lab Test deleted successfully.',
   });
-};
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'PS', href: '/ps-receive' },
+  { title: 'Lab Tests', href: '/ps-lab-test' },
 ];
 </script>
 
 <template>
-  <Head title="PS Lab Test" />
-
+  <Head title="Lab Tests" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md">
+
       <!-- Header -->
-      <div
-        class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4"
-      >
-        <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">
-          PS Lab Test
-        </h1>
-        <!-- <Link
-          v-if="can('ps.receive.create')"
-          href="/ps-receive/create"
-          class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">Lab Tests</h1>
+        <Link v-if="can('ps-lab-test.create')"
+          href="/ps-lab-test/create"
+          class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded shadow transition"
         >
-          + Add PS Receive
-        </Link> -->
+          + Add
+        </Link>
       </div>
 
       <!-- Filters -->
-      <FilterControls :filters="props.filters" routeName="/ps-receive" />
+      <FilterControls :filters="props.filters" routeName="/ps-lab-test" />
 
       <!-- Table -->
-      <div
-        class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700"
-      >
-        <table
-          class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm"
-        >
-          <thead
-            class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
-          >
+      <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 mt-4">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
             <tr>
               <th class="px-6 py-3 text-left font-semibold">PI No</th>
-              <th class="px-6 py-3 text-left font-semibold">LC NO</th>
-              <th class="px-6 py-3 text-left font-semibold">Supplier</th>
-              <th class="px-6 py-3 text-left font-semibold">Test Quantity</th>
+              <th class="px-6 py-3 text-left font-semibold">Order No</th>
+              <th class="px-6 py-3 text-left font-semibold">Receive Date</th>
+              <th class="px-6 py-3 text-left font-semibold">Lab Type</th>
+              <th class="px-6 py-3 text-left font-semibold">Female Qty</th>
+              <th class="px-6 py-3 text-left font-semibold">Male Qty</th>
+              <th class="px-6 py-3 text-left font-semibold">Total Qty</th>
               <th class="px-6 py-3 text-left font-semibold">Notes</th>
+              <th class="px-6 py-3 text-left font-semibold">Status</th>
               <th class="px-6 py-3 text-left font-semibold">Actions</th>
             </tr>
           </thead>
-          <tbody
-            class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700"
-          >
+          <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             <tr
-              v-for="item in psReceives.data"
-              :key="item.id"
+              v-for="lab in props.labTests.data"
+              :key="lab.id"
               class="hover:bg-gray-50 dark:hover:bg-gray-800"
             >
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                {{ item.pi_no }}
+              <td class="px-6 py-4">{{ lab.ps_receive?.pi_no ?? '-' }}</td>
+              <td class="px-6 py-4">{{ lab.ps_receive?.order_no ?? '-' }}</td>
+              <td class="px-6 py-4">
+                {{ lab.ps_receive?.created_at ? dayjs(lab.ps_receive.created_at).format('YYYY-MM-DD') : '-' }}
               </td>
-              <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
-                {{ item.receive_date }}
-              </td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                {{ item.supplier?.name || 'N/A' }}
-              </td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                {{ item.quantity }}
-              </td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                {{ item.remarks || '-' }}
+              <td class="px-6 py-4">{{ lab.lab_type }}</td>
+              <td class="px-6 py-4">{{ lab.female_qty }}</td>
+              <td class="px-6 py-4">{{ lab.male_qty }}</td>
+              <td class="px-6 py-4">{{ lab.total_qty }}</td>
+              <td class="px-6 py-4">{{ lab.notes ?? '-' }}</td>
+              <td class="px-6 py-4">
+                <span :class="lab.status === 1 ? 'text-green-600' : 'text-red-600'">
+                  {{ lab.status === 1 ? 'Active' : 'Inactive' }}
+                </span>
               </td>
               <td class="px-6 py-4 flex gap-4 items-center">
                 <Link
-                  v-if="can('ps.receive.edit')"
-                  :href="`/ps-receive/${item.id}/edit`"
+                  v-if="can('ps-lab-test.edit')"
+                  :href="`/ps-lab-test/${lab.id}/edit`"
                   class="text-indigo-600 hover:underline font-medium"
                 >
                   Edit
                 </Link>
                 <button
-                  @click="deleteReceive(item.id)"
+                  v-if="can('ps-lab-test.delete')"
+                  @click="deleteLabTest(lab.id)"
                   class="text-red-600 hover:underline font-medium"
-                  v-if="can('ps.receive.delete')"
                 >
                   Delete
                 </button>
               </td>
             </tr>
-            <tr v-if="psReceives.data.length === 0">
-              <td
-                colspan="6"
-                class="px-6 py-6 text-center text-gray-500 dark:text-gray-400"
-              >
-                No PS Receives found.
+
+            <tr v-if="labTests.data.length === 0">
+              <td colspan="10" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
+                No lab tests found.
               </td>
             </tr>
           </tbody>
@@ -145,7 +137,7 @@ const breadcrumbs: BreadcrumbItem[] = [
       </div>
 
       <!-- Pagination -->
-      <Pagination :meta="psReceives.meta" class="mt-6" />
+      <Pagination :meta="labTests.meta" :page="props.filters.page" class="mt-6" />
     </div>
   </AppLayout>
 </template>
