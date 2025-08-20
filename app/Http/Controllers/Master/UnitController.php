@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Master\Unit;
 
 class UnitController extends Controller
 {
@@ -13,15 +14,18 @@ class UnitController extends Controller
      */
     public function index()
     {
-         return Inertia::render('library/unit/List');
-    }
+        $units = Unit::latest()->get()->map(function ($unit) {
+            return [
+                'id' => $unit->id,
+                'name' => $unit->name,
+                'status' => $unit->status ? 'Active' : 'Deactivated',
+                'created_at' => $unit->created_at->format('Y-m-d'),
+            ];
+        });
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        return Inertia::render('library/unit/List', [
+            'units' => $units
+        ]);
     }
 
     /**
@@ -29,23 +33,17 @@ class UnitController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        $data = $request->validate([
+            'name' => 'required|string|max:200',
+            'status' => 'required|string|in:Active,Deactivated',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        Unit::create([
+            'name' => $data['name'],
+            'status' => $data['status'] === 'Active' ? 1 : 0,
+        ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        return redirect()->route('unit.index')->with('success', 'Unit created successfully.');
     }
 
     /**
@@ -53,7 +51,18 @@ class UnitController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $data = $request->validate([
+            'name' => 'required|string|max:200',
+            'status' => 'required|string|in:Active,Deactivated',
+        ]);
+
+        $unit = Unit::findOrFail($id);
+        $unit->update([
+            'name' => $data['name'],
+            'status' => $data['status'] === 'Active' ? 1 : 0,
+        ]);
+
+        return redirect()->route('unit.index')->with('success', 'Unit updated successfully.');
     }
 
     /**
@@ -61,6 +70,7 @@ class UnitController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        Unit::findOrFail($id)->delete();
+        return redirect()->route('unit.index')->with('success', 'Unit deleted successfully.');
     }
 }
