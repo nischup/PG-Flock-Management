@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
 
     
     Route::resource('ps-receive', PsReceiveController::class)->except(['show']);
+    Route::post('ps-receive/storelab', [PsReceiveController::class, 'storelab']);
     Route::resource('user-role', UserRoleController::class)->except(['show']);
     
     

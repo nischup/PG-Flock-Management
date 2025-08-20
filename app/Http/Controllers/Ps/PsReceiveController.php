@@ -10,6 +10,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Ps\PsLabTest;
 
 class PsReceiveController extends Controller
 {
@@ -123,10 +124,40 @@ class PsReceiveController extends Controller
         }
     }
 
-    public function edit(PsReceive $psReceive)
+    public function edit($id)
     {
-        return Inertia::render('ps/ps-receive/Edit', [
-            'psReceive' => $psReceive,
+        $psReceive = PsReceive::with('chickCounts')->findOrFail($id);
+        
+    // Flatten data from parent + child for modal
+    $data = [
+        'id' => $psReceive->id,
+        'pi_no' => $psReceive->pi_no,
+        'pi_date' => $psReceive->pi_date,
+        'order_no' => $psReceive->order_no,
+        'order_date' => $psReceive->order_date,
+        'lc_no' => $psReceive->lc_no,
+        'lc_date' => $psReceive->lc_date,
+        'supplier_id' => $psReceive->supplier_id,
+        'breed_type' => $psReceive->breed_type,
+        'country_of_origin' => $psReceive->country_of_origin,
+        'transport_type' => $psReceive->transport_type,
+        'remarks' => $psReceive->remarks,
+        'status' => $psReceive->status,
+        // Child fields
+        'ps_male_rec_box' => $psReceive->chickCounts->ps_male_rec_box ?? 0,
+        'ps_male_qty' => $psReceive->chickCounts->ps_male_qty ?? 0,
+        'ps_female_rec_box' => $psReceive->chickCounts->ps_female_rec_box ?? 0,
+        'ps_female_qty' => $psReceive->chickCounts->ps_female_qty ?? 0,
+        'ps_total_qty' => $psReceive->chickCounts->ps_total_qty ?? 0,
+        'ps_total_re_box_qty' => $psReceive->chickCounts->ps_total_re_box_qty ?? 0,
+        'ps_challan_box_qty' => $psReceive->chickCounts->ps_challan_box_qty ?? 0,
+        'ps_gross_weight' => $psReceive->chickCounts->ps_gross_weight ?? 0,
+        'ps_net_weight' => $psReceive->chickCounts->ps_net_weight ?? 0,
+    ];
+
+        // Return Inertia response instead of JSON
+        return Inertia::render('ps/ps-receive/PsReceive', [
+            'psReceive' => $data
         ]);
     }
 
@@ -181,5 +212,20 @@ class PsReceiveController extends Controller
 
             return back()->withErrors(['general' => 'Failed to delete PS Receive.']);
         }
+    }
+
+    public function storelab(){
+        $labTest = PsLabTest::updateOrCreate(
+            ['ps_receive_id' => 1],
+            [
+                'lab_type' => 1,
+                'female_qty' => 1,
+                'male_qty' => 1,
+                'total_qty' => 1 + 1,   
+                'notes' => "test",
+            ]
+        );
+
+         return redirect()->route('ps-receive.index')->with('success', 'Lab Test saved successfully!');
     }
 }

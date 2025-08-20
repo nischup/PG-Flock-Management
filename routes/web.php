@@ -36,4 +36,5 @@ Route::resource('shed', ShedController::class);
 
 Route::get('unit', [UnitController::class, 'index'])->name('medicine');
 Route::get('vaccine', [VaccineController::class, 'index'])->name('vaccine');
+Route::post('/labtest/getdata', [PsLabTestController::class, 'getData'])->name('labtest.getdata');
 Route::resource('ps-lab-test', PsLabTestController::class);

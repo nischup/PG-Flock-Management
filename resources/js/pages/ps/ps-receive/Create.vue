@@ -164,7 +164,7 @@ watch(
                 model-type="yyyy-MM-dd"  
                 :input-class="'mt-2 border rounded px-3 py-2 w-full'"
                 placeholder="Select PI Date"
-                :auto-apply="true"
+                
               />
               <InputError :message="form.errors.pi_date" class="mt-1" />
             </div>
@@ -277,105 +277,68 @@ watch(
             </div>
         </div>
 
-        <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6" @click.self="showModal = false">
-  <div ref="modalRef" class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl" style="top: 100px; position: absolute;">
-    
-    <!-- Modal Header -->
-    <div class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move" @mousedown="startDrag">
-      <h3 class="text-xl font-semibold text-gray-900">
-        {{ editingShed ? 'Edit Shed' : 'Add New Shed' }}
-      </h3>
-      <button type="button" class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center" @click="resetForm">✕</button>
-    </div>
+        <!-- Chick Counts Tabs -->
+        <div class="space-y-4">
+          <h2 class="text-xl font-semibold">Chick Counts</h2>
+          <!-- Challan and Weights -->
+          <div class="grid grid-cols-3 gap-4 items-center">
+            <div class="flex flex-col">
+              <Label>Challan Box Qty</Label>
+              <Input v-model.number="form.ps_challan_box_qty" type="number" class="mt-2" />
+            </div>
 
-    <!-- Modal Body -->
-    <div class="p-4 space-y-4">
-      
-      <!-- Shed Info -->
-      <div>
-        <Label for="name" class="mb-2">Shed Name</Label>
-        <Input v-model="form.name" id="name" />
-        <span v-if="form.errors.name" class="text-red-600 text-sm">{{ form.errors.name }}</span>
-      </div>
+            <div class="flex flex-col">
+              <Label>Gross Weight</Label>
+              <Input v-model.number="form.ps_gross_weight" type="number" step="0.01" class="mt-2" />
+            </div>
 
-      <div>
-        <Label for="status" class="mb-2">Status</Label>
-        <select v-model="form.status" id="status" class="w-full border rounded p-2">
-          <option :value="1">Active</option>
-          <option :value="0">Inactive</option>
-        </select>
-      </div>
+            <div class="flex flex-col">
+              <Label>Net Weight</Label>
+              <Input v-model.number="form.ps_net_weight" type="number" step="0.01" class="mt-2" />
+            </div>
+          </div>
+          <!-- Chicks Section -->
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="flex flex-col">
+              <Label>Female Chicks Qty</Label>
+              <Input v-model.number="form.ps_female_qty" type="number" class="mt-2" />
+            </div>
 
-      <!-- ✅ Chick Counts Section -->
-      <div class="space-y-4 mt-4">
-        <h2 class="text-xl font-semibold">Chick Counts</h2>
+            <div class="flex flex-col">
+              <Label>Male Chicks Qty</Label>
+              <Input v-model.number="form.ps_male_qty" type="number" class="mt-2" />
+            </div>
 
-        <!-- Challan and Weights -->
-        <div class="grid grid-cols-3 gap-4 items-center">
-          <div class="flex flex-col">
-            <Label>Challan Box Qty</Label>
-            <Input v-model.number="form.ps_challan_box_qty" type="number" class="mt-2" />
+            <div class="flex flex-col">
+              <Label>Total Chicks Qty</Label>
+              <Input v-model="form.ps_total_qty" type="number" class="mt-2" readonly />
+            </div>
           </div>
 
-          <div class="flex flex-col">
-            <Label>Gross Weight</Label>
-            <Input v-model.number="form.ps_gross_weight" type="number" step="0.01" class="mt-2" />
-          </div>
+          <!-- Box Count Section -->
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="flex flex-col">
+              <Label>Female Box Receive Qty</Label>
+              <Input v-model.number="form.ps_female_rec_box" type="number" class="mt-2" />
+            </div>
 
-          <div class="flex flex-col">
-            <Label>Net Weight</Label>
-            <Input v-model.number="form.ps_net_weight" type="number" step="0.01" class="mt-2" />
-          </div>
-        </div>
+            <div class="flex flex-col">
+              <Label>Male Box Receive Qty</Label>
+              <Input v-model.number="form.ps_male_rec_box" type="number" class="mt-2" />
+            </div>
 
-        <!-- Chicks Section -->
-        <div class="grid grid-cols-3 gap-4 mb-6">
-          <div class="flex flex-col">
-            <Label>Female Chicks Qty</Label>
-            <Input v-model.number="form.ps_female_qty" type="number" class="mt-2" />
-          </div>
-
-          <div class="flex flex-col">
-            <Label>Male Chicks Qty</Label>
-            <Input v-model.number="form.ps_male_qty" type="number" class="mt-2" />
-          </div>
-
-          <div class="flex flex-col">
-            <Label>Total Chicks Qty</Label>
-            <Input v-model.number="form.ps_total_qty" type="number" class="mt-2" readonly />
+            <div class="flex flex-col">
+              <Label>Total Box Qty</Label>
+              <Input v-model="form.ps_total_re_box_qty" type="number" class="mt-2" readonly />
+            </div>
           </div>
         </div>
 
-        <!-- Box Count Section -->
-        <div class="grid grid-cols-3 gap-4 mb-6">
-          <div class="flex flex-col">
-            <Label>Female Box Receive Qty</Label>
-            <Input v-model.number="form.ps_female_rec_box" type="number" class="mt-2" />
-          </div>
-
-          <div class="flex flex-col">
-            <Label>Male Box Receive Qty</Label>
-            <Input v-model.number="form.ps_male_rec_box" type="number" class="mt-2" />
-          </div>
-
-          <div class="flex flex-col">
-            <Label>Total Box Qty</Label>
-            <Input v-model.number="form.ps_total_re_box_qty" type="number" class="mt-2" readonly />
-          </div>
+        <!-- Submit -->
+        <div class="flex justify-end">
+          <Button type="submit" class="px-6 py-2">Save</Button>
         </div>
-      </div>
-
+      </form>
     </div>
-
-    <!-- Modal Footer -->
-    <div class="flex justify-end p-4 border-t border-gray-200">
-      <button type="button" class="bg-gray-300 text-black mr-2 px-4 py-2 rounded" @click="resetForm">Cancel</button>
-      <button type="button" class="bg-chicken text-white px-4 py-2 rounded" @click="submit">
-        {{ editingShed ? 'Update' : 'Save' }}
-      </button>
-    </div>
-
-  </div>
-</div>
   </AppLayout>
 </template>

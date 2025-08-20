@@ -41,6 +41,6 @@ class PsReceive extends Model
 
     public function chickCounts()
     {
-        return $this->hasMany(PsChickCount::class);
+        return $this->hasOne(PsChickCount::class);
     }
 }

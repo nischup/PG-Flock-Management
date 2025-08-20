@@ -41,4 +41,12 @@ export interface User {
 }
 
 
+export interface ModalField {
+  name: string
+  label: string
+  editable: boolean
+  type?: string
+  options?: Array<{ label: string; value: any }>
+}
+
 export type BreadcrumbItemType = BreadcrumbItem;
