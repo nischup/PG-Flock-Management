@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Master\Company;
+use Illuminate\Support\Facades\Log;
 
 class CompanyController extends Controller
 {
@@ -14,11 +15,24 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $companies = Company::orderBy('id', 'desc')->get();
+        try {
+            $companies = Company::orderBy('id', 'desc')->get()->map(function ($company) {
+                return [
+                    'id'       => $company->id,
+                    'name'     => $company->name,
+                    'status'   => $company->status == 1 ? 'Active' : 'Inactive',
+                    'location' => $company->location,
+                    'created_at' => $company->created_at->format('Y-m-d'),
+                ];
+            });
 
-        return Inertia::render('library/company/List', [
-            'companies' => $companies,
-        ]);
+            return Inertia::render('library/company/List', [
+                'companies' => $companies,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Company index error: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Failed to fetch companies.');
+        }
     }
 
     /**
@@ -29,16 +43,21 @@ class CompanyController extends Controller
         $request->validate([
             'name'     => 'required|string|max:200',
             'status'   => 'nullable|integer',
-            'location' => 'nullable|string|max:200', // ✅ match DB length
+            'location' => 'nullable|string|max:200',
         ]);
 
-        Company::create([
-            'name'     => $request->name,
-            'status'   => $request->status ?? 1,
-            'location' => $request->location, // ✅ save correctly
-        ]);
+        try {
+            Company::create([
+                'name'     => $request->name,
+                'status'   => $request->status ?? 1,
+                'location' => $request->location,
+            ]);
 
-        return redirect()->route('company.index')->with('success', 'Company created successfully.');
+            return redirect()->route('company.index')->with('success', 'Company created successfully.');
+        } catch (\Exception $e) {
+            Log::error('Company store error: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Failed to create company.');
+        }
     }
 
     /**
@@ -46,11 +65,23 @@ class CompanyController extends Controller
      */
     public function edit(string $id)
     {
-        $company = Company::findOrFail($id);
+        try {
+            $company = Company::findOrFail($id);
 
-        return Inertia::render('library/company/Edit', [
-            'company' => $company,
-        ]);
+            $companyData = [
+                'id'       => $company->id,
+                'name'     => $company->name,
+                'status'   => $company->status == 1 ? 'Active' : 'Inactive',
+                'location' => $company->location,
+            ];
+
+            return Inertia::render('library/company/Edit', [
+                'company' => $companyData,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Company edit error: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Failed to fetch company.');
+        }
     }
 
     /**
@@ -58,20 +89,25 @@ class CompanyController extends Controller
      */
     public function update(Request $request, string $id)
     {
-       $request->validate([
+        $request->validate([
             'name'     => 'required|string|max:200',
             'status'   => 'nullable|integer',
-            'location' => 'nullable|string|max:200', // ✅ match DB length
+            'location' => 'nullable|string|max:200',
         ]);
 
-        $company = Company::findOrFail($id);
-        $company->update([
-            'name'     => $request->name,
-            'status'   => $request->status ?? 1,
-            'location' => $request->location,
-        ]);
+        try {
+            $company = Company::findOrFail($id);
+            $company->update([
+                'name'     => $request->name,
+                'status'   => $request->status ?? 1,
+                'location' => $request->location,
+            ]);
 
-        return redirect()->route('company.index')->with('success', 'Company updated successfully.');
+            return redirect()->route('company.index')->with('success', 'Company updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Company update error: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update company.');
+        }
     }
 
     /**
@@ -79,9 +115,14 @@ class CompanyController extends Controller
      */
     public function destroy(string $id)
     {
-        $company = Company::findOrFail($id);
-        $company->delete();
+        try {
+            $company = Company::findOrFail($id);
+            $company->delete();
 
-        return redirect()->route('company.index')->with('success', 'Company deleted successfully.');
+            return redirect()->route('company.index')->with('success', 'Company deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Company delete error: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Failed to delete company.');
+        }
     }
 }

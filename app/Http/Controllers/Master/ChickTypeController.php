@@ -20,8 +20,8 @@ class ChickTypeController extends Controller
             'id' => $item->id,
             'name' => $item->name,
             'status' => $item->status,
-            'created_at' => $item->created_at->format('Y-m-d H:i:s'),
-            'updated_at' => $item->updated_at->format('Y-m-d H:i:s'),
+            'created_at' => $item->created_at->format('Y-m-d'),
+            'updated_at' => $item->updated_at->format('Y-m-d'),
         ];
     });
 

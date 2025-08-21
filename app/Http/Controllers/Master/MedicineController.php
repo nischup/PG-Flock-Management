@@ -21,8 +21,8 @@ class MedicineController extends Controller
                     'id' => $medicine->id,
                     'name' => $medicine->name,
                     'status' => $medicine->status, // 0 or 1
-                    'created_at' => $medicine->created_at->format('Y-m-d H:i:s'),
-                    'updated_at' => $medicine->updated_at->format('Y-m-d H:i:s'),
+                    'created_at' => $medicine->created_at->format('Y-m-d'),
+                    'updated_at' => $medicine->updated_at->format('Y-m-d'),
                 ];
             })->toArray();
 
@@ -59,8 +59,8 @@ class MedicineController extends Controller
                 'id' => $medicine->id,
                 'name' => $medicine->name,
                 'status' => $medicine->status,
-                'created_at' => $medicine->created_at->format('Y-m-d H:i:s'),
-                'updated_at' => $medicine->updated_at->format('Y-m-d H:i:s'),
+                'created_at' => $medicine->created_at->format('Y-m-d'),
+                'updated_at' => $medicine->updated_at->format('Y-m-d'),
             ];
 
             return redirect()->route('medicine.index')->with('success', 'Medicine created successfully')->with('medicine', $data);
@@ -90,8 +90,8 @@ class MedicineController extends Controller
                 'id' => $medicine->id,
                 'name' => $medicine->name,
                 'status' => $medicine->status,
-                'created_at' => $medicine->created_at->format('Y-m-d H:i:s'),
-                'updated_at' => $medicine->updated_at->format('Y-m-d H:i:s'),
+                'created_at' => $medicine->created_at->format('Y-m-d'),
+                'updated_at' => $medicine->updated_at->format('Y-m-d'),
             ];
 
             return redirect()->route('medicine.index')->with('success', 'Medicine updated successfully')->with('medicine', $data);
