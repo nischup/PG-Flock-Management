@@ -13,7 +13,14 @@ class ShedController extends Controller
     public function index()
     {
         try {
-            $sheds = Shed::orderBy('id', 'desc')->get()->toArray();
+            $sheds = Shed::orderBy('id', 'desc')->get()->map(function ($shed) {
+                return [
+                    'id'         => $shed->id,
+                    'name'       => $shed->name,
+                    'status'     => $shed->status ? 'Active' : 'Deactivated',
+                    'created_at' => $shed->created_at->format('Y-m-d'),
+                ];
+            });
 
             return Inertia::render('library/shed/List', [
                 'sheds' => $sheds,
