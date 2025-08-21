@@ -16,7 +16,19 @@ class PsFirmReceiveController extends Controller
     public function index()
     {
         // Fetch all PS Receives (you may filter by status if needed)
-        $psReceives = PsReceive::select('id', 'pi_no')->get();
+        $psReceives = PsReceive::with('chickCounts')
+        ->get()
+        ->map(function($ps) {
+            return [
+                'id' => $ps->id,
+                'pi_no' => $ps->pi_no,
+                'total_chicks_qty' => $ps->chickCounts->ps_total_qty ?? 0,
+                'total_box_qty' => $ps->chickCounts->ps_total_re_box_qty ?? 0,
+                'male_box_qty' => $ps->chickCounts->ps_male_rec_box ?? 0,
+                'female_box_qty' => $ps->chickCounts->ps_female_rec_box ?? 0,
+            ];
+        });
+
 
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();

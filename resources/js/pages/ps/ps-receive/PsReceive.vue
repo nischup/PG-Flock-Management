@@ -7,6 +7,9 @@ import Pagination from '@/components/Pagination.vue'
 import { useListFilters } from '@/composables/useListFilters'
 import { useNotifier } from '@/composables/useNotifier'
 import { usePermissions } from '@/composables/usePermissions'
+import { Button } from '@/components/ui/button'
+import { Pencil, Trash2, FlaskConical } from "lucide-vue-next";
+
 import dayjs from 'dayjs'
 import { type BreadcrumbItem } from '@/types'
 
@@ -120,6 +123,11 @@ const stopDrag = () => {
   document.removeEventListener('mouseup', stopDrag)
 }
 
+const openDropdownId = ref<number | null>(null)
+const toggleDropdown = (id: number) => {
+  openDropdownId.value = openDropdownId.value === id ? null : id
+}
+
 // Open modal and fetch data
 const openModal = (id: number) => {
   form.get(`/ps-receive/${id}/data`, {
@@ -184,18 +192,43 @@ function updateTotalQty() {
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.chick_counts?.ps_total_re_box_qty ?? '-' }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.remarks ?? '-' }}</td>
               <td class="px-6 py-4 flex gap-4 items-center">
-                <Link
-                  v-if="can('ps.receive.edit')"
-                  :href="`/ps-receive/${item.id}/edit`"
-                  class="text-indigo-600 hover:underline font-medium"
-                >
-                  Edit
-                </Link>
-                <button v-if="can('ps.receive.delete')" @click="deleteReceive(item.id)" class="text-red-600 hover:underline font-medium">Delete</button>
-                <button  @click="openModal(item.id)" class="text-indigo-600 hover:underline font-medium">
-                  Lab Test
-                </button>
-             
+                <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(item.id)">
+                  Actions ▼
+                </Button>
+                <div
+                    v-if="openDropdownId === item.id"
+                    class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10 flex flex-col"
+                    @click.stop
+                  >
+                   <!-- Edit -->
+                      <Link
+                        v-if="can('ps.receive.edit')"
+                        :href="`/ps-receive/${item.id}/edit`"
+                        class="px-4 py-2 text-left hover:bg-blue-50 text-blue-600 flex items-center gap-2"
+                      >
+                        <Pencil class="w-4 h-4" />
+                        <span>Edit</span>
+                      </Link>
+
+                      <!-- Delete -->
+                      <button
+                        v-if="can('ps.receive.delete')"
+                        @click="deleteReceive(item.id)"
+                        class="px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2 w-full"
+                      >
+                        <Trash2 class="w-4 h-4" />
+                        <span>Delete</span>
+                      </button>
+
+                      <!-- Lab Test -->
+                      <button
+                        @click="openModal(item.id)"
+                        class="px-4 py-2 text-left hover:bg-gray-50 text-gray-700 flex items-center gap-2 w-full"
+                      >
+                        <FlaskConical class="w-4 h-4" />
+                        <span>Lab Test</span>
+                      </button>
+                  </div>
               </td>
             </tr>
             <tr v-if="(props.psReceives?.data ?? []).length === 0">
