@@ -13,7 +13,7 @@ interface Company {
   id: number
   name: string
   location?: string
-  status: number // 1=Active, 0=Inactive
+  status: number // ✅ keep number
   created_at: string
 }
 
@@ -26,34 +26,6 @@ const editingCompany = ref<Company | null>(null)
 
 // Form
 const form = useForm({ name: '', location: '', status: 1 })
-
-// Draggable modal
-const modalRef = ref<HTMLElement | null>(null)
-let offsetX = 0, offsetY = 0, isDragging = false
-
-const startDrag = (event: MouseEvent) => {
-  if (!modalRef.value) return
-  isDragging = true
-  const rect = modalRef.value.getBoundingClientRect()
-  offsetX = event.clientX - rect.left
-  offsetY = event.clientY - rect.top
-  document.addEventListener('mousemove', onDrag)
-  document.addEventListener('mouseup', stopDrag)
-}
-
-const onDrag = (event: MouseEvent) => {
-  if (!isDragging || !modalRef.value) return
-  modalRef.value.style.left = `${event.clientX - offsetX}px`
-  modalRef.value.style.top = `${event.clientY - offsetY}px`
-  modalRef.value.style.position = 'absolute'
-  modalRef.value.style.margin = '0'
-}
-
-const stopDrag = () => {
-  isDragging = false
-  document.removeEventListener('mousemove', onDrag)
-  document.removeEventListener('mouseup', stopDrag)
-}
 
 // Open modal
 const openModal = (company: Company | null = null) => {
@@ -86,7 +58,6 @@ const submit = () => {
   if (!form.name.trim()) return
 
   if (editingCompany.value) {
-    // Update
     form.put(route('company.update', editingCompany.value.id), {
       preserveScroll: true,
       onSuccess: () => {
@@ -103,21 +74,16 @@ const submit = () => {
       },
     })
   } else {
-    // Create
     form.post(route('company.store'), {
       preserveScroll: true,
-      onSuccess: (page) => {
-        if ((page as any).props?.companies) {
-          companies.value = (page as any).props.companies
-        } else {
-          companies.value.unshift({
-            id: Date.now(),
-            name: form.name,
-            location: form.location,
-            status: form.status,
-            created_at: new Date().toISOString(),
-          })
-        }
+      onSuccess: () => {
+        companies.value.unshift({
+          id: Date.now(), // temp ID until refresh
+          name: form.name,
+          location: form.location,
+          status: form.status,
+          created_at: new Date().toISOString().split('T')[0],
+        })
         resetForm()
       },
     })
@@ -133,7 +99,6 @@ const toggleDropdown = (id: number) => {
 // Status toggle
 const toggleStatus = (company: Company) => {
   const newStatus = company.status === 1 ? 0 : 1
-
   router.put(
     route('company.update', company.id),
     { name: company.name, status: newStatus, location: company.location },
@@ -142,9 +107,6 @@ const toggleStatus = (company: Company) => {
       onSuccess: () => {
         const i = companies.value.findIndex(c => c.id === company.id)
         if (i !== -1) companies.value[i].status = newStatus
-      },
-      onError: () => {
-        Swal.fire('Error!', 'Could not update status.', 'error')
       },
       onFinish: () => {
         openDropdownId.value = null

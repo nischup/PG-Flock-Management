@@ -18,10 +18,10 @@ class CompanyController extends Controller
         try {
             $companies = Company::orderBy('id', 'desc')->get()->map(function ($company) {
                 return [
-                    'id'       => $company->id,
-                    'name'     => $company->name,
-                    'status'   => $company->status == 1 ? 'Active' : 'Inactive',
-                    'location' => $company->location,
+                    'id'         => $company->id,
+                    'name'       => $company->name,
+                    'status'     => (int) $company->status, // keep as int for Vue
+                    'location'   => $company->location,
                     'created_at' => $company->created_at->format('Y-m-d'),
                 ];
             });
@@ -71,7 +71,7 @@ class CompanyController extends Controller
             $companyData = [
                 'id'       => $company->id,
                 'name'     => $company->name,
-                'status'   => $company->status == 1 ? 'Active' : 'Inactive',
+                'status'   => (int) $company->status,
                 'location' => $company->location,
             ];
 
