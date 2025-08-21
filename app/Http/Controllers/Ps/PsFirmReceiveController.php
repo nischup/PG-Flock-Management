@@ -24,6 +24,7 @@ class PsFirmReceiveController extends Controller
                 'pi_no' => $ps->pi_no,
                 'total_chicks_qty' => $ps->chickCounts->ps_total_qty ?? 0,
                 'total_box_qty' => $ps->chickCounts->ps_total_re_box_qty ?? 0,
+                'ps_challan_box_qty' => $ps->chickCounts->ps_challan_box_qty ?? 0,
                 'male_box_qty' => $ps->chickCounts->ps_male_rec_box ?? 0,
                 'female_box_qty' => $ps->chickCounts->ps_female_rec_box ?? 0,
             ];

@@ -116,7 +116,7 @@ class PsReceiveController extends Controller
                 'lab_receive_male_qty'    => (int) $request->lab_receive_male_qty ?? 0,
                 'lab_receive_total_qty'   => (int) $request->lab_receive_total_qty ?? 0,
                 'notes'                   => $request->notes ?? null,
-                'status'                  => (int) $request->status ?? 1,
+                'status'                  =>1,
             ]);
 
            
