@@ -14,9 +14,9 @@ const props = defineProps<{
     data: Array<{
       id: number;
       lab_type: string;
-      female_qty: number;
-      male_qty: number;
-      total_qty: number;
+      lab_send_female_qty: number;
+      lab_send_male_qty: number;
+      lab_send_total_qty: number;
       notes?: string;
       status: number;
       ps_receive?: {
@@ -100,9 +100,9 @@ const breadcrumbs: BreadcrumbItem[] = [
                 {{ lab.ps_receive?.created_at ? dayjs(lab.ps_receive.created_at).format('YYYY-MM-DD') : '-' }}
               </td>
               <td class="px-6 py-4">{{ lab.lab_type }}</td>
-              <td class="px-6 py-4">{{ lab.female_qty }}</td>
-              <td class="px-6 py-4">{{ lab.male_qty }}</td>
-              <td class="px-6 py-4">{{ lab.total_qty }}</td>
+              <td class="px-6 py-4">{{ lab.lab_send_female_qty }}</td>
+              <td class="px-6 py-4">{{ lab.lab_send_male_qty }}</td>
+              <td class="px-6 py-4">{{ lab.lab_send_total_qty }}</td>
               <td class="px-6 py-4">{{ lab.notes ?? '-' }}</td>
               <td class="px-6 py-4">
                 <span :class="lab.status === 1 ? 'text-green-600' : 'text-red-600'">
@@ -117,13 +117,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                 >
                   Edit
                 </Link>
-                <button
+                <!-- <button
                   v-if="can('ps-lab-test.delete')"
                   @click="deleteLabTest(lab.id)"
                   class="text-red-600 hover:underline font-medium"
                 >
                   Delete
-                </button>
+                </button> -->
               </td>
             </tr>
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, defineProps, defineEmits, computed } from 'vue'
 import { CircleX } from 'lucide-vue-next'
-
+import { Label } from '@/components/ui/label'
 const props = defineProps<{
   modelValue: (File | string)[]
   label?: string
@@ -69,7 +69,7 @@ function removeFile(index: number) {
 
 <template>
   <div :class="props.wrapperClass || ''">
-    <label class="font-medium mb-1 block">{{ props.label }}</label>
+    <Label class="font-medium mb-1 block">{{ props.label }}</Label>
 
     <input
       type="file"

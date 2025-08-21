@@ -15,10 +15,14 @@ class PsLabTest extends Model
         'notes',
         'status',
     ];
-
-    // Optional: Relationship to PS Receive
+    protected $casts = [
+        'created_at' => 'date',
+        'updated_at' => 'date',
+    ];
+    
+    
     public function psReceive()
     {
-        return $this->belongsTo(PsReceive::class);
+        return $this->belongsTo(PsReceive::class, 'ps_receive_id', 'id');
     }
 }

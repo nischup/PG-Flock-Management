@@ -15,7 +15,7 @@ class PsLabTestController extends Controller
      */
     public function index(Request $request)
     {
-         $labTests = PsLabTest::with('psReceive') // eager-load parent
+            $labTests = PsLabTest::with('psReceive') // eager-load parent
                 ->when($request->search, fn($q) =>
                     $q->whereHas('psReceive', fn($q2) =>
                         $q2->where('pi_no', 'like', "%{$request->search}%")
@@ -37,7 +37,26 @@ class PsLabTestController extends Controller
      */
     public function create()
     {
-        //
+        $psReceives = PsReceive::with('chickCounts')
+        ->get()
+        ->map(function ($ps) {
+            return [
+                'id' => $ps->id,
+                'pi_no' => $ps->pi_no,
+                'order_no' => $ps->order_no,
+                'created_at' => $ps->created_at->format('Y-m-d'),
+                'total_chicks_qty' => $ps->chickCounts->ps_total_qty ?? 0,
+                'total_box_qty' => $ps->chickCounts->ps_total_re_box_qty ?? 0,
+                'male_box_qty' => $ps->chickCounts->ps_male_rec_box ?? 0,
+                'female_box_qty' => $ps->chickCounts->ps_female_rec_box ?? 0,
+            ];
+        });
+
+        return Inertia::render('ps/ps-lab-test/Create', [
+            'psReceives' => $psReceives,
+        ]);
+
+        
     }
 
     /**
@@ -79,7 +98,11 @@ class PsLabTestController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $labTest = PsLabTest::with('psReceive')->findOrFail($id);
+
+            return Inertia::render('ps/ps-lab-test/Edit', [
+                'labTest' => $labTest
+            ]);
     }
 
     /**

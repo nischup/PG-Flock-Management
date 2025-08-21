@@ -11,22 +11,22 @@ class PsChickCount extends Model
     protected $fillable = [
         'ps_receive_id',
 
-        'ps_male_box',
-        'ps_male_approximate_qty',
-        'ps_male_totalqty',
-        'ps_male_challan_qty',
-        'ps_male_rate',
-        'ps_male_value_total',
+        'ps_male_rec_box',
+        'ps_male_qty',
+        'ps_female_rec_box',
+        'ps_female_qty',
+        'ps_total_qty',
+        'ps_total_re_box_qty',
 
-        'ps_female_box',
-        'ps_female_approximate_qty',
-        'ps_female_totalqty',
-        'ps_challan_qty',
-        'ps_female_rate',
-        'ps_female_value_total',
+        'ps_challan_box_qty',
+        'ps_gross_weight',
+        'ps_net_weight',
+    ];
 
-        'ps_totalbox',
-        'ps_value_total',
+
+    protected $casts = [
+        'created_at' => 'date',
+        'updated_at' => 'date',
     ];
 
     // Belongs to one PS Receive
