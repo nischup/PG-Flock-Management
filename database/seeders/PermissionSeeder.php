@@ -66,10 +66,17 @@ class PermissionSeeder extends Seeder
             'unit.edit',
             'unit.delete',
 
+            'supplier.view',
+            'supplier.create',
+            'supplier.edit',
+            'supplier.delete',
+
             'ps-lab-test.view',
             'ps-lab-test.create',
             'ps-lab-test.edit',
             'ps-lab-test.delete',
+
+
         ];
 
 

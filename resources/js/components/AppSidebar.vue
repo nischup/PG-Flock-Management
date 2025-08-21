@@ -71,6 +71,8 @@ const mainNavItems: NavItem[] = [
       { title: 'Compnay', href: '/company', icon: BookOpen },
       { title: 'Chicks Type', href: '/chick-type', icon: BookOpen },
       { title: 'Feed Type', href: '/feed-type', icon: BookOpen },
+      { title: 'Supplier', href: '/supplier', icon: BookOpen },
+
     ]
   }
 ]
