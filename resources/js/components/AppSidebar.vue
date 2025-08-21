@@ -58,7 +58,7 @@ const mainNavItems: NavItem[] = [
       },
       {
         title: 'Pan assign',
-        href: '/receive',
+        href: '/receive k',
         icon: BabyChick
       },
     ]
