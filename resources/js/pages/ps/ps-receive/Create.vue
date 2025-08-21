@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3'
+import { Head, useForm, Link } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 import HeadingSmall from '@/components/HeadingSmall.vue'
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { type BreadcrumbItem } from '@/types'
+import { ArrowLeft } from 'lucide-vue-next'
 import FileUploader from '@/components/FileUploader.vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
@@ -17,9 +18,9 @@ import { watch } from 'vue'
 
 // Breadcrumb
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'PS Receive', href: '/ps/ps-receive' },
-]
-
+  { title: 'PS', href: '/ps-receive' },
+  { title: 'Create', href: '/ps-receive/create' },
+];
 
 // Form data
 const form = useForm({
@@ -36,8 +37,10 @@ const form = useForm({
   transport_type: '',
   remarks: '',
   file: [], // file upload
+  labfile:[],
   net_weight:0,
   gross_weight:0,
+  company_id:0,
 
   
   ps_male_rec_box: 0,             // Male Box Receive Qty
@@ -57,6 +60,11 @@ const form = useForm({
   // Weight
   ps_gross_weight: 0,
   ps_net_weight: 0,
+
+  lab_type: 'Gov Lab',
+  lab_send_female_qty:0,
+  lab_send_male_qty:0,
+  lab_send_total_qty:0,
 })
 
 const suppliers = ref([
@@ -117,6 +125,11 @@ watch(
 );
 
 
+function updateTotalQty() {
+  form.lab_send_total_qty = Number(form.lab_send_female_qty) + Number(form.lab_send_male_qty);
+}
+
+
 </script>
 
 <template>
@@ -129,8 +142,18 @@ watch(
       <form @submit.prevent="submit" class="space-y-8" enctype="multipart/form-data">
 
         <!-- Master Section -->
-        <div class="space-y-6">
-          <h2 class="text-xl font-semibold">PS Information</h2>
+        <div class="space-y-6 border-b">
+          <div class="pb-3 mb-6 flex items-center justify-between">
+            <!-- Left: Title -->
+            <h2 class="text-xl font-semibold">PS Receiving Info</h2>
+
+            <Link 
+              href="/ps-receive" 
+              class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center gap-1"
+            >
+              <ArrowLeft class="w-4 h-4" /> List
+            </Link>
+          </div>
           <div class="grid grid-cols-3 gap-6">
             <div class="flex flex-col mb-4">
               <Label>Shipment Type</Label>
@@ -233,7 +256,7 @@ watch(
                 </select>
               <InputError :message="form.errors.breed_type" class="mt-1" />
             </div>
-            <div class="flex flex-col mb-4" v-if="form.shipment_type_id == 2">
+            <div class="flex flex-col" v-if="form.shipment_type_id == 2">
               <Label>Country of Origin</Label>
                 <select
                     v-model="form.country_of_origin"
@@ -245,7 +268,7 @@ watch(
                 </select>
               <InputError :message="form.errors.country_of_origin" class="mt-1" />
             </div>
-            <div class="flex flex-col mb-4">
+            <div class="flex flex-col">
               <Label>Transport Type</Label>
                 <select
                     v-model="form.transport_type"
@@ -258,28 +281,43 @@ watch(
                 </select>
               <InputError :message="form.errors.transport_type" class="mt-1" />
             </div>
-            <div class="flex flex-col mb-4 col-span-3">
+            <div class="flex flex-col" v-if="form.shipment_type_id != 1">
+              <Label>Shift To</Label>
+                <select
+                    v-model="form.company_id"
+                    class="mt-2 border rounded px-3 py-2"
+                >
+                    <option value="0">Select One</option>
+                    <option value="1">PBL</option>
+                    <option value="2">PCL</option>
+                </select>
+              <InputError :message="form.errors.transport_type" class="mt-1" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <div class="flex flex-col mb-4">
               <Label>Note</Label>
-              <textarea v-model="form.remarks" class="w-full border rounded px-3 py-2 mt-2" placeholder="Enter any Note"></textarea>
+              <textarea v-model="form.remarks" class="border rounded px-3 py-2 mt-2" placeholder="Enter any Note"></textarea>
               <InputError :message="form.errors.remarks" class="mt-1" />
             </div>
             <!-- File upload section -->
-            <div class="flex flex-col mb-4 col-span-3">
+            <div class="flex flex-col mb-4">
                 <FileUploader
                     v-model="form.file"
                     label="Upload Files"
                     :max-files="3"
                     accept=".jpg,.jpeg,.png,.pdf"
-                    wrapper-class="flex flex-col mb-4 col-span-3"
+                    wrapper-class="flex flex-col mb-4 col-span-3 mt-5"
                     />
                 <InputError :message="form.errors.file" class="mt-1" />
             </div>
-            </div>
         </div>
 
-        <!-- Chick Counts Tabs -->
-        <div class="space-y-4">
-          <h2 class="text-xl font-semibold">Chick Counts</h2>
+        </div>
+        
+        <!-- Chick Counts  -->
+        <div class="space-y-4 border-b">
+          <h2 class="text-xl font-semibold">Receive Quantity</h2>
           <!-- Challan and Weights -->
           <div class="grid grid-cols-3 gap-4 items-center">
             <div class="flex flex-col">
@@ -333,6 +371,56 @@ watch(
             </div>
           </div>
         </div>
+
+
+        <!-- Lab Test -->
+        <div class="space-y-4">
+          <h2 class="text-xl font-semibold">Transfer Lab (For Test)</h2>
+          <!-- Challan and Weights -->
+          <div class="grid grid-cols-3 gap-4 items-center">
+            <div class="flex flex-col">
+             <Label>Lab Type</Label>
+              <select v-model="form.lab_type" class="mt-2 border rounded px-3 py-2">
+                <option value="Gov Lab">Gov Lab</option>
+                <option value="Provita Lab">Provita Lab</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col">
+              <Label>Lab Female Transfer Qty</Label>
+              <Input v-model.number="form.lab_send_female_qty" type="number" class="mt-2" @input="updateTotalQty" />
+            </div>
+            <div class="flex flex-col">
+              <Label>Lab Male Transfer Qty</Label>
+              <Input v-model.number="form.lab_send_male_qty" type="number" class="mt-2"  @input="updateTotalQty" />
+            </div>
+          </div>
+          <!-- Chicks Section -->
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            
+
+            <div class="flex flex-col">
+              <Label>Lab Total Transfer Qty</Label>
+              <Input v-model.number="form.lab_send_total_qty" type="number" class="mt-2"  readonly />
+            </div>
+
+            <div class="flex flex-col">
+              <Label>Remarks</Label>
+              <textarea v-model="form.remarks" class="border rounded px-3 mt-2" ></textarea>
+            </div>
+          </div>
+        </div>
+        <!-- File upload section -->
+          <div class="flex flex-col mb-4 col-span-3">
+              <FileUploader
+                  v-model="form.labfile"
+                  label="Upload Lab Files"
+                  :max-files="1"
+                  accept=".jpg,.jpeg,.png,.pdf"
+                  wrapper-class="flex flex-col mb-4 col-span-3"
+                  />
+              <InputError :message="form.errors.file" class="mt-1" />
+          </div>
 
         <!-- Submit -->
         <div class="flex justify-end">

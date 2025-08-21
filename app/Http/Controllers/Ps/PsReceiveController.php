@@ -69,9 +69,12 @@ class PsReceiveController extends Controller
         // ]);
 
         try {
-            DB::beginTransaction();
+            //DB::beginTransaction();
 
             // 1️⃣ Create main PS Receive
+
+
+            //dd($request);
             $psReceive = PsReceive::create([
                 'shipment_type_id' => (int) $request->shipment_type_id,
                 'pi_no' => $request->pi_no,
@@ -84,21 +87,36 @@ class PsReceiveController extends Controller
                 'breed_type' => (int) ($request->breed_type ?? 0),
                 'country_of_origin' => (int) ($request->country_of_origin ?? 0),
                 'transport_type' => (int) ($request->transport_type ?? 0),
+                'company_id' => (int) ($request->_company_id ?? 0),
                 'remarks' => $request->remarks,
                 'status' => 1,
                 'created_by' =>Auth::id()
             ]);
 
             $psReceive->chickCounts()->create([
-                'ps_male_rec_box'=>(float)$request->ps_male_rec_box,
+                'ps_male_rec_box'=>(int)$request->ps_male_rec_box,
                 'ps_male_qty'=>(float)$request->ps_male_qty,
-                'ps_female_rec_box'=>(float)$request->ps_female_rec_box,
+                'ps_female_rec_box'=>(int)$request->ps_female_rec_box,
                 'ps_female_qty'=>(float)$request->ps_female_qty,
                 'ps_total_qty'=>(float)$request->ps_total_qty,
-                'ps_total_re_box_qty'=>(float)$request->ps_total_re_box_qty,
-                'ps_challan_box_qty'=>(float)$request->ps_challan_box_qty,
+                'ps_total_re_box_qty'=>(int)$request->ps_total_re_box_qty,
+                'ps_challan_box_qty'=>(int)$request->ps_challan_box_qty,
                 'ps_gross_weight'=>(float)$request->ps_gross_weight,
                 'ps_net_weight'=>(float)$request->ps_net_weight,
+            ]);
+
+
+            $psReceive->labTransfers()->create([
+                'ps_receive_id'           => $psReceive->id,               // foreign key
+                'lab_type'                => $request->lab_type,
+                'lab_send_female_qty'     => (int) $request->lab_send_female_qty ?? 0,
+                'lab_send_male_qty'       => (int) $request->lab_send_male_qty ?? 0,
+                'lab_send_total_qty'      => (int) $request->lab_send_total_qty ?? 0,
+                'lab_receive_female_qty'  => (int) $request->lab_receive_female_qty ?? 0,
+                'lab_receive_male_qty'    => (int) $request->lab_receive_male_qty ?? 0,
+                'lab_receive_total_qty'   => (int) $request->lab_receive_total_qty ?? 0,
+                'notes'                   => $request->notes ?? null,
+                'status'                  => (int) $request->status ?? 1,
             ]);
 
            
@@ -112,13 +130,23 @@ class PsReceiveController extends Controller
                 }
             }
 
-            DB::commit();
+            // if ($request->hasFile('labfile')) {
+            //     foreach ($request->file('labfile') as $uploadedFile) {
+            //         $path = $uploadedFile->store('ps_lab_files'); // storage/app/ps_receive_files
+            //         $psReceive->attachments()->create([
+            //             'file_path' => $path,
+            //             'file_type' => $uploadedFile->getClientOriginalExtension(),
+            //         ]);
+            //     }
+            // }
+
+            //DB::commit();
 
             return redirect()->route('ps-receive.index')
                 ->with('success', 'PS Receive created successfully.');
         } catch (\Throwable $e) {
          
-            DB::rollBack();
+            //DB::rollBack();
             Log::error('PS Receive create failed', ['error' => $e->getMessage()]);
 
             return back()->withErrors(['general' => 'Failed to create PS Receive. Please try again.']);
@@ -127,34 +155,38 @@ class PsReceiveController extends Controller
 
     public function edit($id)
     {
-        $psReceive = PsReceive::with('chickCounts')->findOrFail($id);
+        $psReceive = PsReceive::with(['chickCounts', 'labTransfers'])->findOrFail($id);
         
-    // Flatten data from parent + child for modal
-    $data = [
-        'id' => $psReceive->id,
-        'pi_no' => $psReceive->pi_no,
-        'pi_date' => $psReceive->pi_date,
-        'order_no' => $psReceive->order_no,
-        'order_date' => $psReceive->order_date,
-        'lc_no' => $psReceive->lc_no,
-        'lc_date' => $psReceive->lc_date,
-        'supplier_id' => $psReceive->supplier_id,
-        'breed_type' => $psReceive->breed_type,
-        'country_of_origin' => $psReceive->country_of_origin,
-        'transport_type' => $psReceive->transport_type,
-        'remarks' => $psReceive->remarks,
-        'status' => $psReceive->status,
-        // Child fields
-        'ps_male_rec_box' => $psReceive->chickCounts->ps_male_rec_box ?? 0,
-        'ps_male_qty' => $psReceive->chickCounts->ps_male_qty ?? 0,
-        'ps_female_rec_box' => $psReceive->chickCounts->ps_female_rec_box ?? 0,
-        'ps_female_qty' => $psReceive->chickCounts->ps_female_qty ?? 0,
-        'ps_total_qty' => $psReceive->chickCounts->ps_total_qty ?? 0,
-        'ps_total_re_box_qty' => $psReceive->chickCounts->ps_total_re_box_qty ?? 0,
-        'ps_challan_box_qty' => $psReceive->chickCounts->ps_challan_box_qty ?? 0,
-        'ps_gross_weight' => $psReceive->chickCounts->ps_gross_weight ?? 0,
-        'ps_net_weight' => $psReceive->chickCounts->ps_net_weight ?? 0,
-    ];
+        // Flatten data from parent + child for modal
+        $data = [
+            'id' => $psReceive->id,
+            'pi_no' => $psReceive->pi_no,
+            'pi_date' => $psReceive->pi_date,
+            'order_no' => $psReceive->order_no,
+            'order_date' => $psReceive->order_date,
+            'lc_no' => $psReceive->lc_no,
+            'lc_date' => $psReceive->lc_date,
+            'supplier_id' => $psReceive->supplier_id,
+            'breed_type' => $psReceive->breed_type,
+            'country_of_origin' => $psReceive->country_of_origin,
+            'transport_type' => $psReceive->transport_type,
+            'remarks' => $psReceive->remarks,
+            'status' => $psReceive->status,
+            // Child fields
+            'ps_male_rec_box' => $psReceive->chickCounts->ps_male_rec_box ?? 0,
+            'ps_male_qty' => $psReceive->chickCounts->ps_male_qty ?? 0,
+            'ps_female_rec_box' => $psReceive->chickCounts->ps_female_rec_box ?? 0,
+            'ps_female_qty' => $psReceive->chickCounts->ps_female_qty ?? 0,
+            'ps_total_qty' => $psReceive->chickCounts->ps_total_qty ?? 0,
+            'ps_total_re_box_qty' => $psReceive->chickCounts->ps_total_re_box_qty ?? 0,
+            'ps_challan_box_qty' => $psReceive->chickCounts->ps_challan_box_qty ?? 0,
+            'ps_gross_weight' => $psReceive->chickCounts->ps_gross_weight ?? 0,
+            'ps_net_weight' => $psReceive->chickCounts->ps_net_weight ?? 0,
+            'lab_type' => $psReceive->labTransfers->lab_type ?? 0,
+            'lab_send_female_qty' => $psReceive->labTransfers->lab_send_female_qty ?? 0,
+            'lab_send_male_qty' => $psReceive->labTransfers->lab_send_male_qty ?? 0,
+
+        ];
 
         // Return Inertia response instead of JSON
         return Inertia::render('ps/ps-receive/Edit', [

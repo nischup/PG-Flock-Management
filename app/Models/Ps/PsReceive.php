@@ -43,4 +43,9 @@ class PsReceive extends Model
     {
         return $this->hasOne(PsChickCount::class);
     }
+
+    public function labTransfers()
+    {
+        return $this->hasOne(PsLabTest::class);
+    }
 }

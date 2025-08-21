@@ -24,6 +24,7 @@ return new class extends Migration
             $table->tinyInteger('breed_type')->default(0);
             $table->tinyInteger('country_of_origin')->default(0);
             $table->tinyInteger('transport_type')->default(0);
+            $table->unsignedTinyInteger('company_id')->default(0);
             $table->string('remarks')->nullable();
             $table->tinyInteger('created_by')->nullable();
             $table->tinyInteger('updated_by')->nullable();
