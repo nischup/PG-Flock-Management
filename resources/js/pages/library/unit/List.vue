@@ -14,7 +14,7 @@ import { usePermissions } from '@/composables/usePermissions'
 interface Unit {
   id: number
   name: string
-  status: string // 'Active' | 'Deactivated'
+  status: string // 'Active' | 'Inactive'
   created_at: string
 }
 
@@ -141,7 +141,7 @@ const toggleDropdown = (id: number) => {
 
 // Toggle status
 const toggleStatus = (unit: Unit) => {
-  const newStatus = unit.status === 'Active' ? 'Deactivated' : 'Active'
+  const newStatus = unit.status === 'Active' ? 'Inactive' : 'Active'
 
   router.put(
     route('unit.update', unit.id),
@@ -269,7 +269,7 @@ const breadcrumbs = [
                   class="w-full text-left px-4 py-2 hover:bg-gray-100"
                   @click="toggleStatus(unit)"
                 >
-                  {{ unit.status === 'Active' ? 'Deactivate' : 'Activate' }}
+                  {{ unit.status === 'Active' ? 'Inactive' : 'Activate' }}
                 </button>
                 <!-- <button
                   class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
@@ -326,7 +326,7 @@ const breadcrumbs = [
             <Label for="status" class="mb-2">Status</Label>
             <select v-model="form.status" id="status" class="w-full border rounded p-2">
               <option value="Active">Active</option>
-              <option value="Deactivated">Deactivated</option>
+              <option value="Inactive">Inactive</option>
             </select>
           </div>
         </div>

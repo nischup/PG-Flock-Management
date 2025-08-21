@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Master\Unit;
+use Illuminate\Support\Facades\Log;
 
 class UnitController extends Controller
 {
@@ -14,18 +15,26 @@ class UnitController extends Controller
      */
     public function index()
     {
-        $units = Unit::latest()->get()->map(function ($unit) {
-            return [
-                'id' => $unit->id,
-                'name' => $unit->name,
-                'status' => $unit->status ? 'Active' : 'Deactivated',
-                'created_at' => $unit->created_at->format('Y-m-d'),
-            ];
-        });
+        try {
+            $units = Unit::latest()->get()->map(function ($unit) {
+                return [
+                    'id' => $unit->id,
+                    'name' => $unit->name,
+                    'status' => $unit->status ? 'Active' : 'Inactive',
+                    'created_at' => $unit->created_at ? $unit->created_at->format('Y-m-d') : null,
+                ];
+            });
 
-        return Inertia::render('library/unit/List', [
-            'units' => $units
-        ]);
+            return Inertia::render('library/unit/List', [
+                'units' => $units
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Unit Index Error: ' . $e->getMessage());
+            return Inertia::render('library/unit/List', [
+                'units' => [],
+                'error' => 'Failed to load units.'
+            ]);
+        }
     }
 
     /**
@@ -33,17 +42,22 @@ class UnitController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:200',
-            'status' => 'required|string|in:Active,Deactivated',
-        ]);
+        try {
+            $data = $request->validate([
+                'name' => 'required|string|max:200',
+                'status' => 'required|string|in:Active,Inactive',
+            ]);
 
-        Unit::create([
-            'name' => $data['name'],
-            'status' => $data['status'] === 'Active' ? 1 : 0,
-        ]);
+            Unit::create([
+                'name' => $data['name'],
+                'status' => $data['status'] === 'Active' ? 1 : 0,
+            ]);
 
-        return redirect()->route('unit.index')->with('success', 'Unit created successfully.');
+            return redirect()->route('unit.index')->with('success', 'Unit created successfully.');
+        } catch (\Exception $e) {
+            Log::error('Unit Store Error: ' . $e->getMessage());
+            return redirect()->route('unit.index')->with('error', 'Failed to create unit.');
+        }
     }
 
     /**
@@ -51,18 +65,23 @@ class UnitController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:200',
-            'status' => 'required|string|in:Active,Deactivated',
-        ]);
+        try {
+            $data = $request->validate([
+                'name' => 'required|string|max:200',
+                'status' => 'required|string|in:Active,Inactive',
+            ]);
 
-        $unit = Unit::findOrFail($id);
-        $unit->update([
-            'name' => $data['name'],
-            'status' => $data['status'] === 'Active' ? 1 : 0,
-        ]);
+            $unit = Unit::findOrFail($id);
+            $unit->update([
+                'name' => $data['name'],
+                'status' => $data['status'] === 'Active' ? 1 : 0,
+            ]);
 
-        return redirect()->route('unit.index')->with('success', 'Unit updated successfully.');
+            return redirect()->route('unit.index')->with('success', 'Unit updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Unit Update Error: ' . $e->getMessage());
+            return redirect()->route('unit.index')->with('error', 'Failed to update unit.');
+        }
     }
 
     /**
@@ -70,7 +89,12 @@ class UnitController extends Controller
      */
     public function destroy(string $id)
     {
-        Unit::findOrFail($id)->delete();
-        return redirect()->route('unit.index')->with('success', 'Unit deleted successfully.');
+        try {
+            Unit::findOrFail($id)->delete();
+            return redirect()->route('unit.index')->with('success', 'Unit deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Unit Delete Error: ' . $e->getMessage());
+            return redirect()->route('unit.index')->with('error', 'Failed to delete unit.');
+        }
     }
 }

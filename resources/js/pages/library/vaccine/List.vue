@@ -14,7 +14,7 @@ import { useListFilters } from '@/composables/useListFilters'
 interface Vaccine {
   id: number
   name: string
-  status: number // 1 = Active, 0 = Deactivated
+  status: number // 1 = Active, 0 = Inactive
   created_at: string
 }
 
@@ -201,7 +201,7 @@ const breadcrumbs = [
             <td class="p-2 border">{{ vaccine.name }}</td>
             <td class="p-2 border">
               <span :class="vaccine.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-                {{ vaccine.status === 1 ? 'Active' : 'Deactivated' }}
+                {{ vaccine.status === 1 ? 'Active' : 'Inactive' }}
               </span>
             </td>
             <td class="p-2 border">{{ vaccine.created_at }}</td>
@@ -245,7 +245,7 @@ const breadcrumbs = [
             <Label for="status" class="mb-2">Status</Label>
             <select v-model="form.status" id="status" class="w-full border rounded p-2">
               <option :value="1">Active</option>
-              <option :value="0">Deactivated</option>
+              <option :value="0">Inactive</option>
             </select>
           </div>
         </div>

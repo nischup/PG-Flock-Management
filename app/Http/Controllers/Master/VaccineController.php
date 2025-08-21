@@ -18,7 +18,7 @@ class VaccineController extends Controller
                     'id' => $vaccine->id,
                     'name' => $vaccine->name,
                     'status' => $vaccine->status,
-                    'created_at' => $vaccine->created_at->format('Y-m-d H:i:s'),
+                    'created_at' => $vaccine->created_at->format('Y-m-d'),
                 ];
             })->toArray();
 

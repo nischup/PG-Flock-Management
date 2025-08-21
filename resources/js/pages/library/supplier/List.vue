@@ -221,7 +221,7 @@ const breadcrumbs = [
               >
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(supplier)">✏ Edit</button>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(supplier)">
-                  {{ supplier.status === 1 ? 'Deactivate' : 'Activate' }}
+                  {{ supplier.status === 1 ? 'Inactive' : 'Activate' }}
                 </button>
               </div>
             </td>

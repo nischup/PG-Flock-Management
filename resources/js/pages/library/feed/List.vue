@@ -236,7 +236,7 @@ const breadcrumbs = [
             <div v-if="openDropdownId === feed.id" class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10" @click.stop>
               <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(feed)">✏ Edit</button>
               <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(feed)">
-                {{ feed.status === 1 ? 'Deactivate' : 'Activate' }}
+                {{ feed.status === 1 ? 'Inactive' : 'Activate' }}
               </button>
               <button v-if="can('feed.delete')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" @click="deleteFeed(feed)">
                 🗑 Delete

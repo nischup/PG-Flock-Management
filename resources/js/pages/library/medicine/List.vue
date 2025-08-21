@@ -260,7 +260,7 @@ const breadcrumbs = [
                   ✏ Edit
                 </button>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(medicine)">
-                  {{ medicine.status === 1 ? 'Deactivate' : 'Activate' }}
+                  {{ medicine.status === 1 ? 'Inactive' : 'Activate' }}
                 </button>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" @click="deleteMedicine(medicine)">
                   🗑 Delete

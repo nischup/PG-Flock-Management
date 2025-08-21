@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -14,7 +14,7 @@ import { usePermissions } from '@/composables/usePermissions'
 interface FeedType {
   id: number
   name: string
-  status: number // 1 = Active, 0 = Inactive
+  status: number
   created_at: string
 }
 
@@ -23,43 +23,36 @@ const props = defineProps<{
   filters: { search?: string; per_page?: number; page?: number }
 }>()
 
-// Filters & permissions
 useListFilters({ routeName: '/feed-type', filters: props.filters })
 const { can } = usePermissions()
 
-// Local state
+// Reactive state
 const feedTypes = ref<FeedType[]>([...props.feedTypes])
-
-// Modal state
 const showModal = ref(false)
 const editingFeedType = ref<FeedType | null>(null)
 
-// Modal form
 const form = useForm({
   name: '',
   status: 1,
 })
 
-// Draggable modal refs
 const modalRef = ref<HTMLElement | null>(null)
-let offsetX = 0,
-  offsetY = 0,
-  isDragging = false
+let offsetX = 0, offsetY = 0, isDragging = false
 
-const startDrag = (event: MouseEvent) => {
+const startDrag = (e: MouseEvent) => {
   if (!modalRef.value) return
   isDragging = true
   const rect = modalRef.value.getBoundingClientRect()
-  offsetX = event.clientX - rect.left
-  offsetY = event.clientY - rect.top
+  offsetX = e.clientX - rect.left
+  offsetY = e.clientY - rect.top
   document.addEventListener('mousemove', onDrag)
   document.addEventListener('mouseup', stopDrag)
 }
 
-const onDrag = (event: MouseEvent) => {
+const onDrag = (e: MouseEvent) => {
   if (!isDragging || !modalRef.value) return
-  modalRef.value.style.left = `${event.clientX - offsetX}px`
-  modalRef.value.style.top = `${event.clientY - offsetY}px`
+  modalRef.value.style.left = `${e.clientX - offsetX}px`
+  modalRef.value.style.top = `${e.clientY - offsetY}px`
   modalRef.value.style.position = 'absolute'
   modalRef.value.style.margin = '0'
 }
@@ -71,11 +64,11 @@ const stopDrag = () => {
 }
 
 // Open modal
-const openModal = (feedType: FeedType | null = null) => {
-  if (feedType) {
-    editingFeedType.value = feedType
-    form.name = feedType.name
-    form.status = feedType.status
+const openModal = (ft: FeedType | null = null) => {
+  if (ft) {
+    editingFeedType.value = ft
+    form.name = ft.name
+    form.status = ft.status
   } else {
     editingFeedType.value = null
     form.reset()
@@ -84,7 +77,6 @@ const openModal = (feedType: FeedType | null = null) => {
   showModal.value = true
 }
 
-// Reset form
 const resetForm = () => {
   form.reset()
   form.status = 1
@@ -94,7 +86,6 @@ const resetForm = () => {
 
 useNotifier()
 
-// Submit (Create/Update)
 const submit = () => {
   if (!form.name.trim()) return
 
@@ -103,10 +94,10 @@ const submit = () => {
     form.put(route('feed-type.update', editingFeedType.value.id), {
       preserveScroll: true,
       onSuccess: () => {
-        const i = feedTypes.value.findIndex((f) => f.id === editingFeedType.value!.id)
-        if (i !== -1) {
-          feedTypes.value[i] = {
-            ...feedTypes.value[i],
+        const index = feedTypes.value.findIndex(f => f.id === editingFeedType.value!.id)
+        if (index !== -1) {
+          feedTypes.value[index] = {
+            ...feedTypes.value[index],
             name: form.name,
             status: form.status,
           }
@@ -119,6 +110,7 @@ const submit = () => {
     form.post(route('feed-type.store'), {
       preserveScroll: true,
       onSuccess: (page) => {
+        // Refresh the list if server returns updated feedTypes
         if ((page as any).props?.feedTypes) {
           feedTypes.value = (page as any).props.feedTypes
         } else {
@@ -135,39 +127,29 @@ const submit = () => {
   }
 }
 
-// Dropdown actions
+// Dropdown & status
 const openDropdownId = ref<number | null>(null)
 const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
 }
 
-// Toggle status
-const toggleStatus = (feedType: FeedType) => {
-  const newStatus = feedType.status === 1 ? 0 : 1
-  router.put(
-    route('feed-type.update', feedType.id),
-    { name: feedType.name, status: newStatus },
-    {
-      preserveScroll: true,
-      onSuccess: () => {
-        const i = feedTypes.value.findIndex((f) => f.id === feedType.id)
-        if (i !== -1) feedTypes.value[i].status = newStatus
-      },
-      onError: () => {
-        Swal.fire('Error!', 'Could not update status.', 'error')
-      },
-      onFinish: () => {
-        openDropdownId.value = null
-      },
-    }
-  )
+const toggleStatus = (ft: FeedType) => {
+  const newStatus = ft.status === 1 ? 0 : 1
+  router.put(route('feed-type.update', ft.id), { name: ft.name, status: newStatus }, {
+    preserveScroll: true,
+    onSuccess: () => {
+      const index = feedTypes.value.findIndex(f => f.id === ft.id)
+      if (index !== -1) feedTypes.value[index].status = newStatus
+    },
+    onError: () => Swal.fire('Error', 'Could not update status', 'error'),
+    onFinish: () => openDropdownId.value = null,
+  })
 }
 
-// Delete feed type (optional)
-const deleteFeedType = (feedType: FeedType) => {
+const deleteFeedType = (ft: FeedType) => {
   Swal.fire({
     title: 'Are you sure?',
-    text: `You are about to delete feed type "${feedType.name}"!`,
+    text: `Delete "${ft.name}"?`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#d33',
@@ -175,18 +157,14 @@ const deleteFeedType = (feedType: FeedType) => {
     confirmButtonText: 'Yes, delete it!',
   }).then((result) => {
     if (result.isConfirmed) {
-      router.delete(route('feed-type.destroy', feedType.id), {
+      router.delete(route('feed-type.destroy', ft.id), {
         preserveScroll: true,
         onSuccess: () => {
-          feedTypes.value = feedTypes.value.filter((f) => f.id !== feedType.id)
+          feedTypes.value = feedTypes.value.filter(f => f.id !== ft.id)
           Swal.fire('Deleted!', 'Feed type has been deleted.', 'success')
         },
-        onError: () => {
-          Swal.fire('Error!', 'Could not delete feed type.', 'error')
-        },
-        onFinish: () => {
-          openDropdownId.value = null
-        },
+        onError: () => Swal.fire('Error', 'Could not delete feed type.', 'error'),
+        onFinish: () => openDropdownId.value = null,
       })
     }
   })
@@ -198,6 +176,7 @@ const breadcrumbs = [
   { title: 'Feed Type', href: '/master-setup/feed-type' },
 ]
 </script>
+
 
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
@@ -261,7 +240,7 @@ const breadcrumbs = [
                   ✏ Edit
                 </button>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(feedType)">
-                  {{ feedType.status === 1 ? 'Deactivate' : 'Activate' }}
+                  {{ feedType.status === 1 ? 'Inactive' : 'Activate' }}
                 </button>
                 <button
                   v-if="can('feed-type.delete')"

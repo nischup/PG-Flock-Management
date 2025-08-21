@@ -249,7 +249,7 @@ const breadcrumbs = [
                   class="w-full text-left px-4 py-2 hover:bg-gray-100"
                   @click="toggleStatus(chickType)"
                 >
-                  {{ chickType.status === 1 ? 'Deactivate' : 'Activate' }}
+                  {{ chickType.status === 1 ? 'Inactive' : 'Activate' }}
                 </button>
                 <button
                   v-if="can('chick-type.delete')"
