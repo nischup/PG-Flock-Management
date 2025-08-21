@@ -156,7 +156,7 @@ function submit() {
             <span class="ml-1">{{ form.transport }}</span>
           </div>
           <div>
-            <span class="font-medium">RNote:</span>
+            <span class="font-medium">Note:</span>
             <span class="ml-1">{{ form.rnote }}</span>
           </div>
           <div>
@@ -249,7 +249,7 @@ function submit() {
 
       <!-- Submit -->
       <div class="flex justify-end">
-        <Button type="submit" class="px-6 py-2">Save & receive</Button>
+        <Button type="submit" class="px-6 py-2">Save & Submit</Button>
       </div>
     </form>
   </AppLayout>

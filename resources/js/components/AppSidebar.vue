@@ -42,6 +42,29 @@ const mainNavItems: NavItem[] = [
     ]
   },
   {
+    title: 'Shed',
+    icon: BabyChickMultiple ,
+    iconClass: 'text-yellow-500',
+    children: [
+      {
+        title: 'Receive',
+        href: '/receive',
+        icon: BabyChick
+      },
+      {
+        title: 'Batch assign',
+        href: '/receive',
+        icon: BabyChick
+      },
+      {
+        title: 'Pan assign',
+        href: '/receive',
+        icon: BabyChick
+      },
+    ]
+  },
+
+  {
     title: 'User Management',
     icon: Users,
     children: [
