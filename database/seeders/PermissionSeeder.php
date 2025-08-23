@@ -21,10 +21,10 @@ class PermissionSeeder extends Seeder
             'role.edit',
             'role.delete',
 
-            'ps.receive.view',
-            'ps.receive.create',
-            'ps.receive.edit',
-            'ps.receive.delete',
+            'ps-receive.view',
+            'ps-receive.create',
+            'ps-receive.edit',
+            'ps-receive.delete',
 
             'shed.view',
             'shed.create',

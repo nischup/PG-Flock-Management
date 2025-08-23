@@ -37,7 +37,7 @@ class PsLabTestController extends Controller
      */
     public function create()
     {
-        $psReceives = PsReceive::with('chickCounts')
+        $psReceives = PsReceive::with('chickCounts', 'labTransfers')
         ->get()
         ->map(function ($ps) {
             return [
@@ -49,6 +49,7 @@ class PsLabTestController extends Controller
                 'total_box_qty' => $ps->chickCounts->ps_total_re_box_qty ?? 0,
                 'male_box_qty' => $ps->chickCounts->ps_male_rec_box ?? 0,
                 'female_box_qty' => $ps->chickCounts->ps_female_rec_box ?? 0,
+                'labTest' => $ps->labTransfers, // important
             ];
         });
 

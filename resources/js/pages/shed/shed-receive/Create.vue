@@ -11,8 +11,8 @@ import { type BreadcrumbItem } from '@/types'
 
 // Breadcrumb
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Parent Stock', href: '/ps-firm-receive' },
-  { title: 'Firm Receive', href: '' },
+  { title: 'Shed Receive', href: '/shed-receive' },
+  { title: 'Create', href: '' },
 ]
 
 const props = defineProps<{
@@ -44,7 +44,6 @@ function toggleInfo() {
    
   if (selected) {
 
-   
     // assign all matching fields to form (if they exist in ps)
     form.shipment_type = selected.shipment_type || ''
     form.pi_no = selected.pi_no || ''
@@ -83,7 +82,7 @@ watch(
 
 // Submit function
 function submit() {
-  form.post(route('ps-firm-receive.store'), {
+  form.post(route('shed-receive.store'), {
     onSuccess: () => form.reset(),
     onError: () => {},
   })
@@ -100,7 +99,7 @@ function submit() {
           
      <!-- Section: Receiving Information -->
     <div class="border rounded-lg p-4 shadow-sm">
-      <h2 class="font-semibold text-lg mb-4">Receiving Information</h2>
+      <h2 class="font-semibold text-lg mb-4">Shed Receiving Information</h2>
 
       <div class="grid grid-cols-1 gap-4">
         <div>

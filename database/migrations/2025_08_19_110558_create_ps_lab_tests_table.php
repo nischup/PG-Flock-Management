@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('ps_lab_tests', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('ps_receive_id');
-            
-            $table->foreignId('ps_receive_id')->constrained('ps_receives')->onDelete('cascade');
+            $table->foreign('ps_receive_id')->references('id')->on('ps_receives')->onDelete('cascade');
+            $table->foreignId('ps_receive_id')
+                  ->constrained('ps_receives')
+                  ->onDelete('cascade');
             
             $table->string('lab_type');
             $table->integer('lab_send_female_qty')->default(0);
