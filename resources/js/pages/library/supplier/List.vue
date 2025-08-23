@@ -87,59 +87,66 @@ const resetForm = () => {
   showModal.value = false
 }
 
+// SweetAlert helper
+const alert = async (title: string, text: string, icon: 'success' | 'error') => {
+  await new Promise(resolve => setTimeout(resolve, 0))
+  await Swal.fire(title, text, icon)
+}
+
 // Submit (Create/Update)
-const submit = () => {
-  if (!form.name.trim()) return
+const submit = async () => {
+  if (!form.name.trim()) {
+    await alert('Validation', 'Supplier name is required.', 'error')
+    return
+  }
 
   const data = form.data()
   const supplierType = data.supplier_type as 'local' | 'foreign'
 
-  if (editingSupplier.value) {
-    // Update
-    form.put(route('supplier.update', editingSupplier.value.id), {
-      preserveScroll: true,
-      onSuccess: () => {
-        const i = suppliers.value.findIndex(s => s.id === editingSupplier.value!.id)
-        if (i !== -1) {
-          suppliers.value[i] = {
-            ...suppliers.value[i],
-            name: data.name,
-            supplier_type: supplierType,
-            address: data.address || null,
-            origin: data.origin || null,
-            contact_person: data.contact_person || null,
-            contact_person_email: data.contact_person_email || null,
-            contact_person_mobile: data.contact_person_mobile || null,
-            status: data.status,
-          }
-        }
-        resetForm()
-      },
-      onError: () => Swal.fire('Error!', 'Could not update supplier.', 'error')
-    })
-  } else {
-    // Create
-    const newSupplier: Supplier = {
-      id: Date.now(),
-      name: data.name,
-      supplier_type: supplierType,
-      address: data.address || null,
-      origin: data.origin || null,
-      contact_person: data.contact_person || null,
-      contact_person_email: data.contact_person_email || null,
-      contact_person_mobile: data.contact_person_mobile || null,
-      status: data.status,
-      created_at: new Date().toISOString(),
-    }
+  try {
+    if (editingSupplier.value) {
+      // Update
+      await form.put(route('supplier.update', editingSupplier.value.id), { preserveScroll: true })
 
-    form.post(route('supplier.store'), {
-      preserveScroll: true,
-      onSuccess: () => {
-        suppliers.value.unshift(newSupplier)
-        resetForm()
-      },
-      onError: () => Swal.fire('Error!', 'Could not save supplier.', 'error')
-    })
+      const i = suppliers.value.findIndex(s => s.id === editingSupplier.value!.id)
+      if (i !== -1) {
+        suppliers.value[i] = {
+          ...suppliers.value[i],
+          name: data.name,
+          supplier_type: supplierType,
+          address: data.address || null,
+          origin: data.origin || null,
+          contact_person: data.contact_person || null,
+          contact_person_email: data.contact_person_email || null,
+          contact_person_mobile: data.contact_person_mobile || null,
+          status: data.status,
+        }
+      }
+
+      resetForm()
+      await alert('Success', 'Supplier updated successfully.', 'success')
+    } else {
+      // Create
+      const newSupplier: Supplier = {
+        id: Date.now(),
+        name: data.name,
+        supplier_type: supplierType,
+        address: data.address || null,
+        origin: data.origin || null,
+        contact_person: data.contact_person || null,
+        contact_person_email: data.contact_person_email || null,
+        contact_person_mobile: data.contact_person_mobile || null,
+        status: data.status,
+        created_at: new Date().toISOString(),
+      }
+
+      await form.post(route('supplier.store'), { preserveScroll: true })
+      suppliers.value.unshift(newSupplier)
+      resetForm()
+      await alert('Success', 'Supplier added successfully.', 'success')
+    }
+  } catch (error) {
+    await alert('Error', 'Something went wrong. Please try again.', 'error')
   }
 }
 
@@ -162,17 +169,20 @@ const handleClickOutside = (event: MouseEvent) => {
 onMounted(() => document.addEventListener('click', handleClickOutside))
 onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
-const toggleStatus = (supplier: Supplier) => {
+// Toggle status
+const toggleStatus = async (supplier: Supplier) => {
   const newStatus = supplier.status === 1 ? 0 : 1
-  router.put(route('supplier.update', supplier.id), { ...supplier, status: newStatus }, {
-    preserveScroll: true,
-    onSuccess: () => {
-      const i = suppliers.value.findIndex(s => s.id === supplier.id)
-      if (i !== -1) suppliers.value[i].status = newStatus
-    },
-    onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
-    onFinish: () => openDropdownId.value = null
-  })
+  try {
+    await router.put(route('supplier.update', supplier.id), { ...supplier, status: newStatus }, { preserveScroll: true })
+
+    const i = suppliers.value.findIndex(s => s.id === supplier.id)
+    if (i !== -1) suppliers.value[i].status = newStatus
+
+    openDropdownId.value = null
+    await alert('Success', `Supplier ${newStatus === 1 ? 'activated' : 'deactivated'} successfully.`, 'success')
+  } catch (error) {
+    await alert('Error', 'Could not update status.', 'error')
+  }
 }
 
 // Breadcrumbs
