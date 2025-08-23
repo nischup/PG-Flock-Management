@@ -65,6 +65,11 @@ const form = useForm({
   lab_send_female_qty:0,
   lab_send_male_qty:0,
   lab_send_total_qty:0,
+
+  provita_lab_type: 'Provita Lab',
+  provita_lab_send_female_qty:0,
+  provita_lab_send_male_qty:0,
+  
 })
 
 const suppliers = ref([
@@ -126,7 +131,7 @@ watch(
 
 
 function updateTotalQty() {
-  form.lab_send_total_qty = Number(form.lab_send_female_qty) + Number(form.lab_send_male_qty);
+  form.lab_send_total_qty = Number(form.lab_send_female_qty) +Number(form.provita_lab_send_female_qty) + Number(form.provita_lab_send_male_qty) + Number(form.lab_send_male_qty);
 }
 
 
@@ -281,7 +286,7 @@ function updateTotalQty() {
                 </select>
               <InputError :message="form.errors.transport_type" class="mt-1" />
             </div>
-            <div class="flex flex-col" v-if="form.shipment_type_id != 1">
+            <div class="flex flex-col">
               <Label>Shift To</Label>
                 <select
                     v-model="form.company_id"
@@ -382,17 +387,34 @@ function updateTotalQty() {
              <Label>Lab Type</Label>
               <select v-model="form.lab_type" class="mt-2 border rounded px-3 py-2">
                 <option value="Gov Lab">Gov Lab</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col">
+              <Label>Gov Lab Female Transfer Qty</Label>
+              <Input v-model.number="form.lab_send_female_qty" type="number" class="mt-2" @input="updateTotalQty" />
+            </div>
+            <div class="flex flex-col">
+              <Label>Gov Lab Male Transfer Qty</Label>
+              <Input v-model.number="form.lab_send_male_qty" type="number" class="mt-2"  @input="updateTotalQty" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4 items-center">
+            <div class="flex flex-col">
+             <Label>Lab Type</Label>
+              <select v-model="form.provita_lab_type" class="mt-2 border rounded px-3 py-2">
                 <option value="Provita Lab">Provita Lab</option>
               </select>
             </div>
 
             <div class="flex flex-col">
-              <Label>Lab Female Transfer Qty</Label>
-              <Input v-model.number="form.lab_send_female_qty" type="number" class="mt-2" @input="updateTotalQty" />
+              <Label>Provita Lab Female Transfer Qty</Label>
+              <Input v-model.number="form.provita_lab_send_female_qty" type="number" class="mt-2" @input="updateTotalQty" />
             </div>
             <div class="flex flex-col">
-              <Label>Lab Male Transfer Qty</Label>
-              <Input v-model.number="form.lab_send_male_qty" type="number" class="mt-2"  @input="updateTotalQty" />
+              <Label>Provita Lab Male Transfer Qty</Label>
+              <Input v-model.number="form.provita_lab_send_male_qty" type="number" class="mt-2"  @input="updateTotalQty" />
             </div>
           </div>
           <!-- Chicks Section -->

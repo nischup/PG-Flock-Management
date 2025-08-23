@@ -208,7 +208,7 @@ function submit() {
             </div>
 
             <!-- Shift To -->
-            <div v-if="form.shipment_type_id != 1" class="flex flex-col mb-4">
+            <div class="flex flex-col mb-4">
               <Label>Shift To</Label>
               <select v-model="form.company_id" class="mt-2 border rounded px-3 py-2">
                 <option value="0">Select One</option>
