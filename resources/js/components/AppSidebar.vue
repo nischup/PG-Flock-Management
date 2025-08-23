@@ -47,13 +47,13 @@ const mainNavItems: NavItem[] = [
     iconClass: 'text-yellow-500',
     children: [
       {
-        title: 'Receive',
+        title: 'Shed Receive',
         href: '/receive',
         icon: BabyChick
       },
       {
-        title: 'Batch assign',
-        href: '/receive',
+        title: 'Flock Assign',
+        href: '/flock-assign',
         icon: BabyChick
       },
       {

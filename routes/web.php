@@ -14,6 +14,7 @@ use App\Http\Controllers\Master\VaccineController;
 use App\Http\Controllers\Ps\PsLabTestController;
 use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Shed\ShedReceiveController;
+use App\Http\Controllers\Shed\FlockAssignController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -41,3 +42,4 @@ Route::resource('supplier', SupplierController::class);
 Route::post('/labtest/getdata', [PsLabTestController::class, 'getData'])->name('labtest.getdata');
 Route::resource('ps-lab-test', PsLabTestController::class);
 Route::resource('receive', ShedReceiveController::class);
+Route::resource('flock-assign', FlockAssignController::class);
