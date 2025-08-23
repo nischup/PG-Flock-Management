@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -8,9 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useNotifier } from '@/composables/useNotifier'
-import { useListFilters } from '@/composables/useListFilters';
-import { usePermissions } from '@/composables/usePermissions';
-
+import { useListFilters } from '@/composables/useListFilters'
+import { usePermissions } from '@/composables/usePermissions'
 
 interface Shed {
   id: number
@@ -19,17 +18,17 @@ interface Shed {
   created_at: string
 }
 
-const props = defineProps<{ sheds: Shed[];
+const props = defineProps<{
+  sheds: Shed[];
   filters: { search?: string; per_page?: number; page?: number };
 }>()
 
 useListFilters({
   routeName: '/shed',
   filters: props.filters,
-});
+})
 
-const { can } = usePermissions();
-
+const { can } = usePermissions()
 const sheds = ref<Shed[]>([...props.sheds])
 
 // Modal state
@@ -91,12 +90,11 @@ const resetForm = () => {
   editingShed.value = null
   showModal.value = false
 }
-useNotifier();
+useNotifier()
+
 // Submit (Create/Update)
 const submit = () => {
-  if (!form.name.trim()) {
-    return
-  }
+  if (!form.name.trim()) return
 
   if (editingShed.value) {
     form.put(route('shed.update', editingShed.value.id), {
@@ -108,14 +106,11 @@ const submit = () => {
         }
         resetForm()
       },
-      onError: () => {
-      }
     })
   } else {
     form.post(route('shed.store'), {
       preserveScroll: true,
       onSuccess: (page) => {
-        // Update local list if controller returns sheds
         if ((page as any).props?.sheds) {
           sheds.value = (page as any).props.sheds
         } else {
@@ -128,8 +123,6 @@ const submit = () => {
         }
         resetForm()
       },
-      onError: () => {
-      }
     })
   }
 }
@@ -139,6 +132,21 @@ const openDropdownId = ref<number | null>(null)
 const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
 }
+
+// Handle outside click to close dropdown
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (!target.closest('.dropdown-menu') && !target.closest('.actions-button')) {
+    openDropdownId.value = null
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 // Toggle status
 const toggleStatus = (shed: Shed) => {
@@ -163,35 +171,6 @@ const toggleStatus = (shed: Shed) => {
   )
 }
 
-// Delete shed
-// const deleteShed = (shed: Shed) => {
-//   Swal.fire({
-//     title: 'Are you sure?',
-//     text: `You are about to delete shed "${shed.name}"!`,
-//     icon: 'warning',
-//     showCancelButton: true,
-//     confirmButtonColor: '#d33',
-//     cancelButtonColor: '#3085d6',
-//     confirmButtonText: 'Yes, delete it!',
-//   }).then((result) => {
-//     if (result.isConfirmed) {
-//       router.delete(route('shed.destroy', shed.id), {
-//         preserveScroll: true,
-//         onSuccess: () => {
-//           sheds.value = sheds.value.filter(s => s.id !== shed.id)
-//           Swal.fire('Deleted!', 'Shed has been deleted.', 'success')
-//         },
-//         onError: () => {
-//           Swal.fire('Error!', 'Could not delete shed.', 'error')
-//         },
-//         onFinish: () => {
-//           openDropdownId.value = null
-//         },
-//       })
-//     }
-//   })
-// }
-
 // Breadcrumbs
 const breadcrumbs = [
   { title: 'Master Setup', href: '/master-setup' },
@@ -202,8 +181,10 @@ const breadcrumbs = [
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
     <Head title="Sheds" />
+
     <!-- Filters -->
-      <FilterControls :filters="props.filters" routeName="/shed" />
+    <FilterControls :filters="props.filters" routeName="/shed" />
+
     <div class="px-4 py-6">
       <!-- Header -->
       <div class="flex items-center justify-between mb-4">
@@ -212,8 +193,6 @@ const breadcrumbs = [
           + Add New
         </Button>
       </div>
-
-
 
       <!-- Table -->
       <table class="w-full border">
@@ -237,23 +216,23 @@ const breadcrumbs = [
             </td>
             <td class="p-2 border">{{ shed.created_at }}</td>
             <td class="p-2 border relative">
-              <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(shed.id)">
+              <Button
+                size="sm"
+                class="bg-gray-500 hover:bg-gray-600 text-white actions-button"
+                @click.stop="toggleDropdown(shed.id)"
+              >
                 Actions ▼
               </Button>
 
               <!-- Dropdown -->
               <div
                 v-if="openDropdownId === shed.id"
-                class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10"
-                @click.stop
+                class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown-menu"
               >
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(shed)">✏ Edit</button>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(shed)">
                   {{ shed.status === 1 ? 'Inactive' : 'Activate' }}
                 </button>
-                <!-- <button class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" @click="deleteShed(shed)">
-                  🗑 Delete
-                </button> -->
               </div>
             </td>
           </tr>
@@ -272,6 +251,7 @@ const breadcrumbs = [
         class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl"
         style="top: 100px; position: absolute;"
       >
+        <!-- Modal Header -->
         <div
           class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move"
           @mousedown="startDrag"
@@ -288,6 +268,7 @@ const breadcrumbs = [
           </button>
         </div>
 
+        <!-- Modal Body -->
         <div class="p-4 space-y-4">
           <div>
             <Label for="name" class="mb-2">Shed Name</Label>
@@ -304,6 +285,7 @@ const breadcrumbs = [
           </div>
         </div>
 
+        <!-- Modal Footer -->
         <div class="flex justify-end p-4 border-t border-gray-200">
           <Button class="bg-gray-300 text-black mr-2" @click="resetForm">Cancel</Button>
           <Button class="bg-chicken text-white" @click="submit">
@@ -311,8 +293,6 @@ const breadcrumbs = [
           </Button>
         </div>
       </div>
-
-
     </div>
   </AppLayout>
 </template>

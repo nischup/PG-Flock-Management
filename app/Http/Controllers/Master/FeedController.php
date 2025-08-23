@@ -23,7 +23,7 @@ class FeedController extends Controller
                     'feed_type_name' => $feed->feedType->name ?? '',
                     'feed_name' => $feed->feed_name,
                     'status' => $feed->status,
-                    'created_at' => $feed->created_at->format('Y-m-d'),
+                    'created_at' => $feed->created_at->format('d M Y'),
                 ];
             })->toArray(),
             'feedTypes' => $feedTypes->map(function ($ft) {
@@ -54,7 +54,7 @@ class FeedController extends Controller
                     'feed_type_name' => $feed->feedType->name ?? '',
                     'feed_name' => $feed->feed_name,
                     'status' => $feed->status,
-                    'created_at' => $feed->created_at->format('Y-m-d'),
+                    'created_at' => $feed->created_at->format('d M Y'),
                 ]
             ]);
         }
@@ -83,7 +83,7 @@ class FeedController extends Controller
                     'feed_type_name' => $feed->feedType->name ?? '',
                     'feed_name' => $feed->feed_name,
                     'status' => $feed->status,
-                    'created_at' => $feed->created_at->format('Y-m-d'),
+                    'created_at' => $feed->created_at->format('d M Y'),
                 ]
             ]);
         }

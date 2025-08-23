@@ -24,8 +24,8 @@ class FeedTypeController extends Controller
                     'id' => $ft->id,
                     'name' => $ft->name,
                     'status' => $ft->status,
-                    'created_at' => $ft->created_at->format('Y-m-d'),
-                    'updated_at' => $ft->updated_at->format('Y-m-d'),
+                    'created_at' => $ft->created_at->format('d M Y'),
+                    'updated_at' => $ft->updated_at->format('d M Y'),
                 ];
             });
 

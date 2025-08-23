@@ -21,7 +21,7 @@ class UnitController extends Controller
                     'id' => $unit->id,
                     'name' => $unit->name,
                     'status' => $unit->status ? 'Active' : 'Inactive',
-                    'created_at' => $unit->created_at ? $unit->created_at->format('Y-m-d') : null,
+                    'created_at' => $unit->created_at ? $unit->created_at->format('d M Y') : null,
                 ];
             });
 

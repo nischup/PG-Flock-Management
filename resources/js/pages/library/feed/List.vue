@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -35,9 +35,9 @@ const feeds = ref<Feed[]>([...props.feeds])
 const showModal = ref(false)
 const editingFeed = ref<Feed | null>(null)
 
-// Modal form
+// Modal form (feed_type_id is always a number)
 const form = useForm({
-  feed_type_id: props.feedTypes.length ? props.feedTypes[0].id : null,
+  feed_type_id: props.feedTypes.length ? props.feedTypes[0].id : 0,
   feed_name: '',
   status: 1,
 })
@@ -80,7 +80,7 @@ const openModal = (feed: Feed | null = null) => {
   } else {
     editingFeed.value = null
     form.reset()
-    form.feed_type_id = props.feedTypes.length ? props.feedTypes[0].id : null
+    form.feed_type_id = props.feedTypes.length ? props.feedTypes[0].id : 0
     form.status = 1
   }
   showModal.value = true
@@ -89,21 +89,20 @@ const openModal = (feed: Feed | null = null) => {
 // Reset modal
 const resetForm = () => {
   form.reset()
-  form.feed_type_id = props.feedTypes.length ? props.feedTypes[0].id : null
+  form.feed_type_id = props.feedTypes.length ? props.feedTypes[0].id : 0
   form.status = 1
   editingFeed.value = null
   showModal.value = false
 }
 
-// Submit
+// Submit (Create/Update)
 const submit = () => {
   if (!form.feed_name.trim()) return
 
   if (editingFeed.value) {
-    // Update
     form.put(route('feed.update', editingFeed.value.id), {
       preserveScroll: true,
-      onSuccess: (page) => {
+      onSuccess: () => {
         const i = feeds.value.findIndex(f => f.id === editingFeed.value!.id)
         if (i !== -1) {
           feeds.value[i] = {
@@ -118,7 +117,6 @@ const submit = () => {
       onError: () => Swal.fire('Error!', 'Could not update feed.', 'error'),
     })
   } else {
-    // Create
     form.post(route('feed.store'), {
       preserveScroll: true,
       onSuccess: (page) => {
@@ -147,6 +145,22 @@ const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
 }
 
+// Close dropdown on outside click
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (!target.closest('.dropdown-menu') && !target.closest('.actions-button')) {
+    openDropdownId.value = null
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
 // Toggle status
 const toggleStatus = (feed: Feed) => {
   const newStatus = feed.status === 1 ? 0 : 1
@@ -158,31 +172,6 @@ const toggleStatus = (feed: Feed) => {
     },
     onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
     onFinish: () => { openDropdownId.value = null },
-  })
-}
-
-// Delete
-const deleteFeed = (feed: Feed) => {
-  Swal.fire({
-    title: 'Are you sure?',
-    text: `You are about to delete feed "${feed.feed_name}"!`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      router.delete(route('feed.destroy', feed.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-          feeds.value = feeds.value.filter(f => f.id !== feed.id)
-          Swal.fire('Deleted!', 'Feed has been deleted.', 'success')
-        },
-        onError: () => Swal.fire('Error!', 'Could not delete feed.', 'error'),
-        onFinish: () => { openDropdownId.value = null },
-      })
-    }
   })
 }
 
@@ -198,7 +187,6 @@ const breadcrumbs = [
   <Head title="Feeds" />
 
   <div class="px-4 py-6">
-    <!-- Header -->
     <div class="flex items-center justify-between mb-4">
       <HeadingSmall title="Feeds List" />
       <Button v-if="can('feed.create')" class="bg-chicken hover:bg-yellow-600 text-white" @click="openModal()">
@@ -206,7 +194,6 @@ const breadcrumbs = [
       </Button>
     </div>
 
-    <!-- Table -->
     <table class="w-full border">
       <thead>
         <tr class="bg-gray-100">
@@ -230,16 +217,21 @@ const breadcrumbs = [
           </td>
           <td class="p-2 border">{{ feed.created_at }}</td>
           <td class="p-2 border relative">
-            <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(feed.id)">
+            <Button
+              size="sm"
+              class="bg-gray-500 hover:bg-gray-600 text-white actions-button"
+              @click.stop="toggleDropdown(feed.id)"
+            >
               Actions ▼
             </Button>
-            <div v-if="openDropdownId === feed.id" class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10" @click.stop>
+            <div
+              v-if="openDropdownId === feed.id"
+              class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown-menu"
+              @click.stop
+            >
               <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(feed)">✏ Edit</button>
               <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(feed)">
                 {{ feed.status === 1 ? 'Inactive' : 'Activate' }}
-              </button>
-              <button v-if="can('feed.delete')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" @click="deleteFeed(feed)">
-                🗑 Delete
               </button>
             </div>
           </td>
@@ -248,16 +240,13 @@ const breadcrumbs = [
     </table>
   </div>
 
-  <!-- Draggable Modal -->
-  <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6" @click.self="showModal = false">
+  <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6" @click.self="resetForm">
     <div ref="modalRef" class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl" style="top: 100px; position: absolute">
-      <!-- Modal Header -->
       <div class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move" @mousedown="startDrag">
         <h3 class="text-xl font-semibold text-gray-900">{{ editingFeed ? 'Edit Feed' : 'Add New Feed' }}</h3>
-        <button type="button" class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center" @click="resetForm">✕</button>
+        <button type="button" class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg w-8 h-8 flex justify-center items-center" @click="resetForm">✕</button>
       </div>
 
-      <!-- Modal Body -->
       <div class="p-4 space-y-4">
         <div>
           <Label for="feed_type" class="mb-2">Feed Type</Label>
@@ -281,7 +270,6 @@ const breadcrumbs = [
         </div>
       </div>
 
-      <!-- Modal Footer -->
       <div class="flex justify-end p-4 border-t border-gray-200">
         <Button class="bg-gray-300 text-black mr-2" @click="resetForm">Cancel</Button>
         <Button class="bg-chicken text-white" @click="submit">{{ editingFeed ? 'Update' : 'Save' }}</Button>

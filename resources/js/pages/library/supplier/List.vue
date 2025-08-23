@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -7,13 +7,11 @@ import HeadingSmall from '@/components/HeadingSmall.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useNotifier } from '@/composables/useNotifier'
-import { useListFilters } from '@/composables/useListFilters'
-import { usePermissions } from '@/composables/usePermissions'
 
 interface Supplier {
   id: number
   name: string
+  supplier_type: 'local' | 'foreign'
   address: string | null
   origin: string | null
   contact_person: string | null
@@ -23,34 +21,22 @@ interface Supplier {
   created_at: string
 }
 
-const props = defineProps<{
-  suppliers: Supplier[]
-  filters: { search?: string; per_page?: number; page?: number }
-}>()
-
-useListFilters({
-  routeName: '/supplier',
-  filters: props.filters,
-})
-
-const { can } = usePermissions()
+const props = defineProps<{ suppliers: Supplier[] }>()
 const suppliers = ref<Supplier[]>([...props.suppliers])
 
-// Modal state
+// Modal
 const showModal = ref(false)
 const editingSupplier = ref<Supplier | null>(null)
 
-// Form
 const form = useForm({
-  supplier: {
-    name: '',
-    address: '',
-    origin: '',
-    contact_person: '',
-    contact_person_email: '',
-    contact_person_mobile: '',
-    status: 1,
-  }
+  name: '',
+  supplier_type: 'local',
+  address: '',
+  origin: '',
+  contact_person: '',
+  contact_person_email: '',
+  contact_person_mobile: '',
+  status: 1,
 })
 
 // Draggable modal
@@ -85,80 +71,107 @@ const stopDrag = () => {
 const openModal = (supplier: Supplier | null = null) => {
   if (supplier) {
     editingSupplier.value = supplier
-    form.supplier = { ...supplier }
+    Object.assign(form, supplier)
   } else {
     editingSupplier.value = null
     form.reset()
-    form.supplier.status = 1
+    form.status = 1
   }
   showModal.value = true
 }
 
-// Reset form
 const resetForm = () => {
   form.reset()
-  form.supplier.status = 1
+  form.status = 1
   editingSupplier.value = null
   showModal.value = false
 }
 
-useNotifier()
-
-// Submit
+// Submit (Create/Update)
 const submit = () => {
-  if (!form.supplier.name.trim()) return
+  if (!form.name.trim()) return
+
+  const data = form.data()
+  const supplierType = data.supplier_type as 'local' | 'foreign'
 
   if (editingSupplier.value) {
+    // Update
     form.put(route('supplier.update', editingSupplier.value.id), {
       preserveScroll: true,
       onSuccess: () => {
         const i = suppliers.value.findIndex(s => s.id === editingSupplier.value!.id)
         if (i !== -1) {
-          suppliers.value[i] = { ...suppliers.value[i], ...form.supplier }
+          suppliers.value[i] = {
+            ...suppliers.value[i],
+            name: data.name,
+            supplier_type: supplierType,
+            address: data.address || null,
+            origin: data.origin || null,
+            contact_person: data.contact_person || null,
+            contact_person_email: data.contact_person_email || null,
+            contact_person_mobile: data.contact_person_mobile || null,
+            status: data.status,
+          }
         }
         resetForm()
       },
+      onError: () => Swal.fire('Error!', 'Could not update supplier.', 'error')
     })
   } else {
+    // Create
+    const newSupplier: Supplier = {
+      id: Date.now(),
+      name: data.name,
+      supplier_type: supplierType,
+      address: data.address || null,
+      origin: data.origin || null,
+      contact_person: data.contact_person || null,
+      contact_person_email: data.contact_person_email || null,
+      contact_person_mobile: data.contact_person_mobile || null,
+      status: data.status,
+      created_at: new Date().toISOString(),
+    }
+
     form.post(route('supplier.store'), {
       preserveScroll: true,
-      onSuccess: (page) => {
-        if ((page as any).props?.suppliers) {
-          suppliers.value = (page as any).props.suppliers
-        } else {
-          suppliers.value.unshift({
-            id: Date.now(),
-            ...form.supplier,
-            created_at: new Date().toISOString(),
-          })
-        }
+      onSuccess: () => {
+        suppliers.value.unshift(newSupplier)
         resetForm()
       },
+      onError: () => Swal.fire('Error!', 'Could not save supplier.', 'error')
     })
   }
 }
 
-// Dropdown for actions
+// Dropdown & status
 const openDropdownId = ref<number | null>(null)
 const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
 }
 
-// Toggle status
+// Close dropdown when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  const dropdowns = document.querySelectorAll('.dropdown, .dropdown-button')
+  for (let i = 0; i < dropdowns.length; i++) {
+    if (dropdowns[i].contains(target)) return
+  }
+  openDropdownId.value = null
+}
+
+onMounted(() => document.addEventListener('click', handleClickOutside))
+onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
+
 const toggleStatus = (supplier: Supplier) => {
   const newStatus = supplier.status === 1 ? 0 : 1
-  router.put(route('supplier.update', supplier.id), { supplier: { ...supplier, status: newStatus } }, {
+  router.put(route('supplier.update', supplier.id), { ...supplier, status: newStatus }, {
     preserveScroll: true,
     onSuccess: () => {
       const i = suppliers.value.findIndex(s => s.id === supplier.id)
       if (i !== -1) suppliers.value[i].status = newStatus
     },
-    onError: () => {
-      Swal.fire('Error!', 'Could not update status.', 'error')
-    },
-    onFinish: () => {
-      openDropdownId.value = null
-    },
+    onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
+    onFinish: () => openDropdownId.value = null
   })
 }
 
@@ -176,21 +189,19 @@ const breadcrumbs = [
     <div class="px-4 py-6">
       <div class="flex items-center justify-between mb-4">
         <HeadingSmall title="Supplier List" />
-        <Button v-if="can('supplier.create')" class="bg-chicken hover:bg-yellow-600 text-white" @click="openModal()">
+        <Button class="bg-chicken hover:bg-yellow-600 text-white dropdown-button" @click="openModal()">
           + Add New
         </Button>
       </div>
 
-      <!-- Table -->
       <table class="w-full border">
         <thead>
           <tr class="bg-gray-100">
             <th class="p-2 border text-left">#</th>
             <th class="p-2 border text-left">Name</th>
+            <th class="p-2 border text-left">Supplier Type</th>
             <th class="p-2 border text-left">Address</th>
-            <th class="p-2 border text-left">Origin</th>
             <th class="p-2 border text-left">Contact</th>
-            <th class="p-2 border text-left">Mobile</th>
             <th class="p-2 border text-left">Status</th>
             <th class="p-2 border text-left">Created At</th>
             <th class="p-2 border text-left">Action</th>
@@ -200,10 +211,9 @@ const breadcrumbs = [
           <tr v-for="(supplier, index) in suppliers" :key="supplier.id">
             <td class="p-2 border">{{ index + 1 }}</td>
             <td class="p-2 border">{{ supplier.name }}</td>
+            <td class="p-2 border">{{ supplier.supplier_type }}</td>
             <td class="p-2 border">{{ supplier.address }}</td>
-            <td class="p-2 border">{{ supplier.origin }}</td>
-            <td class="p-2 border">{{ supplier.contact_person }}</td>
-            <td class="p-2 border">{{ supplier.contact_person_mobile }}</td>
+            <td class="p-2 border">{{ supplier.contact_person ?? '-' }}</td>
             <td class="p-2 border">
               <span :class="supplier.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
                 {{ supplier.status === 1 ? 'Active' : 'Inactive' }}
@@ -211,14 +221,11 @@ const breadcrumbs = [
             </td>
             <td class="p-2 border">{{ supplier.created_at }}</td>
             <td class="p-2 border relative">
-              <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(supplier.id)">
+              <Button size="sm" class="relative bg-gray-500 hover:bg-gray-600 text-white dropdown-button" @click.stop="toggleDropdown(supplier.id)">
                 Actions ▼
               </Button>
-              <div
-                v-if="openDropdownId === supplier.id"
-                class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10"
-                @click.stop
-              >
+
+              <div v-if="openDropdownId === supplier.id" class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown" @click.stop>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(supplier)">✏ Edit</button>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(supplier)">
                   {{ supplier.status === 1 ? 'Inactive' : 'Activate' }}
@@ -231,63 +238,30 @@ const breadcrumbs = [
     </div>
 
     <!-- Draggable Modal -->
-    <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6" @click.self="showModal = false">
-      <div
-        ref="modalRef"
-        class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl"
-        style="top: 100px; position: absolute;"
-      >
-        <div
-          class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move"
-          @mousedown="startDrag"
-        >
-          <h3 class="text-xl font-semibold text-gray-900">
-            {{ editingSupplier ? 'Edit Supplier' : 'Add New Supplier' }}
-          </h3>
-          <button
-            type="button"
-            class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center"
-            @click="resetForm"
-          >
-            ✕
-          </button>
+    <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6" @click.self="resetForm">
+      <div ref="modalRef" class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl" style="top: 100px; position: absolute; margin:0;">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move" @mousedown="startDrag">
+          <h3 class="text-xl font-semibold text-gray-900">{{ editingSupplier ? 'Edit Supplier' : 'Add New Supplier' }}</h3>
+          <button type="button" class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg w-8 h-8 flex justify-center items-center" @click="resetForm">✕</button>
         </div>
 
         <div class="p-4 space-y-4">
+          <div><Label for="name" class="mb-2">Name</Label><Input v-model="form.name" id="name" /></div>
           <div>
-            <Label for="name">Name</Label>
-            <Input v-model="form.supplier.name" id="name" />
-            <span v-if="form.errors['supplier.name']" class="text-red-600 text-sm">{{ form.errors['supplier.name'] }}</span>
+            <Label for="supplier_type" class="mb-2">Supplier Type</Label>
+            <select v-model="form.supplier_type" id="supplier_type" class="w-full border rounded p-2">
+              <option value="local">Local</option>
+              <option value="foreign">Foreign</option>
+            </select>
           </div>
-
+          <div><Label for="address" class="mb-2">Address</Label><Input v-model="form.address" id="address" /></div>
+          <div><Label for="origin" class="mb-2">Origin</Label><Input v-model="form.origin" id="origin" /></div>
+          <div><Label for="contact_person" class="mb-2">Contact Person</Label><Input v-model="form.contact_person" id="contact_person" /></div>
+          <div><Label for="contact_person_email" class="mb-2">Email</Label><Input v-model="form.contact_person_email" id="contact_person_email" /></div>
+          <div><Label for="contact_person_mobile" class="mb-2">Mobile</Label><Input v-model="form.contact_person_mobile" id="contact_person_mobile" /></div>
           <div>
-            <Label for="address">Address</Label>
-            <Input v-model="form.supplier.address" id="address" />
-          </div>
-
-          <div>
-            <Label for="origin">Origin</Label>
-            <Input v-model="form.supplier.origin" id="origin" />
-          </div>
-
-          <div>
-            <Label for="contact_person">Contact Person</Label>
-            <Input v-model="form.supplier.contact_person" id="contact_person" />
-          </div>
-
-          <div>
-            <Label for="contact_person_email">Email</Label>
-            <Input v-model="form.supplier.contact_person_email" id="contact_person_email" />
-          </div>
-
-          <div>
-            <Label for="contact_person_mobile">Mobile</Label>
-            <Input v-model="form.supplier.contact_person_mobile" id="contact_person_mobile" />
-          </div>
-
-          <div>
-            <Label for="status">Status</Label>
-            <select v-model="form.supplier.status" id="status" class="w-full border rounded p-2">
+            <Label for="status" class="mb-2">Status</Label>
+            <select v-model="form.status" id="status" class="w-full border rounded p-2 mb-2">
               <option :value="1">Active</option>
               <option :value="0">Inactive</option>
             </select>
@@ -296,9 +270,7 @@ const breadcrumbs = [
 
         <div class="flex justify-end p-4 border-t border-gray-200">
           <Button class="bg-gray-300 text-black mr-2" @click="resetForm">Cancel</Button>
-          <Button class="bg-chicken text-white" @click="submit">
-            {{ editingSupplier ? 'Update' : 'Save' }}
-          </Button>
+          <Button class="bg-chicken text-white" @click="submit">{{ editingSupplier ? 'Update' : 'Save' }}</Button>
         </div>
       </div>
     </div>

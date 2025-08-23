@@ -46,7 +46,7 @@ class VaccineController extends Controller
                 'id' => $vaccine->id,
                 'name' => $vaccine->name,
                 'status' => $vaccine->status,
-                'created_at' => $vaccine->created_at->format('Y-m-d H:i:s'),
+                'created_at' => $vaccine->created_at->format('d M Y'),
             ];
 
             return redirect()->route('vaccine.index')
@@ -72,7 +72,7 @@ class VaccineController extends Controller
                 'id' => $vaccine->id,
                 'name' => $vaccine->name,
                 'status' => $vaccine->status,
-                'created_at' => $vaccine->created_at->format('Y-m-d H:i:s'),
+                'created_at' => $vaccine->created_at->format('d M Y'),
             ];
 
             return redirect()->route('vaccine.index')
