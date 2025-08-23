@@ -17,7 +17,7 @@ class ShedController extends Controller
                 return [
                     'id'         => $shed->id,
                     'name'       => $shed->name,
-                    'status'     => $shed->status ? 'Active' : 'Deactivated',
+                    'status'     => (int) $shed->status, // keep as 0/1
                     'created_at' => $shed->created_at->format('Y-m-d'),
                 ];
             });
@@ -39,7 +39,10 @@ class ShedController extends Controller
         ]);
 
         try {
-            Shed::create($request->all());
+            Shed::create([
+                'name'   => $request->name,
+                'status' => (int) $request->status,
+            ]);
 
             return redirect()->route('shed.index')->with('success', 'Shed created successfully!');
         } catch (\Exception $e) {
@@ -56,7 +59,10 @@ class ShedController extends Controller
         ]);
 
         try {
-            $shed->update($request->all());
+            $shed->update([
+                'name'   => $request->name,
+                'status' => (int) $request->status,
+            ]);
 
             return redirect()->route('shed.index')->with('success', 'Shed updated successfully!');
         } catch (\Exception $e) {
