@@ -63,6 +63,24 @@ const mainNavItems: NavItem[] = [
       },
     ]
   },
+  {
+    title: 'Daily Activity',
+    icon: BabyChickMultiple ,
+    iconClass: 'text-yellow-500',
+    children: [
+      {
+        title: 'Brooding',
+        href: '/receive',
+        icon: BabyChick
+      },
+      {
+        title: 'Growing',
+        href: '/flock-assign',
+        icon: BabyChick
+      },
+    ]
+  },
+
 
   {
     title: 'User Management',
