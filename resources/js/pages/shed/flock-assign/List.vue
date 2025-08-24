@@ -303,19 +303,10 @@ const savePanAssign = () => {
           @click.stop
         >
           <div class="p-3 bg-gray-200 cursor-move rounded-t-lg" @mousedown="startPanDrag">
-            <h2 class="font-bold">Pan Assign - {{ selectedFlock?.name }}</h2>
+            <h2 class="font-bold">Pan Assign - Flock - {{ selectedFlock?.name }} ,  {{ selectedFlock?.shed }}</h2>
           </div>
 
           <div class="p-6 space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-1">Shed</label>
-              <select v-model="selectedFlock.shed" class="w-full border rounded px-3 py-2">
-                <option disabled value="">Select shed</option>
-                <option v-for="shedOption in shedOptions" :key="shedOption" :value="shedOption">
-                  {{ shedOption }}
-                </option>
-              </select>
-            </div>
 
             <div>
               <label class="block text-sm font-medium mb-1">Batch</label>
@@ -326,6 +317,29 @@ const savePanAssign = () => {
                 </option>
               </select>
             </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Pan</label>
+              <select v-model="selectedFlock.batch" class="w-full border rounded px-3 py-2">
+                <option disabled value="">Select Pan</option>
+                <option> Pan A</option>
+                <option> Pan B</option>
+                <option> Pan C</option>
+                <option> Pan D</option>
+                <option> Pan E</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Qty</label>
+              <input
+                v-model="newFlockName"
+                type="text"
+                placeholder="Enter Pan Qty"
+                class="w-full border rounded px-3 py-2"
+              />
+            </div>
+
           </div>
 
           <div class="p-4 flex justify-end border-t">
