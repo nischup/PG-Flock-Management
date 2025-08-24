@@ -16,7 +16,7 @@ use App\Http\Controllers\Ps\PsLabTestController;
 use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Shed\FlockAssignController;
-
+use App\Http\Controllers\DailyOperation\DailyOperationController;
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
@@ -45,3 +45,4 @@ Route::post('/labtest/getdata', [PsLabTestController::class, 'getData'])->name('
 Route::resource('ps-lab-test', PsLabTestController::class);
 Route::resource('receive', ShedReceiveController::class);
 Route::resource('flock-assign', FlockAssignController::class);
+Route::resource('daily-operation', DailyOperationController::class);

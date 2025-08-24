@@ -51,6 +51,9 @@ const form = useForm({
   lab_type: props.psReceive.lab_type || 'Gov Lab',
   lab_send_female_qty: props.psReceive.lab_send_female_qty || 0,
   lab_send_male_qty: props.psReceive.lab_send_male_qty || 0,
+  provita_lab_male_qty:0,
+  provita_lab_type:2,
+  provita_lab_female_qty:0,
   lab_send_total_qty: (props.psReceive.lab_send_female_qty || 0) + (props.psReceive.lab_send_male_qty || 0),
 })
 
@@ -299,13 +302,31 @@ function submit() {
             </div>
 
             <div class="flex flex-col">
-              <Label>Lab Female Transfer Qty</Label>
+              <Label>Gov Lab Female Transfer Qty</Label>
               <Input v-model.number="form.lab_send_female_qty" type="number" class="mt-2" @input="form.lab_send_total_qty = Number(form.lab_send_female_qty) + Number(form.lab_send_male_qty)" />
             </div>
 
             <div class="flex flex-col">
-              <Label>Lab Male Transfer Qty</Label>
+              <Label>Gov Lab Male Transfer Qty</Label>
               <Input v-model.number="form.lab_send_male_qty" type="number" class="mt-2" @input="form.lab_send_total_qty = Number(form.lab_send_female_qty) + Number(form.lab_send_male_qty)" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4 items-center">
+            <div class="flex flex-col">
+             <Label>Lab Type</Label>
+              <select v-model="form.provita_lab_type" class="mt-2 border rounded px-3 py-2">
+                <option value="2">Provita Lab</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col">
+              <Label>Provita Lab Female Transfer Qty</Label>
+              <Input v-model.number="form.provita_lab_send_female_qty" type="number" class="mt-2" @input="updateTotalQty" />
+            </div>
+            <div class="flex flex-col">
+              <Label>Provita Lab Male Transfer Qty</Label>
+              <Input v-model.number="form.provita_lab_send_male_qty" type="number" class="mt-2"  @input="updateTotalQty" />
             </div>
           </div>
 
