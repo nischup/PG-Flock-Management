@@ -11,6 +11,7 @@ use App\Http\Controllers\Master\MedicineController;
 use App\Http\Controllers\Master\ShedController;
 use App\Http\Controllers\Master\UnitController;
 use App\Http\Controllers\Master\VaccineController;
+use App\Http\Controllers\Master\VaccineTypeController;
 use App\Http\Controllers\Ps\PsLabTestController;
 use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Shed\ShedReceiveController;
@@ -37,6 +38,7 @@ Route::resource('medicine', MedicineController::class);
 Route::resource('shed', ShedController::class);
 Route::resource('unit', UnitController::class);
 Route::resource('vaccine', VaccineController::class);
+Route::resource('vaccine-type', VaccineTypeController::class);
 Route::resource('supplier', SupplierController::class);
 
 Route::post('/labtest/getdata', [PsLabTestController::class, 'getData'])->name('labtest.getdata');
