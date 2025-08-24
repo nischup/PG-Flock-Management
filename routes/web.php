@@ -48,3 +48,5 @@ Route::resource('receive', ShedReceiveController::class);
 Route::resource('flock-assign', FlockAssignController::class);
 Route::resource('daily-operation', DailyOperationController::class);
 Route::get('/mortality/create', [DailyOperationController::class, 'mortality']);
+Route::get('/overview', [DailyOperationController::class, 'overview']);
+Route::get('/details/{flockId}/{tabKey}', [DailyOperationController::class, 'show']);

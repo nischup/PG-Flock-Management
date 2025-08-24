@@ -9,6 +9,7 @@ import Datepicker from '@vuepic/vue-datepicker'
 import { useAgeCalculator } from '@/composables/useAgeCalculator'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { type BreadcrumbItem } from '@/types'
+import FileUploader from '@/components/FileUploader.vue'
 
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
@@ -27,12 +28,12 @@ const tabs = [
   { key: 'daily_mortality', label: 'Mortality' },
   { key: 'feed_consumption', label: 'Feed' },
   { key: 'water_consumption', label: 'Water' },
-  { key: 'light_consumption', label: 'Light' },
+  { key: 'light_hour', label: 'Light' },
   { key: 'destroy', label: 'Destroy' },
-  { key: 'culling', label: 'Cull' },
+  { key: 'cull', label: 'Cull' },
   { key: 'sexing_error', label: 'Sexing Error' },
   { key: 'weight', label: 'Weight' },
-  { key: 'inside_temperature', label: 'Temperature' },
+  { key: 'temperature', label: 'Temperature' },
   { key: 'humidity', label: 'Humidity' },
   { key: 'medicine', label: 'Medicine' },
   { key: 'vaccine', label: 'Vaccine' },
@@ -150,7 +151,6 @@ function submit() {
 
         <!-- Shed Info -->
         <div class="col-span-1 md:col-span-2 mt-2 border rounded shadow-sm bg-white p-4">
-          <h3 class="font-semibold mb-2 text-lg">Shed Chicks Info</h3>
           <div class="grid grid-cols-3 gap-4 text-center">
             <div>
               <p class="text-gray-700 font-medium">Opening Chicks</p>
@@ -171,7 +171,7 @@ function submit() {
     </div>
 
     <!-- Tabs -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
       <div 
         v-for="(tab, index) in tabs" 
         :key="tab.key"
@@ -179,7 +179,7 @@ function submit() {
         class="cursor-pointer p-6 border rounded-lg shadow text-center font-semibold transition-transform hover:scale-105"
         :class="activeTabIndex === index ? 'bg-chicken text-white' : 'bg-gray-200 text-gray-700'"
       >
-        <Link href="/mortality/create">{{ tab.label }}</Link>
+        {{ tab.label }}
         <span v-if="counts[tab.key] !== undefined" class="block mt-2 text-black text-2xl font-bold">
           {{ counts[tab.key] }}
         </span>
@@ -242,6 +242,321 @@ function submit() {
         </div>
       </div>
 
+      <!-- Water Tab -->
+      <div v-if="activeTab === 'water_consumption'">
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <Label>Water</Label>
+            <select v-model="form.water_type_id" class="w-full mt-1 border rounded px-3 py-2">
+                <option value="">Select Water</option>
+                <option v-for="water in props.waters" :key="water.id" :value="water.id">
+                {{ water.name }}
+                </option>
+            </select>
+            </div>
+
+            <div>
+            <Label>Quantity</Label>
+            <Input v-model.number="form.water_quantity" type="number" />
+            </div>
+            <div class="col-span-3 mt-2">
+            <Label>Note</Label>
+            <textarea v-model="form.water_note" class="w-full border rounded px-3 py-2"></textarea>
+            </div>
+        </div>
+      </div>
+
+      <!-- Water Tab -->
+      <div v-if="activeTab === 'light_hour'">
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <Label>Light Hour</Label>
+                <Input v-model.number="form.light_hour" type="number" />
+            </div>
+            <div>
+                <Label>Note</Label>
+                <textarea v-model="form.lighthour_note" class="w-full border rounded px-3 py-2"></textarea>
+            </div>
+            </div>
+      </div>
+
+
+    <!-- destroy Tab -->
+      <div v-if="activeTab === 'destroy'">
+
+        <div class="grid grid-cols-2 gap-4">
+            <!-- Destroy Male Quantity -->
+            <div class="flex flex-col">
+                <Label>Destroy Male Qty</Label>
+                <Input v-model.number="form.destroy_male_qty" type="number" min="0" />
+            </div>
+
+            <!-- Destroy Male Reason -->
+            <div class="flex flex-col">
+                <Label>Destroy Male Reason</Label>
+                <Input v-model="form.destroy_male_reason" type="text" />
+            </div>
+
+            <!-- Destroy Female Quantity -->
+            <div class="flex flex-col">
+                <Label>Destroy Female Qty</Label>
+                <Input v-model.number="form.destroy_female_qty" type="number" min="0" />
+            </div>
+
+            <!-- Destroy Female Reason -->
+            <div class="flex flex-col">
+                <Label>Destroy Female Reason</Label>
+                <Input v-model="form.destroy_female_reason" type="text" />
+            </div>
+            </div>
+
+            <!-- Note -->
+            <div class="flex flex-col mt-4">
+            <Label>Note</Label>
+            <textarea v-model="form.destroy_note" class="border rounded px-3 py-2"></textarea>
+            </div>
+
+        </div>
+
+
+        <!-- culling Tab -->
+      <div v-if="activeTab === 'cull'">
+
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Cull Male Quantity -->
+                <div class="flex flex-col">
+                    <Label>Cull Male Qty</Label>
+                    <Input v-model.number="form.cull_male_qty" type="number" min="0" />
+                </div>
+
+                <!-- Cull Male Reason -->
+                <div class="flex flex-col">
+                    <Label>Cull Male Reason</Label>
+                    <Input v-model="form.cull_male_reason" type="text" />
+                </div>
+
+                <!-- Cull Female Quantity -->
+                <div class="flex flex-col">
+                    <Label>Cull Female Qty</Label>
+                    <Input v-model.number="form.cull_female_qty" type="number" min="0" />
+                </div>
+
+                <!-- Cull Female Reason -->
+                <div class="flex flex-col">
+                    <Label>Cull Female Reason</Label>
+                    <Input v-model="form.cull_female_reason" type="text" />
+                </div>
+                </div>
+
+                <!-- Note -->
+                <div class="flex flex-col mt-4">
+                <Label>Note</Label>
+                <textarea v-model="form.cull_note" class="border rounded px-3 py-2"></textarea>
+                </div>
+
+        </div>
+
+        <!-- sexxing error Tab -->
+        <div v-if="activeTab === 'sexing_error'">
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Sexing Error Male Qty -->
+                <div class="flex flex-col">
+                    <Label>Sexing Error Male Qty</Label>
+                    <Input v-model.number="form.sexing_error_male_qty" type="number" min="0" />
+                </div>
+
+                
+
+                <!-- Sexing Error Female Qty -->
+                <div class="flex flex-col">
+                    <Label>Sexing Error Female Qty</Label>
+                    <Input v-model.number="form.sexing_error_female_qty" type="number" min="0" />
+                </div>
+             </div>
+
+            <!-- Note -->
+            <div class="flex flex-col mt-4">
+            <Label>Note</Label>
+            <textarea v-model="form.sexing_error_note" class="border rounded px-3 py-2"></textarea>
+            </div>  
+        </div>
+
+
+        <!-- weight Tab -->
+        <div v-if="activeTab === 'weight'">
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Weight Male Qty -->
+                <div class="flex flex-col">
+                    <Label>Weight Male Qty</Label>
+                    <Input v-model.number="form.weight_male_qty" type="number" min="0" />
+                </div>
+
+                <!-- Weight Female Qty -->
+                <div class="flex flex-col">
+                    <Label>Weight Female Qty</Label>
+                    <Input v-model.number="form.weight_female_qty" type="number" min="0" />
+                </div>
+                </div>
+
+                <!-- Note -->
+                <div class="flex flex-col mt-4">
+                <Label>Note</Label>
+                <textarea v-model="form.weight_note" class="border rounded px-3 py-2"></textarea>
+                </div>
+
+        </div>
+
+
+        <!-- temperature Tab -->
+        <div v-if="activeTab === 'temperature'">
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Inside Temperature -->
+                <div class="flex flex-col">
+                    <Label>Inside Temperature</Label>
+                    <Input v-model.number="form.inside_temp" type="number" step="0.1" />
+                </div>
+
+                <!-- Std Inside Temperature -->
+                <div class="flex flex-col">
+                    <Label>Std Inside Temperature</Label>
+                    <Input v-model.number="form.std_inside_temp" type="number" step="0.1" />
+                </div>
+
+                <!-- Outside Temperature -->
+                <div class="flex flex-col">
+                    <Label>Outside Temperature</Label>
+                    <Input v-model.number="form.outside_temp" type="number" step="0.1" />
+                </div>
+
+                <!-- Std Outside Temperature -->
+                <div class="flex flex-col">
+                    <Label>Std Outside Temperature</Label>
+                    <Input v-model.number="form.std_outside_temp" type="number" step="0.1" />
+                </div>
+                </div>
+
+                <!-- Note -->
+                <div class="flex flex-col mt-4">
+                <Label>Note</Label>
+                <textarea v-model="form.temp_note" class="border rounded px-3 py-2"></textarea>
+                </div>
+
+        </div>
+
+
+        <!-- humidity Tab -->
+        <div v-if="activeTab === 'humidity'">
+            <div class="grid grid-cols-2 gap-4">
+            <!-- Today Humidity -->
+            <div class="flex flex-col">
+                <Label>Today Humidity (%)</Label>
+                <Input v-model.number="form.today_humidity" type="number" step="0.1" />
+            </div>
+
+            <!-- Std Humidity -->
+            <div class="flex flex-col">
+                <Label>Std Humidity (%)</Label>
+                <Input v-model.number="form.std_humidity" type="number" step="0.1" />
+            </div>
+            </div>
+
+            <!-- Note -->
+            <div class="flex flex-col mt-4">
+            <Label>Note</Label>
+            <textarea v-model="form.humidity_note" class="border rounded px-3 py-2"></textarea>
+            </div>
+        </div>
+
+
+         <!-- medicine Tab -->
+        <div v-if="activeTab === 'medicine'">
+
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Medicine Name -->
+                <div class="flex flex-col">
+                    <Label>Medicine</Label>
+                    <select v-model="form.medicine_id" class="w-full mt-1 border rounded px-3 py-2">
+                    <option value="">Select Medicine</option>
+                    <option v-for="medicine in props.medicines" :key="medicine.id" :value="medicine.id">
+                        {{ medicine.name }}
+                    </option>
+                    </select>
+                </div>
+
+                <!-- Quantity -->
+                <div class="flex flex-col">
+                    <Label>Quantity</Label>
+                    <Input v-model.number="form.medicine_quantity" type="number" min="0" />
+                </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                <!-- Unit -->
+                <div class="flex flex-col">
+                    <Label>Unit</Label>
+                    <Input v-model="form.medicine_unit" type="text" placeholder="ml / gm / tablet" />
+                </div>
+
+                <!-- Time -->
+                <div class="flex flex-col">
+                    <Label>Time</Label>
+                    <Input v-model="form.medicine_time" type="time" />
+                </div>
+                </div>
+
+                <!-- Note -->
+                <div class="flex flex-col mt-4">
+                <Label>Note</Label>
+                <textarea v-model="form.medicine_note" class="border rounded px-3 py-2"></textarea>
+                </div>
+            </div> 
+            
+            <div v-if="activeTab === 'vaccine'">
+
+        
+                <div class="grid grid-cols-2 gap-4">
+                <!-- Vaccine Name -->
+                <div class="flex flex-col">
+                    <Label>Vaccine</Label>
+                    <select v-model="form.vaccine_id" class="w-full mt-1 border rounded px-3 py-2">
+                    <option value="">Select Vaccine</option>
+                    <option v-for="vaccine in props.vaccines" :key="vaccine.id" :value="vaccine.id">
+                        {{ vaccine.name }}
+                    </option>
+                    </select>
+                </div>
+                <div class="flex flex-col">
+                    <Label>Dose</Label>
+                    <Input v-model.number="form.vaccine_dose" type="number" min="0" />
+                </div>
+                <!-- Unit -->
+                <div class="flex flex-col">
+                    <Label>Unit</Label>
+                    <Input v-model="form.vaccine_unit" type="text" placeholder="ml / dose" />
+                </div>
+                <!-- File Upload -->
+                 <div class="flex flex-col"></div>
+                <Label>Upload File</Label>
+                <input 
+                    type="file" 
+                    @change="form.vaccine_file = $event.target.files[0]" 
+                    class="w-full border rounded px-3 py-2 mt-1"
+                />
+                </div>
+
+               
+                
+
+
+                <!-- Note -->
+                <div class="flex flex-col mt-4">
+                <Label>Note</Label>
+                <textarea v-model="form.vaccine_note" class="border rounded px-3 py-2"></textarea>
+                </div>
+     
+            
+</div> 
+            
     </div>
 
     <!-- Navigation -->
