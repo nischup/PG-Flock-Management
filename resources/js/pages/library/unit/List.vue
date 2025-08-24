@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -139,6 +139,25 @@ const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
 }
 
+// 🔑 Close dropdown when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (
+    !target.closest('.dropdown-menu') &&
+    !target.closest('.actions-button')
+  ) {
+    openDropdownId.value = null
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
 // Toggle status
 const toggleStatus = (unit: Unit) => {
   const newStatus = unit.status === 'Active' ? 'Inactive' : 'Active'
@@ -161,35 +180,6 @@ const toggleStatus = (unit: Unit) => {
     }
   )
 }
-
-// Delete
-// const deleteUnit = (unit: Unit) => {
-//   Swal.fire({
-//     title: 'Are you sure?',
-//     text: `You are about to delete unit "${unit.name}"!`,
-//     icon: 'warning',
-//     showCancelButton: true,
-//     confirmButtonColor: '#d33',
-//     cancelButtonColor: '#3085d6',
-//     confirmButtonText: 'Yes, delete it!',
-//   }).then((result) => {
-//     if (result.isConfirmed) {
-//       router.delete(route('unit.destroy', unit.id), {
-//         preserveScroll: true,
-//         onSuccess: () => {
-//           units.value = units.value.filter((u) => u.id !== unit.id)
-//           Swal.fire('Deleted!', 'Unit has been deleted.', 'success')
-//         },
-//         onError: () => {
-//           Swal.fire('Error!', 'Could not delete unit.', 'error')
-//         },
-//         onFinish: () => {
-//           openDropdownId.value = null
-//         },
-//       })
-//     }
-//   })
-// }
 
 const breadcrumbs = [
   { title: 'Master Setup', href: '/master-setup' },
@@ -247,8 +237,8 @@ const breadcrumbs = [
             <td class="p-2 border relative">
               <Button
                 size="sm"
-                class="bg-gray-500 hover:bg-gray-600 text-white"
-                @click="toggleDropdown(unit.id)"
+                class="relative bg-gray-500 hover:bg-gray-600 text-white actions-button"
+                @click.stop="toggleDropdown(unit.id)"
               >
                 Actions ▼
               </Button>
@@ -256,7 +246,7 @@ const breadcrumbs = [
               <!-- Dropdown -->
               <div
                 v-if="openDropdownId === unit.id"
-                class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10"
+                class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown-menu"
                 @click.stop
               >
                 <button
@@ -271,12 +261,6 @@ const breadcrumbs = [
                 >
                   {{ unit.status === 'Active' ? 'Inactive' : 'Activate' }}
                 </button>
-                <!-- <button
-                  class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
-                  @click="deleteUnit(unit)"
-                >
-                  🗑 Delete
-                </button> -->
               </div>
             </td>
           </tr>
@@ -315,11 +299,9 @@ const breadcrumbs = [
           <div>
             <Label for="name" class="mb-2">Unit Name</Label>
             <Input v-model="form.name" id="name" />
-            <span
-              v-if="form.errors.name"
-              class="text-red-600 text-sm"
-              >{{ form.errors.name }}</span
-            >
+            <span v-if="form.errors.name" class="text-red-600 text-sm">
+              {{ form.errors.name }}
+            </span>
           </div>
 
           <div>

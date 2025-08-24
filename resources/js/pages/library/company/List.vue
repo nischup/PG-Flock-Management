@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
-import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue'
 import HeadingSmall from '@/components/HeadingSmall.vue'
 import { Button } from '@/components/ui/button'
@@ -13,63 +12,120 @@ interface Company {
   id: number
   name: string
   location?: string
-  status: number // ✅ keep number
+  status: number
   created_at: string
 }
 
+// Props & state
 const props = defineProps<{ companies: Company[] }>()
 const companies = ref<Company[]>([...props.companies])
-
-// Modal state
 const showModal = ref(false)
 const editingCompany = ref<Company | null>(null)
-
-// Form
 const form = useForm({ name: '', location: '', status: 1 })
+const openDropdownId = ref<number | null>(null)
+const modalRef = ref<HTMLElement | null>(null)
 
-// Open modal
+// Draggable modal state
+let offsetX = 0
+let offsetY = 0
+let isDragging = false
+
+// Breadcrumbs
+const breadcrumbs = [
+  { title: 'Master Setup', href: '/master-setup' },
+  { title: 'Company', href: '/master-setup/company' },
+]
+
+// -----------------------
+// Modal Drag Functions
+// -----------------------
+const startDrag = (event: MouseEvent) => {
+  if (!modalRef.value) return
+  isDragging = true
+  const rect = modalRef.value.getBoundingClientRect()
+  offsetX = event.clientX - rect.left
+  offsetY = event.clientY - rect.top
+  event.preventDefault()
+}
+
+const onDrag = (event: MouseEvent) => {
+  if (!isDragging || !modalRef.value) return
+  Object.assign(modalRef.value.style, {
+    left: `${event.clientX - offsetX}px`,
+    top: `${event.clientY - offsetY}px`,
+    position: 'absolute',
+    margin: '0',
+  })
+}
+
+const stopDrag = () => (isDragging = false)
+
+// -----------------------
+// Handle Click Outside
+// -----------------------
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  const dropdowns = document.querySelectorAll('.dropdown, .dropdown-button')
+  for (let i = 0; i < dropdowns.length; i++) {
+    if (dropdowns[i].contains(target)) return
+  }
+
+  const modalEl = modalRef.value
+  if (modalEl && modalEl.contains(target)) return
+
+  openDropdownId.value = null
+}
+
+// -----------------------
+// Lifecycle
+// -----------------------
+onMounted(() => {
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+  document.addEventListener('click', handleClickOutside)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.removeEventListener('click', handleClickOutside)
+})
+
+// -----------------------
+// Modal Functions
+// -----------------------
 const openModal = (company: Company | null = null) => {
   if (company) {
     editingCompany.value = company
-    form.name = company.name
-    form.status = company.status
-    form.location = company.location || ''
+    Object.assign(form, { name: company.name, location: company.location || '', status: company.status })
   } else {
-    editingCompany.value = null
-    form.reset()
-    form.status = 1
-    form.location = ''
+    resetForm()
   }
   showModal.value = true
 }
 
-// Reset form
 const resetForm = () => {
   form.reset()
-  form.status = 1
-  form.location = ''
+  Object.assign(form, { status: 1, location: '' })
   editingCompany.value = null
   showModal.value = false
 }
+
+// -----------------------
+// CRUD Functions
+// -----------------------
 useNotifier()
 
-// Submit (Create/Update)
 const submit = () => {
   if (!form.name.trim()) return
+
+  const payload = { name: form.name, location: form.location, status: form.status }
 
   if (editingCompany.value) {
     form.put(route('company.update', editingCompany.value.id), {
       preserveScroll: true,
       onSuccess: () => {
-        const i = companies.value.findIndex(c => c.id === editingCompany.value!.id)
-        if (i !== -1) {
-          companies.value[i] = {
-            ...companies.value[i],
-            name: form.name,
-            location: form.location,
-            status: form.status,
-          }
-        }
+        const idx = companies.value.findIndex(c => c.id === editingCompany.value!.id)
+        if (idx !== -1) companies.value[idx] = { ...companies.value[idx], ...payload }
         resetForm()
       },
     })
@@ -77,77 +133,37 @@ const submit = () => {
     form.post(route('company.store'), {
       preserveScroll: true,
       onSuccess: () => {
-        companies.value.unshift({
-          id: Date.now(), // temp ID until refresh
-          name: form.name,
-          location: form.location,
-          status: form.status,
-          created_at: new Date().toISOString().split('T')[0],
-        })
+        companies.value.unshift({ id: Date.now(), ...payload, created_at: new Date().toISOString().split('T')[0] })
         resetForm()
       },
     })
   }
 }
 
-// Dropdown
-const openDropdownId = ref<number | null>(null)
+// -----------------------
+// Dropdown & Status Toggle
+// -----------------------
 const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
 }
 
-// Status toggle
 const toggleStatus = (company: Company) => {
   const newStatus = company.status === 1 ? 0 : 1
-  router.put(
-    route('company.update', company.id),
-    { name: company.name, status: newStatus, location: company.location },
-    {
-      preserveScroll: true,
-      onSuccess: () => {
-        const i = companies.value.findIndex(c => c.id === company.id)
-        if (i !== -1) companies.value[i].status = newStatus
-      },
-      onFinish: () => {
-        openDropdownId.value = null
-      },
-    }
-  )
-}
-
-// Delete with SweetAlert
-const deleteCompany = (company: Company) => {
-  Swal.fire({
-    title: 'Are you sure?',
-    text: `You are about to delete "${company.name}"!`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      router.delete(route('company.destroy', company.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-          companies.value = companies.value.filter(c => c.id !== company.id)
-          Swal.fire('Deleted!', 'Company has been deleted.', 'success')
-        },
-      })
-    }
+  router.put(route('company.update', company.id), { ...company, status: newStatus }, {
+    preserveScroll: true,
+    onSuccess: () => {
+      const idx = companies.value.findIndex(c => c.id === company.id)
+      if (idx !== -1) companies.value[idx].status = newStatus
+    },
+    onFinish: () => openDropdownId.value = null,
   })
 }
-
-// Breadcrumbs
-const breadcrumbs = [
-  { title: 'Master Setup', href: '/master-setup' },
-  { title: 'Company', href: '/master-setup/company' },
-]
 </script>
 
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
     <Head title="Companies" />
+
     <div class="px-4 py-6">
       <!-- Header -->
       <div class="flex items-center justify-between mb-4">
@@ -179,16 +195,23 @@ const breadcrumbs = [
             </td>
             <td class="p-2 border">{{ company.created_at }}</td>
             <td class="p-2 border relative">
-              <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(company.id)">
+              <Button
+                size="sm"
+                class="bg-gray-500 hover:bg-gray-600 text-white dropdown-button"
+                @click.stop="toggleDropdown(company.id)"
+              >
                 Actions ▼
               </Button>
 
-              <div v-if="openDropdownId === company.id" class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10" @click.stop>
+              <div
+                v-if="openDropdownId === company.id"
+                class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown"
+                @click.stop
+              >
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(company)">✏ Edit</button>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(company)">
                   {{ company.status === 1 ? 'Inactive' : 'Activate' }}
                 </button>
-                <button class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" @click="deleteCompany(company)">🗑 Delete</button>
               </div>
             </td>
           </tr>
@@ -198,10 +221,22 @@ const breadcrumbs = [
 
     <!-- Draggable Modal -->
     <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6" @click.self="resetForm">
-      <div ref="modalRef" class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl" style="top: 100px; position: absolute;">
+      <div
+        ref="modalRef"
+        class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl"
+        style="top: 100px; position: absolute;"
+      >
         <div class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move" @mousedown="startDrag">
-          <h3 class="text-xl font-semibold text-gray-900">{{ editingCompany ? 'Edit Company' : 'Add New Company' }}</h3>
-          <button type="button" class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center" @click="resetForm">✕</button>
+          <h3 class="text-xl font-semibold text-gray-900">
+            {{ editingCompany ? 'Edit Company' : 'Add New Company' }}
+          </h3>
+          <button
+            type="button"
+            class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center"
+            @click="resetForm"
+          >
+            ✕
+          </button>
         </div>
 
         <div class="p-4 space-y-4">

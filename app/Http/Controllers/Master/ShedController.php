@@ -18,7 +18,7 @@ class ShedController extends Controller
                     'id'         => $shed->id,
                     'name'       => $shed->name,
                     'status'     => (int) $shed->status, // keep as 0/1
-                    'created_at' => $shed->created_at->format('Y-m-d'),
+                    'created_at' => $shed->created_at->format('d M Y'),
                 ];
             });
 

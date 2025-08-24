@@ -207,11 +207,11 @@ const breadcrumbs = [
             <td class="p-2 border">{{ vaccine.created_at }}</td>
             <td class="p-2 border">
               <div class="relative inline-block text-left">
-                <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click.stop="toggleDropdown(vaccine.id)">
+                <Button size="sm" class=" relative bg-gray-500 hover:bg-gray-600 text-white" @click.stop="toggleDropdown(vaccine.id)">
                   Actions ▼
                 </Button>
 
-                <div v-if="openDropdownId === vaccine.id" class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10" @click.stop>
+                <div v-if="openDropdownId === vaccine.id" class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10" @click.stop>
                   <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(vaccine)">✏ Edit</button>
                   <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(vaccine)">
                     {{ vaccine.status === 1 ? 'Inactive' : 'Activate' }}

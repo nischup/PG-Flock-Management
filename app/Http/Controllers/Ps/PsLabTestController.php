@@ -99,10 +99,38 @@ class PsLabTestController extends Controller
      */
     public function edit(string $id)
     {
-        $labTest = PsLabTest::with('psReceive')->findOrFail($id);
+            $labTest = PsLabTest::with('psReceive')->findOrFail($id);
+
+            $labTestData = [
+                'id' => $labTest->id,
+                'ps_receive_id' => $labTest->ps_receive_id,
+                'lab_type' => $labTest->lab_type,
+                'lab_send_female_qty' => $labTest->lab_send_female_qty,
+                'lab_send_male_qty' => $labTest->lab_send_male_qty,
+                'lab_send_total_qty' => $labTest->lab_send_total_qty,
+                'lab_receive_female_qty' => $labTest->lab_receive_female_qty,
+                'lab_receive_male_qty' => $labTest->lab_receive_male_qty,
+                'lab_receive_total_qty' => $labTest->lab_receive_total_qty,
+                'mortality_qty' => $labTest->mortality_qty,
+                'notes' => $labTest->notes,
+                'status' => $labTest->status, // 1=receive, 2=complete
+                'created_at' => $labTest->created_at->format('Y-m-d'),
+
+                // bring PI info from ps_receive
+                'ps_receive' => [
+                    'id' => $labTest->psReceive->id,
+                    'pi_no' => $labTest->psReceive->pi_no,
+                    'order_no' => $labTest->psReceive->order_no,
+                    'order_date' => $labTest->psReceive->order_date,
+                    'pi_date' => $labTest->psReceive->pi_date,
+                    'lc_no' => $labTest->psReceive->lc_no,
+                    'lc_date' => $labTest->psReceive->lc_date,
+                    'remarks' => $labTest->psReceive->remarks,
+                ]
+            ];
 
             return Inertia::render('ps/ps-lab-test/Edit', [
-                'labTest' => $labTest
+                'labTest' => $labTestData
             ]);
     }
 
@@ -111,36 +139,29 @@ class PsLabTestController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // $request->validate([
-        //     'ps_receive_id' => 'required|exists:ps_receives,id',
-        //     'female_qty' => 'required|numeric|min:0',
-        //     'male_qty' => 'required|numeric|min:0',
-        //     'notes' => 'nullable|string',
-        // ]);
+        $labTest = PsLabTest::findOrFail($id);
+        // Access request values directly
+      
+        //dd($request->lab_receive_total_qty);
+        $labReceiveFemale = (int) $request->lab_receive_female_qty;
+        $labReceiveMale = (int) $request->lab_receive_male_qty;
+        $labReceiveTotal = (int) $request->lab_receive_total_qty; // <-- here
+        $mortality = (int) $request->mortality_qty;
+        $status = (int) $request->status;
+        $notes = $request->notes;
+       
 
-        $labTest = PsLabTest::updateOrCreate(
-            ['ps_receive_id' => $request->ps_receive_id],
-            [
-                'lab_type' => $request->lab_type,
-                'female_qty' => $request->female_qty,
-                'male_qty' => $request->male_qty,
-                'total_qty' => $request->female_qty + $request->male_qty,
-                'notes' => $request->notes,
-            ]
-        );
+        // Update the lab test
+        $labTest->update([
+            'lab_receive_female_qty' =>10,
+            'lab_receive_male_qty' => 4,
+            'lab_receive_total_qty' =>15,
+            'mortality_qty' => 1 ,
+            'status' => (int) $status,
+            'notes' => $notes,
+        ]);
 
-        $labTest = PsLabTest::updateOrCreate(
-            ['ps_receive_id' => $request->ps_receive_id],
-            [
-                'lab_type' => $request->lab_type,
-                'female_qty' => $request->female_qty,
-                'male_qty' => $request->male_qty,
-                'total_qty' => $request->female_qty + $request->male_qty,
-                'notes' => $request->notes,
-            ]
-        );
-
-         return redirect()->route('ps-receive.index')->with('success', 'Lab Test saved successfully!');
+        return redirect()->route('ps-lab-test.index')->with('success', 'Lab Test updated successfully');
     }
 
     /**

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -14,7 +14,7 @@ import { usePermissions } from '@/composables/usePermissions'
 interface ChickType {
   id: number
   name: string
-  status: number // 1 = Active, 0 = Inactive
+  status: number
   created_at: string
 }
 
@@ -134,6 +134,23 @@ const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
 }
 
+// Close dropdown when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  const dropdowns = document.querySelectorAll('.dropdown, .dropdown-button')
+  for (let i = 0; i < dropdowns.length; i++) {
+    if (dropdowns[i].contains(target)) return
+  }
+  openDropdownId.value = null
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
 // Toggle status
 const toggleStatus = (chickType: ChickType) => {
   const newStatus = chickType.status === 1 ? 0 : 1
@@ -156,27 +173,6 @@ const toggleStatus = (chickType: ChickType) => {
   )
 }
 
-// Delete chick type
-const destroy = (chickType: ChickType) => {
-  Swal.fire({
-    title: 'Are you sure?',
-    text: `Delete "${chickType.name}"? This action cannot be undone.`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Yes, delete it!',
-  }).then(result => {
-    if (result.isConfirmed) {
-      router.delete(route('chick-type.destroy', chickType.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-          chickTypes.value = chickTypes.value.filter(c => c.id !== chickType.id)
-          openDropdownId.value = null
-        },
-      })
-    }
-  })
-}
-
 // Breadcrumbs
 const breadcrumbs = [
   { title: 'Master Setup', href: '/master-setup' },
@@ -188,16 +184,13 @@ const breadcrumbs = [
   <AppLayout :breadcrumbs="breadcrumbs">
     <Head title="Chick Types" />
 
-    <!-- Filters -->
-    <FilterControls :filters="props.filters" routeName="/chick-type" />
-
     <div class="px-4 py-6">
       <!-- Header -->
       <div class="flex items-center justify-between mb-4">
         <HeadingSmall title="Chick Types List" />
         <Button
           v-if="can('chick-type.create')"
-          class="bg-chicken hover:bg-yellow-600 text-white"
+          class="bg-chicken hover:bg-yellow-600 text-white dropdown-button"
           @click="openModal()"
         >
           + Add New
@@ -228,13 +221,17 @@ const breadcrumbs = [
             </td>
             <td class="p-2 border">{{ chickType.created_at }}</td>
             <td class="p-2 border relative">
-              <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(chickType.id)">
+              <Button
+                size="sm"
+                class="bg-gray-500 hover:bg-gray-600 text-white dropdown-button"
+                @click.stop="toggleDropdown(chickType.id)"
+              >
                 Actions ▼
               </Button>
-              <!-- Dropdown -->
+
               <div
                 v-if="openDropdownId === chickType.id"
-                class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10"
+                class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown"
                 @click.stop
               >
                 <button
@@ -251,13 +248,6 @@ const breadcrumbs = [
                 >
                   {{ chickType.status === 1 ? 'Inactive' : 'Activate' }}
                 </button>
-                <button
-                  v-if="can('chick-type.delete')"
-                  class="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
-                  @click="destroy(chickType)"
-                >
-                  🗑 Delete
-                </button>
               </div>
             </td>
           </tr>
@@ -266,7 +256,7 @@ const breadcrumbs = [
     </div>
 
     <!-- Draggable Modal -->
-    <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6" @click.self="showModal = false">
+    <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6" @click.self="resetForm">
       <div
         ref="modalRef"
         class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl"

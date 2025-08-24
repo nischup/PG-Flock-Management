@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -31,7 +31,6 @@ useListFilters({
 })
 
 const { can } = usePermissions()
-
 const medicines = ref<Medicine[]>([...props.medicines])
 
 // Modal state
@@ -56,8 +55,6 @@ const startDrag = (event: MouseEvent) => {
   const rect = modalRef.value.getBoundingClientRect()
   offsetX = event.clientX - rect.left
   offsetY = event.clientY - rect.top
-  document.addEventListener('mousemove', onDrag)
-  document.addEventListener('mouseup', stopDrag)
 }
 
 const onDrag = (event: MouseEvent) => {
@@ -70,9 +67,36 @@ const onDrag = (event: MouseEvent) => {
 
 const stopDrag = () => {
   isDragging = false
+}
+
+// Dropdown state
+const openDropdownId = ref<number | null>(null)
+const toggleDropdown = (id: number) => {
+  openDropdownId.value = openDropdownId.value === id ? null : id
+}
+
+// Click outside dropdown to close
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (
+    !target.closest('.dropdown-menu') &&
+    !target.closest('.actions-button')
+  ) {
+    openDropdownId.value = null
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('mouseup', stopDrag)
-}
+  document.removeEventListener('click', handleClickOutside)
+})
 
 // Open modal
 const openModal = (medicine: Medicine | null = null) => {
@@ -137,12 +161,6 @@ const submit = () => {
   }
 }
 
-// Dropdown for actions
-const openDropdownId = ref<number | null>(null)
-const toggleDropdown = (id: number) => {
-  openDropdownId.value = openDropdownId.value === id ? null : id
-}
-
 // Toggle status
 const toggleStatus = (medicine: Medicine) => {
   const newStatus = medicine.status === 1 ? 0 : 1
@@ -164,35 +182,6 @@ const toggleStatus = (medicine: Medicine) => {
       },
     }
   )
-}
-
-// Delete medicine
-const deleteMedicine = (medicine: Medicine) => {
-  Swal.fire({
-    title: 'Are you sure?',
-    text: `You are about to delete medicine "${medicine.name}"!`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      router.delete(route('medicine.destroy', medicine.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-          medicines.value = medicines.value.filter(m => m.id !== medicine.id)
-          Swal.fire('Deleted!', 'Medicine has been deleted.', 'success')
-        },
-        onError: () => {
-          Swal.fire('Error!', 'Could not delete medicine.', 'error')
-        },
-        onFinish: () => {
-          openDropdownId.value = null
-        },
-      })
-    }
-  })
 }
 
 // Breadcrumbs
@@ -246,24 +235,26 @@ const breadcrumbs = [
             </td>
             <td class="p-2 border">{{ medicine.created_at }}</td>
             <td class="p-2 border relative">
-              <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(medicine.id)">
+              <Button
+                size="sm"
+                class="actions-button bg-gray-500 hover:bg-gray-600 text-white"
+                @click="toggleDropdown(medicine.id)"
+              >
                 Actions ▼
               </Button>
 
               <!-- Dropdown -->
               <div
                 v-if="openDropdownId === medicine.id"
-                class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10"
+                class="dropdown-menu absolute mt-1 w-40 bg-white border rounded shadow-md z-10"
                 @click.stop
               >
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(medicine)">
                   ✏ Edit
                 </button>
+
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(medicine)">
                   {{ medicine.status === 1 ? 'Inactive' : 'Activate' }}
-                </button>
-                <button class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" @click="deleteMedicine(medicine)">
-                  🗑 Delete
                 </button>
               </div>
             </td>
@@ -275,8 +266,8 @@ const breadcrumbs = [
     <!-- Draggable Modal -->
     <div
       v-if="showModal"
-      class="fixed inset-0 z-50 flex justify-center pt-6"
-      @click.self="showModal = false"
+      class="fixed inset-0 z-50 flex justify-center pt-6 bg-black/30"
+      @click.self="resetForm"
     >
       <div
         ref="modalRef"

@@ -20,7 +20,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 // Form
 const form = useForm({
-  ps_receive_id: null,
+  ps_receive_id: "",
   lab_type: 'Gov Lab',
   lab_send_female_qty: 0,
   lab_send_male_qty: 0,
@@ -153,7 +153,7 @@ function submit() {
           </div>
 
           <div class="flex flex-col">
-            <Label>Lab Send Female Qty</Label>
+            <Label>Gov Lab Send Female Qty</Label>
             <Input v-model.number="form.lab_send_female_qty" :disabled="isExistingLabTest"
               type="number" class="mt-2"
               :class="isExistingLabTest ? 'bg-gray-100' : ''" />
@@ -161,7 +161,7 @@ function submit() {
           </div>
 
           <div class="flex flex-col">
-            <Label>Lab Send Male Qty</Label>
+            <Label>Gov Lab Send Male Qty</Label>
             <Input v-model.number="form.lab_send_male_qty" :disabled="isExistingLabTest"
               type="number" class="mt-2"
               :class="isExistingLabTest ? 'bg-gray-100' : ''" />
@@ -174,21 +174,8 @@ function submit() {
             <Label>Lab Send Total Qty</Label>
             <Input v-model.number="form.lab_send_total_qty" readonly class="mt-2 bg-gray-100" />
           </div>
-          <div class="flex flex-col">
-            <Label>Mortality Qty</Label>
-            <Input v-model.number="form.mortality_qty" :disabled="isExistingLabTest"
-              type="number" class="mt-2"
-              :class="isExistingLabTest ? 'bg-gray-100' : ''" />
-          </div>
-          <div class="flex flex-col">
-            <Label>Status</Label>
-            <select v-model="form.status" :disabled="isExistingLabTest"
-              class="mt-2 border rounded px-3 py-2 w-full"
-              :class="isExistingLabTest ? 'bg-gray-100 cursor-not-allowed' : ''">
-              <option value="receive">Receive</option>
-              <option value="complete">Test Complete</option>
-            </select>
-          </div>
+          
+          
         </div>
       </div>
 

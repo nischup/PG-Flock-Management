@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -36,6 +36,7 @@ const form = useForm({
   status: 1,
 })
 
+// Draggable modal
 const modalRef = ref<HTMLElement | null>(null)
 let offsetX = 0, offsetY = 0, isDragging = false
 
@@ -86,31 +87,25 @@ const resetForm = () => {
 
 useNotifier()
 
+// Submit (Create/Update)
 const submit = () => {
   if (!form.name.trim()) return
 
   if (editingFeedType.value) {
-    // Update
     form.put(route('feed-type.update', editingFeedType.value.id), {
       preserveScroll: true,
       onSuccess: () => {
         const index = feedTypes.value.findIndex(f => f.id === editingFeedType.value!.id)
         if (index !== -1) {
-          feedTypes.value[index] = {
-            ...feedTypes.value[index],
-            name: form.name,
-            status: form.status,
-          }
+          feedTypes.value[index] = { ...feedTypes.value[index], name: form.name, status: form.status }
         }
         resetForm()
       },
     })
   } else {
-    // Create
     form.post(route('feed-type.store'), {
       preserveScroll: true,
       onSuccess: (page) => {
-        // Refresh the list if server returns updated feedTypes
         if ((page as any).props?.feedTypes) {
           feedTypes.value = (page as any).props.feedTypes
         } else {
@@ -133,6 +128,23 @@ const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
 }
 
+// Close dropdown when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  const dropdowns = document.querySelectorAll('.dropdown, .dropdown-button')
+  for (let i = 0; i < dropdowns.length; i++) {
+    if (dropdowns[i].contains(target)) return
+  }
+  openDropdownId.value = null
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
 const toggleStatus = (ft: FeedType) => {
   const newStatus = ft.status === 1 ? 0 : 1
   router.put(route('feed-type.update', ft.id), { name: ft.name, status: newStatus }, {
@@ -146,30 +158,6 @@ const toggleStatus = (ft: FeedType) => {
   })
 }
 
-const deleteFeedType = (ft: FeedType) => {
-  Swal.fire({
-    title: 'Are you sure?',
-    text: `Delete "${ft.name}"?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, delete it!',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      router.delete(route('feed-type.destroy', ft.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-          feedTypes.value = feedTypes.value.filter(f => f.id !== ft.id)
-          Swal.fire('Deleted!', 'Feed type has been deleted.', 'success')
-        },
-        onError: () => Swal.fire('Error', 'Could not delete feed type.', 'error'),
-        onFinish: () => openDropdownId.value = null,
-      })
-    }
-  })
-}
-
 // Breadcrumbs
 const breadcrumbs = [
   { title: 'Master Setup', href: '/master-setup' },
@@ -177,13 +165,9 @@ const breadcrumbs = [
 ]
 </script>
 
-
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
     <Head title="Feed Types" />
-
-    <!-- Filters -->
-    <FilterControls :filters="props.filters" routeName="/feed-type" />
 
     <div class="px-4 py-6">
       <!-- Header -->
@@ -191,7 +175,7 @@ const breadcrumbs = [
         <HeadingSmall title="Feed Types List" />
         <Button
           v-if="can('feed-type.create')"
-          class="bg-chicken hover:bg-yellow-600 text-white"
+          class="bg-chicken hover:bg-yellow-600 text-white dropdown-button"
           @click="openModal()"
         >
           + Add New
@@ -210,44 +194,31 @@ const breadcrumbs = [
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(feedType, index) in feedTypes" :key="feedType.id">
+          <tr v-for="(ft, index) in feedTypes" :key="ft.id">
             <td class="p-2 border">{{ index + 1 }}</td>
-            <td class="p-2 border">{{ feedType.name }}</td>
+            <td class="p-2 border">{{ ft.name }}</td>
             <td class="p-2 border">
-              <span
-                :class="feedType.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'"
-              >
-                {{ feedType.status === 1 ? 'Active' : 'Inactive' }}
+              <span :class="ft.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+                {{ ft.status === 1 ? 'Active' : 'Inactive' }}
               </span>
             </td>
-            <td class="p-2 border">{{ feedType.created_at }}</td>
+            <td class="p-2 border">{{ ft.created_at }}</td>
             <td class="p-2 border relative">
               <Button
                 size="sm"
-                class="bg-gray-500 hover:bg-gray-600 text-white"
-                @click="toggleDropdown(feedType.id)"
+                class="bg-gray-500 hover:bg-gray-600 text-white dropdown-button"
+                @click.stop="toggleDropdown(ft.id)"
               >
                 Actions ▼
               </Button>
 
               <!-- Dropdown -->
-              <div
-                v-if="openDropdownId === feedType.id"
-                class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10"
-                @click.stop
-              >
-                <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(feedType)">
+              <div v-if="openDropdownId === ft.id" class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown" @click.stop>
+                <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(ft)">
                   ✏ Edit
                 </button>
-                <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(feedType)">
-                  {{ feedType.status === 1 ? 'Inactive' : 'Activate' }}
-                </button>
-                <button
-                  v-if="can('feed-type.delete')"
-                  class="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
-                  @click="deleteFeedType(feedType)"
-                >
-                  🗑 Delete
+                <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(ft)">
+                  {{ ft.status === 1 ? 'Inactive' : 'Activate' }}
                 </button>
               </div>
             </td>
@@ -257,31 +228,14 @@ const breadcrumbs = [
     </div>
 
     <!-- Draggable Modal -->
-    <div
-      v-if="showModal"
-      class="fixed inset-0 z-50 flex justify-center pt-6"
-      @click.self="showModal = false"
-    >
-      <div
-        ref="modalRef"
-        class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl"
-        style="top: 100px; position: absolute"
-      >
+    <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6" @click.self="resetForm">
+      <div ref="modalRef" class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl" style="top: 100px; position: absolute">
         <!-- Modal Header -->
-        <div
-          class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move"
-          @mousedown="startDrag"
-        >
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move" @mousedown="startDrag">
           <h3 class="text-xl font-semibold text-gray-900">
             {{ editingFeedType ? 'Edit Feed Type' : 'Add New Feed Type' }}
           </h3>
-          <button
-            type="button"
-            class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center"
-            @click="resetForm"
-          >
-            ✕
-          </button>
+          <button type="button" class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center" @click="resetForm">✕</button>
         </div>
 
         <!-- Modal Body -->
@@ -304,9 +258,7 @@ const breadcrumbs = [
         <!-- Modal Footer -->
         <div class="flex justify-end p-4 border-t border-gray-200">
           <Button class="bg-gray-300 text-black mr-2" @click="resetForm">Cancel</Button>
-          <Button class="bg-chicken text-white" @click="submit">
-            {{ editingFeedType ? 'Update' : 'Save' }}
-          </Button>
+          <Button class="bg-chicken text-white" @click="submit">{{ editingFeedType ? 'Update' : 'Save' }}</Button>
         </div>
       </div>
     </div>

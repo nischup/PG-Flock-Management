@@ -22,7 +22,7 @@ class CompanyController extends Controller
                     'name'       => $company->name,
                     'status'     => (int) $company->status, // keep as int for Vue
                     'location'   => $company->location,
-                    'created_at' => $company->created_at->format('Y-m-d'),
+                    'created_at' => $company->created_at->format('d M Y'),
                 ];
             });
 
