@@ -22,6 +22,12 @@ const flocks = ref([
   { id: 3, name: "Flock-003", shed: "Shed 3", batch: "Batch C" },
 ]);
 
+const flockOptions = ref([
+  { id: 1, name: "000001" },
+  { id: 2, name: "000002" },
+  { id: 3, name: "000003" },
+]);
+
 // Modal state
 const showModal = ref(false);
 const newFlockName = ref("");
@@ -140,6 +146,7 @@ const savePanAssign = () => {
   }
   showPanModal.value = false;
 };
+
 </script>
 
 <template>
@@ -232,15 +239,18 @@ const savePanAssign = () => {
           </div>
 
           <div class="p-6 space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-1">Flock Name</label>
-              <input
-                v-model="newFlockName"
-                type="text"
-                placeholder="Enter flock name"
-                class="w-full border rounded px-3 py-2"
-              />
-            </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Flock Name</label>
+            <select
+              v-model="newFlockName"
+              class="w-full border rounded px-3 py-2"
+            >
+              <option disabled value="">Select flock name</option>
+              <option v-for="flock in flockOptions" :key="flock.id" :value="flock.name">
+                {{ flock.name }}
+              </option>
+            </select>
+          </div>
 
             <div>
               <label class="block text-sm font-medium mb-1">Shed No</label>
