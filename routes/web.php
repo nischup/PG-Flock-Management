@@ -5,9 +5,9 @@ use Inertia\Inertia;
 use App\Http\Controllers\Master\ChickTypeController;
 use App\Http\Controllers\Master\FeedController;
 use App\Http\Controllers\Master\FeedTypeController;
-use App\Http\Controllers\Master\LocationController;
 use App\Http\Controllers\Master\CompanyController;
 use App\Http\Controllers\Master\MedicineController;
+use App\Http\Controllers\Master\DiseaseController;
 use App\Http\Controllers\Master\ShedController;
 use App\Http\Controllers\Master\UnitController;
 use App\Http\Controllers\Master\VaccineController;
@@ -16,7 +16,7 @@ use App\Http\Controllers\Ps\PsLabTestController;
 use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Shed\FlockAssignController;
-
+use App\Http\Controllers\DailyOperation\DailyOperationController;
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
@@ -39,9 +39,11 @@ Route::resource('shed', ShedController::class);
 Route::resource('unit', UnitController::class);
 Route::resource('vaccine', VaccineController::class);
 Route::resource('vaccine-type', VaccineTypeController::class);
+Route::resource('disease', DiseaseController::class);
 Route::resource('supplier', SupplierController::class);
 
 Route::post('/labtest/getdata', [PsLabTestController::class, 'getData'])->name('labtest.getdata');
 Route::resource('ps-lab-test', PsLabTestController::class);
 Route::resource('receive', ShedReceiveController::class);
 Route::resource('flock-assign', FlockAssignController::class);
+Route::resource('daily-operation', DailyOperationController::class);

@@ -70,7 +70,7 @@ const mainNavItems: NavItem[] = [
     children: [
       {
         title: 'Brooding',
-        href: '/receive',
+        href: '/daily-operation',
         icon: BabyChick
       },
       {
@@ -109,11 +109,13 @@ const mainNavItems: NavItem[] = [
         { title: 'Shed', href: '/shed', icon: BookOpen },
         { title: 'Vaccine', href: '/vaccine', icon: BookOpen },
         { title: 'Vaccine Type', href: '/vaccine-type', icon: BookOpen },
+        { title: 'Disease', href: '/disease', icon: BookOpen },
         { title: 'Medicine', href: '/medicine', icon: BookOpen },
         { title: 'Compnay', href: '/company', icon: BookOpen },
         { title: 'Chicks Type', href: '/chick-type', icon: BookOpen },
         { title: 'Feed Type', href: '/feed-type', icon: BookOpen },
         { title: 'Supplier', href: '/supplier', icon: BookOpen },
+
     ]
   }
 ]
