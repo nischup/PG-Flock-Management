@@ -56,15 +56,10 @@ const mainNavItems: NavItem[] = [
         href: '/flock-assign',
         icon: BabyChick
       },
-      {
-        title: 'Pan assign',
-        href: '/receive k',
-        icon: BabyChick
-      },
     ]
   },
   {
-    title: 'Daily Activity',
+    title: 'Farm Operation',
     icon: BabyChickMultiple ,
     iconClass: 'text-yellow-500',
     children: [
@@ -80,7 +75,28 @@ const mainNavItems: NavItem[] = [
       },
     ]
   },
-
+  {
+    title: 'Production',
+    icon: BabyChickMultiple ,
+    iconClass: 'text-yellow-500',
+    children: [
+      {
+        title: 'Farm Receive',
+        href: '/production-firm-receive',
+        icon: BabyChick
+      },
+      {
+        title: 'Shed Assign',
+        href: '/flock-assign',
+        icon: BabyChick
+      },
+      {
+        title: 'Daily Operation',
+        href: '/daily-operation',
+        icon: BabyChick
+      },
+    ]
+  },
 
   {
     title: 'User Management',

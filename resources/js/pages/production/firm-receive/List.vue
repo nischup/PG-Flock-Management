@@ -5,9 +5,8 @@ import { Head } from '@inertiajs/vue3';
 import { ref, computed } from "vue";
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Shed', href: '/shed' },
-  { title: 'Flock', href: '/flock' },
-  { title: 'Assign', href: '/flock/assign' },
+  { title: 'Production', href: '/flock' },
+  { title: 'Farm Receive', href: '/flock/assign' },
 ];
 
 // Dummy stats
@@ -143,17 +142,17 @@ const saveTransfer = () => {
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
 
       <!-- Add Flock Button -->
-      <div class="flex justify-end">
+      <!-- <div class="flex justify-end">
         <button
           @click="showModal = true"
           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           + Assign Flock
         </button>
-      </div>
+      </div> -->
 
       <!-- Cards -->
-      <div class="grid gap-4 md:grid-cols-3">
+      <!-- <div class="grid gap-4 md:grid-cols-3">
         <div class="p-5 rounded-xl shadow bg-white dark:bg-gray-800">
           <p class="text-sm font-semibold">Total Flock</p>
           <p class="text-3xl font-bold mt-2">{{ totalFlock }}</p>
@@ -166,7 +165,7 @@ const saveTransfer = () => {
           <p class="text-sm font-semibold">Assign Batch</p>
           <p class="text-3xl font-bold mt-2">{{ assignBatch }}</p>
         </div>
-      </div>
+      </div> -->
 
       <!-- List Table -->
       <div class="overflow-x-auto rounded-xl shadow bg-white dark:bg-gray-800 mt-4">
@@ -174,9 +173,12 @@ const saveTransfer = () => {
           <thead class="bg-gray-100 dark:bg-gray-700">
             <tr>
               <th class="px-4 py-2 border-b">#SL</th>
+              <th class="px-4 py-2 border-b">From Project</th>
+              <th class="px-4 py-2 border-b">Receive Project</th>
               <th class="px-4 py-2 border-b">Flock No</th>
-              <th class="px-4 py-2 border-b">Shed</th>
-              <th class="px-4 py-2 border-b">Batch</th>
+              <th class="px-4 py-2 border-b">Female Qty</th>
+              <th class="px-4 py-2 border-b">Male Qty</th>
+              <th class="px-4 py-2 border-b">Total Qty</th>
               <th class="px-4 py-2 border-b">Action</th>
             </tr>
           </thead>
@@ -187,16 +189,19 @@ const saveTransfer = () => {
               class="hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
+              <td class="px-4 py-2 border-b">PBL</td>
+              <td class="px-4 py-2 border-b">PCL</td>
               <td class="px-4 py-2 border-b">{{ flock.name }}</td>
-              <td class="px-4 py-2 border-b">{{ flock.shed }}</td>
-              <td class="px-4 py-2 border-b">{{ flock.batch }}</td>
+              <td class="px-4 py-2 border-b">10000</td>
+              <td class="px-4 py-2 border-b">200</td>
+              <td class="px-4 py-2 border-b">10200</td>
               <td class="px-4 py-2 border-b">
                 <button class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-chicken mr-2">Edit</button>
                 <button
                   class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 mr-2"
                   @click="openTransferModal(flock)"
                 >
-                  Transfer
+                  Receive
                 </button>
 
               </td>
@@ -204,136 +209,6 @@ const saveTransfer = () => {
           </tbody>
         </table>
       </div>
-
-      <!-- Draggable Add Flock Modal -->
-     <div
-  v-if="showModal"
-  class="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
-  @click="closeModal"
-  @mousemove="onDrag"
-  @mouseup="stopDrag"
->
-  <div
-    id="modal-content"
-    class="bg-white rounded-lg shadow-lg w-[700px] max-w-full"
-    :style="{ transform: `translate(${position.x}px, ${position.y}px)` }"
-    @click.stop
-  >
-    <!-- Header -->
-    <div
-      class="p-3 bg-gray-200 cursor-move rounded-t-lg"
-      @mousedown="startDrag"
-    >
-      <h2 class="font-bold">Assign Flock</h2>
-    </div>
-
-    <!-- Body -->
-    <div class="p-6 space-y-4">
-      <!-- Flock No -->
-      <div>
-        <label class="block text-sm font-medium mb-1">Flock No</label>
-        <select v-model="newFlockName" class="w-full border rounded px-3 py-2">
-          <option disabled value="">Select Flock No</option>
-          <option v-for="flock in flockOptions" :key="flock.id" :value="flock.name">
-            {{ flock.name }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Shed No -->
-      <div>
-        <label class="block text-sm font-medium mb-1">Shed No</label>
-        <select v-model="selectedShed" class="w-full border rounded px-3 py-2">
-          <option disabled value="">Select Shed</option>
-          <option v-for="shed in shedOptions" :key="shed" :value="shed">{{ shed }}</option>
-        </select>
-      </div>
-
-      <!-- Batch + Quantities -->
-<div>
-  <label class="block text-sm font-medium mb-2">Batch Details</label>
-
-  <!-- Border Box -->
-  <div class="border rounded-lg p-3 space-y-2">
-    <!-- Header Row -->
-    <div class="grid grid-cols-5 gap-3 font-semibold text-sm text-gray-600 border-b pb-2">
-      <span>Batch</span>
-      <span>Female Qty</span>
-      <span>Male Qty</span>
-      <span>Total</span>
-      <span></span>
-    </div>
-
-    <!-- Rows -->
-    <div
-      v-for="(batch, index) in batches"
-      :key="index"
-      class="grid grid-cols-5 gap-3 items-center"
-    >
-      <!-- Batch Dropdown -->
-      <select v-model="batch.batchNo" class="border rounded px-3 py-2">
-        <option disabled value="">Select Batch</option>
-        <option v-for="batchOption in batchOptions" :key="batchOption" :value="batchOption">
-          {{ batchOption }}
-        </option>
-      </select>
-
-      <!-- Female Qty -->
-      <input
-        v-model.number="batch.femaleQty"
-        type="number"
-        placeholder="Female Qty"
-        class="border rounded px-3 py-2"
-      />
-
-      <!-- Male Qty -->
-      <input
-        v-model.number="batch.maleQty"
-        type="number"
-        placeholder="Male Qty"
-        class="border rounded px-3 py-2"
-      />
-
-      <!-- Total Qty (readonly) -->
-      <input
-        :value="(batch.femaleQty || 0) + (batch.maleQty || 0)"
-        type="number"
-        readonly
-        class="border rounded px-3 py-2 bg-gray-100"
-      />
-
-      <!-- Add Batch Button (last row only) -->
-      <button
-        v-if="index === batches.length - 1"
-        @click="addBatch"
-        class="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-      >
-        +
-      </button>
-    </div>
-  </div>
-</div>
-
-    </div>
-
-    <!-- Footer -->
-    <div class="p-4 flex justify-end border-t">
-      <button
-        class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mr-2"
-        @click="showModal = false"
-      >
-        Cancel
-      </button>
-      <button
-        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        @click="saveFlock"
-      >
-        Save
-      </button>
-    </div>
-  </div>
-</div>
-
 
 <!-- Transfer Modal -->
 <div
@@ -347,7 +222,7 @@ const saveTransfer = () => {
   >
     <!-- Header -->
     <div class="p-3 bg-gray-200 rounded-t-lg">
-      <h2 class="font-bold">Transfer Flock</h2>
+      <h2 class="font-bold">Receive Flock</h2>
     </div>
 
     <!-- Body -->
@@ -440,7 +315,7 @@ const saveTransfer = () => {
         class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         @click="saveTransfer"
       >
-        Transfer
+        Receive
       </button>
     </div>
   </div>
