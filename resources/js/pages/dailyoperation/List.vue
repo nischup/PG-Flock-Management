@@ -43,7 +43,7 @@ if (!props.dailyOperations) {
         female_mortality: 3,
         feed_consumption: '200 Kg',
         water_consumption: '150 L',
-        light_hour: 8,
+        light_hour: "8 H",
         note: 'Normal day',
       },
       {
@@ -54,7 +54,7 @@ if (!props.dailyOperations) {
         female_mortality: 4,
         feed_consumption: '180 Kg',
         water_consumption: '130 L',
-        light_hour: 9,
+        light_hour: "8 H",
         note: 'Slight heat stress',
       },
     ],

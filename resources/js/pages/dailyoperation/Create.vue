@@ -57,13 +57,13 @@ const form = useForm({
   feed_unit: '',
   feed_note: '',
   water_consumption: 0,
-  light_consumption: 0,
+  light_hour: 0,
   destroy: 0,
-  culling: 0,
+  cull: 0,
   sexing_error: 0,
   egg_collection: 0,
   weight: 0,
-  inside_temperature: 0,
+  temperature: 0,
   humidity: 0,
 })
 
@@ -80,9 +80,9 @@ const shedInfo = {
 
 // Dummy tab counts
 const tabCountsData = {
-  1: { daily_mortality: 10, feed_consumption: "200 Kg", water_consumption: "150 L", light_consumption: "80 H", destroy: 5, culling: 3, sexing_error: 2, weight: "1600 gm", inside_temperature: 28, humidity: 70, egg_collection: 9000 },
-  2: { daily_mortality: 15, feed_consumption: "180 Kg", water_consumption: "130 L", light_consumption: "80 H", destroy: 4, culling: 2, sexing_error: 1, weight: "1500 gm", inside_temperature: 29, humidity: 65, egg_collection: 8900 },
-  3: { daily_mortality: 25, feed_consumption: "190 Kg", water_consumption: "160 L", light_consumption: "70 H", destroy: 6, culling: 5, sexing_error: 3, weight: "1400 gm", inside_temperature: 27, humidity: 72, egg_collection: 8000 },
+  1: { daily_mortality: 10, feed_consumption: "200 Kg", water_consumption: "150 L", light_hour: "80 H", destroy: 5, cull: 3, sexing_error: 2, weight: "1600 gm", temperature: 28, humidity: 70, egg_collection: 9000 },
+  2: { daily_mortality: 15, feed_consumption: "180 Kg", water_consumption: "130 L", light_hour: "80 H", destroy: 4, cull: 2, sexing_error: 1, weight: "1500 gm", temperature: 29, humidity: 65, egg_collection: 8900 },
+  3: { daily_mortality: 25, feed_consumption: "190 Kg", water_consumption: "160 L", light_hour: "70 H", destroy: 6, cull: 5, sexing_error: 3, weight: "1400 gm", temperature: 27, humidity: 72, egg_collection: 8000 },
 }
 
 // Counts for dashboard
@@ -150,17 +150,17 @@ function submit() {
         </div>
 
         <!-- Shed Info -->
-        <div class="col-span-1 md:col-span-2 mt-2 border rounded shadow-sm bg-white p-4">
+        <div class="col-span-1 md:col-span-2 mt-2 border rounded shadow-sm bg-white p-1">
           <div class="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p class="text-gray-700 font-medium">Opening Chicks</p>
+            <div class="bg-yellow-100 p-4">
+              <p class="text-gray-700 font-medium">Total Chicks</p>
               <p class="text-xl font-bold">{{ shedQty.opening }}</p>
             </div>
-            <div>
+            <div class="bg-green-100 p-4">
               <p class="text-gray-700 font-medium">Current Chicks</p>
               <p class="text-xl font-bold">{{ shedQty.current }}</p>
             </div>
-            <div>
+            <div class="bg-blue-100 p-4">
               <p class="text-gray-700 font-medium">Current Age</p>
               <p class="text-xl font-bold">{{ flockInfo.age }}</p>
             </div>
