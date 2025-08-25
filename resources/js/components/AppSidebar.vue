@@ -92,7 +92,7 @@ const mainNavItems: NavItem[] = [
       },
       {
         title: 'Daily Operation',
-        href: '/daily-operation',
+        href: '/production/daily-operation',
         icon: BabyChick
       },
     ]
