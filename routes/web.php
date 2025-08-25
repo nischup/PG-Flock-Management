@@ -17,6 +17,8 @@ use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Shed\FlockAssignController;
 use App\Http\Controllers\DailyOperation\DailyOperationController;
+use App\Http\Controllers\Production\ProductionFirmReceiveController;
+
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
