@@ -17,12 +17,43 @@ use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Shed\FlockAssignController;
 use App\Http\Controllers\DailyOperation\DailyOperationController;
+use Illuminate\Http\Request;
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
+Route::get('dashboard', function (Request $request) {
+   $flocks = [
+            ['id' => 1, 'flock_code' => '1-22A'],
+            ['id' => 2, 'flock_code' => '1-22B'],
+            ['id' => 3, 'flock_code' => '2-22A'],
+        ];
+
+        // You can calculate these summaries from DB later
+        $dummySummary = [
+            1 => [
+                'mortality' => 25,
+                'feed' => 200,
+                'water' => 150,
+            ],
+            2 => [
+                'mortality' => 15,
+                'feed' => 180,
+                'water' => 130,
+            ],
+            3 => [
+                'mortality' => 10,
+                'feed' => 190,
+                'water' => 160,
+            ],
+        ];
+
+        return Inertia::render('Dashboard', [
+            'flocks' => $flocks,
+            'dummySummary' => $dummySummary
+        ]);
+
+    
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 require __DIR__.'/settings.php';
