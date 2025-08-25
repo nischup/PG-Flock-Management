@@ -70,7 +70,7 @@ const mainNavItems: NavItem[] = [
       },
       {
         title: 'Growing',
-        href: '/flock-assign',
+        href: '/daily-operation',
         icon: BabyChick
       },
     ]
