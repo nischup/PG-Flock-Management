@@ -54,7 +54,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   <Head title="Users" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md">
+    <div class="p-6 m-5 bg-white dark:bg-gray-900 rounded-xl shadow-md">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">Users</h1>

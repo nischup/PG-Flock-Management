@@ -41,6 +41,16 @@ const tabs = [
 
 // Active Tab
 const activeTabIndex = ref(0)
+const totalTabs = tabs.length
+const currentStep = computed(() => activeTabIndex.value + 1)
+const progress = computed(() => (currentStep.value / totalTabs) * 100)
+
+// Bar color: green only when finished
+const barColor = computed(() =>
+  currentStep.value === totalTabs
+    ? 'from-green-400 via-green-500 to-green-600'
+    : 'from-yellow-400 via-yellow-500 to-yellow-600'
+)
 const activeTab = computed(() => tabs[activeTabIndex.value].key)
 
 // Form
@@ -87,7 +97,7 @@ const tabCountsData = {
 
 // Counts for dashboard
 const counts = ref<Record<string, number | string>>({})
-const progress = ref(65); 
+
 // Watch flock change
 watch(() => form.flock_id, (id) => {
   if (!id) {
@@ -124,12 +134,16 @@ function submit() {
     <!-- Flock Info -->
     <div class="border rounded-lg p-4 shadow-sm bg-white">
       <h2 class="font-semibold text-lg mb-4">Flock Information</h2>
-      <div
-      class="mb-4 h-6 rounded-xl bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 shadow-md flex items-center justify-end pr-2 text-black font-bold text-sm transition-all duration-500"
-      :style="{ width: progress + '%' }"
-    >
-      {{ progress }}%
-    </div>
+      <!-- Progress Bar -->
+      <div class="w-full bg-gray-200 rounded-xl h-6 overflow-hidden mb-4">
+        <div
+          class="h-full flex items-center justify-center text-black font-bold text-sm transition-all duration-500 rounded-xl"
+          :class="`bg-gradient-to-r ${barColor}`"
+          :style="{ width: progress + '%' }"
+        >
+          {{ currentStep }} / {{ totalTabs }}
+        </div>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <!-- Flock Select -->
@@ -199,23 +213,23 @@ function submit() {
       <div v-if="activeTab === 'daily_mortality'">
         <div class="grid grid-cols-2 gap-4">
           <div class="flex flex-col">
-            <Label>Female Chick Mortality</Label>
+            <Label class="mb-2">Female Chick Mortality</Label>
             <Input v-model.number="form.female_mortality" type="number"/>
           </div>
           <div class="flex flex-col">
-            <Label>Male Chick Mortality</Label>
+            <Label class="mb-2">Male Chick Mortality</Label>
             <Input v-model.number="form.male_mortality" type="number"/>
           </div>
           <div class="flex flex-col">
-            <Label>Female Reason</Label>
+            <Label class="mb-2">Female Reason</Label>
             <Input v-model="form.female_reason" type="text"/>
           </div>
           <div class="flex flex-col">
-            <Label>Male Reason</Label>
+            <Label class="mb-2">Male Reason</Label>
             <Input v-model="form.male_reason" type="text"/>
           </div>
           <div class="flex flex-col col-span-2">
-            <Label>Note</Label>
+            <Label class="mb-2">Note</Label>
             <textarea v-model="form.mortalitynote" class="border rounded px-3 py-2"></textarea>
           </div>
         </div>
@@ -225,7 +239,7 @@ function submit() {
       <div v-if="activeTab === 'feed_consumption'">
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <Label>Feed Type</Label>
+            <Label class="mb-2">Feed Type</Label>
             <select v-model="form.feed_type_id" class="w-full mt-1 border rounded px-3 py-2">
               <option value="">Select Feed</option>
               <option v-for="feed in props.feeds" :key="feed.id" :value="feed.id">
@@ -234,15 +248,15 @@ function submit() {
             </select>
           </div>
           <div>
-            <Label>Quantity</Label>
+            <Label class="mb-2">Quantity</Label>
             <Input v-model.number="form.feed_quantity" type="number"/>
           </div>
           <div>
-            <Label>Unit</Label>
+            <Label class="mb-2">Unit</Label>
             <Input v-model="form.feed_unit" type="text"/>
           </div>
           <div class="col-span-3 mt-2">
-            <Label>Note</Label>
+            <Label class="mb-2">Note</Label>
             <textarea v-model="form.feed_note" class="w-full border rounded px-3 py-2"></textarea>
           </div>
         </div>
@@ -252,7 +266,7 @@ function submit() {
       <div v-if="activeTab === 'water_consumption'">
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <Label>Water</Label>
+            <Label class="mb-2">Water</Label>
             <select v-model="form.water_type_id" class="w-full mt-1 border rounded px-3 py-2">
                 <option value="">Select Water</option>
                 <option v-for="water in props.waters" :key="water.id" :value="water.id">
@@ -262,11 +276,11 @@ function submit() {
             </div>
 
             <div>
-            <Label>Quantity</Label>
+            <Label class="mb-2">Quantity</Label>
             <Input v-model.number="form.water_quantity" type="number" />
             </div>
             <div class="col-span-3 mt-2">
-            <Label>Note</Label>
+            <Label class="mb-2">Note</Label>
             <textarea v-model="form.water_note" class="w-full border rounded px-3 py-2"></textarea>
             </div>
         </div>
@@ -276,11 +290,11 @@ function submit() {
       <div v-if="activeTab === 'light_hour'">
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <Label>Light Hour</Label>
+                <Label class="mb-2">Light Hour</Label>
                 <Input v-model.number="form.light_hour" type="number" />
             </div>
             <div>
-                <Label>Note</Label>
+                <Label class="mb-2">Note</Label>
                 <textarea v-model="form.lighthour_note" class="w-full border rounded px-3 py-2"></textarea>
             </div>
             </div>
@@ -293,32 +307,32 @@ function submit() {
         <div class="grid grid-cols-2 gap-4">
             <!-- Destroy Male Quantity -->
             <div class="flex flex-col">
-                <Label>Destroy Male Qty</Label>
+                <Label class="mb-2">Destroy Male Qty</Label>
                 <Input v-model.number="form.destroy_male_qty" type="number" min="0" />
             </div>
 
             <!-- Destroy Male Reason -->
             <div class="flex flex-col">
-                <Label>Destroy Male Reason</Label>
+                <Label class="mb-2">Destroy Male Reason</Label>
                 <Input v-model="form.destroy_male_reason" type="text" />
             </div>
 
             <!-- Destroy Female Quantity -->
             <div class="flex flex-col">
-                <Label>Destroy Female Qty</Label>
+                <Label class="mb-2">Destroy Female Qty</Label>
                 <Input v-model.number="form.destroy_female_qty" type="number" min="0" />
             </div>
 
             <!-- Destroy Female Reason -->
             <div class="flex flex-col">
-                <Label>Destroy Female Reason</Label>
+                <Label class="mb-2">Destroy Female Reason</Label>
                 <Input v-model="form.destroy_female_reason" type="text" />
             </div>
             </div>
 
             <!-- Note -->
             <div class="flex flex-col mt-4">
-            <Label>Note</Label>
+            <Label class="mb-2">Note</Label>
             <textarea v-model="form.destroy_note" class="border rounded px-3 py-2"></textarea>
             </div>
 
@@ -331,32 +345,32 @@ function submit() {
             <div class="grid grid-cols-2 gap-4">
                 <!-- Cull Male Quantity -->
                 <div class="flex flex-col">
-                    <Label>Cull Male Qty</Label>
+                    <Label class="mb-2">Cull Male Qty</Label>
                     <Input v-model.number="form.cull_male_qty" type="number" min="0" />
                 </div>
 
                 <!-- Cull Male Reason -->
                 <div class="flex flex-col">
-                    <Label>Cull Male Reason</Label>
+                    <Label class="mb-2">Cull Male Reason</Label>
                     <Input v-model="form.cull_male_reason" type="text" />
                 </div>
 
                 <!-- Cull Female Quantity -->
                 <div class="flex flex-col">
-                    <Label>Cull Female Qty</Label>
+                    <Label class="mb-2">Cull Female Qty</Label>
                     <Input v-model.number="form.cull_female_qty" type="number" min="0" />
                 </div>
 
                 <!-- Cull Female Reason -->
                 <div class="flex flex-col">
-                    <Label>Cull Female Reason</Label>
+                    <Label class="mb-2">Cull Female Reason</Label>
                     <Input v-model="form.cull_female_reason" type="text" />
                 </div>
                 </div>
 
                 <!-- Note -->
                 <div class="flex flex-col mt-4">
-                <Label>Note</Label>
+                <Label class="mb-2">Note</Label>
                 <textarea v-model="form.cull_note" class="border rounded px-3 py-2"></textarea>
                 </div>
 
@@ -367,7 +381,7 @@ function submit() {
             <div class="grid grid-cols-2 gap-4">
                 <!-- Sexing Error Male Qty -->
                 <div class="flex flex-col">
-                    <Label>Sexing Error Male Qty</Label>
+                    <Label class="mb-2">Sexing Error Male Qty</Label>
                     <Input v-model.number="form.sexing_error_male_qty" type="number" min="0" />
                 </div>
 
@@ -375,14 +389,14 @@ function submit() {
 
                 <!-- Sexing Error Female Qty -->
                 <div class="flex flex-col">
-                    <Label>Sexing Error Female Qty</Label>
+                    <Label class="mb-2">Sexing Error Female Qty</Label>
                     <Input v-model.number="form.sexing_error_female_qty" type="number" min="0" />
                 </div>
              </div>
 
             <!-- Note -->
             <div class="flex flex-col mt-4">
-            <Label>Note</Label>
+            <Label class="mb-2">Note</Label>
             <textarea v-model="form.sexing_error_note" class="border rounded px-3 py-2"></textarea>
             </div>  
         </div>
@@ -393,20 +407,20 @@ function submit() {
             <div class="grid grid-cols-2 gap-4">
                 <!-- Weight Male Qty -->
                 <div class="flex flex-col">
-                    <Label>Weight Male Qty</Label>
+                    <Label class="mb-2">Weight Male Qty</Label>
                     <Input v-model.number="form.weight_male_qty" type="number" min="0" />
                 </div>
 
                 <!-- Weight Female Qty -->
                 <div class="flex flex-col">
-                    <Label>Weight Female Qty</Label>
+                    <Label class="mb-2">Weight Female Qty</Label>
                     <Input v-model.number="form.weight_female_qty" type="number" min="0" />
                 </div>
                 </div>
 
                 <!-- Note -->
                 <div class="flex flex-col mt-4">
-                <Label>Note</Label>
+                <Label class="mb-2">Note</Label>
                 <textarea v-model="form.weight_note" class="border rounded px-3 py-2"></textarea>
                 </div>
 
@@ -418,32 +432,32 @@ function submit() {
             <div class="grid grid-cols-2 gap-4">
                 <!-- Inside Temperature -->
                 <div class="flex flex-col">
-                    <Label>Inside Temperature</Label>
+                    <Label class="mb-2">Inside Temperature</Label>
                     <Input v-model.number="form.inside_temp" type="number" step="0.1" />
                 </div>
 
                 <!-- Std Inside Temperature -->
                 <div class="flex flex-col">
-                    <Label>Std Inside Temperature</Label>
+                    <Label class="mb-2">Std Inside Temperature</Label>
                     <Input v-model.number="form.std_inside_temp" type="number" step="0.1" />
                 </div>
 
                 <!-- Outside Temperature -->
                 <div class="flex flex-col">
-                    <Label>Outside Temperature</Label>
+                    <Label class="mb-2">Outside Temperature</Label>
                     <Input v-model.number="form.outside_temp" type="number" step="0.1" />
                 </div>
 
                 <!-- Std Outside Temperature -->
                 <div class="flex flex-col">
-                    <Label>Std Outside Temperature</Label>
+                    <Label class="mb-2">Std Outside Temperature</Label>
                     <Input v-model.number="form.std_outside_temp" type="number" step="0.1" />
                 </div>
                 </div>
 
                 <!-- Note -->
                 <div class="flex flex-col mt-4">
-                <Label>Note</Label>
+                <Label class="mb-2">Note</Label>
                 <textarea v-model="form.temp_note" class="border rounded px-3 py-2"></textarea>
                 </div>
 
@@ -455,20 +469,20 @@ function submit() {
             <div class="grid grid-cols-2 gap-4">
             <!-- Today Humidity -->
             <div class="flex flex-col">
-                <Label>Today Humidity (%)</Label>
+                <Label class="mb-2">Today Humidity (%)</Label>
                 <Input v-model.number="form.today_humidity" type="number" step="0.1" />
             </div>
 
             <!-- Std Humidity -->
             <div class="flex flex-col">
-                <Label>Std Humidity (%)</Label>
+                <Label class="mb-2">Std Humidity (%)</Label>
                 <Input v-model.number="form.std_humidity" type="number" step="0.1" />
             </div>
             </div>
 
             <!-- Note -->
             <div class="flex flex-col mt-4">
-            <Label>Note</Label>
+            <Label class="mb-2">Note</Label>
             <textarea v-model="form.humidity_note" class="border rounded px-3 py-2"></textarea>
             </div>
         </div>
@@ -480,7 +494,7 @@ function submit() {
             <div class="grid grid-cols-2 gap-4">
                 <!-- Medicine Name -->
                 <div class="flex flex-col">
-                    <Label>Medicine</Label>
+                    <Label class="mb-2">Medicine</Label>
                     <select v-model="form.medicine_id" class="w-full mt-1 border rounded px-3 py-2">
                     <option value="">Select Medicine</option>
                     <option v-for="medicine in props.medicines" :key="medicine.id" :value="medicine.id">
@@ -491,7 +505,7 @@ function submit() {
 
                 <!-- Quantity -->
                 <div class="flex flex-col">
-                    <Label>Quantity</Label>
+                    <Label class="mb-2">Quantity</Label>
                     <Input v-model.number="form.medicine_quantity" type="number" min="0" />
                 </div>
                 </div>
@@ -499,20 +513,20 @@ function submit() {
                 <div class="grid grid-cols-2 gap-4 mt-4">
                 <!-- Unit -->
                 <div class="flex flex-col">
-                    <Label>Unit</Label>
+                    <Label class="mb-2">Unit</Label>
                     <Input v-model="form.medicine_unit" type="text" placeholder="ml / gm / tablet" />
                 </div>
 
                 <!-- Time -->
                 <div class="flex flex-col">
-                    <Label>Time</Label>
+                    <Label class="mb-2">Time</Label>
                     <Input v-model="form.medicine_time" type="time" />
                 </div>
                 </div>
 
                 <!-- Note -->
                 <div class="flex flex-col mt-4">
-                <Label>Note</Label>
+                <Label class="mb-2">Note</Label>
                 <textarea v-model="form.medicine_note" class="border rounded px-3 py-2"></textarea>
                 </div>
             </div> 
@@ -523,7 +537,7 @@ function submit() {
                 <div class="grid grid-cols-2 gap-4">
                 <!-- Vaccine Name -->
                 <div class="flex flex-col">
-                    <Label>Vaccine</Label>
+                    <Label class="mb-2">Vaccine</Label>
                     <select v-model="form.vaccine_id" class="w-full mt-1 border rounded px-3 py-2">
                     <option value="">Select Vaccine</option>
                     <option v-for="vaccine in props.vaccines" :key="vaccine.id" :value="vaccine.id">
@@ -532,17 +546,17 @@ function submit() {
                     </select>
                 </div>
                 <div class="flex flex-col">
-                    <Label>Dose</Label>
+                    <Label class="mb-2">Dose</Label>
                     <Input v-model.number="form.vaccine_dose" type="number" min="0" />
                 </div>
                 <!-- Unit -->
                 <div class="flex flex-col">
-                    <Label>Unit</Label>
+                    <Label class="mb-2">Unit</Label>
                     <Input v-model="form.vaccine_unit" type="text" placeholder="ml / dose" />
                 </div>
                 <!-- File Upload -->
                  <div class="flex flex-col"></div>
-                <Label>Upload File</Label>
+                <Label class="mb-2">Upload File</Label>
                 <input 
                     type="file" 
                     @change="form.vaccine_file = $event.target.files[0]" 
@@ -556,7 +570,7 @@ function submit() {
 
                 <!-- Note -->
                 <div class="flex flex-col mt-4">
-                <Label>Note</Label>
+                <Label class="mb-2">Note</Label>
                 <textarea v-model="form.vaccine_note" class="border rounded px-3 py-2"></textarea>
                 </div>
      

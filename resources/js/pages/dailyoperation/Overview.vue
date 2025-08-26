@@ -45,7 +45,6 @@ watch([selectedFlock, startDate, endDate], () => {
     <Head title="Daily Operation Overview" />
 
     <div class="p-6 space-y-6">
-
       <!-- Flock & Date Range Selection -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
