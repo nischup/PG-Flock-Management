@@ -84,7 +84,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   <Head title="Daily Operations" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md">
+    <div class="p-6 m-3 bg-white dark:bg-gray-900 rounded-xl shadow-md">
 
       <!-- Header -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
@@ -104,7 +104,7 @@ const breadcrumbs: BreadcrumbItem[] = [
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
-            <tr>
+            <tr class="throw">
               <th class="px-6 py-3 text-left font-semibold">Date</th>
               <th class="px-6 py-3 text-left font-semibold">Flock</th>
               <th class="px-6 py-3 text-left font-semibold">Male Mortality</th>
@@ -117,7 +117,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-for="op in dailyOperations.data" :key="op.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
+            <tr v-for="op in dailyOperations.data" :key="op.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100">
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ op.operation_date }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ op.flock_code }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ op.male_mortality }}</td>
