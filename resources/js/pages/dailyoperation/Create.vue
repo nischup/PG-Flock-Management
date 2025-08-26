@@ -87,7 +87,7 @@ const tabCountsData = {
 
 // Counts for dashboard
 const counts = ref<Record<string, number | string>>({})
-
+const progress = ref(65); 
 // Watch flock change
 watch(() => form.flock_id, (id) => {
   if (!id) {
@@ -124,6 +124,12 @@ function submit() {
     <!-- Flock Info -->
     <div class="border rounded-lg p-4 shadow-sm bg-white">
       <h2 class="font-semibold text-lg mb-4">Flock Information</h2>
+      <div
+      class="mb-4 h-6 rounded-xl bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 shadow-md flex items-center justify-end pr-2 text-black font-bold text-sm transition-all duration-500"
+      :style="{ width: progress + '%' }"
+    >
+      {{ progress }}%
+    </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <!-- Flock Select -->
