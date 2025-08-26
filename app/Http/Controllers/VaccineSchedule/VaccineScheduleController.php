@@ -14,7 +14,7 @@ class VaccineScheduleController extends Controller
      */
     public function index()
     {
-        return Inertia::render('production/firm-receive/List');
+        return Inertia::render('vaccine-schedule/vaccine-schedule/List');
     }
 
     /**
