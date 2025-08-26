@@ -73,7 +73,7 @@ const toggleDropdown = (id: number) => {
   <Head title="PS Receives" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md">
+    <div class="p-6 m-3 bg-white dark:bg-gray-900 rounded-xl shadow-md">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">PS Details</h1>
         <Link
@@ -90,18 +90,18 @@ const toggleDropdown = (id: number) => {
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
-            <tr>
-              <th class="px-6 py-3 text-left font-semibold">PI No</th>
-              <th class="px-6 py-3 text-left font-semibold">Receive Date</th>
-              <th class="px-6 py-3 text-left font-semibold">Supplier</th>
-              <th class="px-6 py-3 text-left font-semibold">Total Quantity</th>
-              <th class="px-6 py-3 text-left font-semibold">Total Box</th>
-              <th class="px-6 py-3 text-left font-semibold">Remarks</th>
-              <th class="px-6 py-3 text-left font-semibold">Actions</th>
+            <tr class="throw">
+              <th class="px-6 py-3 text-left font-bold">PI No</th>
+              <th class="px-6 py-3 text-left font-bold">Receive Date</th>
+              <th class="px-6 py-3 text-left font-bold">Supplier</th>
+              <th class="px-6 py-3 text-left font-bold">Total Quantity</th>
+              <th class="px-6 py-3 text-left font-bold">Total Box</th>
+              <th class="px-6 py-3 text-left font-bold">Remarks</th>
+              <th class="px-6 py-3 text-left font-bold">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-for="item in props.psReceives?.data ?? []" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
+            <tr v-for="item in props.psReceives?.data ?? []" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100">
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.pi_no }}</td>
               <td class="px-6 py-4 text-gray-600 dark:text-gray-300">{{ dayjs(item.receive_date).format('YYYY-MM-DD') }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.supplier?.name ?? 'N/A' }}</td>

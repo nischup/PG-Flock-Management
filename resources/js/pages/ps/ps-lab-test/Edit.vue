@@ -81,7 +81,7 @@ function submit() {
     <form @submit.prevent="submit" class="p-6 space-y-6">
 
       <!-- PS Receive Accordion -->
-      <div class="border rounded-lg p-4 shadow-sm">
+      <div class="border rounded-lg p-4 shadow-sm bg-white p-4 rounded">
         <div class="flex justify-between items-center cursor-pointer" @click="showPsReceive = !showPsReceive">
           <h2 class="font-semibold text-lg">PS Receive Info</h2>
         </div>
@@ -104,7 +104,7 @@ function submit() {
       </div>
 
       <!-- Lab Send Accordion -->
-      <div class="border rounded-lg p-4 shadow-sm">
+      <div class="border rounded-lg p-4 shadow-sm bg-white p-4 rounded">
         <div class="flex justify-between items-center cursor-pointer" @click="showLabSend = !showLabSend">
           <h2 class="font-semibold text-lg">Lab Send Info</h2>
         </div>
@@ -124,7 +124,7 @@ function submit() {
       </div>
 
       <!-- Lab Receive Section -->
-      <div class="border rounded-lg p-4 shadow-sm mt-4">
+      <div class="border rounded-lg p-4 shadow-sm mt-4 bg-white p-4 rounded">
         <h2 class="font-semibold text-lg mb-4">Lab Receive Details</h2>
 
         <div class="grid grid-cols-3 gap-6 mb-4">
@@ -147,7 +147,7 @@ function submit() {
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-6 mb-4">
+        <div class="grid grid-cols-3 gap-6 mb-4 ">
           <div class="flex flex-col">
             <Label>Mortality Qty</Label>
             <Input v-model.number="form.mortality_qty" type="number" class="mt-2 border rounded px-3 py-2 w-full" />
@@ -166,7 +166,7 @@ function submit() {
       </div>
 
       <!-- Notes & Attachments -->
-      <div class="border rounded-lg p-4 shadow-sm mt-4">
+      <div class="border rounded-lg p-4 shadow-sm mt-4 bg-white p-4 rounded">
         <Label>Notes</Label>
         <textarea v-model="form.notes" class="border rounded px-3 py-2 mt-2 w-full"></textarea>
         <InputError :message="form.errors.notes" class="mt-1" />

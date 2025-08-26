@@ -55,7 +55,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 <template>
   <Head title="Lab Tests" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md">
+    <div class="m-3 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md">
 
       <!-- Header -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
@@ -75,7 +75,7 @@ const breadcrumbs: BreadcrumbItem[] = [
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 mt-4">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
-            <tr>
+            <tr class="throw">
               <th class="px-6 py-3 text-left font-semibold">PI No</th>
               <th class="px-6 py-3 text-left font-semibold">Order No</th>
               <th class="px-6 py-3 text-left font-semibold">Receive Date</th>
@@ -96,7 +96,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             <tr
               v-for="lab in props.labTests.data"
               :key="lab.id"
-              class="hover:bg-gray-50 dark:hover:bg-gray-800"
+              class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100"
             >
               <td class="px-6 py-4">{{ lab.ps_receive?.pi_no ?? '-' }}</td>
               <td class="px-6 py-4">{{ lab.ps_receive?.order_no ?? '-' }}</td>

@@ -49,7 +49,7 @@ function getIconColor(iconClass?: string) {
             v-if="!item.children"
             as-child
             :is-active="item.href === page.url"
-            :tooltip="item.title" class="hover:bg-chicken"
+            :tooltip="item.title" class="hover:yellow-300"
           >
             <Link :href="item.href">
               <component 

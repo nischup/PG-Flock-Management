@@ -118,7 +118,7 @@ function submit() {
           </div>
 
           <!-- Form fields (mirrors Add page) -->
-          <div class="grid grid-cols-3 gap-6">
+          <div class="grid grid-cols-3 gap-6  border rounded-lg p-4 shadow-sm bg-white">
             <!-- Shipment Type -->
             <div class="flex flex-col mb-4">
               <Label>Shipment Type</Label>
@@ -221,10 +221,10 @@ function submit() {
               </select>
               <InputError :message="form.errors.company_id" class="mt-1" />
             </div>
-          </div>
 
-          <!-- Notes & File Upload -->
-          <div class="grid grid-cols-2 gap-4">
+
+<!-- Notes & File Upload -->
+          
             <div class="flex flex-col mb-4">
               <Label>Remarks</Label>
               <textarea v-model="form.remarks" class="border rounded px-3 py-2 mt-2"></textarea>
@@ -237,9 +237,8 @@ function submit() {
         </div>
 
         <!-- Chick Counts Section -->
-        <div class="space-y-4 border-b py-4">
+        <div class="space-y-4  border rounded-lg p-4 shadow-sm bg-white">
           <h2 class="text-xl font-semibold">Receive Total</h2>
-
           <!-- Challan and Weights -->
           <div class="grid grid-cols-3 gap-4 items-center">
             <div class="flex flex-col">
@@ -294,7 +293,7 @@ function submit() {
         </div>
 
         <!-- Lab Test Section -->
-        <div class="space-y-4 py-4">
+        <div class="space-y-4 border rounded-lg p-4 shadow-sm bg-white">
           <h2 class="text-xl font-semibold">Transfer Lab (For Test)</h2>
 
           <div class="grid grid-cols-3 gap-4 items-center">

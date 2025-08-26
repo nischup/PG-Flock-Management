@@ -159,7 +159,7 @@ function updateTotalQty() {
               <ArrowLeft class="w-4 h-4" /> List
             </Link>
           </div>
-          <div class="grid grid-cols-3 gap-6">
+          <div class="grid grid-cols-3 gap-6 border rounded-lg p-4 shadow-sm bg-white">
             <div class="flex flex-col mb-4">
               <Label>Shipment Type</Label>
               <select
@@ -298,8 +298,7 @@ function updateTotalQty() {
                 </select>
               <InputError :message="form.errors.transport_type" class="mt-1" />
             </div>
-          </div>
-          <div class="grid grid-cols-2 gap-4 items-center">
+          
             <div class="flex flex-col mb-4">
               <Label>Note</Label>
               <textarea v-model="form.remarks" class="border rounded px-3 py-2 mt-2" placeholder="Enter any Note"></textarea>
@@ -321,7 +320,7 @@ function updateTotalQty() {
         </div>
         
         <!-- Chick Counts  -->
-        <div class="space-y-4 border-b">
+        <div class="space-y-4 border rounded-lg p-4 shadow-sm bg-white">
           <h2 class="text-xl font-semibold">Receive Quantity</h2>
           <!-- Challan and Weights -->
           <div class="grid grid-cols-3 gap-4 items-center">
@@ -361,7 +360,7 @@ function updateTotalQty() {
           </div>
 
           <!-- Box Count Section -->
-          <div class="grid grid-cols-3 gap-4 mb-6">
+          <div class="grid grid-cols-3 gap-4 mb-6 bg-white p-4 rounded">
             <div class="flex flex-col">
               <Label>Female Box Receive Qty</Label>
               <Input v-model.number="form.ps_female_rec_box" type="number" class="mt-2" />
@@ -383,9 +382,8 @@ function updateTotalQty() {
           </div>
         </div>
 
-
         <!-- Lab Test -->
-        <div class="space-y-4">
+        <div class="space-y-4 border rounded-lg p-4 shadow-sm bg-white">
           <h2 class="text-xl font-semibold">Transfer Lab (For Test)</h2>
           <!-- Challan and Weights -->
           <div class="grid grid-cols-3 gap-4 items-center">
@@ -424,9 +422,7 @@ function updateTotalQty() {
             </div>
           </div>
           <!-- Chicks Section -->
-          <div class="grid grid-cols-2 gap-4 mb-6">
-            
-
+          <div class="grid grid-cols-2 gap-4 mb-6 ">
             <div class="flex flex-col">
               <Label>Lab Total Transfer Qty</Label>
               <Input v-model.number="form.lab_send_total_qty" type="number" class="mt-2"  readonly />
@@ -437,9 +433,6 @@ function updateTotalQty() {
               <textarea v-model="form.remarks" class="border rounded px-3 mt-2" ></textarea>
             </div>
           </div>
-        </div>
-        <!-- File upload section -->
-          <div class="flex flex-col mb-4 col-span-3">
               <FileUploader
                   v-model="form.labfile"
                   label="Upload Lab Files"
