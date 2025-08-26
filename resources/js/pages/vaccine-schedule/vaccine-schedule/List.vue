@@ -2,183 +2,127 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import { ref, computed } from "vue";
+import { ref } from "vue";
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Vaccine', href: '/flock' },
-  { title: 'Vaccine', href: '/flock/assign' },
+  { title: 'Vaccine-Schedule', href: '/flock/assign' },
 ];
 
-// Dummy stats
-const totalFlock = ref(50);
-const assignShed = ref(250);
-const assignBatch = ref(350);
+// Table data
+const flocks = ref<any[]>([]);
 
-// Dummy flock list
-const flocks = ref([
-  { id: 1, name: "000001", shed: "Shed 1", batch: "Batch A, Batch B" },
-  { id: 2, name: "000002", shed: "Shed 2", batch: "Batch B" },
-  { id: 3, name: "000003", shed: "Shed 3", batch: "Batch C" },
-]);
-
-const flockOptions = ref([
-  { id: 1, name: "000001" },
-  { id: 2, name: "000002" },
-  { id: 3, name: "000003" },
-]);
+// Dropdown options
+const projectOptions = ["PBL", "PCL"];
+const flockOptions = ["000001", "000002", "000003"];
+const batchOptions = ["Batch A", "Batch B", "Batch C"];
+const diseaseOptions = ["New Castle", "IBD", "Marek"];
+const vaccineOptions = ["Lasota", "Gumboro", "HVT"];
 
 // Modal state
 const showModal = ref(false);
-const newFlockName = ref("");
 
-// Dragging state
-const position = ref({ x: 0, y: 0 });
-const offset = ref({ x: 0, y: 0 });
-const dragging = ref(false);
+// Form data
+const newSchedule = ref({
+  project: "",
+  flock: "",
+  batch: "",
+  disease: "",
+  vaccine: "",
+  age: "",
+  lastVaccination: "",
+  nextVaccination: "",
+});
 
-const startDrag = (event: MouseEvent) => {
-  dragging.value = true;
-  offset.value = {
-    x: event.clientX - position.value.x,
-    y: event.clientY - position.value.y,
-  };
-};
-const onDrag = (event: MouseEvent) => {
-  if (!dragging.value) return;
-  position.value = {
-    x: event.clientX - offset.value.x,
-    y: event.clientY - offset.value.y,
-  };
-};
-const stopDrag = () => (dragging.value = false);
-
-// Shed
-const selectedShed = ref("");
-const shedOptions = ["Shed 1", "Shed 2", "Shed 3"];
-
-// Batch (corrected as array of objects)
-const batches = ref([{ batchNo: "", femaleQty: 0, maleQty: 0 }]);
-const batchOptions = ["Batch A", "Batch B", "Batch C", "Batch D", "Batch E"];
-
-const addBatch = () => {
-  batches.value.push({ batchNo: "", femaleQty: 0, maleQty: 0 });
-};
-
-// Total qty across all batches
-const overallTotal = computed(() =>
-  batches.value.reduce((sum, b) => sum + b.femaleQty + b.maleQty, 0)
-);
-
-// Save flock
-const saveFlock = () => {
-  if (!newFlockName.value.trim()) return;
-
+// Save new schedule
+const saveSchedule = () => {
   flocks.value.push({
     id: flocks.value.length + 1,
-    name: newFlockName.value,
-    shed: selectedShed.value,
-    batch: batches.value
-      .map(b => `${b.batchNo} (F:${b.femaleQty}, M:${b.maleQty}, T:${b.femaleQty + b.maleQty})`)
-      .join(", ")
+    ...newSchedule.value,
   });
 
   // Reset form
-  newFlockName.value = "";
-  selectedShed.value = "";
-  batches.value = [{ batchNo: "", femaleQty: 0, maleQty: 0 }];
+  newSchedule.value = {
+    project: "",
+    flock: "",
+    batch: "",
+    disease: "",
+    vaccine: "",
+    age: "",
+    lastVaccination: "",
+    nextVaccination: "",
+  };
+
   showModal.value = false;
-  totalFlock.value++;
 };
-
-// Close modal on background click
-const closeModal = (event: MouseEvent) => {
-  const modalContent = document.getElementById("modal-content");
-  if (modalContent && !modalContent.contains(event.target as Node)) {
-    showModal.value = false;
-  }
-};
-
-
-// Transfer Modal state
-const showTransferModal = ref(false);
-const transferFlock = ref<any>(null);
-
-// Company list
-const companyOptions = ref([
-  { id: 1, name: "PBL" },
-  { id: 2, name: "PCL" },
-
-]);
-
-const selectedCompany = ref("");
-
-// Open transfer modal with flock data
-const openTransferModal = (flock: any) => {
-  transferFlock.value = flock;
-  selectedCompany.value = "";
-  batches.value = [{ batchNo: "", femaleQty: 0, maleQty: 0 }];
-  showTransferModal.value = true;
-};
-
-// Save transfer logic
-const saveTransfer = () => {
-  if (!selectedCompany.value) return;
-
-  console.log("Transferring", transferFlock.value, "to", selectedCompany.value);
-
-  // Example: you could push to another list or send API request
-  showTransferModal.value = false;
-};
-
-
-
 </script>
 
-
 <template>
-  <Head title="Flock List" />
+  <Head title="Vaccine Schedule" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
+    <div class="flex flex-col gap-4 p-4">
 
-      <!-- Add Flock Button -->
-      <!-- <div class="flex justify-end">
+        <!-- Action Buttons Row -->
+        <div class="flex justify-end gap-3">
+        <!-- Add New Vaccine -->
         <button
-          @click="showModal = true"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            @click="showModal = true"
+            class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          + Assign Flock
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add New Vaccine
         </button>
-      </div> -->
 
-      <!-- Cards -->
-      <!-- <div class="grid gap-4 md:grid-cols-3">
-        <div class="p-5 rounded-xl shadow bg-white dark:bg-gray-800">
-          <p class="text-sm font-semibold">Total Flock</p>
-          <p class="text-3xl font-bold mt-2">{{ totalFlock }}</p>
-        </div>
-        <div class="p-5 rounded-xl shadow bg-white dark:bg-gray-800">
-          <p class="text-sm font-semibold">Assign Shed</p>
-          <p class="text-3xl font-bold mt-2">{{ assignShed }}</p>
-        </div>
-        <div class="p-5 rounded-xl shadow bg-white dark:bg-gray-800">
-          <p class="text-sm font-semibold">Assign Batch</p>
-          <p class="text-3xl font-bold mt-2">{{ assignBatch }}</p>
-        </div>
-      </div> -->
+        <!-- Vaccination Schedule -->
+        <button
+            class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Vaccination Schedule
+        </button>
 
-      <!-- List Table -->
+        <!-- Vaccine Routing -->
+        <button
+            class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6h6v6m-6-6V7h6v4m-6 0H5l7-7 7 7h-4" />
+            </svg>
+            Vaccine Routing
+        </button>
+
+        <!-- View Used Vaccine -->
+        <button
+            class="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            View Used Vaccine
+        </button>
+        </div>
+
+
+      <!-- Table -->
       <div class="overflow-x-auto rounded-xl shadow bg-white dark:bg-gray-800 mt-4">
         <table class="w-full text-left border-collapse">
           <thead class="bg-gray-100 dark:bg-gray-700">
             <tr>
               <th class="px-4 py-2 border-b">#SL</th>
-              <th class="px-4 py-2 border-b">From Project</th>
-              <th class="px-4 py-2 border-b">Receive Project</th>
+              <th class="px-4 py-2 border-b">Project Name</th>
               <th class="px-4 py-2 border-b">Flock No</th>
-              <th class="px-4 py-2 border-b">Female Qty</th>
-              <th class="px-4 py-2 border-b">Male Qty</th>
-              <th class="px-4 py-2 border-b">Total Qty</th>
+              <th class="px-4 py-2 border-b">Batch No</th>
+              <th class="px-4 py-2 border-b">Disease</th>
+              <th class="px-4 py-2 border-b">Vaccine</th>
+              <th class="px-4 py-2 border-b">Age</th>
+              <th class="px-4 py-2 border-b">Last Vaccination</th>
+              <th class="px-4 py-2 border-b">Next Vaccination</th>
               <th class="px-4 py-2 border-b">Action</th>
             </tr>
           </thead>
@@ -189,140 +133,101 @@ const saveTransfer = () => {
               class="hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-              <td class="px-4 py-2 border-b">PBL</td>
-              <td class="px-4 py-2 border-b">PCL</td>
-              <td class="px-4 py-2 border-b">{{ flock.name }}</td>
-              <td class="px-4 py-2 border-b">10000</td>
-              <td class="px-4 py-2 border-b">200</td>
-              <td class="px-4 py-2 border-b">10200</td>
+              <td class="px-4 py-2 border-b">{{ flock.project }}</td>
+              <td class="px-4 py-2 border-b">{{ flock.flock }}</td>
+              <td class="px-4 py-2 border-b">{{ flock.batch }}</td>
+              <td class="px-4 py-2 border-b">{{ flock.disease }}</td>
+              <td class="px-4 py-2 border-b">{{ flock.vaccine }}</td>
+              <td class="px-4 py-2 border-b">{{ flock.age }}</td>
+              <td class="px-4 py-2 border-b">{{ flock.lastVaccination }}</td>
+              <td class="px-4 py-2 border-b">{{ flock.nextVaccination }}</td>
               <td class="px-4 py-2 border-b">
-                <button class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-chicken mr-2">Edit</button>
-                <button
-                  class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 mr-2"
-                  @click="openTransferModal(flock)"
-                >
-                  Receive
+                <button class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 mr-2">
+                  Edit
                 </button>
-
               </td>
+            </tr>
+            <tr v-if="flocks.length === 0">
+              <td colspan="10" class="text-center py-4 text-gray-500">No schedules found.</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-<!-- Transfer Modal -->
-<div
-  v-if="showTransferModal"
-  class="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
-  @click="showTransferModal = false"
->
-  <div
-    class="bg-white rounded-lg shadow-lg w-[700px] max-w-full"
-    @click.stop
-  >
-    <!-- Header -->
-    <div class="p-3 bg-gray-200 rounded-t-lg">
-      <h2 class="font-bold">Receive Flock</h2>
-    </div>
-
-    <!-- Body -->
-    <div class="p-6 space-y-4">
-      <!-- Company -->
- <!-- Company (From & To) -->
-<div>
-
-  <div class="grid grid-cols-2 gap-4">
-    <!-- From Company -->
-    <div>
-      <label class="block text-xs font-medium mb-1">From</label>
-      <select v-model="transferFromCompany" class="w-full border rounded px-3 py-2">
-        <option disabled value="">Select From Project</option>
-        <option v-for="company in companyOptions" :key="company.id" :value="company.name">
-          {{ company.name }}
-        </option>
-      </select>
-    </div>
-
-    <!-- To Company -->
-    <div>
-      <label class="block text-xs font-medium mb-1">To</label>
-      <select v-model="transferToCompany" class="w-full border rounded px-3 py-2">
-        <option disabled value="">Select To Project</option>
-        <option v-for="company in companyOptions" :key="company.id" :value="company.name">
-          {{ company.name }}
-        </option>
-      </select>
-    </div>
-  </div>
-</div>
-
-      <!-- Flock (readonly to show which one is being transferred) -->
-      <div>
-        <label class="block text-sm font-medium mb-1">Flock No</label>
-         <select v-model="newFlockName" class="w-full border rounded px-3 py-2">
-          <option disabled value="">Select Flock No</option>
-          <option v-for="flock in flockOptions" :key="flock.id" :value="flock.name">
-            {{ flock.name }}
-          </option>
-        </select>
-      </div>
-
-  <div class="grid grid-cols-3 gap-4">
-    <!-- Female Company -->
-    <div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Female Qty</label>
-        <input
-          type="number"
-          class="w-full border rounded px-3 py-2 bg-white-100"
-        />
-      </div>
-    </div>
-
-    <!-- To Male -->
-    <div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Male Qty</label>
-        <input
-          type="number"
-          class="w-full border rounded px-3 py-2 bg-white-100"
-        />
-      </div>
-    </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">Total Qty</label>
-        <input
-          type="number"
-          class="w-full border rounded px-3 py-2 bg-gray-100"
-        />
-      </div>
-
-  </div>
-
-
-    </div>
-
-    <!-- Footer -->
-    <div class="p-4 flex justify-end border-t">
-      <button
-        class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mr-2"
-        @click="showTransferModal = false"
+      <!-- Modal -->
+      <div
+        v-if="showModal"
+        class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
       >
-        Cancel
-      </button>
-      <button
-        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        @click="saveTransfer"
-      >
-        Receive
-      </button>
-    </div>
-  </div>
-</div>
+        <div class="bg-white rounded-lg shadow-lg w-[700px] max-w-full p-6">
+          <h2 class="text-lg font-bold mb-4">Add Vaccine Schedule</h2>
 
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm mb-1">Project</label>
+              <select v-model="newSchedule.project" class="w-full border rounded px-3 py-2">
+                <option value="">Select Project</option>
+                <option v-for="p in projectOptions" :key="p">{{ p }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Flock No</label>
+              <select v-model="newSchedule.flock" class="w-full border rounded px-3 py-2">
+                <option value="">Select Flock</option>
+                <option v-for="f in flockOptions" :key="f">{{ f }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Batch No</label>
+              <select v-model="newSchedule.batch" class="w-full border rounded px-3 py-2">
+                <option value="">Select Batch</option>
+                <option v-for="b in batchOptions" :key="b">{{ b }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Disease</label>
+              <select v-model="newSchedule.disease" class="w-full border rounded px-3 py-2">
+                <option value="">Select Disease</option>
+                <option v-for="d in diseaseOptions" :key="d">{{ d }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Vaccine</label>
+              <select v-model="newSchedule.vaccine" class="w-full border rounded px-3 py-2">
+                <option value="">Select Vaccine</option>
+                <option v-for="v in vaccineOptions" :key="v">{{ v }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Age</label>
+              <input v-model="newSchedule.age" type="text" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Last Vaccination</label>
+              <input v-model="newSchedule.lastVaccination" type="date" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Next Vaccination</label>
+              <input v-model="newSchedule.nextVaccination" type="date" class="w-full border rounded px-3 py-2" />
+            </div>
+          </div>
 
-
+          <div class="flex justify-end mt-6">
+            <button
+              class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mr-2"
+              @click="showModal = false"
+            >
+              Cancel
+            </button>
+            <button
+              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              @click="saveSchedule"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </AppLayout>
 </template>

@@ -17,7 +17,8 @@ const mainNavItems: NavItem[] = [
   {
     title: 'Dashboard',
     href: '/dashboard',
-    icon: LayoutGrid
+    icon: LayoutGrid,
+    iconClass: 'text-yellow-500',
   },
   {
     title: 'Parent Stock (PS)',
@@ -27,17 +28,20 @@ const mainNavItems: NavItem[] = [
       {
         title: 'PS Receive',
         href: '/ps-receive',
-        icon: BabyChick
+        icon: BabyChick,
+        iconClass: 'text-yellow-500',
       },
       {
         title: 'PS Lab Test',
         href: '/ps-lab-test',
-        icon: BabyChick
+        icon: BabyChick,
+        iconClass: 'text-yellow-500',
       },
       {
         title: 'PS Firm Receive',
         href: '/ps-firm-receive',
-        icon: BabyChick
+        icon: BabyChick,
+         iconClass: 'text-yellow-500',
       }
     ]
   },
@@ -49,29 +53,34 @@ const mainNavItems: NavItem[] = [
       {
         title: 'Shed Receive',
         href: '/receive',
-        icon: BabyChick
+        icon: BabyChick,
+        iconClass: 'text-yellow-500',
       },
       {
         title: 'Flock Assign',
         href: '/flock-assign',
-        icon: BabyChick
+        icon: BabyChick,
+        iconClass: 'text-yellow-500',
       },
     ]
   },
   {
     title: 'Farm Operation',
     icon: BabyChickMultiple ,
-    iconClass: 'bg-chicken',
+     iconClass: 'text-yellow-500',
     children: [
       {
         title: 'Brooding',
         href: '/daily-operation',
-        icon: BabyChick
+        icon: BabyChick,
+        iconClass: 'text-yellow-500',
       },
       {
         title: 'Growing',
         href: '/daily-operation',
-        icon: BabyChick
+        icon: BabyChick,
+        iconClass: 'text-yellow-500',
+        
       },
     ]
   },
@@ -83,29 +92,33 @@ const mainNavItems: NavItem[] = [
       {
         title: 'Farm Receive',
         href: '/production-firm-receive',
-        icon: BabyChick
+        icon: BabyChick,
+        iconClass: 'text-yellow-500',
       },
       {
         title: 'Shed Assign',
         href: '/flock-assign',
-        icon: BabyChick
+        icon: BabyChick,
+        iconClass: 'text-yellow-500',
       },
       {
         title: 'Daily Operation',
         href: '/production/daily-operation',
-        icon: BabyChick
+        icon: BabyChick,
+        iconClass: 'text-yellow-500',
       },
     ]
   },
   {
     title: 'Vaccine',
     icon: Syringe ,
-    iconClass: 'text-yellow',
+    iconClass: 'text-yellow-500',
     children: [
       {
         title: 'Vaccine Schedule',
         href: '/vaccine-schedule',
-        icon: Syringe
+        icon: Syringe,
+        iconClass: 'text-yellow-500',     
       },
     ]
   },
@@ -113,17 +126,20 @@ const mainNavItems: NavItem[] = [
   {
     title: 'User Management',
     icon: Users,
+    iconClass: 'text-yellow-500',
     children: [
       {
         title: 'User Register',
         href: '/user-register',
         icon: User,
+        iconClass: 'text-yellow-500',     
         permission: 'user.view',
       },
       {
         title: 'User Role Management',
         href: '/user-role',
-        icon: User,
+        icon: User, 
+        iconClass: 'text-yellow-500',
         permission: 'role.view',
       }
     ]
@@ -131,18 +147,25 @@ const mainNavItems: NavItem[] = [
   {
     title: 'Master Setup',
     icon: LayoutGrid,
+    iconClass: 'text-yellow-500',
     children: [
-        { title: 'Feed', href: '/feed', icon: Package },
-        { title: 'Unit', href: '/unit', icon: BookOpen },
-        { title: 'Shed', href: '/shed', icon: Building },
-        { title: 'Vaccine', href: '/vaccine', icon: BookOpen },
-        { title: 'Vaccine Type', href: '/vaccine-type', icon: Syringe },
-        { title: 'Disease', href: '/disease', icon: BookOpen },
-        { title: 'Medicine', href: '/medicine', icon: Tablet },
-        { title: 'Company', href: '/company', icon: BookOpen },
-        { title: 'Chicks Type', href: '/chick-type', icon: BabyChick },
-        { title: 'Feed Type', href: '/feed-type', icon: Package },
-        { title: 'Supplier', href: '/supplier', icon: Users },
+        { title: 'Feed', href: '/feed', icon: Package, iconClass: 'text-yellow-500' },
+        { title: 'Unit', href: '/unit', icon: BookOpen, iconClass: 'text-yellow-500' },
+        { title: 'Shed', href: '/shed', icon: Building, iconClass: 'text-yellow-500' },
+        { title: 'Vaccine', href: '/vaccine', icon: BookOpen, iconClass: 'text-yellow-500' },
+        { title: 'Vaccine Type', href: '/vaccine-type', icon: Syringe,iconClass: 'text-yellow-500' },
+        { title: 'Disease', href: '/disease', icon: BookOpen, iconClass: 'text-yellow-500' },
+        { title: 'Medicine', href: '/medicine', icon: Tablet, iconClass: 'text-yellow-500' },
+        { title: 'Company', href: '/company', icon: BookOpen, iconClass: 'text-yellow-500' },
+        { title: 'Chicks Type', href: '/chick-type', icon: BabyChick, iconClass: 'text-yellow-500' },
+        { title: 'Feed Type', href: '/feed-type', icon: Package, iconClass: 'text-yellow-500' },
+        { title: 'Supplier', href: '/supplier', icon: Users, iconClass: 'text-yellow-500' },
+        { title: 'Disease', href: '/disease', icon: BookOpen, iconClass: 'text-yellow-500' },
+        { title: 'Medicine', href: '/medicine', icon: Tablet, iconClass: 'text-yellow-500' },
+        { title: 'Company', href: '/company', icon: BookOpen, iconClass: 'text-yellow-500' },
+        { title: 'Chicks Type', href: '/chick-type', icon: BabyChick, iconClass: 'text-yellow-500' },
+        { title: 'Feed Type', href: '/feed-type', icon: Package, iconClass: 'text-yellow-500' },
+        { title: 'Supplier', href: '/supplier', icon: Users, iconClass: 'text-yellow-500' },
 
     ]
   }
