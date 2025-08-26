@@ -65,10 +65,10 @@ const breadcrumbs: BreadcrumbItem[] = [
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 mt-4">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
-            <tr>
-              <th class="px-6 py-3 text-left font-semibold">Name</th>
-              <th class="px-6 py-3 text-left font-semibold">Permissions</th>
-              <th class="px-6 py-3 text-left font-semibold">Actions</th>
+            <tr class="throw">
+              <th class="px-6 py-3 text-left font-bold">Name</th>
+              <th class="px-6 py-3 text-left font-bold">Permissions</th>
+              <th class="px-6 py-3 text-left font-bold">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">

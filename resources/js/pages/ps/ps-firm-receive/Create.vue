@@ -139,7 +139,7 @@ function submit() {
     <form @submit.prevent="submit" class="p-6 space-y-6">
           
      <!-- Section: Receiving Information -->
-    <div class="border rounded-lg p-4 shadow-sm">
+    <div class="border rounded-lg p-4 shadow-sm bg-white">
       <h2 class="font-semibold text-lg mb-4">Receiving Information</h2>
 
       <div class="grid grid-cols-1 gap-4">
@@ -243,7 +243,7 @@ function submit() {
 
 
       <!-- Section: Company & Boxes -->
-      <div class="border rounded-lg p-4 shadow-sm">
+      <div class="border rounded-lg p-4 shadow-sm bg-white">
         <h2 class="font-semibold text-lg mb-4">Receiving Company & Boxes</h2>
        
         
@@ -288,7 +288,7 @@ function submit() {
       </div>
 
       <!-- Lab Test Section -->
-      <div v-if="labInput" class="border rounded-lg p-4 shadow-sm mt-4">
+      <div v-if="labInput" class="border rounded-lg p-4 shadow-sm mt-4 bg-white">
         <h2 class="font-semibold text-lg mb-4">Lab Test Send Info</h2>
 
         <div class="grid grid-cols-4 gap-4">
@@ -323,7 +323,7 @@ function submit() {
         </div>
       </div>
       <!-- Section: Remarks -->
-      <div class="border rounded-lg p-4 shadow-sm">
+      <div class="border rounded-lg p-4 shadow-sm bg-white">
         <h2 class="font-semibold text-lg mb-4">Notes</h2>
         <textarea v-model="form.remarks"
           class="w-full border rounded px-3 py-2"

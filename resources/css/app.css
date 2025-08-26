@@ -121,6 +121,13 @@
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 98%);
     --chicken: #ed9513;
+
+    --dcolor-bg: linear-gradient(145deg, rgba(255, 255, 0, 0.13), rgb(255 207 20));
+    --dcolor-boxshadaw: inset 0 4px 6px rgba(0,0,0,0.2), 0 8px 15px rgba(0,0,0,0.2);
+
+    --scolor-bg: linear-gradient(145deg, rgb(32 34 36), rgb(29 31 38));
+
+    --throw-bg: #fed73a9c;
 }
 
 .dark {
@@ -157,8 +164,36 @@
     --sidebar-border: hsl(0 0% 15.9%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(240 5.9% 10%);
-     --chicken: #ed9513;
+    --chicken: #ed9513;
+    --dcolor-bg: linear-gradient(145deg, rgba(255, 255, 0, 0.13), rgb(255 207 20));
+    --dcolor-color: #111827;
+    --dcolor-boxshadaw: inset 0 4px 6px rgba(0,0,0,0.2), 0 8px 15px rgba(255, 221, 2, 0.2);
+
+    --scolor-bg: linear-gradient(145deg, rgb(32 34 36), rgb(29 31 38));
+    --scolor-color: #ffffff;
+    --scolor-bradius: 0.6rem;
+
+
 }
+
+@layer utilities {
+  .dcolor {
+   
+    background: var(--dcolor-bg);
+    box-shadow:var(--dcolor-boxshadaw); 
+  }
+
+  .scolor {
+    background: var(--scolor-bg);
+  }
+
+  .throw{
+    background: var(--throw-bg);
+    color: var(--throw-color);
+    font-weight: var(--throw-fontweight);
+  }
+}
+
 
 @layer base {
     * {

@@ -99,7 +99,7 @@ function submit() {
     <form @submit.prevent="submit" class="p-6 space-y-6">
 
       <!-- PI Selection -->
-      <div class="border rounded-lg p-4 shadow-sm">
+      <div class="border rounded-lg p-4 shadow-sm bg-white">
         <h2 class="font-semibold text-lg mb-4">Select PS Receive</h2>
         <div class="flex flex-col mb-4">
           <Label>PI No</Label>
@@ -137,7 +137,7 @@ function submit() {
       </div>
 
       <!-- Lab Send Section -->
-      <div class="border rounded-lg p-4 shadow-sm">
+      <div class="border rounded-lg p-4 shadow-sm bg-white">
         <h2 class="font-semibold text-lg mb-4">Lab Send Details</h2>
 
         <div class="grid grid-cols-3 gap-6 mb-4">
@@ -180,7 +180,7 @@ function submit() {
       </div>
 
       <!-- File Upload -->
-      <div class="border rounded-lg p-4 shadow-sm">
+      <div class="border rounded-lg p-4 shadow-sm bg-white">
         <h2 class="font-semibold text-lg mb-4">Attachments</h2>
         <FileUploader v-model="form.file" :disabled="isExistingLabTest" label="Upload Files" :max-files="3"
           accept=".jpg,.jpeg,.png,.pdf" />

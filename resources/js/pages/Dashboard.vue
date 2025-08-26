@@ -68,19 +68,12 @@ watch([selectedFlock, startDate, endDate], () => {
 
     <AppLayout :breadcrumbs="breadcrumbs">
 
-
-
-
-
-
-
-
     <div class="p-6 space-y-6">
       <!-- Flock & Date Range Selection -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label>Select Flock</label>
-          <select v-model="selectedFlock" class="w-full border rounded px-3 py-2 mt-1">
+          <select v-model="selectedFlock" class="w-full border rounded px-3 py-2 mt-1 bg-white">
             <option value="">Select Flock</option>
             <option v-for="flock in flocks" :key="flock.id" :value="flock.id">
               {{ flock.flock_code }}
@@ -90,12 +83,12 @@ watch([selectedFlock, startDate, endDate], () => {
 
         <div>
           <label>Start Date</label>
-          <input type="date" v-model="startDate" class="w-full border rounded px-3 py-2 mt-1" />
+          <input type="date" v-model="startDate" class="w-full border rounded px-3 py-2 mt-1 bg-white" />
         </div>
 
         <div>
           <label>End Date</label>
-          <input type="date" v-model="endDate" class="w-full border rounded px-3 py-2 mt-1" />
+          <input type="date" v-model="endDate" class="w-full border rounded px-3 py-2 mt-1 bg-white" />
         </div>
       </div>
 
@@ -113,94 +106,8 @@ watch([selectedFlock, startDate, endDate], () => {
         </Link>
       </div>
     </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
-            <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-                <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                    <!-- Bar Chart -->
-                    <ChartCard
-                    :series="eggCollection"
-                    :labels="chartLabels"
-                    type="bar"
-                    title="Daily Egg Collection"
-                    />
-                </div>
-                <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                    <!-- Line Chart -->
-                    <ChartCard
-                    :series="Hatching"
-                    :labels="chartLabels"
-                    type="line"
-                    title="Daily Hatchable Egg"
-                    />
-                </div>
-                <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                    <!-- Area Chart -->
-                    <ChartCard
-                    :series="Revenue"
-                    :labels="chartLabels"
-                    type="area"
-                    title="Daily Revenue"
-                    />
-                </div>
-            </div>
+            
             <div class="grid auto-rows-min gap-4 md:grid-cols-3">
                 <div
                         class="relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-5
@@ -279,6 +186,36 @@ watch([selectedFlock, startDate, endDate], () => {
                     ></div>
                 </div>
 
+            </div>
+            
+            <div class="grid auto-rows-min gap-4 md:grid-cols-3">
+                <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                    <!-- Bar Chart -->
+                    <ChartCard
+                    :series="eggCollection"
+                    :labels="chartLabels"
+                    type="bar"
+                    title="Daily Egg Collection"
+                    />
+                </div>
+                <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                    <!-- Line Chart -->
+                    <ChartCard
+                    :series="Hatching"
+                    :labels="chartLabels"
+                    type="line"
+                    title="Daily Hatchable Egg"
+                    />
+                </div>
+                <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                    <!-- Area Chart -->
+                    <ChartCard
+                    :series="Revenue"
+                    :labels="chartLabels"
+                    type="area"
+                    title="Daily Revenue"
+                    />
+                </div>
             </div>
             <div class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
                 <PlaceholderPattern />
