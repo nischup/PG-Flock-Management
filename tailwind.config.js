@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        chicken: 'var(--chicken)', // 🐔 Custom color added here
+        chicken: 'var(--chicken)',
       },
     },
   },
