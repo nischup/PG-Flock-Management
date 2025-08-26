@@ -123,7 +123,7 @@ function submit() {
   <form @submit.prevent="submit" class="p-6 space-y-6">
 
     <!-- Flock Info -->
-    <div class="border rounded-lg p-4 shadow-sm">
+    <div class="border rounded-lg p-4 shadow-sm bg-white">
       <h2 class="font-semibold text-lg mb-4">Flock Information</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -178,7 +178,7 @@ function submit() {
         :key="tab.key"
         @click="activeTabIndex = index"
         class="cursor-pointer p-6 border rounded-lg shadow text-center font-semibold transition-transform hover:scale-105"
-        :class="activeTabIndex === index ? 'bg-chicken text-white' : 'bg-gray-200 text-gray-700'"
+        :class="activeTabIndex === index ? 'bg-chicken text-white' : 'bg-white text-gray-700'"
       >
         {{ tab.label }}
         <span v-if="counts[tab.key] !== undefined" class="block mt-2 text-black text-2xl font-bold">
@@ -188,7 +188,7 @@ function submit() {
     </div>
 
     <!-- Tab Content -->
-    <div class="border rounded-lg p-4 shadow-sm mt-4">
+    <div class="border rounded-lg p-4 shadow-sm mt-4 bg-white">
 
       <!-- Mortality Tab -->
       <div v-if="activeTab === 'daily_mortality'">
