@@ -105,7 +105,7 @@ const mainNavItems: NavItem[] = [
       {
         title: 'Vaccine Schedule',
         href: '/vaccine-schedule',
-        icon: BabyChick
+        icon: Syringe
       },
     ]
   },
