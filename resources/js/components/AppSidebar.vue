@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue'
 import { Sidebar,SidebarContent,SidebarFooter,SidebarHeader,SidebarMenu,SidebarMenuButton,SidebarMenuItem } from '@/components/ui/sidebar'
 import { type NavItem } from '@/types'
 import { Link,usePage } from '@inertiajs/vue3'
-import { BookOpen, Folder, LayoutGrid, User, Users } from 'lucide-vue-next'
+import { BookOpen, Folder, LayoutGrid, User, Users, Syringe, Building, Egg, Package, Tablet } from 'lucide-vue-next'
 import AppLogo from './AppLogo.vue'
 import { BabyChick } from '@/icons/BabyChick'
 import { BabyChickMultiple } from '@/icons/BabyChickMultiple'
@@ -43,7 +43,7 @@ const mainNavItems: NavItem[] = [
   },
   {
     title: 'Shed',
-    icon: BabyChickMultiple ,
+    icon: Building ,
     iconClass: 'text-yellow-500',
     children: [
       {
@@ -61,7 +61,7 @@ const mainNavItems: NavItem[] = [
   {
     title: 'Farm Operation',
     icon: BabyChickMultiple ,
-    iconClass: 'text-yellow-500',
+    iconClass: 'bg-chicken',
     children: [
       {
         title: 'Brooding',
@@ -77,7 +77,7 @@ const mainNavItems: NavItem[] = [
   },
   {
     title: 'Production',
-    icon: BabyChickMultiple ,
+    icon: Egg ,
     iconClass: 'text-yellow-500',
     children: [
       {
@@ -93,6 +93,18 @@ const mainNavItems: NavItem[] = [
       {
         title: 'Daily Operation',
         href: '/daily-operation',
+        icon: BabyChick
+      },
+    ]
+  },
+  {
+    title: 'Vaccine',
+    icon: Syringe ,
+    iconClass: 'text-yellow',
+    children: [
+      {
+        title: 'Vaccine Schedule',
+        href: '/vaccine-schedule',
         icon: BabyChick
       },
     ]
@@ -120,17 +132,17 @@ const mainNavItems: NavItem[] = [
     title: 'Master Setup',
     icon: LayoutGrid,
     children: [
-        { title: 'Feed', href: '/feed', icon: BookOpen },
+        { title: 'Feed', href: '/feed', icon: Package },
         { title: 'Unit', href: '/unit', icon: BookOpen },
-        { title: 'Shed', href: '/shed', icon: BookOpen },
+        { title: 'Shed', href: '/shed', icon: Building },
         { title: 'Vaccine', href: '/vaccine', icon: BookOpen },
-        { title: 'Vaccine Type', href: '/vaccine-type', icon: BookOpen },
+        { title: 'Vaccine Type', href: '/vaccine-type', icon: Syringe },
         { title: 'Disease', href: '/disease', icon: BookOpen },
-        { title: 'Medicine', href: '/medicine', icon: BookOpen },
-        { title: 'Compnay', href: '/company', icon: BookOpen },
-        { title: 'Chicks Type', href: '/chick-type', icon: BookOpen },
-        { title: 'Feed Type', href: '/feed-type', icon: BookOpen },
-        { title: 'Supplier', href: '/supplier', icon: BookOpen },
+        { title: 'Medicine', href: '/medicine', icon: Tablet },
+        { title: 'Company', href: '/company', icon: BookOpen },
+        { title: 'Chicks Type', href: '/chick-type', icon: BabyChick },
+        { title: 'Feed Type', href: '/feed-type', icon: Package },
+        { title: 'Supplier', href: '/supplier', icon: Users },
 
     ]
   }

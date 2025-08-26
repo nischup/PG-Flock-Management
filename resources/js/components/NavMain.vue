@@ -24,6 +24,18 @@ function toggleMenu(title: string) {
     openMenus.value.push(title)
   }
 }
+
+// ✅ add this helper here so stroke colors work
+function getIconColor(iconClass?: string) {
+  switch (iconClass) {
+    case 'text-yellow-500': return '#facc15'
+    case 'text-blue-500': return '#3b82f6'
+    case 'text-gray-700': return '#374151'
+    case 'text-green-500': return '#22c55e'
+    case 'bg-chicken': return '#fbbf24'
+    default: return '#000000'
+  }
+}
 </script>
 
 <template>
@@ -40,7 +52,11 @@ function toggleMenu(title: string) {
             :tooltip="item.title"
           >
             <Link :href="item.href">
-              <component :is="item.icon" />
+              <component 
+                :is="item.icon" 
+                class="w-5 h-5" 
+                :stroke="getIconColor(item.iconClass)" 
+              />
               <span>{{ item.title }}</span>
             </Link>
           </SidebarMenuButton>
@@ -51,7 +67,11 @@ function toggleMenu(title: string) {
             class="flex items-center cursor-pointer px-3 py-2 rounded"
             @click="toggleMenu(item.title)"
           >
-            <component :is="item.icon" class="w-5 h-5 mr-2" />
+            <component 
+              :is="item.icon" 
+              class="w-5 h-5 mr-2" 
+              :stroke="getIconColor(item.iconClass)" 
+            />
             <span class="flex-1">{{ item.title }}</span>
             <svg
               class="w-4 h-4 transition-transform"
@@ -81,7 +101,11 @@ function toggleMenu(title: string) {
                 :tooltip="child.title"
               >
                 <Link :href="child.href">
-                  <component :is="child.icon" />
+                  <component 
+                    :is="child.icon" 
+                    class="w-5 h-5" 
+                    :stroke="getIconColor(child.iconClass)" 
+                  />
                   <span>{{ child.title }}</span>
                 </Link>
               </SidebarMenuButton>
