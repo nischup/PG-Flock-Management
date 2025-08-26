@@ -41,7 +41,7 @@ const form = useForm({
   net_weight:0,
   gross_weight:0,
   company_id:0,
-
+  ps_bonus_qty:0,
   
   ps_male_rec_box: 0,             // Male Box Receive Qty
   ps_male_qty: 0,                 // Male Chicks Qty (can be auto-calculated if needed)
@@ -356,6 +356,8 @@ function updateTotalQty() {
               <Label>Total Chicks Qty</Label>
               <Input v-model="form.ps_total_qty" type="number" class="mt-2" readonly />
             </div>
+
+            
           </div>
 
           <!-- Box Count Section -->
@@ -373,6 +375,10 @@ function updateTotalQty() {
             <div class="flex flex-col">
               <Label>Total Box Qty</Label>
               <Input v-model="form.ps_total_re_box_qty" type="number" class="mt-2" readonly />
+            </div>
+            <div class="flex flex-col">
+              <Label>Bonus Qty %</Label>
+              <Input v-model="form.ps_bonus_qty" type="number" class="mt-2"/>
             </div>
           </div>
         </div>

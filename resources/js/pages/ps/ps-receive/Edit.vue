@@ -55,6 +55,7 @@ const form = useForm({
   provita_lab_type:2,
   provita_lab_female_qty:0,
   lab_send_total_qty: (props.psReceive.lab_send_female_qty || 0) + (props.psReceive.lab_send_male_qty || 0),
+  ps_bonus_qty:0
 })
 
 // Example suppliers
@@ -284,6 +285,10 @@ function submit() {
             <div class="flex flex-col">
               <Label>Total Box Qty</Label>
               <Input v-model.number="form.ps_total_re_box_qty" type="number" class="mt-2" readonly />
+            </div>
+            <div class="flex flex-col">
+              <Label>Bonus Qty %</Label>
+              <Input v-model="form.ps_bonus_qty" type="number" class="mt-2"/>
             </div>
           </div>
         </div>

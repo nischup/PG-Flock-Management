@@ -17,14 +17,15 @@ use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Shed\FlockAssignController;
 use App\Http\Controllers\DailyOperation\DailyOperationController;
-use App\Http\Controllers\Production\ProductionFirmReceiveController;
-
+use Illuminate\Http\Request;
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
 Route::get('dashboard', function (Request $request) {
-   $flocks = [
+
+
+        $flocks = [
             ['id' => 1, 'flock_code' => '1-22A'],
             ['id' => 2, 'flock_code' => '1-22B'],
             ['id' => 3, 'flock_code' => '2-22A'],
@@ -78,8 +79,12 @@ Route::post('/labtest/getdata', [PsLabTestController::class, 'getData'])->name('
 Route::resource('ps-lab-test', PsLabTestController::class);
 Route::resource('receive', ShedReceiveController::class);
 Route::resource('flock-assign', FlockAssignController::class);
+
+
 Route::resource('daily-operation', DailyOperationController::class);
+
+Route::get('production/daily-operation', [DailyOperationController::class, 'production']);
+
 Route::get('/mortality/create', [DailyOperationController::class, 'mortality']);
 Route::get('/overview', [DailyOperationController::class, 'overview']);
 Route::get('/details/{flockId}/{tabKey}', [DailyOperationController::class, 'show']);
-Route::resource('production-firm-receive', ProductionFirmReceiveController::class);
