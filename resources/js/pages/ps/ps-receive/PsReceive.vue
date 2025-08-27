@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed  } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import FilterControls from '@/components/FilterControls.vue'
@@ -9,7 +9,7 @@ import { useNotifier } from '@/composables/useNotifier'
 import { usePermissions } from '@/composables/usePermissions'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2, FlaskConical } from "lucide-vue-next";
-
+import listInfocard from '@/components/ListinfoCard.vue'
 import dayjs from 'dayjs'
 import { type BreadcrumbItem } from '@/types'
 
@@ -39,11 +39,37 @@ const props = defineProps<{
   filters?: { search?: string; per_page?: number }
 }>()
 
-
-
 useListFilters({ routeName: '/ps-receive', filters: props.filters })
 const { confirmDelete } = useNotifier()
 const { can } = usePermissions()
+
+// Demo card data grouped by PI No
+const piCardData: Record<string, any[]> = {
+  PI001: [
+    { title: 'Challan Box', value: 12 },
+    { title: 'Receive Box', value: 12, colorFrom: '#22c55e', colorTo: '#16a34a' },
+    { title: 'Male Box', value: 2 },
+    { title: 'Female Box', value: 10 }
+  ],
+  PI002: [
+    { title: 'Challan Box', value: 20 },
+    { title: 'Receive Box', value: 18 },
+    { title: 'Male Box', value: 5 },
+    { title: 'Female Box', value: 13 }
+  ],
+  PI003: [
+    { title: 'Challan Box', value: 15 },
+    { title: 'Receive Box', value: 17 },
+    { title: 'Male Box', value: 4 },
+    { title: 'Female Box', value: 13 }
+  ]
+}
+
+// Selected PI
+const selectedPI = ref('PI001')
+
+// Cards to show based on selected PI
+const cardData = computed(() => piCardData[selectedPI.value] || [])
 
 const deleteReceive = (id: number) => {
   confirmDelete({
@@ -74,6 +100,19 @@ const toggleDropdown = (id: number) => {
   <Head title="PS Receives" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
+    <!-- Select Box -->
+    <div class="w-full max-w-sm m-5">
+      <select
+        v-model="selectedPI"
+        class="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm"
+      >
+        <option value="" disabled selected>Select PI No</option>
+        <option value="PI001">PI001</option>
+        <option value="PI002">PI002</option>
+        <option value="PI003">PI003</option>
+      </select>
+    </div>
+    <listInfocard :cards="cardData" />
     <div class="p-6 m-3 bg-white dark:bg-gray-900 rounded-xl shadow-md">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">Parent Stock Receive Information</h1>

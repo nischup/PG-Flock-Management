@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref,computed } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import FilterControls from '@/components/FilterControls.vue'
@@ -9,6 +9,7 @@ import { useNotifier } from '@/composables/useNotifier'
 import { usePermissions } from '@/composables/usePermissions'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2, FlaskConical } from "lucide-vue-next";
+import listInfocard from '@/components/ListinfoCard.vue'
 
 import dayjs from 'dayjs'
 import { type BreadcrumbItem } from '@/types'
@@ -68,12 +69,57 @@ const toggleDropdown = (id: number) => {
 }
 
 
+
+// Demo card data grouped by PI No
+const piCardData: Record<string, any[]> = {
+  PI001: [
+    
+    { title: 'Opening Chicks', value: 12500},
+    { title: 'Total Chicks', value: 12000 },
+    { title: 'Male Chicks', value: 2000 },
+    { title: 'Female Chicks', value: 10000 },
+    { title: 'Mortality', value: 500 },
+  ],
+  PI002: [
+    
+    { title: 'Opening Chicks', value: 13000},
+    { title: 'Total Chicks', value: 12500 },
+    { title: 'Male Chicks', value: 2000 },
+    { title: 'Female Chicks', value: 10000 },
+    { title: 'Mortality', value: 500 },
+  ],
+  PI003: [
+    { title: 'Opening Chicks', value: 11000},
+    { title: 'Total Chicks', value: 10500 },
+    { title: 'Male Chicks', value: 2000 },
+    { title: 'Female Chicks', value: 10000 },
+    { title: 'Mortality', value: 500 },
+  ]
+}
+// Selected PI
+const selectedPI = ref('PI001')
+
+// Cards to show based on selected PI
+const cardData = computed(() => piCardData[selectedPI.value] || [])
+
 </script>
 
 <template>
   <Head title="PS Receives" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
+    <div class="w-full max-w-sm m-5">
+      <select
+        v-model="selectedPI"
+        class="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm"
+      >
+        <option value="" disabled selected>Select Shed</option>
+        <option value="PI001">Plc-Shed-1</option>
+        <option value="PI002">Plc-Shed-2</option>
+        <option value="PI003">Plc-Shed-3</option>
+      </select>
+    </div>
+    <listInfocard :cards="cardData" />
     <div class="p-6 m-3 bg-white dark:bg-gray-900 rounded-xl shadow-md">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">Shed Receive Info.</h1>
