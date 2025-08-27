@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue'
 import { Sidebar,SidebarContent,SidebarFooter,SidebarHeader,SidebarMenu,SidebarMenuButton,SidebarMenuItem } from '@/components/ui/sidebar'
 import { type NavItem } from '@/types'
 import { Link,usePage } from '@inertiajs/vue3'
-import { BookOpen, Folder, LayoutGrid, User, Users, Syringe, Building, Egg, Package, Tablet } from 'lucide-vue-next'
+import { BookOpen, Folder, LayoutGrid, User, Users, Syringe, Building, Egg, Package, PencilRuler, Pill,Skull,Building2 } from 'lucide-vue-next'
 import AppLogo from './AppLogo.vue'
 import { BabyChick } from '@/icons/BabyChick'
 import { BabyChickMultiple } from '@/icons/BabyChickMultiple'
@@ -80,14 +80,14 @@ const mainNavItems: NavItem[] = [
         href: '/daily-operation',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
-        
+
       },
       {
         title: 'Bird Transfer',
         href: '/daily-operation',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
-        
+
       },
     ]
   },
@@ -125,7 +125,7 @@ const mainNavItems: NavItem[] = [
         title: 'Vaccine Schedule',
         href: '/vaccine-schedule',
         icon: Syringe,
-        iconClass: 'text-yellow-500',     
+        iconClass: 'text-yellow-500',
       },
     ]
   },
@@ -139,13 +139,13 @@ const mainNavItems: NavItem[] = [
         title: 'User Register',
         href: '/user-register',
         icon: User,
-        iconClass: 'text-yellow-500',     
+        iconClass: 'text-yellow-500',
         permission: 'user.view',
       },
       {
         title: 'User Role Management',
         href: '/user-role',
-        icon: User, 
+        icon: User,
         iconClass: 'text-yellow-500',
         permission: 'role.view',
       }
@@ -156,23 +156,18 @@ const mainNavItems: NavItem[] = [
     icon: LayoutGrid,
     iconClass: 'text-yellow-500',
     children: [
+        { title: 'Unit', href: '/unit', icon: PencilRuler , iconClass: 'text-yellow-500' },
         { title: 'Feed', href: '/feed', icon: Package, iconClass: 'text-yellow-500' },
-        { title: 'Unit', href: '/unit', icon: BookOpen, iconClass: 'text-yellow-500' },
+        { title: 'Feed Type', href: '/feed-type', icon: Package, iconClass: 'text-yellow-500' },
         { title: 'Shed', href: '/shed', icon: Building, iconClass: 'text-yellow-500' },
-        { title: 'Vaccine', href: '/vaccine', icon: BookOpen, iconClass: 'text-yellow-500' },
+        { title: 'Disease', href: '/disease', icon: Skull, iconClass: 'text-yellow-500' },
+        { title: 'Medicine', href: '/medicine', icon: Pill, iconClass: 'text-yellow-500' },
+        { title: 'Vaccine', href: '/vaccine', icon: Syringe, iconClass: 'text-yellow-500' },
         { title: 'Vaccine Type', href: '/vaccine-type', icon: Syringe,iconClass: 'text-yellow-500' },
-        { title: 'Disease', href: '/disease', icon: BookOpen, iconClass: 'text-yellow-500' },
-        { title: 'Medicine', href: '/medicine', icon: Tablet, iconClass: 'text-yellow-500' },
-        { title: 'Company', href: '/company', icon: BookOpen, iconClass: 'text-yellow-500' },
-        { title: 'Chicks Type', href: '/chick-type', icon: BabyChick, iconClass: 'text-yellow-500' },
-        { title: 'Feed Type', href: '/feed-type', icon: Package, iconClass: 'text-yellow-500' },
+        { title: 'Company', href: '/company', icon: Building2 , iconClass: 'text-yellow-500' },
         { title: 'Supplier', href: '/supplier', icon: Users, iconClass: 'text-yellow-500' },
-        { title: 'Disease', href: '/disease', icon: BookOpen, iconClass: 'text-yellow-500' },
-        { title: 'Medicine', href: '/medicine', icon: Tablet, iconClass: 'text-yellow-500' },
-        { title: 'Company', href: '/company', icon: BookOpen, iconClass: 'text-yellow-500' },
         { title: 'Chicks Type', href: '/chick-type', icon: BabyChick, iconClass: 'text-yellow-500' },
-        { title: 'Feed Type', href: '/feed-type', icon: Package, iconClass: 'text-yellow-500' },
-        { title: 'Supplier', href: '/supplier', icon: Users, iconClass: 'text-yellow-500' },
+        { title: 'Breed Type', href: '/breed-type', icon: Package, iconClass: 'text-yellow-500' },
 
     ]
   }

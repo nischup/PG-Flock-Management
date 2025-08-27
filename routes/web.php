@@ -19,6 +19,7 @@ use App\Http\Controllers\Shed\FlockAssignController;
 use App\Http\Controllers\DailyOperation\DailyOperationController;
 use App\Http\Controllers\Production\ProductionFirmReceiveController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
+use App\Http\Controllers\Master\BreedTypeController;
 
 use Illuminate\Http\Request;
 Route::get('/', function () {
@@ -58,7 +59,7 @@ Route::get('dashboard', function (Request $request) {
             'dummySummary' => $dummySummary
         ]);
 
-    
+
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 require __DIR__.'/settings.php';
@@ -77,6 +78,7 @@ Route::resource('vaccine', VaccineController::class);
 Route::resource('vaccine-type', VaccineTypeController::class);
 Route::resource('disease', DiseaseController::class);
 Route::resource('supplier', SupplierController::class);
+Route::resource('breed-type', BreedTypeController::class);
 
 Route::post('/labtest/getdata', [PsLabTestController::class, 'getData'])->name('labtest.getdata');
 Route::resource('ps-lab-test', PsLabTestController::class);

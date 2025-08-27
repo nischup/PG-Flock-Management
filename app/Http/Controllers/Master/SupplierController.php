@@ -9,6 +9,9 @@ use Inertia\Inertia;
 
 class SupplierController extends Controller
 {
+    /**
+     * Display a listing of suppliers.
+     */
     public function index()
     {
         $suppliers = Supplier::orderBy('id', 'desc')->get()->map(function ($supplier) {
@@ -31,11 +34,14 @@ class SupplierController extends Controller
         ]);
     }
 
+    /**
+     * Store a newly created supplier.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name'                  => 'required|string|max:200',
-            'supplier_type'         => 'required',
+            'supplier_type'         => 'required|in:Local,Foreign',
             'address'               => 'nullable|string|max:500',
             'origin'                => 'nullable|string|max:255',
             'contact_person'        => 'nullable|string|max:255',
@@ -44,22 +50,26 @@ class SupplierController extends Controller
             'status'                => 'required|in:0,1',
         ]);
 
-        Supplier::create($validated);
+        $supplier = Supplier::create($validated);
 
         return redirect()->route('supplier.index')->with('success', 'Supplier created successfully.');
     }
 
+    /**
+     * Update an existing supplier.
+     */
     public function update(Request $request, Supplier $supplier)
     {
+        // Only validate the fields that are being updated
         $validated = $request->validate([
-            'name'                  => 'required|string|max:200',
-            'supplier_type'         => 'required',
+            'name'                  => 'sometimes|required|string|max:200',
+            'supplier_type'         => 'sometimes|required|in:Local,Foreign',
             'address'               => 'nullable|string|max:500',
             'origin'                => 'nullable|string|max:255',
             'contact_person'        => 'nullable|string|max:255',
             'contact_person_email'  => 'nullable|email|max:255',
             'contact_person_mobile' => 'nullable|string|max:20',
-            'status'                => 'required|in:0,1',
+            'status'                => 'sometimes|required|in:0,1',
         ]);
 
         $supplier->update($validated);
@@ -67,6 +77,9 @@ class SupplierController extends Controller
         return redirect()->route('supplier.index')->with('success', 'Supplier updated successfully.');
     }
 
+    /**
+     * Remove the supplier.
+     */
     public function destroy(Supplier $supplier)
     {
         $supplier->delete();
