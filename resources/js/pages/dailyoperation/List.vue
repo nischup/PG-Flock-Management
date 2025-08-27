@@ -76,7 +76,8 @@ function deleteOperation(id: number) {
 
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Daily Operations', href: '/daily-operations' },
+  { title: 'Farm Operations', href: '/daily-operations' },
+  { title: 'Brooding', href: '/daily-operations' },
 ];
 </script>
 
@@ -88,7 +89,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
       <!-- Header -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">Daily Operations</h1>
+        <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">Brooding (0-4/5 wks)</h1>
         <Link 
           href="/daily-operation/create"
           class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"

@@ -80,7 +80,7 @@ Route::resource('supplier', SupplierController::class);
 
 Route::post('/labtest/getdata', [PsLabTestController::class, 'getData'])->name('labtest.getdata');
 Route::resource('ps-lab-test', PsLabTestController::class);
-Route::resource('receive', ShedReceiveController::class);
+Route::resource('shed-receive', ShedReceiveController::class);
 Route::resource('flock-assign', FlockAssignController::class);
 Route::resource('production-firm-receive', ProductionFirmReceiveController::class);
 Route::resource('vaccine-schedule', VaccineScheduleController::class);

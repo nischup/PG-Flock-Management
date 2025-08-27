@@ -18,8 +18,8 @@ import { watch } from 'vue'
 
 // Breadcrumb
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'PS', href: '/ps-receive' },
-  { title: 'Create', href: '/ps-receive/create' },
+  { title: 'Parent Stock', href: '/ps-receive' },
+  { title: 'Receive Entry', href: '/ps-receive/create' },
 ];
 
 // Form data
@@ -139,7 +139,7 @@ function updateTotalQty() {
 
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
-    <Head title="PS Receive" />
+    <Head title="Parent Stock Receive" />
 
     <div class="px-4 py-6 space-y-8">
       <!-- <HeadingSmall title="ps Receive Entry" description="Record shipment and chick details" /> -->
@@ -150,7 +150,7 @@ function updateTotalQty() {
         <div class="space-y-6 border-b">
           <div class="pb-3 mb-6 flex items-center justify-between">
             <!-- Left: Title -->
-            <h2 class="text-xl font-semibold">PS Receiving Info</h2>
+            <h2 class="text-xl font-semibold">Parent Stock Receiving Info.</h2>
 
             <Link 
               href="/ps-receive" 

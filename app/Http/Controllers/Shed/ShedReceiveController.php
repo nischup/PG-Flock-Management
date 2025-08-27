@@ -33,7 +33,7 @@ class ShedReceiveController extends Controller
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
 
-        return Inertia::render('shed/shed-receive/Create', [
+        return Inertia::render('shed/shed-receive/List', [
             'psReceives' => $psReceives,
             'companies' => $companies,
         ]);
@@ -44,7 +44,28 @@ class ShedReceiveController extends Controller
      */
     public function create()
     {
-        //
+        $psReceives = PsReceive::with('chickCounts')
+        ->get()
+        ->map(function($ps) {
+            return [
+                'id' => $ps->id,
+                'pi_no' => $ps->pi_no,
+                'total_chicks_qty' => $ps->chickCounts->ps_total_qty ?? 0,
+                'total_box_qty' => $ps->chickCounts->ps_total_re_box_qty ?? 0,
+                'ps_challan_box_qty' => $ps->chickCounts->ps_challan_box_qty ?? 0,
+                'male_box_qty' => $ps->chickCounts->ps_male_rec_box ?? 0,
+                'female_box_qty' => $ps->chickCounts->ps_female_rec_box ?? 0,
+            ];
+        });
+
+
+        // Fetch all companies
+        $companies = Company::select('id', 'name')->get();
+
+        return Inertia::render('shed/shed-receive/Create', [
+            'psReceives' => $psReceives,
+            'companies' => $companies,
+        ]);
     }
 
     /**

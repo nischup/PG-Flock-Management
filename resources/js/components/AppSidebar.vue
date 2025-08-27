@@ -52,12 +52,12 @@ const mainNavItems: NavItem[] = [
     children: [
       {
         title: 'Shed Receive',
-        href: '/receive',
+        href: '/shed-receive',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
       },
       {
-        title: 'Flock Assign',
+        title: 'Batch Assign',
         href: '/flock-assign',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
@@ -76,7 +76,14 @@ const mainNavItems: NavItem[] = [
         iconClass: 'text-yellow-500',
       },
       {
-        title: 'Growing',
+        title: 'Growing (4/5wk-18/21wks)',
+        href: '/daily-operation',
+        icon: BabyChick,
+        iconClass: 'text-yellow-500',
+        
+      },
+      {
+        title: 'Bird Transfer',
         href: '/daily-operation',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
@@ -85,12 +92,12 @@ const mainNavItems: NavItem[] = [
     ]
   },
   {
-    title: 'Production',
+    title: 'Production Farm',
     icon: Egg ,
     iconClass: 'text-yellow-500',
     children: [
       {
-        title: 'Farm Receive',
+        title: 'Bird Receive',
         href: '/production-firm-receive',
         icon: BabyChick,
         iconClass: 'text-yellow-500',

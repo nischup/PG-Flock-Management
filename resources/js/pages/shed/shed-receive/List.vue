@@ -55,9 +55,9 @@ const deleteReceive = (id: number) => {
 
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Parent Stock', href: '/ps-receive' },
-  { title: 'Receive', href: '/ps-receive' },
-  
+  { title: 'Shed', href: '/shed-receive' },
+  { title: 'Shed Receive', href: '/shed-receive' },
+
 ];
 
 
@@ -76,30 +76,26 @@ const toggleDropdown = (id: number) => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="p-6 m-3 bg-white dark:bg-gray-900 rounded-xl shadow-md">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">Parent Stock Receive Information</h1>
+        <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">Shed Receive Info.</h1>
         <Link
-          v-if="can('ps.receive.create')"
-          href="/ps-receive/create"
+          href="/shed-receive/create"
           class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"
         >
           + Add
         </Link>
       </div>
 
-      <FilterControls :filters="props.filters" routeName="/ps-receive" />
+      <FilterControls :filters="props.filters" routeName="/shed-receive" />
 
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
             <tr class="throw">
-              <th class="px-6 py-3 text-left font-bold">Shipment Type</th>
-              <th class="px-6 py-3 text-left font-bold">PI No</th>
-              <th class="px-6 py-3 text-left font-bold">LC No</th>
+              <th class="px-6 py-3 text-left font-bold">Project</th>
+              <th class="px-6 py-3 text-left font-bold">Flock No</th>
+              <th class="px-6 py-3 text-left font-bold">Shed No</th>
+              <th class="px-6 py-3 text-left font-bold">Receive Box Qty</th>
               <th class="px-6 py-3 text-left font-bold">Receive Date</th>
-              <th class="px-6 py-3 text-left font-bold">Supplier</th>
-              <th class="px-6 py-3 text-left font-bold">Total Birds Qty</th>
-              <th class="px-6 py-3 text-left font-bold">Total Box</th>
-              <th class="px-6 py-3 text-left font-bold">Breed</th>
               <th class="px-6 py-3 text-left font-bold">Actions</th>
             </tr>
           </thead>
@@ -110,11 +106,8 @@ const toggleDropdown = (id: number) => {
             </td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.pi_no }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.lc_no ?? 'N/A' }}</td>
-              <td class="px-6 py-4 text-gray-600 dark:text-gray-300">{{ dayjs(item.receive_date).format('YYYY-MM-DD') }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.supplier?.name ?? 'N/A' }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.chick_counts?.ps_total_qty ?? '-' }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.chick_counts?.ps_total_re_box_qty ?? '-' }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.remarks ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-300">{{ dayjs(item.receive_date).format('YYYY-MM-DD') }}</td>
               <td class="px-6 py-4 flex gap-4 items-center">
                 <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(item.id)">
                   Actions ▼

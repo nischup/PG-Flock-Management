@@ -6,8 +6,7 @@ import { ref, computed } from "vue";
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Shed', href: '/shed' },
-  { title: 'Flock', href: '/flock' },
-  { title: 'Assign', href: '/flock/assign' },
+  { title: 'Assign Batch', href: '/flock/assign' },
 ];
 
 // Dummy stats
@@ -148,7 +147,7 @@ const saveTransfer = () => {
           @click="showModal = true"
           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          + Assign Flock
+          + Assign Batch
         </button>
       </div>
 
@@ -224,7 +223,7 @@ const saveTransfer = () => {
       class="p-3 bg-gray-200 cursor-move rounded-t-lg"
       @mousedown="startDrag"
     >
-      <h2 class="font-bold">Assign Flock</h2>
+      <h2 class="font-bold">Assign Batch</h2>
     </div>
 
     <!-- Body -->

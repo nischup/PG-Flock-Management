@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3'
+import { Link, Head, useForm } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
 
 import InputError from '@/components/InputError.vue'
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { type BreadcrumbItem } from '@/types'
+import { ArrowLeft } from 'lucide-vue-next'
 
 // Breadcrumb
 const breadcrumbs: BreadcrumbItem[] = [
@@ -96,11 +97,22 @@ function submit() {
     <Head title="Create Firm Receive" />
 
     <form @submit.prevent="submit" class="p-6 space-y-6">
+
+
+      <div class="pb-3 mb-6 flex items-center justify-between">
+            <!-- Left: Title -->
+            <h2 class="text-xl font-semibold">Parent Stock Shed Receiving Info.</h2>
+
+            <Link 
+              href="/shed-receive" 
+              class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center gap-1"
+            >
+              <ArrowLeft class="w-4 h-4" /> List
+            </Link>
+        </div>
           
      <!-- Section: Receiving Information -->
     <div class="border rounded-lg p-4 shadow-sm bg-white">
-      <h2 class="font-semibold text-lg mb-4">Shed Receiving Information</h2>
-
       <div class="grid grid-cols-1 gap-4">
         <div>
           <Label>PS Receive No</Label>
