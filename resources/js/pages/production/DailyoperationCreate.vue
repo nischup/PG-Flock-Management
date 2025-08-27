@@ -66,6 +66,7 @@ const form = useForm({
   weight: 0,
   temperature: 0,
   humidity: 0,
+  
 })
 
 // Shed & flock info
