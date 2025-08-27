@@ -19,10 +19,11 @@ const batchOptions = ["Batch A", "Batch B", "Batch C"];
 const diseaseOptions = ["New Castle", "IBD", "Marek"];
 const vaccineOptions = ["Lasota", "Gumboro", "HVT"];
 
-// Modal state
-const showModal = ref(false);
+// Modal states
+const showScheduleModal = ref(false);
+const showVaccineModal = ref(false);
 
-// Form data
+// Form data (schedule)
 const newSchedule = ref({
   project: "",
   flock: "",
@@ -32,6 +33,15 @@ const newSchedule = ref({
   age: "",
   lastVaccination: "",
   nextVaccination: "",
+});
+
+// Form data (vaccine)
+const newVaccine = ref({
+  name: "",
+  type: "",
+  applicator: "",
+  dose: "",
+  notes: "",
 });
 
 // Save new schedule
@@ -53,7 +63,24 @@ const saveSchedule = () => {
     nextVaccination: "",
   };
 
-  showModal.value = false;
+  showScheduleModal.value = false;
+};
+
+// Save new vaccine
+const saveVaccine = () => {
+  // Add vaccine to options dynamically
+  vaccineOptions.push(newVaccine.value.name);
+
+  // Reset form
+  newVaccine.value = {
+    name: "",
+    type: "",
+    applicator: "",
+    dose: "",
+    notes: "",
+  };
+
+  showVaccineModal.value = false;
 };
 </script>
 
@@ -63,30 +90,30 @@ const saveSchedule = () => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex flex-col gap-4 p-4">
 
-        <!-- Action Buttons Row -->
-        <div class="flex justify-end gap-3">
+      <!-- Action Buttons -->
+      <div class="flex justify-end gap-3">
         <!-- Add New Vaccine -->
         <button
-            @click="showModal = true"
-            class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          @click="showVaccineModal = true"
+          class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Add New Vaccine
+          </svg>
+          Add New Vaccine
         </button>
 
         <!-- Vaccination Schedule -->
         <button
-            class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          @click="showScheduleModal = true"
+          class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
         >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            Vaccination Schedule
+          </svg>
+          Vaccination Schedule
         </button>
 
-        <!-- Vaccine Routing -->
         <button
             class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
         >
@@ -106,8 +133,8 @@ const saveSchedule = () => {
             </svg>
             View Used Vaccine
         </button>
-        </div>
 
+      </div>
 
       <!-- Table -->
       <div class="overflow-x-auto rounded-xl shadow bg-white dark:bg-gray-800 mt-4">
@@ -118,6 +145,7 @@ const saveSchedule = () => {
               <th class="px-4 py-2 border-b">Project Name</th>
               <th class="px-4 py-2 border-b">Flock No</th>
               <th class="px-4 py-2 border-b">Batch No</th>
+              <th class="px-4 py-2 border-b">Breed Type</th>
               <th class="px-4 py-2 border-b">Disease</th>
               <th class="px-4 py-2 border-b">Vaccine</th>
               <th class="px-4 py-2 border-b">Age</th>
@@ -154,11 +182,8 @@ const saveSchedule = () => {
         </table>
       </div>
 
-      <!-- Modal -->
-      <div
-        v-if="showModal"
-        class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-      >
+      <!-- Schedule Modal -->
+      <div v-if="showScheduleModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow-lg w-[700px] max-w-full p-6">
           <h2 class="text-lg font-bold mb-4">Add Vaccine Schedule</h2>
 
@@ -185,6 +210,14 @@ const saveSchedule = () => {
               </select>
             </div>
             <div>
+              <label class="block text-sm mb-1">Breed</label>
+              <select v-model="newSchedule.disease" class="w-full border rounded px-3 py-2">
+                <option value="">Select Breed Type</option>
+                <option>EP</option>
+                <option>IR</option>
+              </select>
+            </div>
+            <div>
               <label class="block text-sm mb-1">Disease</label>
               <select v-model="newSchedule.disease" class="w-full border rounded px-3 py-2">
                 <option value="">Select Disease</option>
@@ -203,31 +236,65 @@ const saveSchedule = () => {
               <input v-model="newSchedule.age" type="text" class="w-full border rounded px-3 py-2" />
             </div>
             <div>
-              <label class="block text-sm mb-1">Last Vaccination</label>
-              <input v-model="newSchedule.lastVaccination" type="date" class="w-full border rounded px-3 py-2" />
-            </div>
-            <div>
               <label class="block text-sm mb-1">Next Vaccination</label>
               <input v-model="newSchedule.nextVaccination" type="date" class="w-full border rounded px-3 py-2" />
             </div>
           </div>
 
           <div class="flex justify-end mt-6">
-            <button
-              class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mr-2"
-              @click="showModal = false"
-            >
+            <button class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mr-2" @click="showScheduleModal = false">
               Cancel
             </button>
-            <button
-              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              @click="saveSchedule"
-            >
+            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" @click="saveSchedule">
               Save
             </button>
           </div>
         </div>
       </div>
+
+      <!-- Vaccine Modal -->
+      <div v-if="showVaccineModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-[600px] max-w-full p-6">
+          <h2 class="text-lg font-bold mb-4">Add New Vaccine</h2>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm mb-1">Vaccine Name</label>
+              <input v-model="newVaccine.name" type="text" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Vaccine Type</label>
+                 <select v-model="newSchedule.vaccine" class="w-full border rounded px-3 py-2">
+                <option value="">Select Vaccine</option>
+                <option> Live </option>
+                <option> Killed </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Applicator</label>
+              <input v-model="newVaccine.applicator" type="text" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Dose</label>
+              <input v-model="newVaccine.dose" type="text" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm mb-1">Notes</label>
+              <textarea v-model="newVaccine.notes" class="w-full border rounded px-3 py-2"></textarea>
+            </div>
+          </div>
+
+          <div class="flex justify-end mt-6">
+            <button class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mr-2" @click="showVaccineModal = false">
+              Cancel
+            </button>
+            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" @click="saveVaccine">
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </AppLayout>
 </template>
