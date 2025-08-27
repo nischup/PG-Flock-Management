@@ -149,14 +149,23 @@ const toggleDropdown = (id: number) => {
 
 const toggleStatus = (company: Company) => {
   const newStatus = company.status === 1 ? 0 : 1
-  router.put(route('company.update', company.id), { ...company, status: newStatus }, {
-    preserveScroll: true,
-    onSuccess: () => {
-      const idx = companies.value.findIndex(c => c.id === company.id)
-      if (idx !== -1) companies.value[idx].status = newStatus
+
+  router.put(
+    route('company.update', company.id),
+    {
+      name: company.name,
+      location: company.location || '',
+      status: newStatus,
     },
-    onFinish: () => openDropdownId.value = null,
-  })
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        const idx = companies.value.findIndex(c => c.id === company.id)
+        if (idx !== -1) companies.value[idx].status = newStatus
+      },
+      onFinish: () => (openDropdownId.value = null),
+    }
+  )
 }
 </script>
 
@@ -210,7 +219,7 @@ const toggleStatus = (company: Company) => {
               >
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(company)">✏ Edit</button>
                 <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(company)">
-                  {{ company.status === 1 ? 'Inactive' : 'Activate' }}
+                  {{ company.status === 1 ? 'Deactivate' : 'Activate' }}
                 </button>
               </div>
             </td>
