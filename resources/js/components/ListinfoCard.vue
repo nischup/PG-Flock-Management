@@ -54,8 +54,8 @@ const gradientList = [
   { from: '#86efac', to: '#22c55e' }, // green-300 -> green-500
   { from: '#fecaca', to: '#f87171' }, // red-200 -> red-400
   { from: '#a78bfa', to: '#7c3aed' }, // purple-400 -> purple-600
-  { from: '#f472b6', to: '#ec4899' }, // pink-400 -> pink-500
-  { from: '#60a5fa', to: '#3b82f6' }  // blue-400 -> blue-600
+  { from: '#fed7aa', to: '#fb923c' }, // pink-400 -> pink-500
+  { from: '#ffffff', to: '#60a5fa' }  // blue-400 -> blue-600
 ]
 
 // Return gradient from list based on index

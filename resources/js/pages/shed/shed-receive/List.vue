@@ -113,10 +113,10 @@ const cardData = computed(() => piCardData[selectedPI.value] || [])
         v-model="selectedPI"
         class="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm"
       >
-        <option value="" disabled selected>Select Shed</option>
-        <option value="PI001">Pcl-Shed-1</option>
-        <option value="PI002">Pcl-Shed-2</option>
-        <option value="PI003">Pcl-Shed-3</option>
+        <option value="" disabled selected>Select PI No</option>
+        <option value="PI001">PI001</option>
+        <option value="PI002">PI002</option>
+        <option value="PI003">PI003</option>
       </select>
     </div>
     <listInfocard :cards="cardData" />

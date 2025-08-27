@@ -3,6 +3,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { ref, computed } from "vue";
+import listInfocard from '@/components/ListinfoCard.vue'
+import { useAgeCalculator } from '@/composables/useAgeCalculator'
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Shed', href: '/shed' },
@@ -130,7 +132,40 @@ const saveTransfer = () => {
   showTransferModal.value = false;
 };
 
+const piCardData: Record<string, any[]> = {
+  PI001: [
+    
+    { title: 'Opening Chicks', value: 12500},
+    { title: 'Total Chicks', value: 12000 },
+    { title: 'Male Chicks', value: 2000 },
+    { title: 'Female Chicks', value: 10000 },
+    { title: 'Mortality', value: 500 },
+    { title: 'Age', value: useAgeCalculator("2025-07-21") },
+  ],
+  PI002: [
+    
+    { title: 'Opening Chicks', value: 13000},
+    { title: 'Total Chicks', value: 12500 },
+    { title: 'Male Chicks', value: 2000 },
+    { title: 'Female Chicks', value: 10000 },
+    { title: 'Mortality', value: 500 },
+    { title: 'Age', value: useAgeCalculator("2025-06-12") },
+  ],
+  PI003: [
+    { title: 'Opening Chicks', value: 11000},
+    { title: 'Total Chicks', value: 10500 },
+    { title: 'Male Chicks', value: 2000 },
+    { title: 'Female Chicks', value: 10000 },
+    { title: 'Mortality', value: 500 },
+    { title: 'Age', value: useAgeCalculator("2025-07-10") },
+  ]
+}
 
+// Selected PI
+const selectedPI = ref('PI001')
+
+// Cards to show based on selected PI
+const cardData = computed(() => piCardData[selectedPI.value] || [])
 
 </script>
 
@@ -141,31 +176,26 @@ const saveTransfer = () => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
 
-      <!-- Add Flock Button -->
-      <div class="flex justify-end">
+      <div class="w-full flex items-center justify-between p-5 ">
+        <!-- Select Box -->
+        <select
+          v-model="selectedPI"
+          class="w-64 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-sm"
+        >
+          <option value="" disabled selected>Select Batch</option>
+          <option value="PI001">Pcl-Shed-1-A</option>
+          <option value="PI002">Pcl-Shed-1-B</option>
+          <option value="PI003">Pcl-Shed-1-C</option>
+        </select>
+        <!-- Button (fully right) -->
         <button
           @click="showModal = true"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          class="px-4 py-2 bg-chicken text-white rounded-lg hover:bg-yellow-700"
         >
           + Assign Batch
         </button>
       </div>
-
-      <!-- Cards -->
-      <div class="grid gap-4 md:grid-cols-3">
-        <div class="p-5 rounded-xl shadow bg-white dark:bg-gray-800">
-          <p class="text-sm font-semibold">Total Flock</p>
-          <p class="text-3xl font-bold mt-2">{{ totalFlock }}</p>
-        </div>
-        <div class="p-5 rounded-xl shadow bg-white dark:bg-gray-800">
-          <p class="text-sm font-semibold">Assign Shed</p>
-          <p class="text-3xl font-bold mt-2">{{ assignShed }}</p>
-        </div>
-        <div class="p-5 rounded-xl shadow bg-white dark:bg-gray-800">
-          <p class="text-sm font-semibold">Assign Batch</p>
-          <p class="text-3xl font-bold mt-2">{{ assignBatch }}</p>
-        </div>
-      </div>
+      <listInfocard :cards="cardData" />
 
       <!-- List Table -->
       <div class="overflow-x-auto rounded-xl shadow bg-white dark:bg-gray-800 mt-4">

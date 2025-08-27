@@ -61,7 +61,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 
-
 const openDropdownId = ref<number | null>(null)
 const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
