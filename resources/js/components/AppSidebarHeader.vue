@@ -4,6 +4,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import Clock from '@/components/Clock.vue' // reusable clock component
 import { Bell } from 'lucide-vue-next';
 import type { BreadcrumbItemType } from '@/types';
+import WeatherWidget from '../components/WehatherWidget.vue';
 
 withDefaults(
     defineProps<{
@@ -67,11 +68,14 @@ withDefaults(
 
   <!-- Right side: Bell + Clock -->
   <div class="flex items-center gap-6">
+    <WeatherWidget/>
     <!-- Bell Icon -->
     <button
       class="relative text-gray-600 hover:text-black-800 transition"
       aria-label="Notifications"
     >
+      
+       
       <Bell />
       <!-- Red notification dot -->
       <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>

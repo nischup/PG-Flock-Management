@@ -48,7 +48,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex items-center h-12 px-4 bg-white shadow rounded text-sm space-x-3">
+  <div class="flex items-center h-12 px-4  rounded text-sm space-x-3">
     <template v-if="loading">
       <span>Loading weather...</span>
     </template>
@@ -56,8 +56,7 @@ onMounted(() => {
       <span class="text-red-500">{{ error }}</span>
     </template>
     <template v-else>
-      <span class="font-medium">{{ city }}</span>
-      <span class="font-bold">{{ temp }}°C</span>
+      <span class="font-bold text-lg">{{ temp }}°C</span>
     </template>
   </div>
 </template>
