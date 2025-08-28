@@ -28,91 +28,93 @@ const submit = () => {
 </script>
 
 <template>
-  <div id="bg-banner" class="flex min-h-screen flex-col items-center justify-center p-6 lg:p-8 text-[#1b1b18] dark:text-white relative">
-    
-    <!-- Optional overlay for readability -->
-    <div class="absolute inset-0 bg-black/40 z-0"></div>
+  <div id="bg-banner" class="min-h-screen relative flex items-center justify-center p-6 lg:p-8 text-[#1b1b18] dark:text-white">
 
-    <AuthBase class="bg-transparent p-0 shadow-none relative z-10" 
-              title="PG-FLOCK-MANAGEMNT" 
-              description="Enter your email and password below to log in">
-      
-      <Head title="Log in" />
+    <!-- Background overlay -->
+    <div class="absolute inset-0 bg-black/30 z-0"></div>
 
-      <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-400 z-10">
-        {{ status }}
+    <!-- Layer 2: Center floating transparent card -->
+    <div class="relative z-10 bg-white/10 backdrop-blur-md rounded-xl shadow-4xl w-2/3 h-[600px] flex items-center justify-between px-8">
+
+      <!-- Layer 3: Transparent floating login panel inside Layer 2, left side -->
+      <div class="bg-white/10 backdrop-blur-md shadow-2xl rounded-xl w-2/5 h-[550px] p-8 flex flex-col justify-center">
+        <AuthBase class="bg-transparent p-0 shadow-none"
+              title="Xpro Farm Management"
+              description="">
+              <Head title="Log in" />
+
+              <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-400">
+                {{ status }}
+              </div>
+
+              <form @submit.prevent="submit" class="flex flex-col gap-6 w-full">
+
+                <!-- Email -->
+                <div class="grid gap-2">
+                  <Label for="email">Email address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    required
+                    autofocus
+                    autocomplete="email"
+                    v-model="form.email"
+                    placeholder="email@example.com"
+                  />
+                  <InputError :message="form.errors.email" />
+                </div>
+
+                <!-- Password -->
+                <div class="grid gap-2">
+                  <div class="flex items-center justify-between">
+                    <Label for="password">Password</Label>
+                    <TextLink v-if="canResetPassword" :href="route('password.request')" class="text-sm">
+                      Forgot password?
+                    </TextLink>
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    autocomplete="current-password"
+                    v-model="form.password"
+                    placeholder="Password"
+                  />
+                  <InputError :message="form.errors.password" />
+                </div>
+
+                <!-- Remember & Submit -->
+                <div class="flex flex-col gap-4 mt-4">
+                  <Label for="remember" class="flex items-center space-x-3">
+                    <Checkbox id="remember" v-model="form.remember" />
+                    <span>Remember me</span>
+                  </Label>
+
+                  <Button type="submit" class="bg-chicken w-full" :disabled="form.processing">
+                    <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
+                    Log in
+                  </Button>
+                </div>
+
+              </form>
+            </AuthBase>
       </div>
 
-      <form @submit.prevent="submit" class="flex flex-col gap-6 z-10">
-        <div class="grid gap-6">
+      <!-- Right side transparent image -->
+      <div class="w-1/2 h-full flex items-center justify-center">
+        <img src="/transparent-chicks.png" alt="Decor" class="max-h-[500px] opacity-60 object-contain" />
+      </div>
 
-          <div class="grid gap-2">
-            <Label for="email">Email address</Label>
-            <Input
-              id="email"
-              type="email"
-              required
-              autofocus
-              :tabindex="1"
-              autocomplete="email"
-              v-model="form.email"
-              placeholder="email@example.com"
-            />
-            <InputError :message="form.errors.email" />
-          </div>
-
-          <div class="grid gap-2">
-            <div class="flex items-center justify-between">
-              <Label for="password">Password</Label>
-              <TextLink v-if="canResetPassword" :href="route('password.request')" class="text-sm" :tabindex="5">
-                Forgot password?
-              </TextLink>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              required
-              :tabindex="2"
-              autocomplete="current-password"
-              v-model="form.password"
-              placeholder="Password"
-            />
-            <InputError :message="form.errors.password" />
-          </div>
-
-          <div class="flex items-center justify-between">
-            <Label for="remember" class="flex items-center space-x-3">
-              <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
-              <span>Remember me</span>
-            </Label>
-          </div>
-
-          <Button type="submit" class="mt-4 w-full bg-chicken" :tabindex="4" :disabled="form.processing">
-            <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-            Log in
-          </Button>
-
-        </div>
-
-        <!-- Optional sign-up link -->
-        <!--
-        <div class="text-center text-sm text-white/80 mt-4">
-          Don't have an account?
-          <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink>
-        </div>
-        -->
-      </form>
-
-    </AuthBase>
+    </div>
   </div>
 </template>
 
 <style scoped>
 #bg-banner {
   background-image: url('pghomebanner.jpg');
+  background-image: url('bg.jpg');
   background-size: cover;
   background-position: center;
   position: relative;
 }
-
 </style>

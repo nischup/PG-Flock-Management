@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('Vaccine_types', function (Blueprint $table) {
+        Schema::create('egg_grades', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 200);
-            $table->tinyInteger('status')->nullable();
             $table->timestamps();
         });
     }
@@ -24,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('Vaccine_types');
+        Schema::dropIfExists('egg_grades');
     }
 };

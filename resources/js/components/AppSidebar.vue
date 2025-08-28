@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue'
 import { Sidebar,SidebarContent,SidebarFooter,SidebarHeader,SidebarMenu,SidebarMenuButton,SidebarMenuItem } from '@/components/ui/sidebar'
 import { type NavItem } from '@/types'
 import { Link,usePage } from '@inertiajs/vue3'
-import { BookOpen, Folder, LayoutGrid, User, Users, Syringe, Building, Egg, Package, PencilRuler, Pill,Skull,Building2 } from 'lucide-vue-next'
+import { BookOpen, Folder, LayoutGrid, User, Users, Syringe, Building, Egg,EggOff, Package, PencilRuler, Pill,Skull,Building2 } from 'lucide-vue-next'
 import AppLogo from './AppLogo.vue'
 import { BabyChick } from '@/icons/BabyChick'
 import { BabyChickMultiple } from '@/icons/BabyChickMultiple'
@@ -112,6 +112,12 @@ const mainNavItems: NavItem[] = [
         title: 'Daily Operation',
         href: '/production/daily-operation',
         icon: BabyChick,
+        iconClass: 'text-yellow-500',
+      },
+      {
+        title: 'Egg Classification',
+        href: '/production/egg-classification',
+        icon: EggOff ,
         iconClass: 'text-yellow-500',
       },
     ]

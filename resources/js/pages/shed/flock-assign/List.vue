@@ -135,8 +135,8 @@ const saveTransfer = () => {
 const piCardData: Record<string, any[]> = {
   PI001: [
     
-    { title: 'Opening Chicks', value: 12500},
-    { title: 'Total Chicks', value: 12000 },
+    { title: 'Total Chicks', value: 12500},
+    { title: 'Current Chicks', value: 12000 },
     { title: 'Male Chicks', value: 2000 },
     { title: 'Female Chicks', value: 10000 },
     { title: 'Mortality', value: 500 },
@@ -144,16 +144,16 @@ const piCardData: Record<string, any[]> = {
   ],
   PI002: [
     
-    { title: 'Opening Chicks', value: 13000},
-    { title: 'Total Chicks', value: 12500 },
+    { title: 'Total Chicks', value: 13000},
+    { title: 'Current Chicks', value: 12500 },
     { title: 'Male Chicks', value: 2000 },
     { title: 'Female Chicks', value: 10000 },
     { title: 'Mortality', value: 500 },
     { title: 'Age', value: useAgeCalculator("2025-06-12") },
   ],
   PI003: [
-    { title: 'Opening Chicks', value: 11000},
-    { title: 'Total Chicks', value: 10500 },
+    { title: 'Total Chicks', value: 11000},
+    { title: 'Current Chicks', value: 10500 },
     { title: 'Male Chicks', value: 2000 },
     { title: 'Female Chicks', value: 10000 },
     { title: 'Mortality', value: 500 },

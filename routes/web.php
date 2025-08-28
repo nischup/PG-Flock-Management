@@ -20,7 +20,8 @@ use App\Http\Controllers\DailyOperation\DailyOperationController;
 use App\Http\Controllers\Production\ProductionFirmReceiveController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\Master\BreedTypeController;
-
+use App\Http\Controllers\Production\EggClassificationController;
+use App\Http\Controllers\WeatherController;
 use Illuminate\Http\Request;
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -95,3 +96,7 @@ Route::get('production/daily-operation', [DailyOperationController::class, 'prod
 Route::get('/mortality/create', [DailyOperationController::class, 'mortality']);
 Route::get('/overview', [DailyOperationController::class, 'overview']);
 Route::get('/details/{flockId}/{tabKey}', [DailyOperationController::class, 'show']);
+
+Route::resource('production/egg-classification', EggClassificationController::class);
+
+Route::get('/weather', [WeatherController::class, 'get']);
