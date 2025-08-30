@@ -95,8 +95,6 @@ Route::prefix('daily-operation')->group(function () {
 });
 Route::resource('daily-operation', DailyOperationController::class);
 
-Route::get('production/daily-operation', [DailyOperationController::class, 'production']);
-
 Route::get('/mortality/create', [DailyOperationController::class, 'mortality']);
 Route::get('/overview', [DailyOperationController::class, 'overview']);
 Route::get('/details/{flockId}/{tabKey}', [DailyOperationController::class, 'show']);
