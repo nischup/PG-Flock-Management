@@ -191,112 +191,124 @@ const toggleStatus = (supplier: Supplier) => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <Head title="Suppliers" />
 
-    <div class="px-4 py-6">
+    <div class="px-2 sm:px-4 py-6">
       <!-- Header -->
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
         <HeadingSmall title="Suppliers List" />
-        <Button class="bg-chicken hover:bg-yellow-600 text-white" @click="openModal()">+ Add New</Button>
+        <Button class="bg-chicken hover:bg-yellow-600 text-white w-full sm:w-auto" @click="openModal()">+ Add New</Button>
       </div>
 
-      <!-- Table -->
-      <table class="w-full border">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="p-2 border text-left">#</th>
-            <th class="p-2 border text-left">Name</th>
-            <th class="p-2 border text-left">Type</th>
-            <th class="p-2 border text-left">Address</th>
-            <th class="p-2 border text-left">Contact</th>
-            <th class="p-2 border text-left">Status</th>
-            <th class="p-2 border text-left">Created At</th>
-            <th class="p-2 border text-left">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(supplier, index) in suppliers" :key="supplier.id">
-            <td class="p-2 border">{{ index + 1 }}</td>
-            <td class="p-2 border">{{ supplier.name }}</td>
-            <td class="p-2 border">{{ supplier.supplier_type }}</td>
-            <td class="p-2 border">{{ supplier.address || '-' }}</td>
-            <td class="p-2 border">{{ supplier.contact_person || '-' }}</td>
-            <td class="p-2 border">
-              <span :class="supplier.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-                {{ supplier.status === 1 ? 'Active' : 'Inactive' }}
-              </span>
-            </td>
-            <td class="p-2 border">{{ supplier.created_at }}</td>
-            <td class="p-2 border relative">
-              <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white dropdown-button" @click.stop="toggleDropdown(supplier.id)">
-                Actions ▼
-              </Button>
-              <div v-if="openDropdownId === supplier.id" class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown" @click.stop>
-                <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(supplier)">✏ Edit</button>
-                <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(supplier)">
-                  {{ supplier.status === 1 ? 'Inactive' : 'Activate' }}
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- Table wrapper for horizontal scroll -->
+      <div class="overflow-x-auto border rounded">
+        <table class="min-w-[700px] w-full border">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="p-2 border text-left">#</th>
+              <th class="p-2 border text-left">Name</th>
+              <th class="p-2 border text-left">Type</th>
+              <th class="p-2 border text-left">Address</th>
+              <th class="p-2 border text-left">Contact</th>
+              <th class="p-2 border text-left">Status</th>
+              <th class="p-2 border text-left">Created At</th>
+              <th class="p-2 border text-left">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(supplier, index) in suppliers" :key="supplier.id">
+              <td class="p-2 border">{{ index + 1 }}</td>
+              <td class="p-2 border">{{ supplier.name }}</td>
+              <td class="p-2 border">{{ supplier.supplier_type }}</td>
+              <td class="p-2 border">{{ supplier.address || '-' }}</td>
+              <td class="p-2 border">{{ supplier.contact_person || '-' }}</td>
+              <td class="p-2 border">
+                <span :class="supplier.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+                  {{ supplier.status === 1 ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td class="p-2 border">{{ supplier.created_at }}</td>
+              <td class="p-2 border relative">
+                <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white dropdown-button" @click.stop="toggleDropdown(supplier.id)">
+                  Actions ▼
+                </Button>
+                <div v-if="openDropdownId === supplier.id" class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown" @click.stop>
+                  <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(supplier)">✏ Edit</button>
+                  <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(supplier)">
+                    {{ supplier.status === 1 ? 'Inactive' : 'Activate' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Draggable Modal -->
-    <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6" @click.self="resetForm">
-      <div ref="modalRef" class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl" style="top: 100px; position: absolute;">
+    <!-- Draggable & Responsive Modal -->
+    <div v-if="showModal" class="fixed inset-0 z-50 flex items-start justify-center pt-6 px-2 sm:px-4" @click.self="resetForm">
+      <div
+        ref="modalRef"
+        class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-full sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-y-auto"
+        style="top: 100px; position: absolute;"
+      >
+        <!-- Header -->
         <div class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move" @mousedown="startDrag">
-          <h3 class="text-xl font-semibold text-gray-900">
+          <h3 class="text-lg sm:text-xl font-semibold text-gray-900">
             {{ editingSupplier ? 'Edit Supplier' : 'Add New Supplier' }}
           </h3>
           <button type="button" class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center" @click="resetForm">✕</button>
         </div>
 
-        <div class="p-4 space-y-4">
-          <div>
-            <Label for="name" class="mb-2">Supplier Name</Label>
-            <Input v-model="form.name" id="name" />
-          </div>
-          <div>
-            <Label for="supplier_type" class="mb-2">Supplier Type</Label>
-            <select v-model="form.supplier_type" id="supplier_type" class="w-full border rounded p-2">
-              <option value="Local">Local</option>
-              <option value="Foreign">Foreign</option>
-            </select>
-          </div>
-          <div>
-            <Label for="address" class="mb-2">Address</Label>
-            <Input v-model="form.address" id="address" />
-          </div>
-          <div>
-            <Label for="origin" class="mb-2">Origin</Label>
-            <Input v-model="form.origin" id="origin" />
-          </div>
-          <div>
-            <Label for="contact_person" class="mb-2">Contact Person</Label>
-            <Input v-model="form.contact_person" id="contact_person" />
-          </div>
-          <div>
-            <Label for="contact_person_email" class="mb-2">Email</Label>
-            <Input v-model="form.contact_person_email" id="contact_person_email" />
-          </div>
-          <div>
-            <Label for="contact_person_mobile" class="mb-2">Mobile</Label>
-            <Input v-model="form.contact_person_mobile" id="contact_person_mobile" />
-          </div>
-          <div>
-            <Label for="status" class="mb-2">Status</Label>
-            <select v-model="form.status" id="status" class="w-full border rounded p-2">
-              <option :value="1">Active</option>
-              <option :value="0">Inactive</option>
-            </select>
+        <!-- Form -->
+        <div class="p-4 sm:p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label for="name" class="mb-2">Supplier Name</Label>
+              <Input v-model="form.name" id="name" />
+            </div>
+            <div>
+              <Label for="supplier_type" class="mb-2">Supplier Type</Label>
+              <select v-model="form.supplier_type" id="supplier_type" class="w-full border rounded p-2">
+                <option value="Local">Local</option>
+                <option value="Foreign">Foreign</option>
+              </select>
+            </div>
+            <div>
+              <Label for="address" class="mb-2">Address</Label>
+              <Input v-model="form.address" id="address" />
+            </div>
+            <div>
+              <Label for="origin" class="mb-2">Origin</Label>
+              <Input v-model="form.origin" id="origin" />
+            </div>
+            <div>
+              <Label for="contact_person" class="mb-2">Contact Person</Label>
+              <Input v-model="form.contact_person" id="contact_person" />
+            </div>
+            <div>
+              <Label for="contact_person_email" class="mb-2">Email</Label>
+              <Input v-model="form.contact_person_email" id="contact_person_email" />
+            </div>
+            <div>
+              <Label for="contact_person_mobile" class="mb-2">Mobile</Label>
+              <Input v-model="form.contact_person_mobile" id="contact_person_mobile" />
+            </div>
+            <div>
+              <Label for="status" class="mb-2">Status</Label>
+              <select v-model="form.status" id="status" class="w-full border rounded p-2">
+                <option :value="1">Active</option>
+                <option :value="0">Inactive</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div class="flex justify-end p-4 border-t border-gray-200">
-          <Button class="bg-gray-300 text-black mr-2" @click="resetForm">Cancel</Button>
-          <Button class="bg-chicken text-white" @click="submit">{{ editingSupplier ? 'Update' : 'Save' }}</Button>
+        <!-- Footer -->
+        <div class="flex flex-col sm:flex-row justify-end p-4 border-t border-gray-200 gap-2 sm:gap-2">
+          <Button class="bg-gray-300 text-black w-full sm:w-auto" @click="resetForm">Cancel</Button>
+          <Button class="bg-chicken text-white w-full sm:w-auto" @click="submit">{{ editingSupplier ? 'Update' : 'Save' }}</Button>
         </div>
       </div>
     </div>
   </AppLayout>
 </template>
+
