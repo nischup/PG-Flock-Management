@@ -83,7 +83,7 @@ class DailyOperationController extends Controller
             ],
         ];
 
-        return Inertia::render('Dailyoperation/Create', [
+        return Inertia::render('dailyoperation/Create', [
             'stage'      => $stage,   // ✅ Pass stage here
             'flocks'     => $flocks,
             'tabCounts'  => $tabCounts,
