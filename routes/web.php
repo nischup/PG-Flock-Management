@@ -88,7 +88,11 @@ Route::resource('flock-assign', FlockAssignController::class);
 Route::resource('production-firm-receive', ProductionFirmReceiveController::class);
 Route::resource('vaccine-schedule', VaccineScheduleController::class);
 
-
+Route::prefix('daily-operation')->group(function () {
+    Route::get('/stage/{stage}', [DailyOperationController::class, 'index'])
+        ->where('stage', 'brooding|growing|laying|closing')
+        ->name('daily-operation.stage');
+});
 Route::resource('daily-operation', DailyOperationController::class);
 
 Route::get('production/daily-operation', [DailyOperationController::class, 'production']);

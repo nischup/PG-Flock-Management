@@ -71,20 +71,19 @@ const mainNavItems: NavItem[] = [
     children: [
       {
         title: 'Brooding',
-        href: '/daily-operation',
+        href: '/daily-operation/stage/brooding',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
       },
       {
-        title: 'Growing (4/5wk-18/21wks)',
-        href: '/daily-operation',
+        title: 'Growing',
+        href: '/daily-operation/stage/growing',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
-
       },
       {
         title: 'Bird Transfer',
-        href: '/daily-operation',
+        href: '/bird-transfer',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
 
@@ -110,7 +109,7 @@ const mainNavItems: NavItem[] = [
       },
       {
         title: 'Daily Operation',
-        href: '/production/daily-operation',
+        href: '/daily-operation/stage/laying',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
       },

@@ -11,10 +11,11 @@ class DailyOperationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, ?string $stage = null)
     {
-       
-        // Dummy Data
+        // Default stage = brooding if not provided
+        $stage = $stage ?? 'brooding';
+
         $dailyOperations = [
             'data' => [
                 [
@@ -27,76 +28,28 @@ class DailyOperationController extends Controller
                     'water_consumption' => '150 L',
                     'light_hour' => 8,
                     'note' => 'Normal day',
-                ],
-                [
-                    'id' => 2,
-                    'operation_date' => '2025-08-02',
-                    'flock_code' => '1-22B',
-                    'male_mortality' => 2,
-                    'female_mortality' => 4,
-                    'feed_consumption' => '180 Kg',
-                    'water_consumption' => '130 L',
-                    'light_hour' => 9,
-                    'note' => 'Slight heat stress',
+                    'stage' => $stage,
                 ],
             ],
             'meta' => [
                 'current_page' => 1,
                 'last_page' => 1,
                 'per_page' => 10,
-                'total' => 2,
+                'total' => 1,
             ],
         ];
 
         return Inertia::render('Dailyoperation/List', [
             'dailyOperations' => $dailyOperations,
             'filters' => $request->only(['search', 'per_page', 'page']),
+            'stage' => $stage,
         ]);
-         
-    }
-
-    public function production(){
-       $flocks = [
-            ['id' => 1, 'flock_code' => '1-22A'],
-            ['id' => 2, 'flock_code' => '1-22B'],
-            ['id' => 3, 'flock_code' => '2-22A'],
-        ];
-
-
-        // Dummy tab counts per flock
-        $tabCounts = [
-            1 => [
-                'daily_mortality' => 10,
-                'feed_consumption' => "200 Kg",
-                'water_consumption' => "500 L",
-                'culling' => 5,
-                'egg_collection' => 10000,
-            ],
-            2 => [
-                'daily_mortality' => 10,
-                'feed_consumption' => "200 Kg",
-                'water_consumption' => "500 L",
-                'culling' => 5,
-                'egg_collection' => 10000,
-            ],
-            3 => [
-                'daily_mortality' => 10,
-                'feed_consumption' => "200 Kg",
-                'water_consumption' => "500 L",
-                'culling' => 5,
-                'egg_collection' => 10000,
-            ],
-        ];
-
-        return Inertia::render('production/DailyoperationCreate', [
-            'flocks' => $flocks
-        ]); 
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create($stage)
     {
         // Dummy flocks
         $flocks = [
@@ -105,36 +58,38 @@ class DailyOperationController extends Controller
             ['id' => 3, 'flock_code' => '2-22A'],
         ];
 
-
         // Dummy tab counts per flock
         $tabCounts = [
             1 => [
-                'daily_mortality' => 10,
-                'feed_consumption' => "200 Kg",
+                'daily_mortality'   => 10,
+                'feed_consumption'  => "200 Kg",
                 'water_consumption' => "500 L",
-                'culling' => 5,
-                'egg_collection' => 10000,
+                'culling'           => 5,
+                'egg_collection'    => 10000,
             ],
             2 => [
-                'daily_mortality' => 10,
-                'feed_consumption' => "200 Kg",
+                'daily_mortality'   => 10,
+                'feed_consumption'  => "200 Kg",
                 'water_consumption' => "500 L",
-                'culling' => 5,
-                'egg_collection' => 10000,
+                'culling'           => 5,
+                'egg_collection'    => 10000,
             ],
             3 => [
-                'daily_mortality' => 10,
-                'feed_consumption' => "200 Kg",
+                'daily_mortality'   => 10,
+                'feed_consumption'  => "200 Kg",
                 'water_consumption' => "500 L",
-                'culling' => 5,
-                'egg_collection' => 10000,
+                'culling'           => 5,
+                'egg_collection'    => 10000,
             ],
         ];
 
-        return Inertia::render('dailyoperation/Create', [
-            'flocks' => $flocks
+        return Inertia::render('Dailyoperation/Create', [
+            'stage'      => $stage,   // ✅ Pass stage here
+            'flocks'     => $flocks,
+            'tabCounts'  => $tabCounts,
         ]);
     }
+
 
     /**
      * Store a newly created resource in storage.
