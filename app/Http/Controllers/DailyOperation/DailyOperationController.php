@@ -14,7 +14,7 @@ class DailyOperationController extends Controller
     public function index(Request $request)
     {
        
-        // Dummy data
+        // Dummy Data
         $dailyOperations = [
             'data' => [
                 [
@@ -48,14 +48,12 @@ class DailyOperationController extends Controller
             ],
         ];
 
-        return Inertia::render('dailyoperation/List', [
+        return Inertia::render('Dailyoperation/List', [
             'dailyOperations' => $dailyOperations,
             'filters' => $request->only(['search', 'per_page', 'page']),
         ]);
          
     }
-
-
 
     public function production(){
        $flocks = [
@@ -94,14 +92,6 @@ class DailyOperationController extends Controller
             'flocks' => $flocks
         ]); 
     }
-
-
-
-
-
-
-
-
 
     /**
      * Show the form for creating a new resource.
