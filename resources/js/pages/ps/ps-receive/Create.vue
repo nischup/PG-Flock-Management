@@ -193,18 +193,19 @@ function validateTab(index: number) {
         <!-- Tabs Navigation -->
 <div class="flex items-center justify-between mb-6">
   <!-- Tabs -->
-  <div class="flex space-x-2">
-    <button
-      v-for="(tab, index) in tabs"
-      :key="tab.key"
-      type="button"
-      @click="activeTab = index"
-      class="px-4 py-2 rounded-md font-medium"
-      :class="activeTab === index ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'"
-    >
-      {{ tab.label }}
-    </button>
+  <div class="flex flex-wrap gap-4 mb-6">
+  <div
+    v-for="(tab, index) in tabs"
+    :key="tab.key"
+    @click="activeTab = index"
+    class="cursor-pointer p-6 border shadow text-center font-semibold transition-transform hover:scale-105 flex-1 min-w-[150px]"
+    :class="activeTab === index 
+      ? 'bg-chicken text-white' 
+      : 'bg-white text-gray-700 hover:bg-gray-100'"
+  >
+    {{ tab.label }}
   </div>
+</div>
 
   <!-- List Link aligned to right -->
   <Link 
@@ -225,7 +226,7 @@ function validateTab(index: number) {
   </div>
 
   <div class="grid grid-cols-3 gap-6">
-    <div class="flex flex-col mb-4">
+    <div class="flex flex-col">
       <Label>Shipment Type</Label>
       <select v-model="form.shipment_type_id" class="mt-2 border rounded px-3 py-2">
         <option :value="1">Local</option>
@@ -234,43 +235,43 @@ function validateTab(index: number) {
       <InputError :message="form.errors.shipment_type_id" class="mt-1" />
     </div>
 
-    <div class="flex flex-col mb-4">
+    <div class="flex flex-col">
       <Label>PI No</Label>
       <Input v-model="form.pi_no" type="text" placeholder="Enter PI No" class="mt-2" />
       <InputError :message="form.errors.pi_no" class="mt-1" />
     </div>
 
-    <div class="flex flex-col mb-4">
+    <div class="flex flex-col">
       <Label>PI Date</Label>
       <Datepicker v-model="form.pi_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select PI Date" />
       <InputError :message="form.errors.pi_date" class="mt-1" />
     </div>
 
-    <div class="flex flex-col mb-4">
+    <div class="flex flex-col">
       <Label>Order No</Label>
       <Input v-model="form.order_no" type="text" placeholder="Enter Order No" class="mt-2" />
       <InputError :message="form.errors.order_no" class="mt-1" />
     </div>
 
-    <div class="flex flex-col mb-4">
+    <div class="flex flex-col">
       <Label>Order Date</Label>
       <Datepicker v-model="form.order_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select Order Date" />
       <InputError :message="form.errors.order_date" class="mt-1" />
     </div>
 
-    <div v-if="form.shipment_type_id != 1" class="flex flex-col mb-4">
+    <div v-if="form.shipment_type_id != 1" class="flex flex-col">
       <Label>LC No</Label>
       <Input v-model="form.lc_no" type="text" placeholder="Enter LC No" class="mt-2" />
       <InputError :message="form.errors.lc_no" class="mt-1" />
     </div>
 
-    <div v-if="form.shipment_type_id != 1" class="flex flex-col mb-4">
+    <div v-if="form.shipment_type_id != 1" class="flex flex-col">
       <Label>LC Date</Label>
       <Datepicker v-model="form.lc_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select LC Date" />
       <InputError :message="form.errors.lc_date" class="mt-1" />
     </div>
 
-    <div class="flex flex-col mb-4">
+    <div class="flex flex-col">
       <Label>Supplier Name</Label>
       <select v-model="form.supplier_id" class="mt-2 border rounded px-3 py-2">
         <option value="">Select One</option>
@@ -279,7 +280,7 @@ function validateTab(index: number) {
       <InputError :message="form.errors.supplier_id" class="mt-1" />
     </div>
 
-    <div class="flex flex-col mb-4">
+    <div class="flex flex-col">
       <Label>Breed Type</Label>
       <select v-model="form.breed_type" class="mt-2 border rounded px-3 py-2">
         <option value="">Select One</option>
@@ -289,7 +290,7 @@ function validateTab(index: number) {
       <InputError :message="form.errors.breed_type" class="mt-1" />
     </div>
 
-    <div v-if="form.shipment_type_id == 2" class="flex flex-col mb-4">
+    <div v-if="form.shipment_type_id == 2" class="flex flex-col">
       <Label>Country of Origin</Label>
       <select v-model="form.country_of_origin" class="mt-2 border rounded px-3 py-2">
         <option value="">Select One</option>
@@ -299,7 +300,7 @@ function validateTab(index: number) {
       <InputError :message="form.errors.country_of_origin" class="mt-1" />
     </div>
 
-    <div class="flex flex-col mb-4">
+    <div class="flex flex-col">
       <Label>Transport Type</Label>
       <select v-model="form.transport_type" class="mt-2 border rounded px-3 py-2">
         <option value="">Select One</option>
@@ -310,7 +311,7 @@ function validateTab(index: number) {
       <InputError :message="form.errors.transport_type" class="mt-1" />
     </div>
 
-    <div class="flex flex-col mb-4">
+    <div class="flex flex-col">
       <Label>Shift To</Label>
       <select v-model="form.company_id" class="mt-2 border rounded px-3 py-2">
         <option value="0">Select One</option>
@@ -320,20 +321,20 @@ function validateTab(index: number) {
       <InputError :message="form.errors.company_id" class="mt-1" />
     </div>
 
-    <div class="flex flex-col mb-4 col-span-3">
+    <div class="flex flex-col col-span-3">
       <Label>Note</Label>
       <textarea v-model="form.remarks" class="border rounded px-3 py-2 mt-2" placeholder="Enter any Note"></textarea>
       <InputError :message="form.errors.remarks" class="mt-1" />
     </div>
 
     <!-- File upload -->
-    <div class="flex flex-col mb-4 col-span-3">
+    <div class="flex flex-col col-span-3">
       <FileUploader
         v-model="form.file"
         label="Upload Files"
         :max-files="3"
         accept=".jpg,.jpeg,.png,.pdf"
-        wrapper-class="flex flex-col mb-4 mt-5"
+        wrapper-class="flex flex-col mt-5"
       />
       <InputError :message="form.errors.file" class="mt-1" />
     </div>
