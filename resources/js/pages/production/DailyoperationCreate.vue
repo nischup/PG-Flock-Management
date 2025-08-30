@@ -261,11 +261,22 @@ function validateTab(tabKey: string): boolean {
   return ok
 }
 
+const completedTabs = ref<number[]>([])
+
 // Navigation (guarded)
 function nextTab() {
   const key = activeTab.value
   if (!validateTab(key)) return
+  
+
+  // mark current tab as completed
+  if (!completedTabs.value.includes(activeTabIndex.value)) {
+    completedTabs.value.push(activeTabIndex.value)
+  }
+
+
   if (activeTabIndex.value < tabs.length - 1) activeTabIndex.value++
+  
 }
 
 function prevTab() {
@@ -364,8 +375,14 @@ function submit() {
           v-for="(tab, index) in tabs"
           :key="tab.key"
           @click="goToTab(index)"
-          class="cursor-pointer p-6 border rounded-lg shadow text-center font-semibold transition-transform hover:scale-105"
-          :class="activeTabIndex === index ? 'bg-chicken text-white' : 'bg-white text-gray-700'"
+          class="cursor-pointer p-6 border shadow text-center font-semibold transition-transform hover:scale-105"
+          :class="[
+  activeTabIndex === index 
+    ? 'bg-chicken text-white'
+    : completedTabs.includes(index) 
+      ? 'bg-gradient-to-r from-green-400 via-green-500 to-green-600 text-white'
+      : 'bg-white text-gray-700'
+]"
         >
           {{ tab.label }}
           <span v-if="counts[tab.key] !== undefined" class="block mt-2 text-black text-2xl font-bold">
