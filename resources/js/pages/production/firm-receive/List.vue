@@ -196,7 +196,7 @@ const saveTransfer = () => {
               <td class="px-4 py-2 border-b">200</td>
               <td class="px-4 py-2 border-b">10200</td>
               <td class="px-4 py-2 border-b">
-                <button class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-chicken mr-2">Edit</button>
+                
                 <button
                   class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 mr-2"
                   @click="openTransferModal(flock)"
@@ -227,45 +227,7 @@ const saveTransfer = () => {
 
     <!-- Body -->
     <div class="p-6 space-y-4">
-      <!-- Company -->
- <!-- Company (From & To) -->
-<div>
-
-  <div class="grid grid-cols-2 gap-4">
-    <!-- From Company -->
-    <div>
-      <label class="block text-xs font-medium mb-1">From</label>
-      <select v-model="transferFromCompany" class="w-full border rounded px-3 py-2">
-        <option disabled value="">Select From Project</option>
-        <option v-for="company in companyOptions" :key="company.id" :value="company.name">
-          {{ company.name }}
-        </option>
-      </select>
-    </div>
-
-    <!-- To Company -->
-    <div>
-      <label class="block text-xs font-medium mb-1">To</label>
-      <select v-model="transferToCompany" class="w-full border rounded px-3 py-2">
-        <option disabled value="">Select To Project</option>
-        <option v-for="company in companyOptions" :key="company.id" :value="company.name">
-          {{ company.name }}
-        </option>
-      </select>
-    </div>
-  </div>
-</div>
-
       <!-- Flock (readonly to show which one is being transferred) -->
-      <div>
-        <label class="block text-sm font-medium mb-1">Flock No</label>
-         <select v-model="newFlockName" class="w-full border rounded px-3 py-2">
-          <option disabled value="">Select Flock No</option>
-          <option v-for="flock in flockOptions" :key="flock.id" :value="flock.name">
-            {{ flock.name }}
-          </option>
-        </select>
-      </div>
 
   <div class="grid grid-cols-3 gap-4">
     <!-- Female Company -->

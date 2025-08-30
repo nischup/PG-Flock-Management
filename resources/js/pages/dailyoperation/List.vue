@@ -124,7 +124,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                   @click="deleteOperation(op.id)" 
                   class="text-red-600 hover:underline font-medium"
                 >
-                  Delete
+                  Transfer
                 </button>
               </td>
             </tr>

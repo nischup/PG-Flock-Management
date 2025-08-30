@@ -108,7 +108,7 @@ const mainNavItems: NavItem[] = [
         iconClass: 'text-yellow-500',
       },
       {
-        title: 'Daily Operation',
+        title: 'Laying',
         href: '/daily-operation/stage/laying',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
