@@ -4,7 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import PlaceholderPattern from '../components/PlaceholderPattern.vue';
 import ChartCard from "../components/ChartCard.vue";
-import WeatherWidget from '../components/WehatherWidget.vue';
+
 
 import { ref, computed, watch } from 'vue';
 
@@ -219,8 +219,6 @@ watch([selectedFlock, startDate, endDate], () => {
                 </div>
             </div>
             <div class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                
-                  <WeatherWidget/>
                 <PlaceholderPattern />
             </div>
         </div>

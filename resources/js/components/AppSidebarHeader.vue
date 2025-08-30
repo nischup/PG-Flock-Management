@@ -2,9 +2,10 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import Clock from '@/components/Clock.vue' // reusable clock component
-import { Bell } from 'lucide-vue-next';
+import { ref } from 'vue';
 import type { BreadcrumbItemType } from '@/types';
 import WeatherWidget from '../components/WehatherWidget.vue';
+import NotificationBell from '../components/NotificationBell.vue';
 
 withDefaults(
     defineProps<{
@@ -14,6 +15,30 @@ withDefaults(
         breadcrumbs: () => [],
     },
 );
+
+const userNotifications = ref([
+  {
+    id: 1,
+    userId: 101,
+    userName: 'John Doe',
+    message: 'Sent you a message',
+    avatar: 'https://i.pravatar.cc/40?img=1'
+  },
+  {
+    id: 2,
+    userId: 102,
+    userName: 'Sarah Lee',
+    message: 'Commented on your post',
+    avatar: 'https://i.pravatar.cc/40?img=2'
+  },
+  {
+    id: 3,
+    userId: 103,
+    userName: 'Mike',
+    message: 'Liked your photo',
+    avatar: null
+  }
+])
 </script>
 
 <template>
@@ -76,9 +101,8 @@ withDefaults(
     >
       
        
-      <Bell />
-      <!-- Red notification dot -->
-      <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+      <NotificationBell :notifications="userNotifications" />
+      
     </button>
 
     <!-- Clock -->
