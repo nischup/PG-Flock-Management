@@ -55,6 +55,11 @@ const breadcrumbs = [
 // -----------------------
 const startDrag = (event: MouseEvent) => {
   if (!modalRef.value) return
+
+  // Prevent drag if clicking a button
+  const target = event.target as HTMLElement
+  if (target.closest('button')) return
+
   isDragging = true
   const rect = modalRef.value.getBoundingClientRect()
   offsetX = event.clientX - rect.left
@@ -172,7 +177,6 @@ const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
 }
 
-// ✅ Corrected Status Toggle
 const toggleStatus = (supplier: Supplier) => {
   const newStatus = supplier.status === 1 ? 0 : 1
 
@@ -188,7 +192,19 @@ const toggleStatus = (supplier: Supplier) => {
 </script>
 
 <template>
-  <AppLayout :breadcrumbs="breadcrumbs">
+  <AppLayout>
+    <!-- Responsive Breadcrumbs -->
+    <template #breadcrumbs>
+      <nav class="flex flex-wrap items-center gap-2 text-sm sm:text-base text-gray-600">
+        <template v-for="(crumb, index) in breadcrumbs" :key="index">
+          <a :href="crumb.href" class="hover:underline truncate max-w-[120px] sm:max-w-[200px] block">
+            {{ crumb.title }}
+          </a>
+          <span v-if="index < breadcrumbs.length - 1">/</span>
+        </template>
+      </nav>
+    </template>
+
     <Head title="Suppliers" />
 
     <div class="px-2 sm:px-4 py-6">
@@ -198,52 +214,52 @@ const toggleStatus = (supplier: Supplier) => {
         <Button class="bg-chicken hover:bg-yellow-600 text-white w-full sm:w-auto" @click="openModal()">+ Add New</Button>
       </div>
 
-      <!-- Table wrapper for horizontal scroll -->
-      <div class="overflow-x-auto border rounded">
-        <table class="min-w-[700px] w-full border">
-          <thead>
+      <!-- Table wrapper -->
+     <div class="overflow-x-auto md:overflow-x-visible border-t border-gray-300 w-full">
+        <table class="min-w-[700px] w-full">
+            <thead>
             <tr class="bg-gray-100">
-              <th class="p-2 border text-left">#</th>
-              <th class="p-2 border text-left">Name</th>
-              <th class="p-2 border text-left">Type</th>
-              <th class="p-2 border text-left">Address</th>
-              <th class="p-2 border text-left">Contact</th>
-              <th class="p-2 border text-left">Status</th>
-              <th class="p-2 border text-left">Created At</th>
-              <th class="p-2 border text-left">Action</th>
+                <th class="p-2 border text-left">#</th>
+                <th class="p-2 border text-left">Name</th>
+                <th class="p-2 border text-left">Type</th>
+                <th class="p-2 border text-left">Address</th>
+                <th class="p-2 border text-left">Contact</th>
+                <th class="p-2 border text-left">Status</th>
+                <th class="p-2 border text-left">Created At</th>
+                <th class="p-2 border text-left">Action</th>
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody>
             <tr v-for="(supplier, index) in suppliers" :key="supplier.id">
-              <td class="p-2 border">{{ index + 1 }}</td>
-              <td class="p-2 border">{{ supplier.name }}</td>
-              <td class="p-2 border">{{ supplier.supplier_type }}</td>
-              <td class="p-2 border">{{ supplier.address || '-' }}</td>
-              <td class="p-2 border">{{ supplier.contact_person || '-' }}</td>
-              <td class="p-2 border">
+                <td class="p-2 border">{{ index + 1 }}</td>
+                <td class="p-2 border">{{ supplier.name }}</td>
+                <td class="p-2 border">{{ supplier.supplier_type }}</td>
+                <td class="p-2 border">{{ supplier.address || '-' }}</td>
+                <td class="p-2 border">{{ supplier.contact_person || '-' }}</td>
+                <td class="p-2 border">
                 <span :class="supplier.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-                  {{ supplier.status === 1 ? 'Active' : 'Inactive' }}
+                    {{ supplier.status === 1 ? 'Active' : 'Inactive' }}
                 </span>
-              </td>
-              <td class="p-2 border">{{ supplier.created_at }}</td>
-              <td class="p-2 border relative">
+                </td>
+                <td class="p-2 border">{{ supplier.created_at }}</td>
+                <td class="p-2 border relative">
                 <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white dropdown-button" @click.stop="toggleDropdown(supplier.id)">
-                  Actions ▼
+                    Actions ▼
                 </Button>
                 <div v-if="openDropdownId === supplier.id" class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown" @click.stop>
-                  <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(supplier)">✏ Edit</button>
-                  <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(supplier)">
+                    <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(supplier)">✏ Edit</button>
+                    <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(supplier)">
                     {{ supplier.status === 1 ? 'Inactive' : 'Activate' }}
-                  </button>
+                    </button>
                 </div>
-              </td>
+                </td>
             </tr>
-          </tbody>
+            </tbody>
         </table>
-      </div>
+        </div>
     </div>
 
-    <!-- Draggable & Responsive Modal -->
+    <!-- Modal -->
     <div v-if="showModal" class="fixed inset-0 z-50 flex items-start justify-center pt-6 px-2 sm:px-4" @click.self="resetForm">
       <div
         ref="modalRef"
@@ -311,4 +327,3 @@ const toggleStatus = (supplier: Supplier) => {
     </div>
   </AppLayout>
 </template>
-
