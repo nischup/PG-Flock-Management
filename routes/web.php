@@ -45,7 +45,7 @@ Route::get('dashboard', function (Request $request) {
             ],
             2 => [
                 'mortality' => 15,
-                'feed' => 180,
+                'feed' => 200,
                 'water' => 130,
             ],
             3 => [
