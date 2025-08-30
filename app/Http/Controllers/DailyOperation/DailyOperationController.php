@@ -39,7 +39,7 @@ class DailyOperationController extends Controller
             ],
         ];
 
-        return Inertia::render('Dailyoperation/List', [
+        return Inertia::render('dailyoperation/List', [
             'dailyOperations' => $dailyOperations,
             'filters' => $request->only(['search', 'per_page', 'page']),
             'stage' => $stage,
