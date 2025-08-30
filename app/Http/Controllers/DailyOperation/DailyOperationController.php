@@ -49,7 +49,7 @@ class DailyOperationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create($stage)
+    public function create($stage = 1)
     {
         // Dummy flocks
         $flocks = [

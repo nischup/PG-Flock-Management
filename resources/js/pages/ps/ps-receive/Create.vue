@@ -13,7 +13,7 @@ import { ArrowLeft } from 'lucide-vue-next'
 import FileUploader from '@/components/FileUploader.vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import { watch } from 'vue'
+import { watch  } from 'vue'
 
 
 // Breadcrumb
@@ -137,17 +137,24 @@ function updateTotalQty() {
 
 
 const tabs = [
-  { key: 'master', label: 'Master Info' },
+  { key: 'master', label: 'Shipment Info' },
   { key: 'receive', label: 'Receive Quantity' },
   { key: 'lab', label: 'Lab Transfer' },
 ]
 
 const activeTab = ref(0)
 const tabErrors = ref<{ [key: string]: string }>({})
-
+const completedTabs = ref<number[]>([])
 function goNext() {
   if (!validateTab(activeTab.value)) return
-  if (activeTab.value < tabs.length - 1) activeTab.value++
+
+  if (!completedTabs.value.includes(activeTab.value)) {
+    completedTabs.value.push(activeTab.value)
+  }
+
+  if (activeTab.value < tabs.length - 1) {
+    activeTab.value++
+  }
 }
 
 function goPrevious() {
@@ -171,7 +178,10 @@ function validateTab(index: number) {
   }
 
   if (tabs[index].key === 'lab') {
-    if (form.lab_send_total_qty <= 0 && form.provita_lab_send_female_qty + form.provita_lab_send_male_qty <= 0) {
+    if (
+      form.lab_send_total_qty <= 0 &&
+      form.provita_lab_send_female_qty + form.provita_lab_send_male_qty <= 0
+    ) {
       tabErrors.value.lab_send_total_qty = 'At least one lab qty required'
       return false
     }
@@ -180,6 +190,7 @@ function validateTab(index: number) {
 
   return true
 }
+
 
 </script>
 
@@ -190,34 +201,37 @@ function validateTab(index: number) {
     <div class="px-4 py-6 space-y-8">
       <form @submit.prevent="submit" class="space-y-8" enctype="multipart/form-data">
         
-        <!-- Tabs Navigation -->
-<div class="flex items-center justify-between mb-6">
-  <!-- Tabs -->
-  <div class="flex flex-wrap gap-4 mb-6">
-  <div
+      <!-- Tabs Navigation -->
+      <div class="flex items-center justify-between mb-6">
+          <!-- Tabs -->
+          <div class="flex flex-wrap gap-4 mb-6">
+          <div
     v-for="(tab, index) in tabs"
     :key="tab.key"
     @click="activeTab = index"
     class="cursor-pointer p-6 border shadow text-center font-semibold transition-transform hover:scale-105 flex-1 min-w-[150px]"
-    :class="activeTab === index 
-      ? 'bg-chicken text-white' 
-      : 'bg-white text-gray-700 hover:bg-gray-100'"
+    :class="[
+      activeTab === index
+        ? 'bg-chicken text-white'
+        : completedTabs.includes(index)
+          ? 'bg-green-500 text-white'
+          : 'bg-white text-gray-700 hover:bg-gray-100'
+    ]"
   >
     {{ tab.label }}
   </div>
-</div>
+      </div>
 
-  <!-- List Link aligned to right -->
-  <Link 
-    href="/ps-receive" 
-    class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center gap-1"
-  >
-    <ArrowLeft class="w-4 h-4" /> List
-  </Link>
-</div>
+    <!-- List Link aligned to right -->
+    <Link 
+      href="/ps-receive" 
+      class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center gap-1"
+    >
+      <ArrowLeft class="w-4 h-4" /> List
+    </Link>
+  </div>
 
-        <!-- Tab Content -->
-        <!-- Master Info -->
+        
         <!-- Master Info Tab -->
 <div v-if="activeTab === 0" class="space-y-6 border-b p-4 rounded-lg shadow-sm bg-white">
   <div class="pb-3 mb-6 flex items-center justify-between">
@@ -237,13 +251,13 @@ function validateTab(index: number) {
 
     <div class="flex flex-col">
       <Label>PI No</Label>
-      <Input v-model="form.pi_no" type="text" placeholder="Enter PI No" class="mt-2" />
-      <InputError :message="form.errors.pi_no" class="mt-1" />
+      <Input v-model="form.pi_no" type="text" placeholder="Enter PI No" class="mt-2"  :class="tabErrors.pi_no ? 'border-red-500' : form.errors.pi_no ? 'border-red-500' : 'border-gray-300'"/>
+      <InputError :message="tabErrors.pi_no || form.errors.pi_no" class="mt-1" />
     </div>
 
     <div class="flex flex-col">
       <Label>PI Date</Label>
-      <Datepicker v-model="form.pi_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select PI Date" />
+      <Datepicker v-model="form.pi_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select PI Date" :auto-apply="true"/>
       <InputError :message="form.errors.pi_date" class="mt-1" />
     </div>
 
@@ -255,7 +269,7 @@ function validateTab(index: number) {
 
     <div class="flex flex-col">
       <Label>Order Date</Label>
-      <Datepicker v-model="form.order_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select Order Date" />
+      <Datepicker v-model="form.order_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select Order Date"  :auto-apply="true"/>
       <InputError :message="form.errors.order_date" class="mt-1" />
     </div>
 
@@ -267,7 +281,7 @@ function validateTab(index: number) {
 
     <div v-if="form.shipment_type_id != 1" class="flex flex-col">
       <Label>LC Date</Label>
-      <Datepicker v-model="form.lc_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select LC Date" />
+      <Datepicker v-model="form.lc_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select LC Date" :auto-apply="true"/>
       <InputError :message="form.errors.lc_date" class="mt-1" />
     </div>
 
@@ -312,7 +326,7 @@ function validateTab(index: number) {
     </div>
 
     <div class="flex flex-col">
-      <Label>Shift To</Label>
+      <Label>Ship To</Label>
       <select v-model="form.company_id" class="mt-2 border rounded px-3 py-2">
         <option value="0">Select One</option>
         <option value="1">PBL</option>
@@ -453,24 +467,22 @@ function validateTab(index: number) {
 
         <!-- Navigation Buttons -->
         <div class="flex justify-between mt-4">
-          <!-- Previous Button -->
-          <Button 
-            type="button" 
-            class="bg-black text-white" 
-            @click="goPrevious" 
-            :disabled="activeTab === 0"
-          >
-            Previous
-          </Button>
+          <Button
+    type="button"
+    class="bg-black text-white"
+    @click="goPrevious"
+    :disabled="activeTab === 0"
+  >
+    Previous
+  </Button>
 
-          <!-- Next / Submit Button -->
-          <Button 
-            type="button" 
-            class="bg-black text-white" 
-            @click="activeTab === tabs.length - 1 ? submit() : goNext"
-          >
-            {{ activeTab === tabs.length - 1 ? 'Submit' : 'Next' }}
-          </Button>
+  <Button
+    type="button"
+    class="bg-black text-white"
+    @click="activeTab === tabs.length - 1 ? submit() : goNext()"
+  >
+    {{ activeTab === tabs.length - 1 ? 'Submit' : 'Next' }}
+  </Button>
         </div>
 
         
