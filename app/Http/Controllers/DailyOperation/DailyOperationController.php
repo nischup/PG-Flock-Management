@@ -49,7 +49,7 @@ class DailyOperationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create($stage = 1)
+    public function create($stage)
     {
         // Dummy flocks
         $flocks = [
@@ -83,7 +83,7 @@ class DailyOperationController extends Controller
             ],
         ];
 
-        return Inertia::render('production/DailyoperationCreate', [
+        return Inertia::render('dailyoperation/Create', [
             'stage'      => $stage,   // ✅ Pass stage here
             'flocks'     => $flocks,
             'tabCounts'  => $tabCounts,

@@ -22,7 +22,9 @@ use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\Master\BreedTypeController;
 use App\Http\Controllers\Production\EggClassificationController;
 use App\Http\Controllers\WeatherController;
+use App\Http\Controllers\Transfer\BirdTransferController;
 use Illuminate\Http\Request;
+
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
@@ -87,13 +89,18 @@ Route::resource('shed-receive', ShedReceiveController::class);
 Route::resource('flock-assign', FlockAssignController::class);
 Route::resource('production-firm-receive', ProductionFirmReceiveController::class);
 Route::resource('vaccine-schedule', VaccineScheduleController::class);
+Route::resource('bird-transfer', BirdTransferController::class);
 
 Route::prefix('daily-operation')->group(function () {
     Route::get('/stage/{stage}', [DailyOperationController::class, 'index'])
         ->where('stage', 'brooding|growing|laying|closing')
         ->name('daily-operation.stage');
+
+    Route::get('/stage/{stage}/create', [DailyOperationController::class, 'create'])
+        ->where('stage', 'brooding|growing|laying|closing')
+        ->name('daily-operation.stage.create');
 });
-Route::resource('daily-operation', DailyOperationController::class);
+
 
 Route::get('/mortality/create', [DailyOperationController::class, 'mortality']);
 Route::get('/overview', [DailyOperationController::class, 'overview']);
