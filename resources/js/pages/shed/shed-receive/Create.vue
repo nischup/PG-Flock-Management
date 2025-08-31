@@ -99,17 +99,17 @@ function submit() {
     <form @submit.prevent="submit" class="p-6 space-y-6">
 
 
-      <div class="pb-3 mb-6 flex items-center justify-between">
-            <!-- Left: Title -->
-            <h2 class="text-xl font-semibold">Parent Stock Shed Receiving Info.</h2>
+    <div class="pb-3 mb-6 flex items-center justify-between">
+      <!-- Left: Title -->
+      <h2 class="text-xl font-semibold">Parent Stock Shed Receiving Info.</h2>
 
-            <Link 
-              href="/shed-receive" 
-              class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center gap-1"
-            >
-              <ArrowLeft class="w-4 h-4" /> List
-            </Link>
-        </div>
+      <Link 
+        href="/shed-receive" 
+        class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center gap-1"
+      >
+        <ArrowLeft class="w-4 h-4" /> List
+      </Link>
+    </div>
           
      <!-- Section: Receiving Information -->
     <div class="border rounded-lg p-4 shadow-sm bg-white">

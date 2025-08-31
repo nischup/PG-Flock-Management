@@ -79,6 +79,9 @@ const piCardData: Record<string, any[]> = {
     { title: 'Male Chicks', value: 2000 },
     { title: 'Female Chicks', value: 10000 },
     { title: 'Mortality', value: 500 },
+    { title: 'Min Age', value: "5 Weeks 2 Days " },
+    { title: 'Max Age', value: "9 Weeks 2 Days " },
+    
   ],
   PI002: [
     
@@ -87,6 +90,9 @@ const piCardData: Record<string, any[]> = {
     { title: 'Male Chicks', value: 2000 },
     { title: 'Female Chicks', value: 10000 },
     { title: 'Mortality', value: 500 },
+    { title: 'Mortality', value: 500 },
+    { title: 'Min Age', value: "7 Weeks 5 Days " },
+    { title: 'Max Age', value: "9 Weeks 2 Days " },
   ],
   PI003: [
     { title: 'Total Chicks', value: 11000},
@@ -94,6 +100,9 @@ const piCardData: Record<string, any[]> = {
     { title: 'Male Chicks', value: 2000 },
     { title: 'Female Chicks', value: 10000 },
     { title: 'Mortality', value: 500 },
+    { title: 'Mortality', value: 500 },
+    { title: 'Min Age', value: "3 Weeks 4 Days " },
+    { title: 'Max Age', value: "7 Weeks 2 Days " },
   ]
 }
 // Selected PI

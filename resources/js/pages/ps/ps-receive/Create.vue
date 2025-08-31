@@ -35,6 +35,8 @@ const form = useForm({
   breed_type: '',
   country_of_origin: '',
   transport_type: '',
+  t_inside_temp:'',
+
   remarks: '',
   file: [], // file upload
   labfile:[],
@@ -43,6 +45,7 @@ const form = useForm({
   company_id:0,
   ps_bonus_qty:0,
   
+
   ps_male_rec_box: 0,             // Male Box Receive Qty
   ps_male_qty: 0,                 // Male Chicks Qty (can be auto-calculated if needed)
 
@@ -231,129 +234,134 @@ function validateTab(index: number) {
     </Link>
   </div>
 
-        
         <!-- Master Info Tab -->
-<div v-if="activeTab === 0" class="space-y-6 border-b p-4 rounded-lg shadow-sm bg-white">
-  <div class="pb-3 mb-6 flex items-center justify-between">
-    <h2 class="text-xl font-semibold">Parent Stock Receiving Info.</h2>
-    
-  </div>
+        <div v-if="activeTab === 0" class="space-y-6 border-b p-4 rounded-lg shadow-sm bg-white">
+          <div class="pb-3 mb-6 flex items-center justify-between">
+            <h2 class="text-xl font-semibold">Parent Stock Receiving Info.</h2>
+            
+          </div>
 
-  <div class="grid grid-cols-3 gap-6">
-    <div class="flex flex-col">
-      <Label>Shipment Type</Label>
-      <select v-model="form.shipment_type_id" class="mt-2 border rounded px-3 py-2">
-        <option :value="1">Local</option>
-        <option :value="2">Foreign</option>
-      </select>
-      <InputError :message="form.errors.shipment_type_id" class="mt-1" />
-    </div>
+          <div class="grid grid-cols-3 gap-6">
+            <div class="flex flex-col">
+              <Label>Shipment Type</Label>
+              <select v-model="form.shipment_type_id" class="mt-2 border rounded px-3 py-2">
+                <option :value="1">Local</option>
+                <option :value="2">Foreign</option>
+              </select>
+              <InputError :message="form.errors.shipment_type_id" class="mt-1" />
+            </div>
 
-    <div class="flex flex-col">
-      <Label>PI No</Label>
-      <Input v-model="form.pi_no" type="text" placeholder="Enter PI No" class="mt-2"  :class="tabErrors.pi_no ? 'border-red-500' : form.errors.pi_no ? 'border-red-500' : 'border-gray-300'"/>
-      <InputError :message="tabErrors.pi_no || form.errors.pi_no" class="mt-1" />
-    </div>
+            <div class="flex flex-col">
+              <Label>PI No</Label>
+              <Input v-model="form.pi_no" type="text" placeholder="Enter PI No" class="mt-2"  :class="tabErrors.pi_no ? 'border-red-500' : form.errors.pi_no ? 'border-red-500' : 'border-gray-300'"/>
+              <InputError :message="tabErrors.pi_no || form.errors.pi_no" class="mt-1" />
+            </div>
 
-    <div class="flex flex-col">
-      <Label>PI Date</Label>
-      <Datepicker v-model="form.pi_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select PI Date" :auto-apply="true"/>
-      <InputError :message="form.errors.pi_date" class="mt-1" />
-    </div>
+            <div class="flex flex-col">
+              <Label>PI Date</Label>
+              <Datepicker v-model="form.pi_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select PI Date" :auto-apply="true"/>
+              <InputError :message="form.errors.pi_date" class="mt-1" />
+            </div>
 
-    <div class="flex flex-col">
-      <Label>Order No</Label>
-      <Input v-model="form.order_no" type="text" placeholder="Enter Order No" class="mt-2" />
-      <InputError :message="form.errors.order_no" class="mt-1" />
-    </div>
+            <div class="flex flex-col">
+              <Label>Order No</Label>
+              <Input v-model="form.order_no" type="text" placeholder="Enter Order No" class="mt-2" />
+              <InputError :message="form.errors.order_no" class="mt-1" />
+            </div>
 
-    <div class="flex flex-col">
-      <Label>Order Date</Label>
-      <Datepicker v-model="form.order_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select Order Date"  :auto-apply="true"/>
-      <InputError :message="form.errors.order_date" class="mt-1" />
-    </div>
+            <div class="flex flex-col">
+              <Label>Order Date</Label>
+              <Datepicker v-model="form.order_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select Order Date"  :auto-apply="true"/>
+              <InputError :message="form.errors.order_date" class="mt-1" />
+            </div>
 
-    <div v-if="form.shipment_type_id != 1" class="flex flex-col">
-      <Label>LC No</Label>
-      <Input v-model="form.lc_no" type="text" placeholder="Enter LC No" class="mt-2" />
-      <InputError :message="form.errors.lc_no" class="mt-1" />
-    </div>
+            <div v-if="form.shipment_type_id != 1" class="flex flex-col">
+              <Label>LC No</Label>
+              <Input v-model="form.lc_no" type="text" placeholder="Enter LC No" class="mt-2" />
+              <InputError :message="form.errors.lc_no" class="mt-1" />
+            </div>
 
-    <div v-if="form.shipment_type_id != 1" class="flex flex-col">
-      <Label>LC Date</Label>
-      <Datepicker v-model="form.lc_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select LC Date" :auto-apply="true"/>
-      <InputError :message="form.errors.lc_date" class="mt-1" />
-    </div>
+            <div v-if="form.shipment_type_id != 1" class="flex flex-col">
+              <Label>LC Date</Label>
+              <Datepicker v-model="form.lc_date" format="yyyy-MM-dd" :input-class="'mt-2 border rounded px-3 py-2 w-full'" placeholder="Select LC Date" :auto-apply="true"/>
+              <InputError :message="form.errors.lc_date" class="mt-1" />
+            </div>
 
-    <div class="flex flex-col">
-      <Label>Supplier Name</Label>
-      <select v-model="form.supplier_id" class="mt-2 border rounded px-3 py-2">
-        <option value="">Select One</option>
-        <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">{{ supplier.name }}</option>
-      </select>
-      <InputError :message="form.errors.supplier_id" class="mt-1" />
-    </div>
+            <div class="flex flex-col">
+              <Label>Supplier Name</Label>
+              <select v-model="form.supplier_id" class="mt-2 border rounded px-3 py-2">
+                <option value="">Select One</option>
+                <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">{{ supplier.name }}</option>
+              </select>
+              <InputError :message="form.errors.supplier_id" class="mt-1" />
+            </div>
 
-    <div class="flex flex-col">
-      <Label>Breed Type</Label>
-      <select v-model="form.breed_type" class="mt-2 border rounded px-3 py-2">
-        <option value="">Select One</option>
-        <option value="1">Rhode Island Red</option>
-        <option value="2">Cobb 500</option>
-      </select>
-      <InputError :message="form.errors.breed_type" class="mt-1" />
-    </div>
+            <div class="flex flex-col">
+              <Label>Breed Type</Label>
+              <select v-model="form.breed_type" class="mt-2 border rounded px-3 py-2">
+                <option value="">Select One</option>
+                <option value="1">Rhode Island Red</option>
+                <option value="2">Cobb 500</option>
+              </select>
+              <InputError :message="form.errors.breed_type" class="mt-1" />
+            </div>
 
-    <div v-if="form.shipment_type_id == 2" class="flex flex-col">
-      <Label>Country of Origin</Label>
-      <select v-model="form.country_of_origin" class="mt-2 border rounded px-3 py-2">
-        <option value="">Select One</option>
-        <option value="1">France</option>
-        <option value="2">India</option>
-      </select>
-      <InputError :message="form.errors.country_of_origin" class="mt-1" />
-    </div>
+            <div v-if="form.shipment_type_id == 2" class="flex flex-col">
+              <Label>Country of Origin</Label>
+              <select v-model="form.country_of_origin" class="mt-2 border rounded px-3 py-2">
+                <option value="">Select One</option>
+                <option value="1">France</option>
+                <option value="2">India</option>
+              </select>
+              <InputError :message="form.errors.country_of_origin" class="mt-1" />
+            </div>
 
-    <div class="flex flex-col">
-      <Label>Transport Type</Label>
-      <select v-model="form.transport_type" class="mt-2 border rounded px-3 py-2">
-        <option value="">Select One</option>
-        <option value="1">Freezing Microbas</option>
-        <option value="2">Freezing Bus</option>
-        <option value="3">Open Truck</option>
-      </select>
-      <InputError :message="form.errors.transport_type" class="mt-1" />
-    </div>
+            <div class="flex flex-col">
+              <Label>Transport Type</Label>
+              <select v-model="form.transport_type" class="mt-2 border rounded px-3 py-2">
+                <option value="">Select One</option>
+                <option value="1">Freezing Microbas</option>
+                <option value="2">Freezing Bus</option>
+                <option value="3">Open Truck</option>
+              </select>
+              <InputError :message="form.errors.transport_type" class="mt-1" />
+            </div>
 
-    <div class="flex flex-col">
-      <Label>Ship To</Label>
-      <select v-model="form.company_id" class="mt-2 border rounded px-3 py-2">
-        <option value="0">Select One</option>
-        <option value="1">PBL</option>
-        <option value="2">PCL</option>
-      </select>
-      <InputError :message="form.errors.company_id" class="mt-1" />
-    </div>
+            <div class="flex flex-col">
+              <Label>Vehicle Temperature</Label>
+              <Input v-model="form.t_inside_temp" type="text" placeholder="Enter Inside Temperature" class="mt-2" />
+              <InputError :message="form.errors.t_inside_temp" class="mt-1" />
+            </div>
 
-    <div class="flex flex-col col-span-3">
-      <Label>Note</Label>
-      <textarea v-model="form.remarks" class="border rounded px-3 py-2 mt-2" placeholder="Enter any Note"></textarea>
-      <InputError :message="form.errors.remarks" class="mt-1" />
-    </div>
+            <div class="flex flex-col">
+              <Label>Ship To</Label>
+              <select v-model="form.company_id" class="mt-2 border rounded px-3 py-2">
+                <option value="0">Select One</option>
+                <option value="1">PBL</option>
+                <option value="2">PCL</option>
+              </select>
+              <InputError :message="form.errors.company_id" class="mt-1" />
+            </div>
 
-    <!-- File upload -->
-    <div class="flex flex-col col-span-3">
-      <FileUploader
-        v-model="form.file"
-        label="Upload Files"
-        :max-files="3"
-        accept=".jpg,.jpeg,.png,.pdf"
-        wrapper-class="flex flex-col mt-5"
-      />
-      <InputError :message="form.errors.file" class="mt-1" />
-    </div>
-  </div>
-</div>
+            <div class="flex flex-col col-span-3">
+              <Label>Note</Label>
+              <textarea v-model="form.remarks" class="border rounded px-3 py-2 mt-2" placeholder="Enter any Note"></textarea>
+              <InputError :message="form.errors.remarks" class="mt-1" />
+            </div>
+
+            <!-- File upload -->
+            <div class="flex flex-col col-span-3">
+              <FileUploader
+                v-model="form.file"
+                label="Upload Files"
+                :max-files="3"
+                accept=".jpg,.jpeg,.png,.pdf"
+                wrapper-class="flex flex-col mt-5"
+              />
+              <InputError :message="form.errors.file" class="mt-1" />
+            </div>
+          </div>
+        </div>
 
         <!-- Receive Quantity -->
         <div v-if="activeTab === 1" class="space-y-4 border rounded-lg p-4 shadow-sm bg-white">
@@ -468,25 +476,22 @@ function validateTab(index: number) {
         <!-- Navigation Buttons -->
         <div class="flex justify-between mt-4">
           <Button
-    type="button"
-    class="bg-black text-white"
-    @click="goPrevious"
-    :disabled="activeTab === 0"
-  >
-    Previous
-  </Button>
+            type="button"
+            class="bg-black text-white"
+            @click="goPrevious"
+            :disabled="activeTab === 0"
+          >
+            Previous
+          </Button>
 
-  <Button
-    type="button"
-    class="bg-black text-white"
-    @click="activeTab === tabs.length - 1 ? submit() : goNext()"
-  >
-    {{ activeTab === tabs.length - 1 ? 'Submit' : 'Next' }}
-  </Button>
+          <Button
+            type="button"
+            class="bg-black text-white"
+            @click="activeTab === tabs.length - 1 ? submit() : goNext()"
+          >
+            {{ activeTab === tabs.length - 1 ? 'Submit' : 'Next' }}
+          </Button>
         </div>
-
-        
-
       </form>
     </div>
   </AppLayout>
