@@ -58,7 +58,7 @@ const mainNavItems: NavItem[] = [
       },
       {
         title: 'Batch Assign',
-        href: '/flock-assign',
+        href: '/batch-assign',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
       },
@@ -102,8 +102,8 @@ const mainNavItems: NavItem[] = [
         iconClass: 'text-yellow-500',
       },
       {
-        title: 'Shed Assign',
-        href: '/flock-assign',
+        title: 'Batch Assign',
+        href: '/batch-assign',
         icon: BabyChick,
         iconClass: 'text-yellow-500',
       },
