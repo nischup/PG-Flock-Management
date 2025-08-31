@@ -140,6 +140,17 @@ const saveTransfer = () => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
 
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">
+         Transfer Details List
+        </h1>
+      <Link 
+        href="" class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"
+      >
+        + Add
+      </Link>
+      </div>
+
       <!-- List Table -->
       <div class="overflow-x-auto rounded-xl shadow bg-white dark:bg-gray-800 mt-4">
         <table class="w-full text-left border-collapse">
