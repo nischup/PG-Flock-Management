@@ -34,9 +34,9 @@ const props = defineProps<{
 
 // Map stage → display titles
 const stageTitles: Record<string, string> = {
-  brooding: "Brooding (0–4/5 wks)",
-  growing: "Growing (5–18 wks)",
-  laying: "Laying / Production (18–72 wks)",
+  brooding: "Brooding",
+  growing: "Growing",
+  laying: "Laying / Production",
 };
 
 const currentTitle = stageTitles[props.stage] ?? props.stage;
