@@ -9,14 +9,14 @@ use App\Models\Ps\PsReceive;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class FlockAssignController extends Controller
+class BatchAssignController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return Inertia::render('shed/flock-assign/List');
+        return Inertia::render('shed/batch-assign/List');
     }
 
     /**
