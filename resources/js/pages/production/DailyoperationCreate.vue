@@ -28,17 +28,20 @@ const { showInfo } = useNotifier(); // auto-shows flash messages
 // Tabs (keys must match below validations)
 const tabs = [
   { key: 'daily_mortality', label: 'Mortality' },
+  { key: 'destroy', label: 'Destroy' }, 
+  { key: 'sexing_error', label: 'Sexing Error' },
+  { key: 'cull', label: 'Cull' }, 
   { key: 'feed_consumption', label: 'Feed' },
   { key: 'water_consumption', label: 'Water' },
-  { key: 'light_hour', label: 'Light' },
-  { key: 'destroy', label: 'Destroy' },       // uses `destroy` (number)
-  { key: 'cull', label: 'Cull' },             // uses `cull` (number)
-  { key: 'sexing_error', label: 'Sexing Error' }, // uses `sexing_error` (number)
+  { key: 'light_hour', label: 'Light' },  
+  { key: 'medicine', label: 'Medicine' },     // optional in this form model
+  { key: 'vaccine', label: 'Vaccine' }, // uses `cull` (number)
+   // uses `sexing_error` (number)
   { key: 'weight', label: 'Weight' },         // uses `weight` (number)
   { key: 'temperature', label: 'Temperature' }, // uses `temperature` (number)
+  { key: 'feedingprogram', label: 'Feeding Program' }, // uses `temperature` (number)
+  { key: 'feedFinishingtime', label: 'Finishing Time' }, // uses `temperature` (number)
   { key: 'humidity', label: 'Humidity' },     // uses `humidity` (number)
-  { key: 'medicine', label: 'Medicine' },     // optional in this form model
-  { key: 'vaccine', label: 'Vaccine' }, 
   { key: 'egg_collection', label: 'Egg collection' },      // optional in this form model
 ]
 
@@ -376,13 +379,13 @@ function submit() {
           :key="tab.key"
           @click="goToTab(index)"
           class="cursor-pointer p-6 border shadow text-center font-semibold transition-transform hover:scale-105"
-          :class="[
-  activeTabIndex === index 
-    ? 'bg-chicken text-white'
-    : completedTabs.includes(index) 
-      ? 'bg-gradient-to-r from-green-400 via-green-500 to-green-600 text-white'
-      : 'bg-white text-gray-700'
-]"
+            :class="[
+              activeTabIndex === index 
+                ? 'bg-chicken text-white'
+                : completedTabs.includes(index) 
+                  ? 'bg-gradient-to-r from-green-400 via-green-500 to-green-600 text-white'
+                  : 'bg-white text-gray-700'
+            ]"
         >
           {{ tab.label }}
           <span v-if="counts[tab.key] !== undefined" class="block mt-2 text-black text-2xl font-bold">
@@ -471,43 +474,48 @@ function submit() {
           </div>
         </div>
 
-        <!-- Water (aligned: only water_consumption exists in form) -->
+        
         <!-- Water Tab -->
-      <div v-if="activeTab === 'water_consumption'">
-        <div class="grid grid-cols-3 gap-4">
-          <div>
-            <Label class="mb-2">Water</Label>
-            <select v-model="form.water_type_id" class="w-full mt-1 border rounded px-3 py-2">
-                <option value="">Select Water</option>
-                <option v-for="water in props.waters" :key="water.id" :value="water.id">
-                {{ water.name }}
-                </option>
-            </select>
+        <div v-if="activeTab === 'water_consumption'">
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <Label class="mb-2">Water</Label>
+              <select v-model="form.water_type_id" class="w-full mt-1 border rounded px-3 py-2">
+                  <option value="">Select Water</option>
+                  <option v-for="water in props.waters" :key="water.id" :value="water.id">
+                  {{ water.name }}
+                  </option>
+              </select>
             </div>
 
             <div>
-            <Label class="mb-2">Quantity</Label>
-            <Input v-model.number="form.water_quantity" type="number" />
+              <Label class="mb-2">Quantity</Label>
+              <Input v-model.number="form.water_quantity" type="number" />
             </div>
-            
+              
+            </div>
+            <div class="flex flex-col mt-5">
+              <Label class="mb-2">Note</Label>
+                <textarea
+                  v-model="form.water_note"
+                  class="border rounded px-3 py-2"
+                  :class="errors.water_note ? 'border-red-500 ring-1 ring-red-500' : ''"
+                ></textarea>
+                <p v-if="errors.water_note" class="text-red-600 text-sm mt-1">{{ errors.water_note }}</p>
+            </div>
         </div>
-          <div class="flex flex-col mt-5">
-            <Label class="mb-2">Note</Label>
-              <textarea
-                v-model="form.water_note"
-                class="border rounded px-3 py-2"
-                :class="errors.water_note ? 'border-red-500 ring-1 ring-red-500' : ''"
-              ></textarea>
-              <p v-if="errors.water_note" class="text-red-600 text-sm mt-1">{{ errors.water_note }}</p>
-          </div>
-      </div>
 
-      <!-- Water Tab -->
+      <!-- Light Hour -->
       <div v-if="activeTab === 'light_hour'">
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <Label>Light Hour</Label>
+                <Label>Hour</Label>
                 <Input v-model.number="form.light_hour" type="number" />
+            </div>
+
+            <div>
+                <Label>Minute</Label>
+                <Input v-model.number="form.light_minute" type="number" />
             </div>
             
             </div>
@@ -527,10 +535,22 @@ function submit() {
       <div v-if="activeTab === 'destroy'">
 
         <div class="grid grid-cols-2 gap-4">
+
+          <!-- Destroy Female Quantity -->
+            <div class="flex flex-col">
+                <Label class="mb-2">Destroy Female Qty</Label>
+                <Input v-model.number="form.destroy_female_qty" type="number" min="0" />
+            </div>
             <!-- Destroy Male Quantity -->
             <div class="flex flex-col">
                 <Label class="mb-2">Destroy Male Qty</Label>
                 <Input v-model.number="form.destroy_male_qty" type="number" min="0" />
+            </div>
+
+            <!-- Destroy Female Reason -->
+            <div class="flex flex-col">
+                <Label class="mb-2">Destroy Female Reason</Label>
+                <Input v-model="form.destroy_female_reason" type="text" />
             </div>
 
             <!-- Destroy Male Reason -->
@@ -539,17 +559,9 @@ function submit() {
                 <Input v-model="form.destroy_male_reason" type="text" />
             </div>
 
-            <!-- Destroy Female Quantity -->
-            <div class="flex flex-col">
-                <Label class="mb-2">Destroy Female Qty</Label>
-                <Input v-model.number="form.destroy_female_qty" type="number" min="0" />
-            </div>
+            
 
-            <!-- Destroy Female Reason -->
-            <div class="flex flex-col">
-                <Label class="mb-2">Destroy Female Reason</Label>
-                <Input v-model="form.destroy_female_reason" type="text" />
-            </div>
+            
             </div>
 
             <!-- Note -->
@@ -570,29 +582,31 @@ function submit() {
       <div v-if="activeTab === 'cull'">
 
             <div class="grid grid-cols-2 gap-4">
+
+              <!-- Cull Female Quantity -->
+                <div class="flex flex-col">
+                    <Label class="mb-2">Cull Female Qty</Label>
+                    <Input v-model.number="form.cull_female_qty" type="number" min="0" />
+                </div>
                 <!-- Cull Male Quantity -->
                 <div class="flex flex-col">
                     <Label class="mb-2">Cull Male Qty</Label>
                     <Input v-model.number="form.cull_male_qty" type="number" min="0" />
                 </div>
-
+                <!-- Cull Female Reason -->
+                <div class="flex flex-col">
+                    <Label class="mb-2">Cull Female Reason</Label>
+                    <Input v-model="form.cull_female_reason" type="text" />
+                </div>
                 <!-- Cull Male Reason -->
                 <div class="flex flex-col">
                     <Label class="mb-2">Cull Male Reason</Label>
                     <Input v-model="form.cull_male_reason" type="text" />
                 </div>
 
-                <!-- Cull Female Quantity -->
-                <div class="flex flex-col">
-                    <Label class="mb-2">Cull Female Qty</Label>
-                    <Input v-model.number="form.cull_female_qty" type="number" min="0" />
-                </div>
+                
 
-                <!-- Cull Female Reason -->
-                <div class="flex flex-col">
-                    <Label class="mb-2">Cull Female Reason</Label>
-                    <Input v-model="form.cull_female_reason" type="text" />
-                </div>
+                
                 </div>
 
                 <!-- Note -->
@@ -611,6 +625,12 @@ function submit() {
         <!-- sexxing error Tab -->
         <div v-if="activeTab === 'sexing_error'">
             <div class="grid grid-cols-2 gap-4">
+
+              <!-- Sexing Error Female Qty -->
+                <div class="flex flex-col">
+                    <Label class="mb-2">Sexing Error Female Qty</Label>
+                    <Input v-model.number="form.sexing_error_female_qty" type="number" min="0" />
+                </div>
                 <!-- Sexing Error Male Qty -->
                 <div class="flex flex-col">
                     <Label class="mb-2">Sexing Error Male Qty</Label>
@@ -619,11 +639,7 @@ function submit() {
 
                 
 
-                <!-- Sexing Error Female Qty -->
-                <div class="flex flex-col">
-                    <Label class="mb-2">Sexing Error Female Qty</Label>
-                    <Input v-model.number="form.sexing_error_female_qty" type="number" min="0" />
-                </div>
+                
              </div>
 
             <!-- Note -->
@@ -639,8 +655,8 @@ function submit() {
         </div>
 
 
-        <!-- weight Tab -->
-        <div v-if="activeTab === 'weight'">
+          <!-- weight Tab -->
+           <div v-if="activeTab === 'weight'">
             <div class="grid grid-cols-2 gap-4">
                 <!-- Weight Male Qty -->
                 <div class="flex flex-col">
@@ -664,7 +680,7 @@ function submit() {
                 :class="errors.weight_note ? 'border-red-500 ring-1 ring-red-500' : ''"
               ></textarea>
               <p v-if="errors.weight_note" class="text-red-600 text-sm mt-1">{{ errors.weight_note }}</p>
-                </div>
+          </div>
 
         </div>
 
@@ -710,6 +726,72 @@ function submit() {
 
         </div>
 
+
+
+
+
+        <!-- Feeding Program -->
+           <div v-if="activeTab === 'feedingprogram'">
+            <div class="grid grid-cols-2 gap-4">
+              <!-- Weight Female Qty -->
+                <div class="flex flex-col">
+                    <Label class="mb-2">Feeding Program Female</Label>
+                    <Input v-model.number="form.weight_female_qty" type="number" min="0" />
+                </div>
+                <!-- Weight Male Qty -->
+                <div class="flex flex-col">
+                    <Label class="mb-2">Feeding Program Male</Label>
+                    <Input v-model.number="form.weight_male_qty" type="number" min="0" />
+                </div>
+
+                
+                </div>
+
+                <!-- Note -->
+                <div class="flex flex-col mt-4">
+                <Label class="mb-2">Note</Label>
+                <textarea
+                v-model="form.weight_note"
+                class="border rounded px-3 py-2"
+                :class="errors.weight_note ? 'border-red-500 ring-1 ring-red-500' : ''"
+              ></textarea>
+              <p v-if="errors.weight_note" class="text-red-600 text-sm mt-1">{{ errors.weight_note }}</p>
+          </div>
+
+        </div>
+
+
+
+        <!-- Feed Finishing Time -->
+           <div v-if="activeTab === 'feedFinishingtime'">
+            <div class="grid grid-cols-2 gap-4">
+
+              <!-- Weight Female Qty -->
+                <div class="flex flex-col">
+                    <Label class="mb-2">Finishing Time Female</Label>
+                    <Input v-model.number="form.weight_female_qty" type="number" min="0" />
+                </div>
+                <!-- Weight Male Qty -->
+                <div class="flex flex-col">
+                    <Label class="mb-2">Finishing Time Male</Label>
+                    <Input v-model.number="form.weight_male_qty" type="number" min="0" />
+                </div>
+
+                
+                </div>
+
+                <!-- Note -->
+                <div class="flex flex-col mt-4">
+                <Label class="mb-2">Note</Label>
+                <textarea
+                v-model="form.weight_note"
+                class="border rounded px-3 py-2"
+                :class="errors.weight_note ? 'border-red-500 ring-1 ring-red-500' : ''"
+              ></textarea>
+              <p v-if="errors.weight_note" class="text-red-600 text-sm mt-1">{{ errors.weight_note }}</p>
+          </div>
+
+        </div>
 
         <!-- humidity Tab -->
         <div v-if="activeTab === 'humidity'">
@@ -788,8 +870,8 @@ function submit() {
 
                 <!-- Time -->
                 <div class="flex flex-col">
-                    <Label class="mb-2">Time</Label>
-                    <Input v-model="form.medicine_time" type="time" />
+                    <Label class="mb-2">Dose</Label>
+                    <Input v-model="form.medicine_time" type="text" />
                 </div>
                 </div>
 
