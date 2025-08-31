@@ -13,40 +13,50 @@ class EggClassificationController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-{
-        $dummyData = [
-        [
-            'id' => 1,
-            'grading_type' => 'Commercial',
-            'grade' => 'A',
-            'classification' => 'Large',
-            'qty' => 120,
-        ],
-        [
-            'id' => 2,
-            'grading_type' => 'Commercial',
-            'grade' => 'B',
-            'classification' => 'Medium',
-            'qty' => 95,
-        ],
-        [
-            'id' => 3,
-            'grading_type' => 'Hatching',
-            'grade' => 'H1',
-            'classification' => null, // no classification for hatching
-            'qty' => 60,
-        ],
-    ];
+        {
+                $dummyData = [
+            [
+                'id' => 1,
+                'date' => '2025-08-31',
+                'flock' => 'Flock 22',
+                'batch' => 'Batch A',
+                'hatching_qty' => 1200,
+                'commercial_qty' => 50, // renamed
+            ],
+            [
+                'id' => 2,
+                'date' => '2025-08-31',
+                'flock' => 'Flock 22',
+                'batch' => 'Batch B',
+                'hatching_qty' => 950,
+                'commercial_qty' => 30,
+            ],
+            [
+                'id' => 3,
+                'date' => '2025-08-31',
+                'flock' => 'Flock 22',
+                'batch' => 'Batch C',
+                'hatching_qty' => 1100,
+                'commercial_qty' => 60,
+            ],
+        ];
+
+        // Fake pagination meta (Laravel paginator style)
+        $meta = [
+            'current_page' => 1,
+            'from' => 1,
+            'last_page' => 1,
+            'path' => url()->current(),
+            'per_page' => 10,
+            'to' => count($dummyData),
+            'total' => count($dummyData),
+        ];
+
 
     return Inertia::render('production/egg-classification/List', [
         'classifications' => [
             'data' => $dummyData,
-            'meta' => [
-                'current_page' => 1,
-                'last_page' => 1,
-                'per_page' => 10,
-                'total' => count($dummyData),
-            ],
+            'meta' => $meta,
         ],
         'filters' => request()->only(['search', 'per_page', 'page']),
     ]);

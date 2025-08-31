@@ -12,10 +12,11 @@ const props = defineProps<{
   classifications: {
     data: Array<{
       id: number;
-      grading_type: 'Commercial' | 'Hatching';
-      grade: string;
-      classification?: string;
-      qty: number;
+      date: string;
+      flock: string;
+      batch: string;
+      hatching_qty: number;
+      commercial_qty: number;
     }>;
     meta: { current_page: number; last_page: number; per_page: number; total: number };
   };
@@ -71,10 +72,11 @@ const breadcrumbs: BreadcrumbItem[] = [
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
             <tr>
-              <th class="px-6 py-3 text-left font-bold">Grading Type</th>
-              <th class="px-6 py-3 text-left font-bold">Grade</th>
-              <th class="px-6 py-3 text-left font-bold">Classification</th>
-              <th class="px-6 py-3 text-left font-bold">Quantity</th>
+              <th class="px-6 py-3 text-left font-bold">Date</th>
+              <th class="px-6 py-3 text-left font-bold">Flock</th>
+              <th class="px-6 py-3 text-left font-bold">Batch</th>
+              <th class="px-6 py-3 text-left font-bold">Hatching Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Commercial Qty</th>
               <th class="px-6 py-3 text-left font-bold">Actions</th>
             </tr>
           </thead>
@@ -84,10 +86,11 @@ const breadcrumbs: BreadcrumbItem[] = [
               :key="item.id"
               class="hover:bg-gray-50 dark:hover:bg-gray-800"
             >
-              <td class="px-6 py-4">{{ item.grading_type }}</td>
-              <td class="px-6 py-4">{{ item.grade }}</td>
-              <td class="px-6 py-4">{{ item.classification || '-' }}</td>
-              <td class="px-6 py-4">{{ item.qty }}</td>
+              <td class="px-6 py-4">{{ item.date }}</td>
+              <td class="px-6 py-4">{{ item.flock }}</td>
+              <td class="px-6 py-4">{{ item.batch }}</td>
+              <td class="px-6 py-4">{{ item.hatching_qty }}</td>
+              <td class="px-6 py-4">{{ item.commercial_qty }}</td>
               <td class="px-6 py-4 flex gap-4 items-center">
                 <Link
                   v-if="can('eggclassification.edit')"
@@ -107,7 +110,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             </tr>
 
             <tr v-if="classifications.data.length === 0">
-              <td colspan="5" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
+              <td colspan="6" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
                 No classification records found.
               </td>
             </tr>
