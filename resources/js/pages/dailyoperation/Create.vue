@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3'
+import { Link, Head, useForm } from '@inertiajs/vue3'
 import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,17 +10,30 @@ import { useAgeCalculator } from '@/composables/useAgeCalculator'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { type BreadcrumbItem } from '@/types'
 import { useNotifier } from "@/composables/useNotifier"
-// Breadcrumbs
-const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Flock Management', href: '/flocks' },
-  { title: 'Daily Operation', href: '' },
-]
+import { ArrowLeft } from 'lucide-vue-next'
 
-// Props
+
 const props = defineProps<{
+  stage: string
   flocks: Array<any>
   feeds?: Array<any>
 }>()
+
+// Map stage → display titles
+const stageTitles: Record<string, string> = {
+  brooding: "Brooding",
+  growing: "Growing",
+  laying: "Laying / Production",
+};
+
+const currentTitle = stageTitles[props.stage] ?? props.stage
+
+// Breadcrumbs
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Flock Management', href: '/daily-operation' },
+  { title: currentTitle, href: `/daily-operation/stage/${props.stage}` },
+]
+
 
 const { showInfo } = useNotifier(); // auto-shows flash messages
 
@@ -300,7 +313,18 @@ function submit() {
     <form @submit.prevent="submit" class="p-6 space-y-6">
       <!-- Flock Info -->
       <div class="border rounded-lg p-4 shadow-sm bg-white">
-        <h2 class="font-semibold text-lg mb-4">Flock Information</h2>
+
+        <div class="pb-3 mb-6 flex items-center justify-between">
+            <!-- Left: Title -->
+            <h2 class="text-xl font-semibold"> Flock Info.</h2>
+
+            <Link 
+                :href="`/daily-operation/stage/${props.stage}`"
+              class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center gap-1"
+            >
+              <ArrowLeft class="w-4 h-4" /> List
+            </Link>
+          </div>
 
         <!-- Progress Bar -->
         <div class="w-full bg-gray-200 rounded-xl h-6 overflow-hidden mb-4">

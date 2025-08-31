@@ -71,12 +71,13 @@ const breadcrumbs: BreadcrumbItem[] = [
         <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">
           {{ currentTitle }}
         </h1>
-        <Link 
-        :href="`/daily-operation/create`"
+      <Link 
+        :href="`/daily-operation/stage/${props.stage}/create`"
         class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"
       >
         + Add
       </Link>
+
 
       </div>
 
