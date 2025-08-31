@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head,Link } from '@inertiajs/vue3';
 import { ref, computed } from "vue";
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -145,7 +145,7 @@ const saveTransfer = () => {
          Transfer Details List
         </h1>
       <Link 
-        href="" class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"
+        href="/bird-transfer/create" class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"
       >
         + Add
       </Link>

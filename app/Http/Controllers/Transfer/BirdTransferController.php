@@ -21,7 +21,7 @@ class BirdTransferController extends Controller
      */
     public function create()
     {
-        //
+       return Inertia::render('transfer/bird-transfer/Create');
     }
 
     /**
