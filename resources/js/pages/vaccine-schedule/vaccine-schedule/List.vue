@@ -23,16 +23,15 @@ const vaccineOptions = ["Lasota", "Gumboro", "HVT"];
 const showScheduleModal = ref(false);
 const showVaccineModal = ref(false);
 
-// Form data (schedule)
+// Form data (schedule) → stages hold multiple disease+vaccine+age+date
 const newSchedule = ref({
   project: "",
   flock: "",
   batch: "",
-  disease: "",
-  vaccine: "",
-  age: "",
-  lastVaccination: "",
-  nextVaccination: "",
+  breed: "",
+  stages: [
+    { disease: "", vaccine: "", age: "", date: "" }
+  ]
 });
 
 // Form data (vaccine)
@@ -43,6 +42,16 @@ const newVaccine = ref({
   dose: "",
   notes: "",
 });
+
+// Add stage
+const addStage = () => {
+  newSchedule.value.stages.push({ disease: "", vaccine: "", age: "", date: "" });
+};
+
+// Remove stage
+const removeStage = (index: number) => {
+  newSchedule.value.stages.splice(index, 1);
+};
 
 // Save new schedule
 const saveSchedule = () => {
@@ -56,11 +65,10 @@ const saveSchedule = () => {
     project: "",
     flock: "",
     batch: "",
-    disease: "",
-    vaccine: "",
-    age: "",
-    lastVaccination: "",
-    nextVaccination: "",
+    breed: "",
+    stages: [
+      { disease: "", vaccine: "", age: "", date: "" }
+    ]
   };
 
   showScheduleModal.value = false;
@@ -184,10 +192,11 @@ const saveVaccine = () => {
 
       <!-- Schedule Modal -->
       <div v-if="showScheduleModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg w-[700px] max-w-full p-6">
+        <div class="bg-white rounded-lg shadow-lg w-[800px] max-w-full p-6">
           <h2 class="text-lg font-bold mb-4">Add Vaccine Schedule</h2>
 
           <div class="grid grid-cols-2 gap-4">
+            <!-- Project -->
             <div>
               <label class="block text-sm mb-1">Project</label>
               <select v-model="newSchedule.project" class="w-full border rounded px-3 py-2">
@@ -195,6 +204,8 @@ const saveVaccine = () => {
                 <option v-for="p in projectOptions" :key="p">{{ p }}</option>
               </select>
             </div>
+
+            <!-- Flock -->
             <div>
               <label class="block text-sm mb-1">Flock No</label>
               <select v-model="newSchedule.flock" class="w-full border rounded px-3 py-2">
@@ -202,6 +213,8 @@ const saveVaccine = () => {
                 <option v-for="f in flockOptions" :key="f">{{ f }}</option>
               </select>
             </div>
+
+            <!-- Batch -->
             <div>
               <label class="block text-sm mb-1">Batch No</label>
               <select v-model="newSchedule.batch" class="w-full border rounded px-3 py-2">
@@ -209,48 +222,95 @@ const saveVaccine = () => {
                 <option v-for="b in batchOptions" :key="b">{{ b }}</option>
               </select>
             </div>
+
+            <!-- Breed -->
             <div>
               <label class="block text-sm mb-1">Breed</label>
-              <select v-model="newSchedule.disease" class="w-full border rounded px-3 py-2">
+              <select v-model="newSchedule.breed" class="w-full border rounded px-3 py-2">
                 <option value="">Select Breed Type</option>
                 <option>EP</option>
                 <option>IR</option>
               </select>
             </div>
-            <div>
-              <label class="block text-sm mb-1">Disease</label>
-              <select v-model="newSchedule.disease" class="w-full border rounded px-3 py-2">
-                <option value="">Select Disease</option>
-                <option v-for="d in diseaseOptions" :key="d">{{ d }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm mb-1">Vaccine</label>
-              <select v-model="newSchedule.vaccine" class="w-full border rounded px-3 py-2">
-                <option value="">Select Vaccine</option>
-                <option v-for="v in vaccineOptions" :key="v">{{ v }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm mb-1">Age</label>
-              <input v-model="newSchedule.age" type="text" class="w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-              <label class="block text-sm mb-1">Next Vaccination</label>
-              <input v-model="newSchedule.nextVaccination" type="date" class="w-full border rounded px-3 py-2" />
-            </div>
           </div>
 
+          <!-- Multiple Disease + Vaccine + Age + Date -->
+          <div class="mt-6">
+            <h3 class="text-md font-semibold mb-2">Vaccination Stages</h3>
+            <div
+              v-for="(stage, index) in newSchedule.stages"
+              :key="index"
+              class="grid grid-cols-4 gap-4 mb-3 p-3 border rounded"
+            >
+              <!-- Disease -->
+              <div>
+                <label class="block text-sm mb-1">Disease</label>
+                <select v-model="stage.disease" class="w-full border rounded px-3 py-2">
+                  <option value="">Select Disease</option>
+                  <option v-for="d in diseaseOptions" :key="d">{{ d }}</option>
+                </select>
+              </div>
+
+              <!-- Vaccine -->
+              <div>
+                <label class="block text-sm mb-1">Vaccine</label>
+                <select v-model="stage.vaccine" class="w-full border rounded px-3 py-2">
+                  <option value="">Select Vaccine</option>
+                  <option v-for="v in vaccineOptions" :key="v">{{ v }}</option>
+                </select>
+              </div>
+
+              <!-- Age -->
+              <div>
+                <label class="block text-sm mb-1">Age</label>
+                <input v-model="stage.age" type="text" class="w-full border rounded px-3 py-2" placeholder="Enter age" />
+              </div>
+
+              <!-- Next Vaccination Date -->
+              <div>
+                <label class="block text-sm mb-1">Next Vaccination</label>
+                <input v-model="stage.date" type="date" class="w-full border rounded px-3 py-2" />
+              </div>
+
+              <!-- Remove Button -->
+              <div class="col-span-4 flex justify-end">
+                <button
+                  v-if="newSchedule.stages.length > 1"
+                  class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                  @click="removeStage(index)"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+
+            <!-- Add New Stage -->
+            <button
+              class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm mt-2"
+              @click="addStage"
+            >
+              + Add Another
+            </button>
+          </div>
+
+          <!-- Footer Buttons -->
           <div class="flex justify-end mt-6">
-            <button class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mr-2" @click="showScheduleModal = false">
+            <button
+              class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mr-2"
+              @click="showScheduleModal = false"
+            >
               Cancel
             </button>
-            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" @click="saveSchedule">
+            <button
+              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              @click="saveSchedule"
+            >
               Save
             </button>
           </div>
         </div>
       </div>
+
 
       <!-- Vaccine Modal -->
       <div v-if="showVaccineModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
