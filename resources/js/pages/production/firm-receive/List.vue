@@ -140,13 +140,22 @@ const saveTransfer = () => {
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
-
+      
       <!-- Add Flock Button -->
       <!-- <div class="flex justify-end">
         <button
           @click="showModal = true"
           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
+        ><div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">
+         Transfer Details List
+        </h1>
+      <Link 
+        href="/bird-transfer/create" class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"
+      >
+        + Add
+      </Link>
+      </div>
           + Assign Flock
         </button>
       </div> -->
@@ -211,13 +220,14 @@ const saveTransfer = () => {
       </div>
 
 <!-- Transfer Modal -->
+<!-- Transfer Modal -->
 <div
   v-if="showTransferModal"
   class="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
   @click="showTransferModal = false"
 >
   <div
-    class="bg-white rounded-lg shadow-lg w-[700px] max-w-full"
+    class="bg-white rounded-lg shadow-lg w-[800px] max-w-full"
     @click.stop
   >
     <!-- Header -->
@@ -227,42 +237,87 @@ const saveTransfer = () => {
 
     <!-- Body -->
     <div class="p-6 space-y-4">
-      <!-- Flock (readonly to show which one is being transferred) -->
-
-  <div class="grid grid-cols-3 gap-4">
-    <!-- Female Company -->
-    <div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Female Qty</label>
-        <input
-          type="number"
-          class="w-full border rounded px-3 py-2 bg-white-100"
-        />
-      </div>
-    </div>
-
-    <!-- To Male -->
-    <div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Male Qty</label>
-        <input
-          type="number"
-          class="w-full border rounded px-3 py-2 bg-white-100"
-        />
-      </div>
-    </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">Total Qty</label>
-        <input
-          type="number"
-          class="w-full border rounded px-3 py-2 bg-gray-100"
-        />
+      <!-- Info Section -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Flock ID</label>
+          <input type="text" class="w-full border rounded px-3 py-2 bg-gray-100" :value="transferFlock?.name" readonly />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Origin Project</label>
+          <input type="text" class="w-full border rounded px-3 py-2 bg-gray-100" value="PBL" readonly />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Receive Project</label>
+          <input type="text" class="w-full border rounded px-3 py-2 bg-gray-100" value="PCL" readonly />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Transfer Date</label>
+          <input type="date" class="w-full border rounded px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Receive Date</label>
+          <input type="date" class="w-full border rounded px-3 py-2" />
+        </div>
       </div>
 
-  </div>
+      <!-- Challan Section -->
+      <div class="grid grid-cols-3 gap-4 mt-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Challan Female Qty</label>
+          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100" value="10000" readonly />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Challan Male Qty</label>
+          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100" value="200" readonly />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Challan Total</label>
+          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100" value="10200" readonly />
+        </div>
+      </div>
 
+      <!-- Receive Section -->
+      <div class="grid grid-cols-3 gap-4 mt-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Receive Female Qty</label>
+          <input v-model.number="transferFlock.receiveFemale" type="number" class="w-full border rounded px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Receive Male Qty</label>
+          <input v-model.number="transferFlock.receiveMale" type="number" class="w-full border rounded px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Total Receive Qty</label>
+          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100"
+            :value="(transferFlock.receiveMale || 0) + (transferFlock.receiveFemale || 0)" readonly />
+        </div>
+      </div>
 
+      <!-- Deviation Section -->
+      <div class="grid grid-cols-3 gap-4 mt-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Deviation Female</label>
+          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100"
+            :value="10000 - (transferFlock.receiveFemale || 0)" readonly />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Deviation Male</label>
+          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100"
+            :value="200 - (transferFlock.receiveMale || 0)" readonly />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Deviation Total</label>
+          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100"
+            :value="(10200 - ((transferFlock.receiveMale || 0) + (transferFlock.receiveFemale || 0)))" readonly />
+        </div>
+      </div>
+
+      <!-- Note -->
+      <div>
+        <label class="block text-sm font-medium mb-1">Note</label>
+        <textarea v-model="transferFlock.note" rows="2" class="w-full border rounded px-3 py-2"></textarea>
+      </div>
     </div>
 
     <!-- Footer -->
