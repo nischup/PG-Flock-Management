@@ -1,29 +1,30 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\Master\ChickTypeController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\WeatherController;
 use App\Http\Controllers\Master\FeedController;
-use App\Http\Controllers\Master\FeedTypeController;
-use App\Http\Controllers\Master\CompanyController;
-use App\Http\Controllers\Master\MedicineController;
-use App\Http\Controllers\Master\DiseaseController;
 use App\Http\Controllers\Master\ShedController;
 use App\Http\Controllers\Master\UnitController;
-use App\Http\Controllers\Master\VaccineController;
-use App\Http\Controllers\Master\VaccineTypeController;
 use App\Http\Controllers\Ps\PsLabTestController;
+use App\Http\Controllers\Master\CompanyController;
+use App\Http\Controllers\Master\DiseaseController;
+use App\Http\Controllers\Master\VaccineController;
+use App\Http\Controllers\Master\FeedTypeController;
+use App\Http\Controllers\Master\MedicineController;
 use App\Http\Controllers\Master\SupplierController;
-use App\Http\Controllers\Shed\ShedReceiveController;
-use App\Http\Controllers\Shed\BatchAssignController;
-use App\Http\Controllers\DailyOperation\DailyOperationController;
-use App\Http\Controllers\Production\ProductionFirmReceiveController;
-use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\Master\BreedTypeController;
-use App\Http\Controllers\Production\EggClassificationController;
-use App\Http\Controllers\WeatherController;
+use App\Http\Controllers\Master\ChickTypeController;
+use App\Http\Controllers\Shed\BatchAssignController;
+use App\Http\Controllers\Shed\ShedReceiveController;
+use App\Http\Controllers\Master\VaccineTypeController;
+use App\Http\Controllers\Reports\VaccineReportController;
 use App\Http\Controllers\Transfer\BirdTransferController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Production\EggClassificationController;
+use App\Http\Controllers\DailyOperation\DailyOperationController;
+use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
+use App\Http\Controllers\Production\ProductionFirmReceiveController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -109,3 +110,10 @@ Route::get('/details/{flockId}/{tabKey}', [DailyOperationController::class, 'sho
 Route::resource('production/egg-classification', EggClassificationController::class);
 
 Route::get('/weather', [WeatherController::class, 'get']);
+
+
+//Report
+Route::get('reports/vaccines/pdf', [VaccineReportController::class, 'downloadPdf'])
+     ->name('reports.vaccines.pdf');
+     Route::get('reports/vaccines/excel', [VaccineReportController::class, 'downloadExcel'])
+    ->name('reports.vaccines.excel');

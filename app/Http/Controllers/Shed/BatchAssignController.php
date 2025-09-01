@@ -24,7 +24,7 @@ class BatchAssignController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('shed/batch-assign/Create');
     }
 
     /**
