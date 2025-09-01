@@ -37,6 +37,12 @@ const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
     window.open(url, '_blank');
 };
 
+//for excel
+const exportExcel = () => {
+    const url = route('reports.vaccines.excel', { ...filters.value });
+    window.open(url, '_blank');
+};
+
 // Props
 const props = defineProps<{
     vaccines: Vaccine[];
@@ -226,7 +232,7 @@ const breadcrumbs = [
                     <!-- Export PDF Dropdown -->
                     <div class="pdf-dropdown relative">
                         <Button class="pdf-button bg-green-600 text-white hover:bg-green-700" @click="openDropdown = !openDropdown">
-                            Export PDF ▼
+                            Export Report ▼
                         </Button>
                         <div v-if="openDropdown" class="absolute right-0 z-20 mt-2 w-40 rounded border bg-white shadow-lg">
                             <button
@@ -236,9 +242,18 @@ const breadcrumbs = [
                                 "
                                 class="block w-full px-4 py-2 text-left hover:bg-gray-100"
                             >
-                                Portrait
+                                PDF
                             </button>
                             <button
+                                class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                                @click="
+                                    exportExcel();
+                                    openDropdown = false;
+                                "
+                            >
+                                Excel
+                            </button>
+                            <!-- <button
                                 @click="
                                     exportPdf('landscape');
                                     openDropdown = false;
@@ -246,7 +261,7 @@ const breadcrumbs = [
                                 class="block w-full px-4 py-2 text-left hover:bg-gray-100"
                             >
                                 Landscape
-                            </button>
+                            </button> -->
                         </div>
                     </div>
                 </div>

@@ -46,22 +46,22 @@ const { can } = usePermissions()
 // Demo card data grouped by PI No
 const piCardData: Record<string, any[]> = {
   PI001: [
-    { title: 'Challan Box', value: 12 },
-    { title: 'Receive Box', value: 12, colorFrom: '#22c55e', colorTo: '#16a34a' },
-    { title: 'Male Box', value: 2 },
-    { title: 'Female Box', value: 10 }
+    { title: 'Challan Box', value: 12,title1: 'F Box', value1: 10,title2: 'M Box', value2: 2 },
+    { title: 'Receive Box', value: 12,title1: 'F Box', value1: 9,title2: 'M Box', value2: 3 },
+    { title: 'Challan Chicks', value: 10000,title1: 'M', value1: 8000,title2: 'F', value2: 2000 },
+    { title: 'Ship To', value: "PCL" },
   ],
   PI002: [
-    { title: 'Challan Box', value: 20 },
-    { title: 'Receive Box', value: 18 },
-    { title: 'Male Box', value: 5 },
-    { title: 'Female Box', value: 13 }
+    { title: 'Challan Box', value: 15,title1: 'F Box', value1: 12,title2: 'M Box', value2: 5 },
+    { title: 'Receive Box', value: 15,title1: 'F Box', value1: 13,title2: 'M Box', value2: 2 },
+    { title: 'Challan Chicks', value: 10000,title1: 'M', value1: 8000,title2: 'F', value2: 2000 },
+    { title: 'Ship To', value: "PBL" },
   ],
   PI003: [
-    { title: 'Challan Box', value: 15 },
-    { title: 'Receive Box', value: 17 },
-    { title: 'Male Box', value: 4 },
-    { title: 'Female Box', value: 13 }
+    { title: 'Challan Box', value: 20,title1: 'F Box', value1: 15,title2: 'M Box', value2: 5 },
+    { title: 'Receive Box', value: 20,title1: 'F Box', value1: 14,title2: 'M Box', value2: 6 },
+    { title: 'Challan Chicks', value: 10000,title1: 'M', value1: 8000,title2: 'F', value2: 2000 },
+    { title: 'Ship To', value: "PHL1" },
   ]
 }
 
