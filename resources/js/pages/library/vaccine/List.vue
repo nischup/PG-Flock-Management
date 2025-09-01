@@ -7,6 +7,7 @@ import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
+import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
@@ -252,56 +253,55 @@ const breadcrumbs = [
             </div>
 
             <!-- Vaccine Table -->
-            <table class="w-full border">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="border p-2 text-left">#</th>
-                        <th class="border p-2 text-left">Vaccine Type</th>
-                        <th class="border p-2 text-left">Name</th>
-                        <th class="border p-2 text-left">Applicator</th>
-                        <th class="border p-2 text-left">Dose</th>
-                        <th class="border p-2 text-left">Note</th>
-                        <th class="border p-2 text-left">Status</th>
-                        <th class="border p-2 text-left">Created At</th>
-                        <th class="border p-2 text-left">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(vaccine, index) in vaccines" :key="vaccine.id">
-                        <td class="border p-2">{{ index + 1 }}</td>
-                        <td class="border p-2">{{ vaccine.vaccine_type_name }}</td>
-                        <td class="border p-2">{{ vaccine.name }}</td>
-                        <td class="border p-2">{{ vaccine.applicator }}</td>
-                        <td class="border p-2">{{ vaccine.dose }}</td>
-                        <td class="border p-2">{{ vaccine.note }}</td>
-                        <td class="border p-2">
-                            <span :class="vaccine.status === 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
-                                {{ vaccine.status === 1 ? 'Active' : 'Inactive' }}
-                            </span>
-                        </td>
-                        <td class="border p-2">{{ vaccine.created_at }}</td>
-                        <td class="relative border p-2">
-                            <Button
-                                size="sm"
-                                class="actions-button bg-gray-500 text-white hover:bg-gray-600"
-                                @click.stop="toggleDropdown(vaccine.id)"
-                            >
-                                Actions ▼
-                            </Button>
-                            <div
-                                v-if="openDropdownId === vaccine.id"
-                                class="dropdown-menu absolute z-10 mt-1 w-40 rounded border bg-white shadow-md"
-                                @click.stop
-                            >
-                                <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="openModal(vaccine)">✏ Edit</button>
-                                <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="toggleStatus(vaccine)">
-                                    {{ vaccine.status === 1 ? 'Inactive' : 'Activate' }}
+            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
+                    <thead class="bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                        <tr>
+                            <th class="px-6 py-3 text-left font-semibold">#</th>
+                            <th class="px-6 py-3 text-left font-semibold">Vaccine Type</th>
+                            <th class="px-6 py-3 text-left font-semibold">Name</th>
+                            <th class="px-6 py-3 text-left font-semibold">Applicator</th>
+                            <th class="px-6 py-3 text-left font-semibold">Dose</th>
+                            <th class="px-6 py-3 text-left font-semibold">Note</th>
+                            <th class="px-6 py-3 text-left font-semibold">Status</th>
+                            <th class="px-6 py-3 text-left font-semibold">Created At</th>
+                            <th class="px-6 py-3 text-left font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                        <tr
+                            v-for="(vaccine, index) in vaccines"
+                            :key="vaccine.id"
+                            class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
+                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ index + 1 }}</td>
+                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ vaccine.vaccine_type_name }}</td>
+                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ vaccine.name }}</td>
+                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ vaccine.applicator }}</td>
+                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ vaccine.dose }}</td>
+                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ vaccine.note }}</td>
+                            <td class="px-6 py-4">
+                                <span :class="vaccine.status === 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
+                                    {{ vaccine.status === 1 ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
+                                {{ dayjs(vaccine.created_at).format('DD MMM YYYY,') }}
+                            </td>
+                            <td class="flex gap-4 px-6 py-4">
+                                <button class="font-medium text-indigo-600 hover:underline" @click="openModal(vaccine)">Edit</button>
+                                <button class="font-medium text-red-600 hover:underline" @click="toggleStatus(vaccine)">
+                                    {{ vaccine.status === 1 ? 'Deactivate' : 'Activate' }}
                                 </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                            </td>
+                        </tr>
+
+                        <tr v-if="vaccines.length === 0">
+                            <td colspan="9" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No vaccines found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Modal -->
