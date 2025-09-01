@@ -115,3 +115,5 @@ Route::get('/weather', [WeatherController::class, 'get']);
 //Report
 Route::get('reports/vaccines/pdf', [VaccineReportController::class, 'downloadPdf'])
      ->name('reports.vaccines.pdf');
+     Route::get('reports/vaccines/excel', [VaccineReportController::class, 'downloadExcel'])
+    ->name('reports.vaccines.excel');

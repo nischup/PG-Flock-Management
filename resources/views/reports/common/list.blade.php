@@ -53,17 +53,28 @@
 </head>
 
 <body>
+    <div style="text-align: center; margin-bottom: 20px; font-family: 'DejaVu Sans', sans-serif;">
+        <h1 style="margin: 0; font-size: 22px; color: #1a202c;">PROVITA GROUP</h1>
+        <p style="margin: 4px 0; font-size: 14px; color: #4a5568;">
+            Provita Tower, House #21, Road #35, Gulshan-02, Dhaka 1212
+        </p>
+        <p style="margin: 2px 0; font-size: 14px; color: #4a5568;">
+            Phone: +880248811872 | Email: hrm@provitagroupbd.com
+        </p>
+        <hr style="border: 1px solid #e2e8f0; margin-top: 8px;">
+    </div>
     <h1>{{ $title ?? 'Report' }}</h1>
+
     <div class="meta">
         Generated: {{ $generatedAt->format('Y-m-d H:i') }}
-        @if (!empty($filters))
+        {{-- @if (!empty($filters))
             <br>Filters:
             @foreach ($filters as $k => $v)
                 @if ($v !== null && $v !== '')
                     <strong>{{ $k }}</strong>=<span>{{ $v }}</span>
                 @endif
             @endforeach
-        @endif
+        @endif --}}
     </div>
 
     <table>
