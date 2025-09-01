@@ -231,13 +231,14 @@ const cardData = computed(() => piCardData[selectedPI.value] || [])
               <td class="px-4 py-2 border-b">Shed-1</td>
               <td class="px-4 py-2 border-b">{{ flock.batch }}</td>
               <td class="px-4 py-2 border-b">
-                <button class="px-3 py-1 bg-chicken text-white rounded hover:bg-chicken mr-2">Edit</button>
-                <button
-                  class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 mr-2"
-                  @click="openTransferModal(flock)"
-                >
-                  Transfer
-                </button>
+                <button class="px-3 py-1 bg-chicken text-white rounded hover:bg-chicken mr-2 mb-2">Edit</button>
+
+              <Link 
+                href="/bird-transfer/create" 
+                class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 mr-2 flex items-center"
+              >
+                <ArrowLeft class="w-1 h4" /> Transfer
+              </Link>
 
               </td>
             </tr>
