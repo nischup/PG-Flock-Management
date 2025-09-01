@@ -12,12 +12,42 @@
       }"
     >
       <!-- Text -->
-      <div>
-        <p class="text-sm font-semibold uppercase tracking-wide text-gray-700 dark:text-gray-200">
-          {{ card.title }}
-        </p>
-        <p class="text-3xl font-extrabold mt-1">{{ card.value }}</p>
-        <p v-if="card.extra" class="text-xs mt-0.5">{{ card.extra }}</p>
+      <div class="flex justify-between items-start w-full">
+        <!-- Left side (main title + value) -->
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wide text-gray-700 dark:text-gray-200">
+            {{ card.title }}
+          </p>
+          <p class="text-3xl font-extrabold mt-1">
+            {{ card.value }}
+          </p>
+          <p v-if="card.extra" class="text-xs mt-0.5">
+            {{ card.extra }}
+          </p>
+        </div>
+
+        <!-- Right side (subtitles + values) -->
+        <div class="text-right space-y-1">
+          <div v-if="card.title1 && card.value1" class="flex justify-between gap-2  mt-4">
+            <p class="text-sm font-medium text-black-700 dark:text-gray-400">
+              {{ card.title1 }}
+            </p>
+            <p class="text-sm font-semibold text-black-700 dark:text-gray-200">
+              {{ card.value1 }}
+            </p>
+          </div>
+
+          <div v-if="card.title2 && card.value2" class="flex justify-between gap-2">
+            <p class="text-sm font-medium text-black-700 dark:text-gray-400">
+              {{ card.title2 }}
+            </p>
+            <p class="text-sm font-semibold text-black-700 dark:text-gray-200">
+              {{ card.value2 }}
+            </p>
+          </div>
+        </div>
+
+
       </div>
 
       <!-- Icon -->
@@ -41,6 +71,10 @@ defineProps<{
   cards: Array<{
     title: string
     value: number | string
+    title1: string
+    value1: number | string
+    title2: string
+    value2: number | string
     extra?: string
     colorFrom?: string
     colorTo?: string
@@ -51,10 +85,10 @@ defineProps<{
 // Fallback gradient list (light colors from your example)
 const gradientList = [
   { from: '#ffffff', to: '#6C6C6C' }, // yellow-300 -> yellow-500
-  { from: '#86efac', to: '#22c55e' }, // green-300 -> green-500
-  { from: '#fecaca', to: '#f87171' }, // red-200 -> red-400
-  { from: '#a78bfa', to: '#7c3aed' }, // purple-400 -> purple-600
-  { from: '#fed7aa', to: '#fb923c' }, // pink-400 -> pink-500
+  { from: '#ffffff', to: '#22c55e' }, // green-300 -> green-500
+  { from: '#ffffff', to: '#f87171' }, // red-200 -> red-400
+  { from: '#ffffff', to: '#7c3aed' }, // purple-400 -> purple-600
+  { from: '#ffffff', to: '#fb923c' }, // pink-400 -> pink-500
   { from: '#ffffff', to: '#60a5fa' }  // blue-400 -> blue-600
 ]
 
