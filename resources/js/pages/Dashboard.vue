@@ -1,265 +1,224 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
+import { ref, computed, watch } from 'vue'
+
 import DashboardCard from '@/components/DashboardCard.vue'
-import { ref, computed } from 'vue'
-import ChartCard from "../components/ChartCard.vue";
-import CircleProgress from '@/components/CircularProgress.vue'
 import ProgressInfoBar from '@/components/BigProgressbar.vue'
+import CircleProgress from '@/components/CircularProgress.vue'
 import BirdStage from '@/components/BirdStage.vue'
-import { Home, User, Settings } from "lucide-vue-next"
-// Breadcrumbs
-const breadcrumbs = [
-  { title: 'Dashboard', href: '/dashboard' }
-]
 
-// Labels: last 7 days
-const chartLabels = Array.from({ length: 7 }, (_, i) => {
-  const d = new Date();
-  d.setDate(d.getDate() - (6 - i));
-  return d.toISOString().split('T')[0]; // YYYY-MM-DD
-});
+import Datepicker from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 
-// Dummy data for charts
-const eggCollection = [{ name: 'Egg Collection', data: [5520, 8950, 5420, 7966, 2550, 4120, 6340] }];
-const Hatching = [{ name: 'Hatching', data: [5420, 4120, 6340, 5520, 5520, 8950, 2550] }];
-const Revenue = [{ name: 'Revenue', data: [17000000, 120000000, 1100000000, 160000000, 1300000000, 1700000000, 120000000] }];
+import { User, Drumstick, ShieldX, Egg, FlaskConical, PackageSearch, Factory, Syringe, Archive } from "lucide-vue-next"
+import { BabyChick } from '@/icons/BabyChick'
 
+// --- Breadcrumbs
+const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }]
 
-
-// Tabs
-const alltabs = [
-  { name: 'Dashboard' },
-  { name: 'Company' },
-  { name: 'Project' },
-  { name: 'Flock' },
-  { name: 'Shed' },
-  { name: 'Batch' },
-]
-
-// Active tab
+// --- Tabs
+const alltabs = ['Dashboard','Company','Project','Flock','Shed','Batch']
 const activeTab = ref('Dashboard')
 
-// Select tab function
-function selectTab(tabName: string) {
-  activeTab.value = tabName
+// --- Shared card dataset
+const defaultCards = [
+  { title: 'Total Flock', value: 120, icon: User },
+  { title: 'Total Chicks', value: 500, icon: Drumstick },
+  { title: 'Total Mortality', value: 50, icon: ShieldX },
+  { title: 'Total Egg Collection', value: 3000, icon: Egg },
+  { title: 'Total Sent for Lab', value: 25, icon: FlaskConical },
+  { title: 'Total Male Chicks', value: 230, icon: BabyChick },
+  { title: 'Total Female Chicks', value: 220, icon: FlaskConical },
+  { title: 'Total Hatching Egg', value: 1500, icon: PackageSearch },
+  { title: 'Total Commercial Egg', value: 1500, icon: PackageSearch },
+  { title: 'Total Feed Consumption', value: 1000, icon: Factory },
+  { title: 'Total Vaccination', value: 75, icon: Syringe },
+  { title: 'Total Active Sheds', value: 8, icon: Archive },
+]
+
+// --- Filter options
+const filterOptions = {
+  company: ["pcl", "phl", "pbl"],
+  project: ["phl1", "phl2"],
+  flock: ["12", "13"],
+  shed: ["1", "2", "3"],
+  batch: ["A", "B"],
+  date: ["Last 7 Days", "Last 1 Month", "Custom"]
 }
 
-// Dashboard cards
-const dashboardCards = [
-  { title: 'Total Flock', value: 120,icon: User },
-  { title: 'Total Chicks', value: 500,icon: User },
-  { title: 'Total Mortality', value: 50,icon: User },
-  { title: 'Total Egg Collection', value: 3000,icon: User },
-  { title: 'Total Sent for Lab', value: 25,icon: User },
-  { title: 'Total Male Chicks', value: 230 ,icon: User},
-  { title: 'Total Female Chicks', value: 220,icon: User },
-  { title: 'Total Hatching Egg', value: 1500,icon: User },
-  { title: 'Total Commercial Egg', value: 1500,icon: User },
-  { title: 'Total Feed Consumption', value: 1000,icon: User },
-  { title: 'Total Vaccination', value: 75,icon: User },
-  { title: 'Total Active Sheds', value: 8,icon: User },
-]
-
-// Example: Shed cards (replace with your real data)
-const shedCards = [
-  { title: 'Shed A Chicks', value: 120 },
-  { title: 'Shed A Mortality', value: 5 },
-  { title: 'Shed A Egg Collection', value: 300 },
-  { title: 'Shed A Feed Consumption', value: 200 },
-]
-
-// Add other tab cards if needed
-const companyCards = [
-  { title: 'Total Companies', value: 10 },
-  { title: 'Active Projects', value: 5 },
-]
-const projectCards = [
-  { title: 'Total Projects', value: 20 },
-  { title: 'Active Flocks', value: 8 },
-]
-const flockCards = [
-  { title: 'Total Flocks', value: 12 },
-  { title: 'Current Chicks', value: 600 },
-]
-
-// Computed active cards based on active tab
-const activeCards = computed(() => {
-  switch (activeTab.value) {
-    case 'Dashboard':
-      return dashboardCards
-    case 'Shed':
-      return shedCards
-    case 'Company':
-      return companyCards
-    case 'Project':
-      return projectCards
-    case 'Flock':
-      return flockCards
-    default:
-      return []
-  }
+// --- Filters state
+const filters = ref({
+  company: "",
+  project: "",
+  flock: "",
+  shed: "",
+  batch: "",
+  date: "",
+  dateRange: [null, null], // <-- Vue Datepicker range
 })
+
+// --- Tab configuration
+const tabConfig = {
+  Dashboard: { filters: [], cards: defaultCards },
+  Company: { filters: ["company", "date"], cards: defaultCards },
+  Project: { filters: ["company","project","date"], cards: defaultCards },
+  Flock: { filters: ["company","project","flock","shed"], cards: defaultCards },
+  Shed: { filters: ["company","project","flock","shed","date"], cards: defaultCards },
+  Batch: { filters: ["company","project","flock","shed","batch","date"], cards: defaultCards },
+}
+
+// --- Active tab content
+const activeContent = computed(() => tabConfig[activeTab.value] || { filters: [], cards: [] })
+
+// --- Reactive data
+const filteredCards = ref([...defaultCards])
+const progressBars = ref([
+  { title: "Total Eggs", progress: 85, extra: "Goal: 1000 eggs" },
+  { title: "Hatchable Eggs", progress: 65, extra: "Goal: 1000 eggs" },
+  { title: "Commercial", progress: 20, extra: "Goal: 1000 eggs" },
+])
+const circleBars = ref([
+  { title:'Mortality', value:5, type:'rounded' },
+  { title:'Culling', value:2, type:'rounded' },
+  { title:'Male Chicks', value:8, type:'rounded' },
+  { title:'Female Chicks', value:92, type:'straight' },
+  { title:'Excess', value:10, type:'straight' },
+  { title:'Worker', value:80, type:'straight' },
+])
+const birdStage = ref({ bordingTotal:120, growingTotal:180, productionTotal:250 })
+
+// --- Watch filters & tab to update all data
+watch([filters, activeTab], () => {
+  // Cards
+  filteredCards.value = defaultCards.map(card => ({
+    ...card,
+    value: Math.floor(Math.random() * 1000) + 50
+  }))
+
+  // Progress bars
+  progressBars.value = progressBars.value.map(pb => ({
+    ...pb,
+    progress: Math.floor(Math.random() * 100)
+  }))
+
+  // Circle bars
+  circleBars.value = circleBars.value.map(c => ({
+    ...c,
+    value: Math.floor(Math.random() * 100)
+  }))
+
+  // Bird Stage
+  birdStage.value = {
+    bordingTotal: Math.floor(Math.random() * 200),
+    growingTotal: Math.floor(Math.random() * 200),
+    productionTotal: Math.floor(Math.random() * 300)
+  }
+}, { deep: true })
 </script>
 
 <template>
   <Head title="Dashboard" />
-
   <AppLayout :breadcrumbs="breadcrumbs">
+
     <!-- Tabs -->
     <div class="flex justify-end p-4">
       <div class="flex bg-white dark:bg-gray-800 rounded-full shadow overflow-hidden">
         <button
-          v-for="item in alltabs"
-          :key="item.name"
-          @click="selectTab(item.name)"
-          :class="[
-            'flex-1 text-center px-3 py-2 text-sm font-medium transition',
-            activeTab === item.name
-              ? 'bg-black text-white'
-              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
-          ]"
+          v-for="tab in alltabs"
+          :key="tab"
+          @click="activeTab = tab"
+          class="flex-1 text-center px-3 py-2 text-sm font-medium transition"
+          :class="activeTab === tab ? 'bg-black text-white' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'"
         >
-          {{ item.name }}
+          {{ tab }}
         </button>
       </div>
     </div>
+
+    <!-- Filters -->
+    <div v-if="activeContent.filters.length" class="flex gap-4 p-4 flex-wrap">
+      <template v-for="f in activeContent.filters" :key="f">
+        <select
+          v-if="f !== 'date'"
+          v-model="filters[f]"
+          class="border rounded px-2 py-1"
+        >
+          <option disabled value="">Select {{ f }}</option>
+          <option v-for="opt in filterOptions[f]" :key="opt" :value="opt">{{ opt }}</option>
+        </select>
+
+        <div v-else>
+          <select v-model="filters.date" class="border rounded px-2 py-1">
+            <option disabled value="">Select Date Range</option>
+            <option v-for="opt in filterOptions.date" :key="opt" :value="opt">{{ opt }}</option>
+          </select>
+
+          <div v-if="filters.date === 'Custom'" class="flex gap-2 mt-2">
+            <Datepicker
+              v-model="filters.dateRange"
+              :range="true"
+              format="yyyy-MM-dd"
+              :input-class="'border rounded px-3 py-2 w-full'"
+              placeholder="Select Date Range"
+              :auto-apply="true"
+            />
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Progress Bars -->
     <div class="p-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <ProgressInfoBar
+          v-for="(pb, i) in progressBars"
+          :key="i"
+          :title="pb.title"
+          :progress="pb.progress"
+          colorFrom="#34d399"
+          colorTo="#10b981"
+          :extra="pb.extra"
+          :tooltip="pb.progress + '%'"
+        />
+        <BirdStage
+          title="Birds Distribution"
+          :bordingTotal="birdStage.bordingTotal"
+          :growingTotal="birdStage.growingTotal"
+          :productionTotal="birdStage.productionTotal"
+          bordingColor="#fbbf24"
+          growingColor="#22c55e"
+          productionColor="#3b82f6"
+        />
+      </div>
+    </div>
 
-         <ProgressInfoBar
-  title="Total Eggs"
-  :progress="85"
-  colorFrom="#34d399"
-  colorTo="#10b981"
-  extra="Goal: 1000 eggs"
-  tooltip="85%"
-/>
-    <ProgressInfoBar
-  title="Hatchable Eggs"
-  :progress="65"
-  colorFrom="#34d399"
-  colorTo="#10b981"
-  extra="Goal: 1000 eggs"
-  tooltip="65%"
-/>
-
-<ProgressInfoBar
-  title="Commercial "
-  :progress="20"
-  colorFrom="#34d399"
-  colorTo="#10b981"
-  extra="Goal: 1000 eggs"
-  tooltip="20%"
-/>
-
-<BirdStage
-title="Birds Distribution"
-  :bordingTotal="120"
-  :growingTotal="180"
-  :productionTotal="250"
-  bordingColor="#fbbf24"
-  growingColor="#22c55e"
-  productionColor="#3b82f6"
-/>
-
-
-
-</div>
-</div>
-    <!-- Dashboard Cards -->
+    <!-- Cards -->
     <div class="p-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <DashboardCard
-          v-for="(card, index) in activeCards"
-          :key="index"
+          v-for="(card, i) in filteredCards"
+          :key="i"
           :title="card.title"
           :value="card.value"
-          :index="index"
           :icon="card.icon"
+          :index="i"
         />
       </div>
-      
     </div>
+
+    <!-- Circles -->
     <div class="flex justify-start p-4">
       <div class="grid grid-cols-6 gap-4 w-full">
         <CircleProgress
-          :title="'Mortality'"
-          :value="5"
-          type="rounded"
-          colorFrom="#ffffff"
-          colorTo="#000000"
+          v-for="(c,i) in circleBars"
+          :key="i"
+          v-bind="c"
+          colorFrom="#34D399"
+          colorTo="#10B981"
         />
-        <CircleProgress
-          :title="'Culling'"
-          :value="2"
-          type="rounded"
-          colorFrom="#ffffff"
-          colorTo="#000000"
-        />
-        <CircleProgress
-          :title="'Male Chicks'"
-          :value="8"
-          type="rounded"
-          colorFrom="#ffffff"
-          colorTo="#000000"
-        />
-        <CircleProgress
-          :title="'Female Chicks'"
-          :value="92"
-          type="straight"
-          colorFrom="#ffe680"
-          colorTo="#ff9900"
-        />
-        <CircleProgress
-          :title="'Excess'"
-          :value="10"
-          type="straight"
-          colorFrom="#ffe680"
-          colorTo="#ff9900"
-        />
-        <CircleProgress
-          :title="'Worker'"
-          :value="80"
-          type="straight"
-          colorFrom="#ffe680"
-          colorTo="#ff9900"
-        />
-        
       </div>
-        </div>
-    <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-                <!-- <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"> -->
-                    <!-- Bar Chart -->
-                    <!-- <ChartCard
-                    :series="eggCollection"
-                    :labels="chartLabels"
-                    type="bar"
-                    title="Daily Egg Collection"
-                    /> -->
-                <!-- </div> -->
-                <!-- <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"> -->
-                    <!-- Line Chart -->
-                    <!-- <ChartCard
-                    :series="Hatching"
-                    :labels="chartLabels"
-                    type="line"
-                    title="Daily Hatchable Egg"
-                    /> -->
-                <!-- </div> -->
-                <!-- <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"> -->
-                    <!-- Area Chart -->
-                    <!-- <ChartCard
-                    :series="Revenue"
-                    :labels="chartLabels"
-                    type="area"
-                    title="Daily Revenue"
-                    /> -->
-                <!-- </div> -->
-            </div>
-            <div class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                <PlaceholderPattern />
-            </div>
-      
+    </div>
+
   </AppLayout>
 </template>

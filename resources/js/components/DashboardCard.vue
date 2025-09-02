@@ -20,7 +20,7 @@
         v-if="icon"
         class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm"
       >
-        <component :is="icon" class="w-5 h-5 text-gray-800" />
+        <component :is="icon" class="w-5 h-5 text-[#dc8926]" />
       </div>
     </div>
 
