@@ -90,7 +90,10 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('disease/pdf', [DiseaseController::class, 'exportPdf'])->name('disease.pdf');
     Route::get('disease/excel', [DiseaseController::class, 'exportExcel'])->name('disease.excel');
     Route::get('vaccines/pdf', [VaccineController::class, 'downloadPdf'])->name('vaccines.pdf');
-Route::get('vaccines/excel', [VaccineController::class, 'downloadExcel'])->name('vaccines.excel');
-Route::get('units/pdf', [UnitController::class, 'downloadPdf'])->name('unit.pdf');
-Route::get('units/excel', [UnitController::class, 'downloadExcel'])->name('unit.excel');
+    Route::get('vaccines/excel', [VaccineController::class, 'downloadExcel'])->name('vaccines.excel');
+    Route::get('units/pdf', [UnitController::class, 'downloadPdf'])->name('unit.pdf');
+    Route::get('units/excel', [UnitController::class, 'downloadExcel'])->name('unit.excel');
+    Route::get('company/pdf', [CompanyController::class, 'downloadPdf'])->name('company.pdf');
+    Route::get('company/excel', [CompanyController::class, 'downloadExcel'])->name('company.excel');
+
 });
