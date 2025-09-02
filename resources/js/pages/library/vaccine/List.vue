@@ -306,7 +306,7 @@ const breadcrumbs = [
                             <td class="flex gap-4 px-6 py-4">
                                 <button class="font-medium text-indigo-600 hover:underline" @click="openModal(vaccine)">Edit</button>
                                 <button class="font-medium text-red-600 hover:underline" @click="toggleStatus(vaccine)">
-                                    {{ vaccine.status === 1 ? 'Deactivate' : 'Activate' }}
+                                    {{ vaccine.status === 1 ? 'Inactive' : 'Activate' }}
                                 </button>
                             </td>
                         </tr>
