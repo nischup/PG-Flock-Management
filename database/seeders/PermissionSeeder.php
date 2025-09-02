@@ -61,6 +61,11 @@ class PermissionSeeder extends Seeder
             'company.edit',
             'company.delete',
 
+            'project.view',
+            'project.create',
+            'project.edit',
+            'project.delete',
+
             'feed-type.view',
             'feed-type.create',
             'feed-type.edit',
