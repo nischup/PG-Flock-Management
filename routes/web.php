@@ -19,7 +19,6 @@ use App\Http\Controllers\Master\ChickTypeController;
 use App\Http\Controllers\Shed\BatchAssignController;
 use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Master\VaccineTypeController;
-use App\Http\Controllers\Reports\VaccineReportController;
 use App\Http\Controllers\Transfer\BirdTransferController;
 use App\Http\Controllers\Production\EggClassificationController;
 use App\Http\Controllers\DailyOperation\DailyOperationController;
@@ -113,7 +112,8 @@ Route::get('/weather', [WeatherController::class, 'get']);
 
 
 //Report
-Route::get('reports/vaccines/pdf', [VaccineReportController::class, 'downloadPdf'])
-     ->name('reports.vaccines.pdf');
-     Route::get('reports/vaccines/excel', [VaccineReportController::class, 'downloadExcel'])
-    ->name('reports.vaccines.excel');
+Route::get('reports/vaccines/pdf', [VaccineController::class, 'downloadPdf'])->name('reports.vaccines.pdf');
+Route::get('reports/vaccines/excel', [VaccineController::class, 'downloadExcel'])->name('reports.vaccines.excel');
+Route::get('reports/units/pdf', [UnitController::class, 'downloadPdf'])->name('reports.unit.pdf');
+Route::get('reports/units/excel', [UnitController::class, 'downloadExcel'])->name('reports.unit.excel');
+
