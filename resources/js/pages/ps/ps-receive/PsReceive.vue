@@ -117,7 +117,7 @@ const toggleDropdown = (id: number) => {
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">Parent Stock Receive Information</h1>
         <Link
-          v-if="can('ps.receive.create')"
+          v-if="can('ps-receive.create')"
           href="/ps-receive/create"
           class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"
         >
@@ -165,7 +165,7 @@ const toggleDropdown = (id: number) => {
                   >
                    <!-- Edit -->
                       <Link
-                        v-if="can('ps.receive.edit')"
+                        v-if="can('ps-receive.edit')"
                         :href="`/ps-receive/${item.id}/edit`"
                         class="px-4 py-2 text-left hover:bg-blue-50 text-blue-600 flex items-center gap-2"
                       >
@@ -175,7 +175,7 @@ const toggleDropdown = (id: number) => {
 
                       <!-- Delete -->
                       <button
-                        v-if="can('ps.receive.delete')"
+                        v-if="can('ps-receive.delete')"
                         @click="deleteReceive(item.id)"
                         class="px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2 w-full"
                       >

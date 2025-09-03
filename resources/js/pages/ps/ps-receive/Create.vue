@@ -14,14 +14,25 @@ import FileUploader from '@/components/FileUploader.vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { watch  } from 'vue'
+import { useDropdownOptions } from '@/composables/dropdownOptions'
 
 
+
+
+
+const { transportTypes,shipmentTypes  } = useDropdownOptions()
 // Breadcrumb
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Parent Stock', href: '/ps-receive' },
   { title: 'Receive Entry', href: '/ps-receive/create' },
 ];
 
+
+const props = defineProps<{
+  suppliers: Array<{id: number, name: string}>
+  breedTypes: Array<{id: number, name: string}>
+  companies: Array<{id: number, name: string}>
+}>();
 // Form data
 const form = useForm({
   shipment_type_id: 1,
@@ -35,7 +46,7 @@ const form = useForm({
   breed_type: '',
   country_of_origin: '',
   transport_type: '',
-  t_inside_temp:'',
+  vehicle_inside_temp:'',
 
   remarks: '',
   file: [], // file upload
@@ -65,25 +76,21 @@ const form = useForm({
   ps_net_weight: 0,
 
   lab_type: 'Gov Lab',
-  lab_send_female_qty:0,
-  lab_send_male_qty:0,
-  lab_send_total_qty:0,
+  gov_lab_send_female_qty:0,
+  gov_lab_send_male_qty:0,
+  gov_lab_send_total_qty:0,
 
   provita_lab_type: 'Provita Lab',
   provita_lab_send_female_qty:0,
   provita_lab_send_male_qty:0,
+  provita_lab_send_total_qty:0,
   
 })
-
-const suppliers = ref([
-  { id: 1, name: 'Hubbard Breeders' },
-  { id: 2, name: 'Kazi' },
-])
 
 
 function submit() {
 
-    console.log(form.file);
+
 
   const formData = new FormData();
 
@@ -134,9 +141,15 @@ watch(
 
 
 function updateTotalQty() {
-  form.lab_send_total_qty = Number(form.lab_send_female_qty) +Number(form.provita_lab_send_female_qty) + Number(form.provita_lab_send_male_qty) + Number(form.lab_send_male_qty);
-}
+  // Subtotals
+  form.provita_lab_send_total_qty =
+    Number(form.provita_lab_send_male_qty || 0) +
+    Number(form.provita_lab_send_female_qty || 0);
 
+  form.gov_lab_send_total_qty =
+    Number(form.gov_lab_send_male_qty || 0) +
+    Number(form.gov_lab_send_female_qty || 0);
+}
 
 
 const tabs = [
@@ -182,7 +195,7 @@ function validateTab(index: number) {
 
   if (tabs[index].key === 'lab') {
     if (
-      form.lab_send_total_qty <= 0 &&
+      form.gov_lab_send_total_qty <= 0 &&
       form.provita_lab_send_female_qty + form.provita_lab_send_male_qty <= 0
     ) {
       tabErrors.value.lab_send_total_qty = 'At least one lab qty required'
@@ -245,8 +258,9 @@ function validateTab(index: number) {
             <div class="flex flex-col">
               <Label>Shipment Type</Label>
               <select v-model="form.shipment_type_id" class="mt-2 border rounded px-3 py-2">
-                <option :value="1">Local</option>
-                <option :value="2">Foreign</option>
+                <option v-for="shipmenttype in shipmentTypes" :key="shipmenttype.id" :value="shipmenttype.id">
+                  {{ shipmenttype.name }}
+                </option>
               </select>
               <InputError :message="form.errors.shipment_type_id" class="mt-1" />
             </div>
@@ -291,7 +305,13 @@ function validateTab(index: number) {
               <Label>Supplier Name</Label>
               <select v-model="form.supplier_id" class="mt-2 border rounded px-3 py-2">
                 <option value="">Select One</option>
-                <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">{{ supplier.name }}</option>
+                <option
+                    v-for="supplier in props.suppliers"
+                    :key="supplier.id"
+                    :value="supplier.id"
+                  >
+                    {{ supplier.name }}
+                </option>
               </select>
               <InputError :message="form.errors.supplier_id" class="mt-1" />
             </div>
@@ -300,8 +320,13 @@ function validateTab(index: number) {
               <Label>Breed Type</Label>
               <select v-model="form.breed_type" class="mt-2 border rounded px-3 py-2">
                 <option value="">Select One</option>
-                <option value="1">Rhode Island Red</option>
-                <option value="2">Cobb 500</option>
+                <option
+                  v-for="breed in props.breedTypes"
+                  :key="breed.id"
+                  :value="breed.id"
+                >
+                  {{ breed.name }}
+                </option>
               </select>
               <InputError :message="form.errors.breed_type" class="mt-1" />
             </div>
@@ -320,25 +345,30 @@ function validateTab(index: number) {
               <Label>Transport Type</Label>
               <select v-model="form.transport_type" class="mt-2 border rounded px-3 py-2">
                 <option value="">Select One</option>
-                <option value="1">Freezing Microbas</option>
-                <option value="2">Freezing Bus</option>
-                <option value="3">Open Truck</option>
+                <option v-for="transporttype in transportTypes" :key="transporttype.id" :value="transporttype.id">
+                  {{ transporttype.name }}
+                </option>
               </select>
               <InputError :message="form.errors.transport_type" class="mt-1" />
             </div>
 
             <div class="flex flex-col">
               <Label>Vehicle Temperature</Label>
-              <Input v-model="form.t_inside_temp" type="text" placeholder="Enter Inside Temperature" class="mt-2" />
-              <InputError :message="form.errors.t_inside_temp" class="mt-1" />
+              <Input v-model="form.vehicle_inside_temp" type="text" placeholder="Enter Inside Temperature" class="mt-2" />
+              <InputError :message="form.errors.vehicle_inside_temp" class="mt-1" />
             </div>
 
             <div class="flex flex-col">
               <Label>Ship To</Label>
               <select v-model="form.company_id" class="mt-2 border rounded px-3 py-2">
                 <option value="0">Select One</option>
-                <option value="1">PBL</option>
-                <option value="2">PCL</option>
+                <option
+                  v-for="company in props.companies"
+                  :key="company.id"
+                  :value="company.id"
+                >
+                  {{ company.name }}
+                </option>
               </select>
               <InputError :message="form.errors.company_id" class="mt-1" />
             </div>
@@ -416,61 +446,54 @@ function validateTab(index: number) {
           </div>
         </div>
 
-        <!-- Lab Transfer -->
+        <!-- LAB TAB (Create Page, same as Edit Page) -->
         <div v-if="activeTab === 2" class="space-y-4 border rounded-lg p-4 shadow-sm bg-white">
-          <h2 class="text-xl font-semibold">Transfer Lab (For Test)</h2>
-          <div class="grid grid-cols-3 gap-4 items-center">
-            <div class="flex flex-col">
-             <Label>Lab Type</Label>
-              <select v-model="form.lab_type" class="mt-2 border rounded px-3 py-2">
-                <option value="Gov Lab">Gov Lab</option>
-              </select>
-            </div>
-            <div class="flex flex-col">
-              <Label>Gov Lab Female Transfer Qty</Label>
-              <Input v-model.number="form.lab_send_female_qty" type="number" class="mt-2" @input="updateTotalQty" />
-            </div>
-            <div class="flex flex-col">
-              <Label>Gov Lab Male Transfer Qty</Label>
-              <Input v-model.number="form.lab_send_male_qty" type="number" class="mt-2"  @input="updateTotalQty" />
-            </div>
-          </div>
+          <h2 class="text-xl font-semibold">Lab Transfer</h2>
 
           <div class="grid grid-cols-3 gap-4 items-center">
+            <h3 class="col-span-3 font-semibold text-gray-700">Gov Lab</h3>
             <div class="flex flex-col">
-             <Label>Lab Type</Label>
-              <select v-model="form.provita_lab_type" class="mt-2 border rounded px-3 py-2">
-                <option value="Provita Lab">Provita Lab</option>
-              </select>
+              <Label>Male Qty</Label>
+              <Input v-model.number="form.gov_lab_send_male_qty" type="number" class="mt-2" @input="updateTotalQty" />
             </div>
             <div class="flex flex-col">
-              <Label>Provita Lab Female Transfer Qty</Label>
+              <Label>Female Qty</Label>
+              <Input v-model.number="form.gov_lab_send_female_qty" type="number" class="mt-2" @input="updateTotalQty" />
+            </div>
+            <div class="flex flex-col">
+              <Label>Total Qty</Label>
+              <Input v-model.number="form.gov_lab_send_total_qty" type="number" class="mt-2" readonly />
+            </div>
+
+            <h3 class="col-span-3 font-semibold text-gray-700 mt-4">Provita Lab</h3>
+            <div class="flex flex-col">
+              <Label>Male Qty</Label>
+              <Input v-model.number="form.provita_lab_send_male_qty" type="number" class="mt-2" @input="updateTotalQty" />
+            </div>
+            <div class="flex flex-col">
+              <Label>Female Qty</Label>
               <Input v-model.number="form.provita_lab_send_female_qty" type="number" class="mt-2" @input="updateTotalQty" />
             </div>
             <div class="flex flex-col">
-              <Label>Provita Lab Male Transfer Qty</Label>
-              <Input v-model.number="form.provita_lab_send_male_qty" type="number" class="mt-2"  @input="updateTotalQty" />
+              <Label>Total Qty</Label>
+              <Input v-model.number="form.provita_lab_send_total_qty" type="number" class="mt-2" readonly />
             </div>
-          </div>
 
-          <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="flex flex-col">
-              <Label>Lab Total Transfer Qty</Label>
-              <Input v-model.number="form.lab_send_total_qty" type="number" class="mt-2"  readonly />
-            </div>
-            <div class="flex flex-col">
+            <div class="flex flex-col col-span-3">
               <Label>Remarks</Label>
-              <textarea v-model="form.remarks" class="border rounded px-3 mt-2" ></textarea>
+              <textarea v-model="form.remarks" class="border rounded px-3 mt-2"></textarea>
+            </div>
+
+            <div class="flex flex-col col-span-3">
+              <FileUploader
+                v-model="form.labfile"
+                label="Upload Lab Files"
+                :max-files="3"
+                accept=".jpg,.jpeg,.png,.pdf"
+                wrapper-class="flex flex-col mt-5"
+              />
             </div>
           </div>
-
-          <FileUploader
-              v-model="form.labfile"
-              label="Upload Lab Files"
-              :max-files="1"
-              accept=".jpg,.jpeg,.png,.pdf"
-              wrapper-class="flex flex-col mb-4 col-span-3"
-          />
         </div>
 
         <!-- Navigation Buttons -->

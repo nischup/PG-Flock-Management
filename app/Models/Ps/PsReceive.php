@@ -46,6 +46,6 @@ class PsReceive extends Model
 
     public function labTransfers()
     {
-        return $this->hasOne(PsLabTest::class);
+        return $this->hasMany(PsLabTest::class);
     }
 }

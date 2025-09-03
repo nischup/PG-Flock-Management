@@ -83,9 +83,6 @@ const breadcrumbs: BreadcrumbItem[] = [
               
               <th class="px-6 py-3 text-left font-semibold">Female Qty</th>
               <th class="px-6 py-3 text-left font-semibold">Male Qty</th>
-              <th class="px-6 py-3 text-left font-semibold">Lab</th>
-              <th class="px-6 py-3 text-left font-semibold">Female Qty</th>
-              <th class="px-6 py-3 text-left font-semibold">Male Qty</th>
               <th class="px-6 py-3 text-left font-semibold">Total Qty</th>
               <th class="px-6 py-3 text-left font-semibold">Notes</th>
               <th class="px-6 py-3 text-left font-semibold">Status</th>
@@ -103,12 +100,9 @@ const breadcrumbs: BreadcrumbItem[] = [
               <td class="px-6 py-4">
                 {{ lab.ps_receive?.created_at ? dayjs(lab.ps_receive.created_at).format('YYYY-MM-DD') : '-' }}
               </td>
-              <td class="px-6 py-4">{{ lab.lab_type }}</td>
+              <td class="px-6 py-4"> {{ lab.lab_type == "1" ? 'Gov Lab' : lab.lab_type == "2" ? 'Provita Lab' : '' }}</td>
               <td class="px-6 py-4">{{ lab.lab_send_female_qty }}</td>
               <td class="px-6 py-4">{{ lab.lab_send_male_qty }}</td>
-              <td class="px-6 py-4">Provita Lab</td>
-              <td class="px-6 py-4"></td>
-              <td class="px-6 py-4"></td>
               <td class="px-6 py-4">{{ lab.lab_send_total_qty }}</td>
               <td class="px-6 py-4">{{ lab.notes ?? '-' }}</td>
               <td class="px-6 py-4">

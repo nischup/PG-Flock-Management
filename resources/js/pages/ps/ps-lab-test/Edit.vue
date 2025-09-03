@@ -34,6 +34,8 @@ const form = useForm({
   file: props.labTest.files ?? [],
 })
 
+console.log(props.labTest);
+
 const psReceive = ref({
   pi_no: props.labTest.ps_receive?.pi_no ?? '',
   pi_date: props.labTest.ps_receive?.pi_date ?? '',
@@ -42,6 +44,7 @@ const psReceive = ref({
   lc_no: props.labTest.ps_receive?.lc_no ?? '',
   lc_date: props.labTest.ps_receive?.lc_date ?? '',
   remarks: props.labTest.ps_receive?.remarks ?? '',
+  created_at:props.labTest.created_at ?? '',
 })
 
 // Lab Send Accordion
@@ -96,8 +99,8 @@ function submit() {
             <div><span class="font-medium">PI Date:</span> {{ psReceive.pi_date }}</div>
             <div><span class="font-medium">Order No:</span> {{ psReceive.order_no }}</div>
             <div><span class="font-medium">Order Date:</span> {{ psReceive.order_date }}</div>
-            <div><span class="font-medium">LC No:</span> {{ psReceive.lc_no }}</div>
-            <div><span class="font-medium">LC Date:</span> {{ psReceive.lc_date }}</div>
+            <div><span class="font-medium">Lab Send Date:</span> {{ psReceive.created_at }}</div>
+            
             <div class="col-span-3"><span class="font-medium">Remarks:</span> {{ psReceive.remarks }}</div>
           </div>
         </transition>
@@ -115,7 +118,7 @@ function submit() {
                     leave-from-class="max-h-screen opacity-100"
                     leave-to-class="max-h-0 opacity-0">
           <div v-if="showLabSend" class="grid grid-cols-3 gap-4 text-sm mt-4 overflow-hidden">
-            <div><span class="font-medium">Lab Type:</span> {{ labSend.lab_type }}</div>
+            <div><span class="font-medium">Lab Type:</span> {{ labSend.lab_type == 1 ? 'Gov Lab' : labSend.lab_type == 2 ? 'Provita Lab' : '' }}</div>
             <div><span class="font-medium">Female Qty:</span> {{ labSend.lab_send_female_qty }}</div>
             <div><span class="font-medium">Male Qty:</span> {{ labSend.lab_send_male_qty }}</div>
             <div><span class="font-medium">Total Qty:</span> {{ labSend.lab_send_total_qty }}</div>
