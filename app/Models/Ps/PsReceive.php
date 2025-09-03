@@ -32,6 +32,7 @@ class PsReceive extends Model
         'order_date' => 'date',
         'lc_date' => 'date',
         'created_at'=> 'date',
+        'breed_type' => 'array',
     ];
 
     public function attachments()

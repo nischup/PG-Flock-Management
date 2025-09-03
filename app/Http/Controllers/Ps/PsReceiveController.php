@@ -86,7 +86,7 @@ class PsReceiveController extends Controller
 
             // 1️⃣ Create main PS Receive
 
-
+            
             //dd($request);
             $psReceive = PsReceive::create([
                 'shipment_type_id' => (int) $request->shipment_type_id,
@@ -97,7 +97,7 @@ class PsReceiveController extends Controller
                 'lc_no' => $request->lc_no,
                 'lc_date' => $request->lc_date,
                 'supplier_id' => (int) ($request->supplier_id ?? 0),
-                'breed_type' => (int) ($request->breed_type ?? 0),
+                'breed_type' => collect($request->breed_type)->pluck('id')->map(fn($id) => (int) $id)->unique()->toArray(),
                 'country_of_origin' => (int) ($request->country_of_origin ?? 0),
                 'transport_type' => (int) ($request->transport_type ?? 0),
                 'company_id' => (int) ($request->_company_id ?? 0),
@@ -221,7 +221,7 @@ class PsReceiveController extends Controller
                 'lc_no' => $request->lc_no,
                 'lc_date' => $request->lc_date,
                 'supplier_id' => (int) ($request->supplier_id ?? 0),
-                'breed_type' => (int) ($request->breed_type ?? 0),
+                'breed_type' => $request->breed_type ?? [],
                 'country_of_origin' => (int) ($request->country_of_origin ?? 0),
                 'transport_type' => (int) ($request->transport_type ?? 0),
                 'remarks' => $request->remarks,

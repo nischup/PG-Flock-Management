@@ -122,7 +122,7 @@ const cardData = computed(() => piCardData[selectedPI.value] || [])
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">Parent Stock Farm Receive Info.</h1>
         <Link
-          v-if="can('ps.receive.create')"
+          v-if="can('ps-receive.create')"
           href="/ps-firm-receive/create"
           class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"
         >

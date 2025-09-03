@@ -13,6 +13,8 @@ import { ArrowLeft } from 'lucide-vue-next'
 import FileUploader from '@/components/FileUploader.vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
+import Multiselect from 'vue-multiselect'
+import 'vue-multiselect/dist/vue-multiselect.css'
 import { watch  } from 'vue'
 import { useDropdownOptions } from '@/composables/dropdownOptions'
 
@@ -43,7 +45,7 @@ const form = useForm({
   lc_no: '',
   lc_date: null, 
   supplier_id: '',
-  breed_type: '',
+  breed_type: [],
   country_of_origin: '',
   transport_type: '',
   vehicle_inside_temp:'',
@@ -318,16 +320,18 @@ function validateTab(index: number) {
 
             <div class="flex flex-col">
               <Label>Breed Type</Label>
-              <select v-model="form.breed_type" class="mt-2 border rounded px-3 py-2">
-                <option value="">Select One</option>
-                <option
-                  v-for="breed in props.breedTypes"
-                  :key="breed.id"
-                  :value="breed.id"
-                >
-                  {{ breed.name }}
-                </option>
-              </select>
+              <Multiselect
+                v-model="form.breed_type"
+                :options="props.breedTypes"
+                :multiple="true"
+                :close-on-select="false"
+                :clear-on-select="false"
+                :preserve-search="true"
+                placeholder="Select breed types"
+                label="name"
+                track-by="id"
+              />
+            
               <InputError :message="form.errors.breed_type" class="mt-1" />
             </div>
 

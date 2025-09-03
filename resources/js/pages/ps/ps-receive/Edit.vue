@@ -13,7 +13,9 @@ import FileUploader from '@/components/FileUploader.vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { useDropdownOptions } from '@/composables/dropdownOptions'
+import Multiselect from 'vue-multiselect'
 
+import 'vue-multiselect/dist/vue-multiselect.css'
 const { transportTypes, shipmentTypes } = useDropdownOptions()
 
 const props = defineProps<{
@@ -29,7 +31,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 ]
 
 
-console.log(props.psReceive);
+// Map saved breed_type IDs to objects from props.breedTypes
+const selectedBreeds = props.breedTypes.filter(breed =>
+  (props.psReceive.breed_type ?? []).includes(breed.id)
+)
 // Form prefilled with existing data
 const form = useForm({
   shipment_type_id: props.psReceive.shipment_type_id,
@@ -40,7 +45,7 @@ const form = useForm({
   lc_no: props.psReceive.lc_no,
   lc_date: props.psReceive.lc_date,
   supplier_id: props.psReceive.supplier_id,
-  breed_type: props.psReceive.breed_type,
+  breed_type: selectedBreeds,
   country_of_origin: props.psReceive.country_of_origin,
   transport_type: props.psReceive.transport_type,
   vehicle_inside_temp: props.psReceive.transport_inside_temp,
@@ -245,10 +250,17 @@ function submit() {
 
             <div class="flex flex-col">
               <Label>Breed Type</Label>
-              <select v-model="form.breed_type" class="mt-2 border rounded px-3 py-2">
-                <option value="">Select One</option>
-                <option v-for="breed in props.breedTypes" :key="breed.id" :value="breed.id">{{ breed.name }}</option>
-              </select>
+              <Multiselect
+                v-model="form.breed_type"
+                :options="props.breedTypes"
+                :multiple="true"
+                :close-on-select="false"
+                :clear-on-select="false"
+                :preserve-search="true"
+                placeholder="Select breed types"
+                label="name"
+                track-by="id"
+              />
               <InputError :message="form.errors.breed_type" class="mt-1" />
             </div>
 

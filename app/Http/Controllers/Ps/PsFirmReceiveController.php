@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Ps;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ps\PsReceive;
+use App\Models\Ps\PsFirmReceive;
 use App\Models\Master\Company;
+use App\Models\Master\Flock;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
+
 
 class PsFirmReceiveController extends Controller
 {
@@ -51,13 +55,16 @@ class PsFirmReceiveController extends Controller
             ];
         });
 
+        $flocks = Flock::select('id', 'name')->get();
 
+        
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
 
         return Inertia::render('ps/ps-firm-receive/List', [
             'psReceives' => $psReceives,
             'companies' => $companies,
+            'flocks' => $flocks,
         ]);
     }
 
@@ -102,13 +109,14 @@ class PsFirmReceiveController extends Controller
             ];
         });
 
-
+        $flocks = Flock::select('id', 'name')->get();
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
 
         return Inertia::render('ps/ps-firm-receive/Create', [
             'psReceives' => $psReceives,
             'companies' => $companies,
+            'flocks' => $flocks,
         ]);
     }
 
@@ -117,7 +125,33 @@ class PsFirmReceiveController extends Controller
      */
     public function store(Request $request)
     {
-        //
+       
+       
+     
+        
+       
+        $jobNo = "PS{$request->ps_receive_id}-RC{$request->receiving_company_id}-F{$request->flock_id}";
+
+        $firmReceive = PsFirmReceive::create([
+            'ps_receive_id' => $request->ps_receive_id,
+            'job_no' => $jobNo,
+            'receipt_type' => 'box',
+            'source_type' => 'psreceive',
+            'source_id' => $request->ps_receive_id,
+            'flock_id' => $request->flock_id,
+            'flock_name' => $request->flock_name,
+            'receiving_company_id' => $request->receiving_company_id,
+            'firm_female_qty' => $request->firm_female_box_qty,
+            'firm_male_qty' => $request->firm_male_box_qty,
+            'firm_total_qty' => $request->firm_total_box_qty,
+            'remarks' => $request->remarks,
+            'created_by' => Auth::id(),
+            'status' => $request->status ?? 1,
+        ]);
+
+
+        dd($firmReceive);
+        return redirect()->back()->with('success', 'Firm Receive created successfully!');
     }
 
     /**

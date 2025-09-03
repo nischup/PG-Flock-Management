@@ -19,6 +19,7 @@ use App\Http\Controllers\Master\MedicineController;
 use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Master\BreedTypeController;
 use App\Http\Controllers\Master\ChickTypeController;
+use App\Http\Controllers\Master\FlockController;
 use App\Http\Controllers\Shed\BatchAssignController;
 use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Master\VaccineTypeController;
@@ -80,6 +81,8 @@ Route::get('/details/{flockId}/{tabKey}', [DailyOperationController::class, 'sho
 Route::resource('production/egg-classification', EggClassificationController::class);
 
 Route::get('/weather', [WeatherController::class, 'get']);
+
+ Route::resource('flocks', FlockController::class)->only(['store']);
 
 
 //Report
