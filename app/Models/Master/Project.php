@@ -2,24 +2,29 @@
 
 namespace App\Models\Master;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
+use App\Models\Master\Company;
 
-class Company extends Model
+class Project extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
+        'company_id',
         'name',
-        'company_type',
+
         'location',
         'contact_person_name',
         'contact_person_phone',
         'contact_person_email',
         'contact_person_designation',
-        'status'
+        'status',
     ];
 
-    public function users()
+    // Project belongs to a company
+    public function company()
     {
-        return $this->hasMany(User::class, 'company_id');
+        return $this->belongsTo(Company::class);
     }
 }
