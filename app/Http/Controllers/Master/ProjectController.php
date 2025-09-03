@@ -40,7 +40,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'company_id' => 'required|exists:companies,id',
             'name' => 'required|string|max:200',
-            'project_type' => 'nullable|string|max:100',
+            // 'project_type' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:200',
             'contact_person_name' => 'nullable|string|max:150',
             'contact_person_phone' => 'nullable|string|max:50',
@@ -61,7 +61,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'company_id' => 'required|exists:companies,id',
             'name' => 'required|string|max:200',
-            'project_type' => 'nullable|string|max:100',
+            // 'project_type' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:200',
             'contact_person_name' => 'nullable|string|max:150',
             'contact_person_phone' => 'nullable|string|max:50',
@@ -111,7 +111,7 @@ class ProjectController extends Controller
             ->map(fn($p) => [
                 'company' => $p->company?->name,
                 'name' => $p->name,
-                'type' => $p->project_type,
+                // 'type' => $p->project_type,
                 'location' => $p->location,
                 'contact_name' => $p->contact_person_name,
                 'phone' => $p->contact_person_phone,
@@ -125,7 +125,7 @@ class ProjectController extends Controller
             ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
             ['label' => 'Company', 'key' => 'company'],
             ['label' => 'Name', 'key' => 'name'],
-            ['label' => 'Type', 'key' => 'type'],
+            // ['label' => 'Type', 'key' => 'type'],
             ['label' => 'Location', 'key' => 'location'],
             ['label' => 'Contact Name', 'key' => 'contact_name'],
             ['label' => 'Phone', 'key' => 'phone'],
@@ -169,7 +169,7 @@ class ProjectController extends Controller
             ->map(fn($p) => [
                 'company' => $p->company?->name,
                 'name' => $p->name,
-                'type' => $p->project_type,
+                // 'type' => $p->project_type,
                 'location' => $p->location,
                 'contact_name' => $p->contact_person_name,
                 'phone' => $p->contact_person_phone,
@@ -183,7 +183,7 @@ class ProjectController extends Controller
             ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
             ['label' => 'Company', 'key' => 'company'],
             ['label' => 'Name', 'key' => 'name'],
-            ['label' => 'Type', 'key' => 'type'],
+            // ['label' => 'Type', 'key' => 'type'],
             ['label' => 'Location', 'key' => 'location'],
             ['label' => 'Contact Name', 'key' => 'contact_name'],
             ['label' => 'Phone', 'key' => 'phone'],
