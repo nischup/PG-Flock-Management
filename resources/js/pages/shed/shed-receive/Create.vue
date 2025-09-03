@@ -20,20 +20,24 @@ const props = defineProps<{
   firmReceives: Array<any> // Batches generated from firm receive
   flocks: Array<any>
   companies: Array<any>
+  sheds: Array<any>
 }>()
 
 // Form state
-const selectedBatchId = ref<number | string>('')
+const selectedJobId = ref<number | string>('')
 const selectedFlockId = ref<number | string>('')
+const selectedShedid = ref<number | string>('')
+
 const showInfo = ref(false)
 
 const form = useForm({
-  batch_id: '',
+  job_id: 0,
   flock_id: 0,
+  shed_id:1,
   receiving_company_id: 0,
-  shed_female_box_qty: 0,
-  shed_male_box_qty: 0,
-  shed_total_box_qty: 0,
+  shed_female_qty: 0,
+  shed_male_qty: 0,
+  shed_total_qty: 0,
   shed_sortage_male_box: 0,
   shed_sortage_female_box: 0,
   shed_sortage_box_qty: 0,
@@ -46,10 +50,10 @@ const form = useForm({
 
 // Watch for total boxes and auto-calc shortages/excess
 watch(
-  () => [form.shed_male_box_qty, form.shed_female_box_qty],
+  () => [form.shed_male_qty, form.shed_female_qty],
   () => {
-    form.shed_total_box_qty =
-      Number(form.shed_male_box_qty || 0) + Number(form.shed_female_box_qty || 0)
+    form.shed_total_qty =
+      Number(form.shed_male_qty || 0) + Number(form.shed_female_qty || 0)
 
     // Total shortage
     form.shed_sortage_box_qty =
@@ -65,14 +69,23 @@ watch(selectedFlockId, (val) => {
   form.flock_id = val
 })
 
+// Watch for flock selection
+watch(selectedShedid, (val) => {
+  form.shed_id = val
+})
+
+watch(selectedJobId, (val) => {
+  form.job_id = val
+})
+
 // Toggle Batch Info
 function toggleInfo() {
-  const selected = props.firmReceives.find((batch) => batch.id === Number(selectedBatchId.value))
+  const selected = props.firmReceives.find((job) => job.id === Number(selectedJobId.value))
   if (!selected) {
     showInfo.value = false
     return
   }
-  form.batch_id = selected.id
+  form.job_id = selected.id
   form.receiving_company_id = selected.receiving_company_id
   selectedFlockId.value = selected.flock_id
   showInfo.value = true
@@ -109,10 +122,10 @@ function submit() {
         <!-- Batch Dropdown -->
         <div>
           <Label>Job No (Firm Receive)</Label>
-          <select v-model="selectedBatchId" @change="toggleInfo" class="w-full mt-1 border rounded px-3 py-2">
-            <option value="">Select Batch</option>
-            <option v-for="batch in props.firmReceives" :key="batch.id" :value="batch.id">
-              {{ batch.job_no }}
+          <select v-model="selectedJobId" @change="toggleInfo" class="w-full mt-1 border rounded px-3 py-2">
+            <option value="">Select Job No</option>
+            <option v-for="job in props.firmReceives" :key="job.id" :value="job.id">
+              {{ job.job_no }}
             </option>
           </select>
         </div>
@@ -120,9 +133,18 @@ function submit() {
         <!-- Flock -->
         <div>
           <Label>Flock</Label>
-          <select v-model="selectedFlockId" class="w-full mt-1 border rounded px-3 py-2">
+          <select v-model="selectedFlockId" class="w-full mt-1 border rounded px-3 py-2"  disabled>
             <option value="">Select Flock</option>
             <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">{{ flock.name }}</option>
+          </select>
+        </div>
+
+        <!-- Flock -->
+        <div>
+          <Label>Shed</Label>
+          <select v-model="selectedShedid" class="w-full mt-1 border rounded px-3 py-2">
+            <option value="">Select Shed</option>
+            <option v-for="shed in props.sheds" :key="shed.id" :value="shed.id">{{ shed.name }}</option>
           </select>
         </div>
       </div>
@@ -132,11 +154,11 @@ function submit() {
         enter-from-class="max-h-0 opacity-0" enter-to-class="max-h-screen opacity-100"
         leave-from-class="max-h-screen opacity-100" leave-to-class="max-h-0 opacity-0">
         <div v-if="showInfo" class="grid grid-cols-3 gap-4 text-sm mt-5 overflow-hidden">
-          <div><span class="font-medium">Job No:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedBatchId)?.job_no }}</span></div>
+          <div><span class="font-medium">Job No:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedJobId)?.job_no }}</span></div>
           <div><span class="font-medium">Receiving Company:</span> <span class="ml-1">{{ props.companies.find(c => c.id === form.receiving_company_id)?.name }}</span></div>
-          <div><span class="font-medium">Female Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedBatchId)?.firm_female_qty }}</span></div>
-          <div><span class="font-medium">Male Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedBatchId)?.firm_male_qty }}</span></div>
-          <div><span class="font-medium">Total Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedBatchId)?.firm_total_qty }}</span></div>
+          <div><span class="font-medium">Female Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedJobId)?.firm_female_qty }}</span></div>
+          <div><span class="font-medium">Male Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedJobId)?.firm_male_qty }}</span></div>
+          <div><span class="font-medium">Total Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedJobId)?.firm_total_qty }}</span></div>
         </div>
       </transition>
     </div>
@@ -146,9 +168,9 @@ function submit() {
       <h2 class="font-semibold text-lg mb-4">Shed Receive Boxes</h2>
 
       <div class="grid grid-cols-3 gap-4">
-        <div><Label>Female Box Qty</Label><Input v-model.number="form.shed_female_box_qty" type="number" class="mt-1" /></div>
-        <div><Label>Male Box Qty</Label><Input v-model.number="form.shed_male_box_qty" type="number" class="mt-1" /></div>
-        <div><Label>Total Box Qty</Label><Input type="number" :value="form.shed_total_box_qty" readonly class="mt-1 bg-gray-100 text-gray-700 cursor-not-allowed" /></div>
+        <div><Label>Female Box Qty</Label><Input v-model.number="form.shed_female_qty" type="number" class="mt-1" /></div>
+        <div><Label>Male Box Qty</Label><Input v-model.number="form.shed_male_qty" type="number" class="mt-1" /></div>
+        <div><Label>Total Box Qty</Label><Input type="number" :value="form.shed_total_qty" readonly class="mt-1 bg-gray-100 text-gray-700 cursor-not-allowed" /></div>
       </div>
 
       <div class="grid grid-cols-3 gap-4 mt-5">

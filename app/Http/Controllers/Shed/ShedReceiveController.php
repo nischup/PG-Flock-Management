@@ -5,40 +5,40 @@ use App\Http\Controllers\Controller;
 use App\Models\Shed\ShedReceive;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
+use App\Models\Master\Shed;
 use App\Models\Ps\PsFirmReceive;
 use App\Models\Ps\PsReceive;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-
+use Illuminate\Support\Facades\Auth;
 class ShedReceiveController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-       $psReceives = PsReceive::with('chickCounts')
-        ->get()
-        ->map(function($ps) {
-            return [
-                'id' => $ps->id,
-                'pi_no' => $ps->pi_no,
-                'total_chicks_qty' => $ps->chickCounts->ps_total_qty ?? 0,
-                'total_box_qty' => $ps->chickCounts->ps_total_re_box_qty ?? 0,
-                'ps_challan_box_qty' => $ps->chickCounts->ps_challan_box_qty ?? 0,
-                'male_box_qty' => $ps->chickCounts->ps_male_rec_box ?? 0,
-                'female_box_qty' => $ps->chickCounts->ps_female_rec_box ?? 0,
-            ];
-        });
+       
+        $search = $request->search;
 
+        // Fetch shed receives with related flock, shed, and company
+        $shedReceives = ShedReceive::with(['flock', 'shed', 'company'])
+            ->when($search, function ($query, $search) {
+                $query->whereHas('flock', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                      ->orWhereHas('shed', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                      ->orWhere('job_no', 'like', "%{$search}%");
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->per_page ?? 10)
+            ->withQueryString();
 
-        // Fetch all companies
-        $companies = Company::select('id', 'name')->where('status', '1')->get();
-
-        return Inertia::render('shed/shed-receive/List', [
-            'psReceives' => $psReceives,
-            'companies' => $companies,
+        // Return to Inertia page
+        return inertia('shed/shed-receive/List', [
+            'psReceives' => $shedReceives,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
+
+        
     }
 
     /**
@@ -69,13 +69,14 @@ class ShedReceiveController extends Controller
 
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
-
+        $sheds = Shed::select('id', 'name')->get();
         // Render the Inertia page
 
         return Inertia::render('shed/shed-receive/Create', [
-             'firmReceives' => $firmReceives,
+            'firmReceives' => $firmReceives,
             'flocks' => $flocks,
             'companies' => $companies,
+            'sheds'=>$sheds,
         ]);
     }
 
@@ -84,7 +85,29 @@ class ShedReceiveController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
+        $firmReceive = PsFirmReceive::findOrFail($request->job_id);
+        
+        $shedReceive = ShedReceive::create([
+            'receive_id'       => $request->job_id,   // firm receive reference
+            'job_no'           => $firmReceive->job_no,
+            'company_id'       => $firmReceive->receiving_company_id,
+            'flock_id'         => $request->flock_id,
+            'flock_name'       => $request->flock_name,
+            'shed_id'          => $request->shed_id,
+            'shed_female_qty'  => $request->shed_female_qty,
+            'shed_male_qty'    => $request->shed_male_qty,
+            'shed_total_qty'   => $request->shed_total_qty,
+            'receive_type'     => "Box",
+            'remarks'          => $request->remarks,
+            'created_by'       => Auth::id(),
+            'status'           => $request->status ?? 1,
+        ]);
+
+        return redirect()
+            ->route('shed-receive.index')
+            ->with('success', 'Shed Receive created successfully!');
+   
     }
 
     /**

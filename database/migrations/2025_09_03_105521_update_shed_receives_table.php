@@ -43,35 +43,20 @@ return new class extends Migration
                 $table->unsignedInteger('shed_male_qty')->default(0);
             }
 
+            if (!Schema::hasColumn('shed_receives', 'company_id')) {
+                $table->unsignedInteger('company_id')->default(0);
+            }
+
             if (!Schema::hasColumn('shed_receives', 'shed_total_qty')) {
                 $table->unsignedInteger('shed_total_qty')->default(0);
             }
 
-            // Shortage columns
-            if (!Schema::hasColumn('shed_receives', 'shed_sortage_male')) {
-                $table->unsignedInteger('shed_sortage_male')->default(0);
-            }
-            if (!Schema::hasColumn('shed_receives', 'shed_sortage_female')) {
-                $table->unsignedInteger('shed_sortage_female')->default(0);
-            }
-            if (!Schema::hasColumn('shed_receives', 'shed_sortage_total')) {
-                $table->unsignedInteger('shed_sortage_total')->default(0);
+            
+            if (!Schema::hasColumn('shed_receives', 'receive_type')) {
+                $table->string('receive_type')->nullable()->default('chicks');
             }
 
-            // Excess columns
-            if (!Schema::hasColumn('shed_receives', 'shed_excess_male')) {
-                $table->unsignedInteger('shed_excess_male')->default(0);
-            }
-            if (!Schema::hasColumn('shed_receives', 'shed_excess_female')) {
-                $table->unsignedInteger('shed_excess_female')->default(0);
-            }
-            if (!Schema::hasColumn('shed_receives', 'shed_excess_total')) {
-                $table->unsignedInteger('shed_excess_total')->default(0);
-            }
-
-            if (!Schema::hasColumn('shed_receives', 'receipt_type')) {
-                $table->string('receipt_type')->nullable()->default('chicks');
-            }
+            
 
             if (!Schema::hasColumn('shed_receives', 'remarks')) {
                 $table->string('remarks')->nullable();
@@ -97,10 +82,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('shed_receives', function (Blueprint $table) {
+           if (Schema::hasColumn('shed_receives', 'receive_id')) {
+            $table->dropForeign(['receive_id']);
+            $table->dropColumn('receive_id');
+        }
             $columns = [
                 'receive_id',
                 'job_no',
                 'flock_id',
+                'company_id',
                 'flock_name',
                 'shed_id',
                 'shed_female_qty',
@@ -112,7 +102,7 @@ return new class extends Migration
                 'shed_excess_male',
                 'shed_excess_female',
                 'shed_excess_total',
-                'receipt_type',
+                'receive_type',
                 'remarks',
                 'status',
                 'created_by',

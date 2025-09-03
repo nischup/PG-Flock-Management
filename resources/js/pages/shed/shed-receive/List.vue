@@ -146,56 +146,61 @@ const cardData = computed(() => piCardData[selectedPI.value] || [])
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
             <tr class="throw">
-              <th class="px-6 py-3 text-left font-bold">Project</th>
-              <th class="px-6 py-3 text-left font-bold">Flock No</th>
-              <th class="px-6 py-3 text-left font-bold">Shed No</th>
-              <th class="px-6 py-3 text-left font-bold">Receive Box Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Job No</th>
+              <th class="px-6 py-3 text-left font-bold">Flock</th>
+              <th class="px-6 py-3 text-left font-bold">Shed</th>
+              <th class="px-6 py-3 text-left font-bold">Female Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Male Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Total Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Company</th>
               <th class="px-6 py-3 text-left font-bold">Receive Date</th>
               <th class="px-6 py-3 text-left font-bold">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-for="item in props.psReceives?.data ?? []" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100">
-             <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-              {{ item.shipment_type_id === 1 ? 'Local' : 'Foreign' }}
-            </td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.pi_no }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.lc_no ?? 'N/A' }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.chick_counts?.ps_total_re_box_qty ?? '-' }}</td>
-              <td class="px-6 py-4 text-gray-600 dark:text-gray-300">{{ dayjs(item.receive_date).format('YYYY-MM-DD') }}</td>
-              <td class="px-6 py-4 flex gap-4 items-center">
+            <tr v-for="item in props.psReceives?.data ?? []" :key="item.id"
+                class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100">
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.job_no ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.flock?.name ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.shed?.name ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.shed_female_qty ?? 0 }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.shed_male_qty ?? 0 }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100 font-bold">{{ item.shed_total_qty ?? 0 }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.company?.name ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-300">{{ item.created_at ? dayjs(item.created_at).format('YYYY-MM-DD') : '-' }}</td>
+              <td class="px-6 py-4 relative">
                 <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(item.id)">
                   Actions ▼
                 </Button>
-                <div
-                    v-if="openDropdownId === item.id"
+                <div v-if="openDropdownId === item.id"
                     class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10 flex flex-col"
-                    @click.stop
+                    @click.stop>
+                  <!-- Edit -->
+                  <Link
+                    v-if="can('shed.receive.edit')"
+                    :href="`/shed-receive/${item.id}/edit`"
+                    class="px-4 py-2 text-left hover:bg-blue-50 text-blue-600 flex items-center gap-2"
                   >
-                   <!-- Edit -->
-                      <Link
-                        v-if="can('ps.receive.edit')"
-                        :href="`/ps-receive/${item.id}/edit`"
-                        class="px-4 py-2 text-left hover:bg-blue-50 text-blue-600 flex items-center gap-2"
-                      >
-                        <Pencil class="w-4 h-4" />
-                        <span>Edit</span>
-                      </Link>
+                    <Pencil class="w-4 h-4" />
+                    <span>Edit</span>
+                  </Link>
 
-                      <!-- Delete -->
-                      <button
-                        v-if="can('ps.receive.delete')"
-                        @click="deleteReceive(item.id)"
-                        class="px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2 w-full"
-                      >
-                        <FileText class="w-4 h-4" />
-                        <span>Report</span>
-                      </button>
-                  </div>
+                  <!-- Delete -->
+                  <button
+                    v-if="can('shed.receive.delete')"
+                    @click="deleteReceive(item.id)"
+                    class="px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2 w-full"
+                  >
+                    <Trash2 class="w-4 h-4" />
+                    <span>Delete</span>
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="(props.psReceives?.data ?? []).length === 0">
-              <td colspan="6" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No PS Receives found.</td>
+              <td colspan="9" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
+                No Shed Receives found.
+              </td>
             </tr>
           </tbody>
         </table>

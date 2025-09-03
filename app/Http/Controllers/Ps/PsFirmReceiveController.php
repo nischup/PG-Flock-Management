@@ -120,10 +120,11 @@ class PsFirmReceiveController extends Controller
     {
        
        
-     
         
+        $companyInfo = Company::findOrFail($request->receiving_company_id);
+        $flockInfo = Flock::findOrFail($request->flock_id);
        
-        $jobNo = "PS{$request->ps_receive_id}-RC{$request->receiving_company_id}-F{$request->flock_id}";
+        $jobNo = "{$request->ps_receive_id}-{$companyInfo->name}-{$flockInfo->name}";
 
         $firmReceive = PsFirmReceive::create([
             'ps_receive_id' => $request->ps_receive_id,
@@ -132,7 +133,7 @@ class PsFirmReceiveController extends Controller
             'source_type' => 'psreceive',
             'source_id' => $request->ps_receive_id,
             'flock_id' => $request->flock_id,
-            'flock_name' => $request->flock_name,
+            'flock_name' => $flockInfo->_name,
             'receiving_company_id' => $request->receiving_company_id,
             'firm_female_qty' => $request->firm_female_box_qty,
             'firm_male_qty' => $request->firm_male_box_qty,
@@ -144,7 +145,9 @@ class PsFirmReceiveController extends Controller
 
 
         
-        return redirect()->back()->with('success', 'Firm Receive created successfully!');
+        return redirect()
+            ->route('ps-firm-receive.index')
+            ->with('success', 'Firm Receive created successfully!');
     }
 
     /**
