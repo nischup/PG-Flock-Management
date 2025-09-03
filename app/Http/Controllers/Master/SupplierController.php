@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\Supplier;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ArrayExport;
 
 class SupplierController extends Controller
 {
-    /**
-     * Display a listing of suppliers.
-     */
     public function index()
     {
         $suppliers = Supplier::orderBy('id', 'desc')->get()->map(function ($supplier) {
@@ -34,9 +34,6 @@ class SupplierController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created supplier.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -50,17 +47,13 @@ class SupplierController extends Controller
             'status'                => 'required|in:0,1',
         ]);
 
-        $supplier = Supplier::create($validated);
+        Supplier::create($validated);
 
         return redirect()->route('supplier.index')->with('success', 'Supplier created successfully.');
     }
 
-    /**
-     * Update an existing supplier.
-     */
     public function update(Request $request, Supplier $supplier)
     {
-        // Only validate the fields that are being updated
         $validated = $request->validate([
             'name'                  => 'sometimes|required|string|max:200',
             'supplier_type'         => 'sometimes|required|in:Local,Foreign',
@@ -77,12 +70,102 @@ class SupplierController extends Controller
         return redirect()->route('supplier.index')->with('success', 'Supplier updated successfully.');
     }
 
-    /**
-     * Remove the supplier.
-     */
     public function destroy(Supplier $supplier)
     {
         $supplier->delete();
         return redirect()->route('supplier.index')->with('success', 'Supplier deleted successfully.');
+    }
+
+    /**
+     * Download PDF report of suppliers.
+     */
+    public function exportPdf(Request $request)
+    {
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
+
+        $suppliers = Supplier::latest()
+            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
+            ->get()
+            ->map(fn($s) => [
+                'name' => $s->name,
+                'type' => $s->supplier_type,
+                'address' => $s->address,
+                'contact' => $s->contact_person,
+                'status' => $s->status ? 'Active' : 'Inactive',
+                'created_at' => $s->created_at?->format('Y-m-d H:i'),
+            ])->toArray();
+
+        $columns = [
+            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
+            ['label' => 'Name', 'key' => 'name'],
+            ['label' => 'Type', 'key' => 'type'],
+            ['label' => 'Address', 'key' => 'address'],
+            ['label' => 'Contact', 'key' => 'contact'],
+            ['label' => 'Status', 'key' => 'status'],
+            ['label' => 'Created At', 'key' => 'created_at'],
+        ];
+
+        $data = [
+            'title' => 'Supplier List',
+            'columns' => $columns,
+            'rows' => $suppliers,
+            'filters' => $request->all(),
+            'generatedAt' => now(),
+            'orientation' => $request->get('orientation', 'portrait'),
+        ];
+
+        Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
+        $pdf = Pdf::loadView('reports.common.list', $data)
+                  ->setPaper('a4', $data['orientation']);
+
+        return $pdf->stream('suppliers-list.pdf');
+    }
+
+    /**
+     * Download Excel report of suppliers.
+     */
+    public function exportExcel(Request $request)
+    {
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
+
+        $rows = Supplier::latest()
+            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
+            ->get()
+            ->map(fn($s) => [
+                'name' => $s->name,
+                'type' => $s->supplier_type,
+                'address' => $s->address,
+                'contact' => $s->contact_person,
+                'status' => $s->status ? 'Active' : 'Inactive',
+                'created_at' => $s->created_at?->format('Y-m-d H:i'),
+            ])->toArray();
+
+        $columns = [
+            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
+            ['label' => 'Name', 'key' => 'name'],
+            ['label' => 'Type', 'key' => 'type'],
+            ['label' => 'Address', 'key' => 'address'],
+            ['label' => 'Contact', 'key' => 'contact'],
+            ['label' => 'Status', 'key' => 'status'],
+            ['label' => 'Created At', 'key' => 'created_at'],
+        ];
+
+        $headings = array_map(fn($c) => $c['label'], $columns);
+
+        $body = [];
+        foreach ($rows as $i => $row) {
+            $line = [];
+            foreach ($columns as $col) {
+                $val = isset($col['callback']) && is_callable($col['callback'])
+                    ? $col['callback']($row, $i)
+                    : ($row[$col['key']] ?? '');
+                $line[] = is_array($val) ? json_encode($val) : $val;
+            }
+            $body[] = $line;
+        }
+
+        return Excel::download(new ArrayExport($headings, $body), 'suppliers-report.xlsx');
     }
 }

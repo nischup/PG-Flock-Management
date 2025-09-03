@@ -38,7 +38,7 @@ const mainNavItems: NavItem[] = [
                 iconClass: 'text-yellow-500',
             },
             {
-                title: 'PS Firm Receive',
+                title: 'PS Farm Receive',
                 href: '/ps-firm-receive',
                 icon: BabyChick,
                 iconClass: 'text-yellow-500',

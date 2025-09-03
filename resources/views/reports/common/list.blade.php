@@ -12,30 +12,38 @@
 
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 12px;
+            font-size: 11px;
+            /* slightly smaller for better fit */
         }
 
         h1 {
             margin-bottom: 8px;
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .meta {
             margin-bottom: 8px;
-            font-size: 11px;
+            font-size: 10px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11px;
+            font-size: 10px;
+            table-layout: fixed;
+            /* force equal column scaling */
+            word-wrap: break-word;
+            /* allow wrapping inside cells */
         }
 
         th,
         td {
             border: 1px solid #444;
-            padding: 6px 8px;
+            padding: 4px 6px;
             vertical-align: top;
+            word-break: break-word;
+            /* break long words */
+            overflow-wrap: break-word;
         }
 
         tr {
