@@ -100,4 +100,6 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('company/excel', [CompanyController::class, 'downloadExcel'])->name('company.excel');
     Route::get('project/pdf', [ProjectController::class, 'exportPdf'])->name('project.pdf');
     Route::get('project/excel', [ProjectController::class, 'exportExcel'])->name('project.excel');
+    Route::get('supplier/pdf', [SupplierController::class, 'exportPdf'])->name('supplier.pdf');
+    Route::get('supplier/excel', [SupplierController::class, 'exportExcel'])->name('supplier.excel');
 });
