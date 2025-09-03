@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Models\Ps;
-
+use App\Models\Master\Flock;
+use App\Models\Master\Company;
 use Illuminate\Database\Eloquent\Model;
 
 class PsFirmReceive extends Model
@@ -26,4 +27,17 @@ class PsFirmReceive extends Model
     protected $casts = [
         'created_at' => 'date',
     ];
+
+    
+    // Flock relationship
+    public function flock()
+    {
+        return $this->belongsTo(Flock::class, 'flock_id');
+    }
+
+    // Company relationship
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'receiving_company_id');
+    }
 }

@@ -131,9 +131,10 @@ const toggleDropdown = (id: number) => {
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
             <tr class="throw">
-              <th class="px-6 py-3 text-left font-bold">Shipment Type</th>
               <th class="px-6 py-3 text-left font-bold">PI No</th>
-              <th class="px-6 py-3 text-left font-bold">LC No</th>
+              <th class="px-6 py-3 text-left font-bold">Shipment Type</th>
+              
+              
               <th class="px-6 py-3 text-left font-bold">Receive Date</th>
               <th class="px-6 py-3 text-left font-bold">Supplier</th>
               <th class="px-6 py-3 text-left font-bold">Total Birds Qty</th>
@@ -144,11 +145,14 @@ const toggleDropdown = (id: number) => {
           </thead>
           <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             <tr v-for="item in props.psReceives?.data ?? []" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100">
-             <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-              {{ item.shipment_type_id === 1 ? 'Local' : 'Foreign' }}
+             
+             
+            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.pi_no }}</td>
+            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
+                {{ item.shipment_type_id === 1 ? 'Local' : 'Foreign' }}
             </td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.pi_no }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.lc_no ?? 'N/A' }}</td>
+              
+              
               <td class="px-6 py-4 text-gray-600 dark:text-gray-300">{{ dayjs(item.receive_date).format('YYYY-MM-DD') }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.supplier?.name ?? 'N/A' }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.chick_counts?.ps_total_qty ?? '-' }}</td>

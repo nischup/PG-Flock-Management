@@ -14,20 +14,25 @@ import dayjs from 'dayjs'
 import { type BreadcrumbItem } from '@/types'
 
 const props = defineProps<{
-  psReceives?: {
+  psFirmReceives?: {
     data: Array<{
       id: number
-      pi_no: string
-      receive_date: string
-      supplier: { id: number; name: string } | null
+      ps_receive_id: number
+      job_no: string
+      receipt_type: string
+      source_type: string
+      source_id: number
+      flock_id: number
+      flock_name: string
+      receiving_company_id: number
+      company_name: string
+      firm_female_qty: number
+      firm_male_qty: number
+      firm_total_qty: number
       remarks?: string | null
-
-      // Chick counts (hasOne)
-      chick_counts?: {
-        id: number
-        ps_total_qty: number
-        ps_total_re_box_qty: number
-      } | null
+      created_by: number
+      status: number
+      receive_date: string
     }>
     meta: {
       current_page: number
@@ -40,7 +45,7 @@ const props = defineProps<{
 }>()
 
 
-
+console.log(props.psFirmReceives);
 useListFilters({ routeName: '/ps-receive', filters: props.filters })
 const { confirmDelete } = useNotifier()
 const { can } = usePermissions()
@@ -135,60 +140,47 @@ const cardData = computed(() => piCardData[selectedPI.value] || [])
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
-            <tr class="throw">
-              <th class="px-6 py-3 text-left font-bold">Receiving Project</th>
-              <th class="px-6 py-3 text-left font-bold">Flock No</th>
-              <th class="px-6 py-3 text-left font-bold">LC No</th>
-              <th class="px-6 py-3 text-left font-bold">PI No</th>
-              <th class="px-6 py-3 text-left font-bold">Supplier</th>
-              <th class="px-6 py-3 text-left font-bold">Total Box Qty</th>
+            <tr>
+           
+              <th class="px-6 py-3 text-left font-bold">Flock Name</th>
+              <th class="px-6 py-3 text-left font-bold">Company</th>
+              <th class="px-6 py-3 text-left font-bold">Male Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Female Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Total Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Remarks</th>
               <th class="px-6 py-3 text-left font-bold">Receive Date</th>
               <th class="px-6 py-3 text-left font-bold">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-for="item in props.psReceives?.data ?? []" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100">
-             <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-              {{ item.shipment_type_id === 1 ? 'Local' : 'Foreign' }}
-            </td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.pi_no }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.lc_no ?? 'N/A' }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.supplier?.name ?? 'N/A' }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.chick_counts?.ps_total_re_box_qty ?? '-' }}</td>
-              <td class="px-6 py-4 text-gray-600 dark:text-gray-300">{{ dayjs(item.receive_date).format('YYYY-MM-DD') }}</td>
-              <td class="px-6 py-4 flex gap-4 items-center">
-                <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(item.id)">
-                  Actions ▼
-                </Button>
-                <div
-                    v-if="openDropdownId === item.id"
-                    class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10 flex flex-col"
-                    @click.stop
-                  >
-                   <!-- Edit -->
-                      <Link
-                        v-if="can('ps.receive.edit')"
-                        :href="`/ps-receive/${item.id}/edit`"
-                        class="px-4 py-2 text-left hover:bg-blue-50 text-blue-600 flex items-center gap-2"
-                      >
-                        <Pencil class="w-4 h-4" />
-                        <span>Edit</span>
-                      </Link>
-
-                      <!-- Delete -->
-                      <button
-                        v-if="can('ps.receive.delete')"
-                        @click="deleteReceive(item.id)"
-                        class="px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2 w-full"
-                      >
-                        <FileText class="w-4 h-4" />
-                        <span>Report</span>
-                      </button>
-                  </div>
+            <tr v-for="item in props.psFirmReceives?.data ?? []" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100">
+            
+              <td class="px-6 py-4">{{ item.flock_name }}</td>
+              <td class="px-6 py-4">{{ item.company_name }}</td>
+              <td class="px-6 py-4">{{ item.firm_male_qty }}</td>
+              <td class="px-6 py-4">{{ item.firm_female_qty }}</td>
+              <td class="px-6 py-4">{{ item.firm_total_qty }}</td>
+              <td class="px-6 py-4">{{ item.remarks ?? '-' }}</td>
+              <td class="px-6 py-4">{{ item.receive_date }}</td>
+              <td class="px-6 py-4 flex gap-4">
+                <Link
+                  v-if="can('ps-receive.edit')"
+                  :href="`/ps-firm-receive/${item.id}/edit`"
+                  class="text-blue-600 hover:underline"
+                >
+                  Edit
+                </Link>
+                <button
+                  v-if="can('ps-receive.delete')"
+                  @click="deleteReceive(item.id)"
+                  class="text-red-600 hover:underline"
+                >
+                  Delete
+                </button>
               </td>
             </tr>
-            <tr v-if="(props.psReceives?.data ?? []).length === 0">
-              <td colspan="6" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No PS Receives found.</td>
+            <tr v-if="(props.psFirmReceives?.data ?? []).length === 0">
+              <td colspan="9" class="text-center text-gray-500 dark:text-gray-400">No PS Firm Receives found.</td>
             </tr>
           </tbody>
         </table>

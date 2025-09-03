@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Link, Head, useForm } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
-
 import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,72 +15,70 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Create', href: '' },
 ]
 
+// Props
 const props = defineProps<{
-  psReceives: Array<any>
+  firmReceives: Array<any> // Batches generated from firm receive
+  flocks: Array<any>
+  companies: Array<any>
 }>()
 
-const selectedPsId = ref<number | string>('')
-const showInfo = ref(false)       // 👈 replaces modal toggle
+// Form state
+const selectedBatchId = ref<number | string>('')
+const selectedFlockId = ref<number | string>('')
+const showInfo = ref(false)
+
 const form = useForm({
-  ps_receive_id: '',             // Parent PS Receive
-  job_no: '',
+  batch_id: '',
+  flock_id: 0,
   receiving_company_id: 0,
-  firm_female_box_qty: 0,
-  firm_male_box_qty: 0,
-  firm_total_box_qty: 0,
-  firm_sortage_box_qty: 0,
+  shed_female_box_qty: 0,
+  shed_male_box_qty: 0,
+  shed_total_box_qty: 0,
+  shed_sortage_male_box: 0,
+  shed_sortage_female_box: 0,
+  shed_sortage_box_qty: 0,
+  shed_excess_male_box: 0,
+  shed_excess_female_box: 0,
+  shed_excess_box_qty: 0,
   remarks: '',
   status: 1,
 })
 
-// Toggle details when dropdown changes
-function toggleInfo() {
-  if (!selectedPsId.value) {
-    showInfo.value = false
-    return
-  }
-
-  const selected = props.psReceives.find(ps => ps.id === Number(selectedPsId.value))
-   
-  if (selected) {
-
-    // assign all matching fields to form (if they exist in ps)
-    form.shipment_type = selected.shipment_type || ''
-    form.pi_no = selected.pi_no || ''
-    form.lc_no = selected.lc_no || ''
-    form.order_no = selected.order_no || ''
-    form.supplier = selected.supplier || ''
-    form.breed = selected.breed || ''
-    form.transport = selected.transport || ''
-    form.rnote = selected.rnote || ''
-    form.challan_box = selected.total_box_qty || ''
-    form.gross_weight = selected.gross_weight || ''
-    form.net_weight = selected.net_weight || ''
-    form.female_chicks = selected.female_chicks || 0
-    form.male_chicks = selected.male_chicks || 0
-    form.total_chicks = selected.total_chicks_qty || 0
-
-    // toggle show/hide on reselection
-    showInfo.value = !showInfo.value
-  }
-}
-
-// Company options
-const companies = ref([
-  { id: 1, name: 'PBL' },
-  { id: 2, name: 'PCL' },
-])
-
-// Watch total boxes
+// Watch for total boxes and auto-calc shortages/excess
 watch(
-  () => [form.firm_male_box_qty, form.firm_female_box_qty],
+  () => [form.shed_male_box_qty, form.shed_female_box_qty],
   () => {
-    form.firm_total_box_qty = Number(form.firm_male_box_qty || 0) + Number(form.firm_female_box_qty || 0)
+    form.shed_total_box_qty =
+      Number(form.shed_male_box_qty || 0) + Number(form.shed_female_box_qty || 0)
+
+    // Total shortage
+    form.shed_sortage_box_qty =
+      Number(form.shed_sortage_male_box || 0) + Number(form.shed_sortage_female_box || 0)
+    form.shed_excess_box_qty =
+      Number(form.shed_excess_male_box || 0) + Number(form.shed_excess_female_box || 0)
   },
   { deep: true, immediate: true }
 )
 
-// Submit function
+// Watch for flock selection
+watch(selectedFlockId, (val) => {
+  form.flock_id = val
+})
+
+// Toggle Batch Info
+function toggleInfo() {
+  const selected = props.firmReceives.find((batch) => batch.id === Number(selectedBatchId.value))
+  if (!selected) {
+    showInfo.value = false
+    return
+  }
+  form.batch_id = selected.id
+  form.receiving_company_id = selected.receiving_company_id
+  selectedFlockId.value = selected.flock_id
+  showInfo.value = true
+}
+
+// Submit Shed Receive
 function submit() {
   form.post(route('shed-receive.store'), {
     onSuccess: () => form.reset(),
@@ -90,181 +87,111 @@ function submit() {
 }
 </script>
 
-
-
 <template>
-  <AppLayout :breadcrumbs="breadcrumbs">
-    <Head title="Create Firm Receive" />
+<AppLayout :breadcrumbs="breadcrumbs">
+  <Head title="Create Shed Receive" />
 
-    <form @submit.prevent="submit" class="p-6 space-y-6">
+  <form @submit.prevent="submit" class="p-6 space-y-6">
 
-
-    <div class="pb-3 mb-6 flex items-center justify-between">
-      <!-- Left: Title -->
-      <h2 class="text-xl font-semibold">Parent Stock Shed Receiving Info.</h2>
-
-      <Link 
-        href="/shed-receive" 
-        class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center gap-1"
-      >
-        <ArrowLeft class="w-4 h-4" /> List
-      </Link>
-    </div>
-          
-     <!-- Section: Receiving Information -->
+    <!-- Batch Info -->
     <div class="border rounded-lg p-4 shadow-sm bg-white">
+      <div class="pb-3 mb-6 flex items-center justify-between">
+        <h2 class="text-xl font-semibold">Shed Receive Info</h2>
+        <Link 
+          href="/shed-receive" 
+          class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center gap-1"
+        >
+          <ArrowLeft class="w-4 h-4" /> List
+        </Link>
+      </div>
+
       <div class="grid grid-cols-1 gap-4">
+        <!-- Batch Dropdown -->
         <div>
-          <Label>PS Receive No</Label>
-          <select v-model="selectedPsId" @change="toggleInfo"
-            class="w-full mt-1 border rounded px-3 py-2">
-            <option value="">Select PS Receive</option>
-            <option v-for="ps in props.psReceives" :key="ps.id" :value="ps.id">
-              {{ ps.pi_no }}
+          <Label>Job No (Firm Receive)</Label>
+          <select v-model="selectedBatchId" @change="toggleInfo" class="w-full mt-1 border rounded px-3 py-2">
+            <option value="">Select Batch</option>
+            <option v-for="batch in props.firmReceives" :key="batch.id" :value="batch.id">
+              {{ batch.job_no }}
             </option>
+          </select>
+        </div>
+
+        <!-- Flock -->
+        <div>
+          <Label>Flock</Label>
+          <select v-model="selectedFlockId" class="w-full mt-1 border rounded px-3 py-2">
+            <option value="">Select Flock</option>
+            <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">{{ flock.name }}</option>
           </select>
         </div>
       </div>
 
-      <!-- Smooth transition wrapper -->
-      <transition
-        enter-active-class="transition-all duration-500 ease-in-out"
-        leave-active-class="transition-all duration-500 ease-in-out"
-        enter-from-class="max-h-0 opacity-0"
-        enter-to-class="max-h-screen opacity-100"
-        leave-from-class="max-h-screen opacity-100"
-        leave-to-class="max-h-0 opacity-0"
-      >
+      <!-- Show batch info -->
+      <transition enter-active-class="transition-all duration-500 ease-in-out" leave-active-class="transition-all duration-500 ease-in-out"
+        enter-from-class="max-h-0 opacity-0" enter-to-class="max-h-screen opacity-100"
+        leave-from-class="max-h-screen opacity-100" leave-to-class="max-h-0 opacity-0">
         <div v-if="showInfo" class="grid grid-cols-3 gap-4 text-sm mt-5 overflow-hidden">
-          <!-- Row 1 -->
-          <div>
-            <span class="font-medium">Shipment Type:</span>
-            <span class="ml-1">{{ form.shipment_type }}</span>
-          </div>
-          <div>
-            <span class="font-medium">PI No:</span>
-            <span class="ml-1">{{ form.pi_no }}</span>
-          </div>
-          <div>
-            <span class="font-medium">LC No:</span>
-            <span class="ml-1">{{ form.lc_no }}</span>
-          </div>
-
-          <!-- Row 2 -->
-          <div>
-            <span class="font-medium">Order No:</span>
-            <span class="ml-1">{{ form.order_no }}</span>
-          </div>
-          <div>
-            <span class="font-medium">Supplier:</span>
-            <span class="ml-1">{{ form.supplier }}</span>
-          </div>
-          <div>
-            <span class="font-medium">Breed:</span>
-            <span class="ml-1">{{ form.breed }}</span>
-          </div>
-
-          <!-- Row 3 -->
-          <div>
-            <span class="font-medium">Transport:</span>
-            <span class="ml-1">{{ form.transport }}</span>
-          </div>
-          <div>
-            <span class="font-medium">Note:</span>
-            <span class="ml-1">{{ form.rnote }}</span>
-          </div>
-          <div>
-            <span class="font-medium">Challan Box:</span>
-            <span class="ml-1">{{ form.challan_box }}</span>
-          </div>
-
-          <!-- Row 4 -->
-          <div>
-            <span class="font-medium">Gross Weight:</span>
-            <span class="ml-1">{{ form.gross_weight }}</span>
-          </div>
-          <div>
-            <span class="font-medium">Net Weight:</span>
-            <span class="ml-1">{{ form.net_weight }}</span>
-          </div>
-          <div>
-            <span class="font-medium">Female Chicks:</span>
-            <span class="ml-1">{{ form.female_chicks }}</span>
-          </div>
-
-          <!-- Row 5 -->
-          <div>
-            <span class="font-medium">Male Chicks:</span>
-            <span class="ml-1">{{ form.male_chicks }}</span>
-          </div>
-          <div>
-            <span class="font-medium">Total Chicks:</span>
-            <span class="ml-1">{{ form.total_chicks }}</span>
-          </div>
+          <div><span class="font-medium">Job No:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedBatchId)?.job_no }}</span></div>
+          <div><span class="font-medium">Receiving Company:</span> <span class="ml-1">{{ props.companies.find(c => c.id === form.receiving_company_id)?.name }}</span></div>
+          <div><span class="font-medium">Female Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedBatchId)?.firm_female_qty }}</span></div>
+          <div><span class="font-medium">Male Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedBatchId)?.firm_male_qty }}</span></div>
+          <div><span class="font-medium">Total Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedBatchId)?.firm_total_qty }}</span></div>
         </div>
       </transition>
     </div>
 
+    <!-- Shed Receive Boxes -->
+    <div class="border rounded-lg p-4 shadow-sm bg-white mt-4">
+      <h2 class="font-semibold text-lg mb-4">Shed Receive Boxes</h2>
 
-      <!-- Section: Company & Boxes -->
-      <div class="border rounded-lg p-4 shadow-sm bg-white">
-        <h2 class="font-semibold text-lg mb-4">Receiving Company & Boxes</h2>
-
-        <div class="mb-4">
-          <Label>Receiving Company</Label>
-          <select v-model="form.receiving_company_id" class="w-full mt-1 border rounded px-3 py-2">
-            <option value="0">Select Company</option>
-            <option v-for="c in companies" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
-        </div>
-
-        <div class="grid grid-cols-3 gap-4">
-          <div>
-            <Label>Female Box Qty</Label>
-            <Input v-model.number="form.firm_female_box_qty" type="number" class="mt-1" />
-          </div>
-          <div>
-            <Label>Male Box Qty</Label>
-            <Input v-model.number="form.firm_male_box_qty" type="number" class="mt-1" />
-          </div>
-          <div>
-            <Label>Total Box Qty</Label>
-            <Input 
-              v-model.number="form.firm_total_box_qty" 
-              type="number" 
-              readonly 
-              class="mt-1 bg-gray-100 text-gray-700 cursor-not-allowed" 
-            />
-          </div>
-        </div>
-
-        
-        <div class="grid grid-cols-3 gap-4 mt-5">
-          <div>
-            <Label>Sortage Box Qty</Label>
-            <Input  type="number" class="mt-1" />
-          </div>
-          <div>
-            <Label>Excess Box Qty</Label>
-            <Input type="number" class="mt-1" />
-          </div>
-        </div>
-
+      <div class="grid grid-cols-3 gap-4">
+        <div><Label>Female Box Qty</Label><Input v-model.number="form.shed_female_box_qty" type="number" class="mt-1" /></div>
+        <div><Label>Male Box Qty</Label><Input v-model.number="form.shed_male_box_qty" type="number" class="mt-1" /></div>
+        <div><Label>Total Box Qty</Label><Input type="number" :value="form.shed_total_box_qty" readonly class="mt-1 bg-gray-100 text-gray-700 cursor-not-allowed" /></div>
       </div>
 
-      <!-- Section: Remarks -->
-      <div class="border rounded-lg p-4 shadow-sm bg-white">
-        <h2 class="font-semibold text-lg mb-4">Notes</h2>
-        <textarea v-model="form.remarks"
-          class="w-full border rounded px-3 py-2"
-          rows="3"
-          placeholder="Write notes here..."></textarea>
-      </div>
+      <div class="grid grid-cols-3 gap-4 mt-5">
+        <!-- Shortage Boxes -->
+        <div>
+          <Label>Shortage Male Box</Label>
+          <Input type="number" v-model.number="form.shed_sortage_male_box" class="mt-1" />
+        </div>
+        <div>
+          <Label>Shortage Female Box</Label>
+          <Input type="number" v-model.number="form.shed_sortage_female_box" class="mt-1" />
+        </div>
+        <div>
+          <Label>Shortage Total Box</Label>
+          <Input type="number" :value="form.shed_sortage_box_qty" readonly class="mt-1 bg-gray-100 text-gray-700 cursor-not-allowed" />
+        </div>
 
-      <!-- Submit -->
-      <div class="flex justify-end">
-        <Button type="submit" class="px-6 py-2">Save & Submit</Button>
+        <!-- Excess Boxes -->
+        <div>
+          <Label>Excess Male Box</Label>
+          <Input type="number" v-model.number="form.shed_excess_male_box" class="mt-1" />
+        </div>
+        <div>
+          <Label>Excess Female Box</Label>
+          <Input type="number" v-model.number="form.shed_excess_female_box" class="mt-1" />
+        </div>
+        <div>
+          <Label>Excess Total Box</Label>
+          <Input type="number" :value="form.shed_excess_box_qty" readonly class="mt-1 bg-gray-100 text-gray-700 cursor-not-allowed" />
+        </div>
       </div>
-    </form>
-  </AppLayout>
+    </div>
+
+    <!-- Notes -->
+    <div class="border rounded-lg p-4 shadow-sm bg-white mt-4">
+      <h2 class="font-semibold text-lg mb-4">Notes</h2>
+      <textarea v-model="form.remarks" class="w-full border rounded px-3 py-2" rows="3" placeholder="Write notes here..."></textarea>
+    </div>
+
+    <!-- Submit -->
+    <div class="flex justify-end">
+      <Button type="submit" class="px-6 py-2">Save & Submit</Button>
+    </div>
+  </form>
+</AppLayout>
 </template>
