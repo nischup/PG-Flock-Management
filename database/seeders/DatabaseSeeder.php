@@ -18,11 +18,26 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             PermissionSeeder::class,
+            BreedTypeSeeder::class,
+            ChickTypeSeeder::class,
+            CompanySeeder::class,
+            CountrySeeder::class,
+            DiseaseSeeder::class,
+            FeedSeeder::class,
+            FeedTypeSeeder::class,
+            MedicineSeeder::class,
+            ProjectSeeder::class,
+            ShedSeeder::class,
+            SupplierSeeder::class,
+            TransportTypeSeeder::class,
+            UnitSeeder::class,
+            VaccineTypeSeeder::class,
+            VaccineSeeder::class,
         ]);
 
-        User::factory()->create([
-            'name' => 'Provita',
-            'email' => 'provita@mail.com',
-        ]);
+        // User::factory()->create([
+        //     'name' => 'Provita',
+        //     'email' => 'provita@mail.com',
+        // ]);
     }
 }

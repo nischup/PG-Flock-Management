@@ -31,7 +31,7 @@ class ShedReceiveController extends Controller
 
 
         // Fetch all companies
-        $companies = Company::select('id', 'name')->get();
+        $companies = Company::select('id', 'name')->where('status', '1')->get();
 
         return Inertia::render('shed/shed-receive/List', [
             'psReceives' => $psReceives,
