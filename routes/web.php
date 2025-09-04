@@ -8,18 +8,19 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Master\FeedController;
 use App\Http\Controllers\Master\ShedController;
 use App\Http\Controllers\Master\UnitController;
+use App\Http\Controllers\Master\FlockController;
 use App\Http\Controllers\Ps\PsLabTestController;
+use App\Http\Controllers\Ps\PsReceiveController;
 use App\Http\Controllers\Master\CompanyController;
+
 use App\Http\Controllers\Master\DiseaseController;
 use App\Http\Controllers\Master\ProjectController;
-
 use App\Http\Controllers\Master\VaccineController;
 use App\Http\Controllers\Master\FeedTypeController;
 use App\Http\Controllers\Master\MedicineController;
 use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Master\BreedTypeController;
 use App\Http\Controllers\Master\ChickTypeController;
-use App\Http\Controllers\Master\FlockController;
 use App\Http\Controllers\Shed\BatchAssignController;
 use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Master\VaccineTypeController;
@@ -105,4 +106,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('project/excel', [ProjectController::class, 'exportExcel'])->name('project.excel');
     Route::get('supplier/pdf', [SupplierController::class, 'exportPdf'])->name('supplier.pdf');
     Route::get('supplier/excel', [SupplierController::class, 'exportExcel'])->name('supplier.excel');
+    Route::get('ps-receive/pdf', [PsReceiveController::class, 'downloadPdf'])->name('ps-receive.pdf');
+    Route::get('ps-receive/excel', [PsReceiveController::class, 'downloadExcel'])->name('ps-receive.excel');
 });
+Route::get('/ps-receive/{id}/pdf', [PsReceiveController::class, 'downloadRowPdf'])
+    ->name('ps-receive.row-pdf');

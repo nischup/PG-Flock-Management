@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Ps\PsLabTest;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ArrayExport;
 
 use App\Models\Master\BreedType;
 
@@ -23,14 +26,14 @@ class PsReceiveController extends Controller
     public function index(Request $request)
     {
         $psReceives = PsReceive::query()
-            ->with(['chickCounts']) 
-            ->when($request->search, fn($q) => 
+            ->with(['chickCounts'])
+            ->when($request->search, fn($q) =>
                 $q->where('pi_no', 'like', "%{$request->search}%")
                   ->orWhere('order_no', 'like', "%{$request->search}%")
             )
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
-        
+
         return Inertia::render('ps/ps-receive/PsReceive', [
             'psReceives' => $psReceives,
             'filters' => $request->only(['search', 'per_page']),
@@ -39,19 +42,19 @@ class PsReceiveController extends Controller
 
     public function create()
     {
-        
+
         return inertia('ps/ps-receive/Create', [
             'suppliers' => Supplier::all(),
             'breedTypes' => BreedType::all(),
             'companies' => Company::all(),
         ]);
-        
-       
+
+
     }
 
     public function store(Request $request)
     {
-            
+
         // $request->validate([
         //     // Main PS Receive
         //     //'shipment_type_id'   => 'required|integer|exists:shipment_types,id',
@@ -86,7 +89,11 @@ class PsReceiveController extends Controller
 
             // 1️⃣ Create main PS Receive
 
+<<<<<<< HEAD
                dd($request->all()); 
+=======
+
+>>>>>>> b83b31ab2cba766ab15511924f6b7f51e390cc0e
             //dd($request);
             $psReceive = PsReceive::create([
                 'shipment_type_id' => (int) $request->shipment_type_id,
@@ -146,7 +153,7 @@ class PsReceiveController extends Controller
                 'status'                  => 1,
             ]);
 
-           
+
             if ($request->hasFile('file')) {
                 foreach ($request->file('file') as $uploadedFile) {
                     $path = $uploadedFile->store('ps_receive_files'); // storage/app/ps_receive_files
@@ -172,7 +179,7 @@ class PsReceiveController extends Controller
             return redirect()->route('ps-receive.index')
                 ->with('success', 'PS Receive created successfully.');
         } catch (\Throwable $e) {
-         
+
             //DB::rollBack();
             Log::error('PS Receive create failed', ['error' => $e->getMessage()]);
 
@@ -182,11 +189,11 @@ class PsReceiveController extends Controller
 
     public function edit($id)
     {
-        
 
 
-       
-        
+
+
+
         // Load the PsReceive entry with relationships
         $psReceive = PsReceive::with([
             'chickCounts',
@@ -295,7 +302,7 @@ class PsReceiveController extends Controller
     }
 
     public function storelab(Request $request){
-        
+
             $psReceiveId = $request->ps_receive_id;
             $labType     = $request->lab_type;
             $femaleQty   = $request->female_qty;
@@ -322,7 +329,7 @@ class PsReceiveController extends Controller
     public function getdata($id)
     {
         $psReceive = PsReceive::with('chickCounts')->findOrFail($id);
-        
+
         // Flatten data from parent + child for modal
         $data = [
             'id' => $psReceive->id,
@@ -355,4 +362,136 @@ class PsReceiveController extends Controller
             'psReceive' => $data
         ]);
     }
+    public function downloadPdf(Request $request)
+{
+    ini_set('memory_limit', '512M');
+    set_time_limit(120);
+
+    $psReceives = PsReceive::with(['chickCounts', 'supplier'])
+        ->when($request->search, function ($q, $search) {
+            $q->where('pi_no', 'like', "%{$search}%")
+              ->orWhere('order_no', 'like', "%{$search}%");
+        })
+        ->latest()
+        ->get()
+        ->map(function ($r) {
+            return [
+                'pi_no'         => $r->pi_no,
+                'shipment_type' => $r->shipment_type_id == 1 ? 'Local' : 'Foreign',
+                'receive_date'  => $r->pi_date ? date('Y-m-d', strtotime($r->pi_date)) : '', // ✅ FIXED
+                'supplier'      => $r->supplier->name ?? 'N/A',
+                'total_qty'     => $r->chickCounts->ps_total_qty ?? 0,
+                'total_box'     => $r->chickCounts->ps_total_re_box_qty ?? 0,
+                'remarks'       => $r->remarks ?? '',
+            ];
+        })->toArray();
+
+    $columns = [
+        ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
+        ['label' => 'PI No', 'key' => 'pi_no'],
+        ['label' => 'Shipment Type', 'key' => 'shipment_type'],
+        ['label' => 'Receive Date', 'key' => 'receive_date'],
+        ['label' => 'Supplier', 'key' => 'supplier'],
+        ['label' => 'Total Birds Qty', 'key' => 'total_qty'],
+        ['label' => 'Total Box', 'key' => 'total_box'],
+        ['label' => 'Remarks', 'key' => 'remarks'],
+    ];
+
+    $data = [
+        'title'       => 'PS Receive Report',
+        'columns'     => $columns,
+        'rows'        => $psReceives,
+        'filters'     => $request->all(),
+        'generatedAt' => now(),
+        'orientation' => $request->get('orientation', 'landscape'),
+    ];
+
+    Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
+    $pdf = Pdf::loadView('reports.common.list', $data)
+              ->setPaper('a4', $data['orientation']);
+
+    return $pdf->stream('ps-receive-report.pdf');
+}
+
+  public function downloadExcel(Request $request)
+{
+    ini_set('memory_limit', '512M');
+    set_time_limit(120);
+
+    $rows = PsReceive::with(['chickCounts', 'supplier'])
+        ->when($request->search, fn($q, $search) =>
+            $q->where('pi_no', 'like', "%{$search}%")
+              ->orWhere('order_no', 'like', "%{$search}%")
+        )
+        ->latest()
+        ->get()
+        ->map(fn($r) => [
+            'pi_no'         => $r->pi_no,
+            'shipment_type' => $r->shipment_type_id == 1 ? 'Local' : 'Foreign',
+            'receive_date'  => $r->pi_date ? $r->pi_date->format('Y-m-d') : '', // using pi_date
+            'supplier'      => $r->supplier->name ?? 'N/A',
+            'total_qty'     => $r->chickCounts->ps_total_qty ?? 0,
+            'total_box'     => $r->chickCounts->ps_total_re_box_qty ?? 0,
+            'remarks'       => $r->remarks ?? '',
+        ])->toArray();
+
+    $columns = [
+        ['label'=>'#', 'key'=>'index', 'callback'=>fn($r,$i)=> $i+1],
+        ['label'=>'PI No', 'key'=>'pi_no'],
+        ['label'=>'Shipment Type', 'key'=>'shipment_type'],
+        ['label'=>'Receive Date', 'key'=>'receive_date'],
+        ['label'=>'Supplier', 'key'=>'supplier'],
+        ['label'=>'Total Birds Qty', 'key'=>'total_qty'],
+        ['label'=>'Total Box', 'key'=>'total_box'],
+        ['label'=>'Remarks', 'key'=>'remarks'],
+    ];
+
+    $headings = array_map(fn($c) => $c['label'], $columns);
+
+    $body = [];
+    foreach ($rows as $i => $row) {
+        $line = [];
+        foreach ($columns as $col) {
+            $val = isset($col['callback']) && is_callable($col['callback'])
+                ? $col['callback']($row, $i)
+                : ($row[$col['key']] ?? '');
+            $line[] = is_array($val) ? json_encode($val) : $val;
+        }
+        $body[] = $line;
+    }
+
+    return Excel::download(new ArrayExport($headings, $body), 'ps-receive-report.xlsx');
+}
+public function downloadRowPdf($id)
+{
+    ini_set('memory_limit', '512M');
+    set_time_limit(120);
+
+    $psReceive = PsReceive::with([
+        'chickCounts',
+        'supplier',
+        'labTransfers',
+        'attachments'
+    ])->findOrFail($id);
+
+    $data = [
+        'pi_no'          => $psReceive->pi_no,
+        'shipment_type'  => $psReceive->shipment_type_id == 1 ? 'Local' : 'Foreign',
+        'receive_date'   => $psReceive->pi_date?->format('Y-m-d') ?? '',
+        'supplier'       => $psReceive->supplier->name ?? 'N/A',
+        'remarks'        => $psReceive->remarks ?? '',
+        'chick_counts'   => $psReceive->chickCounts,
+        'lab_transfers'  => $psReceive->labTransfers,
+        'attachments'    => $psReceive->attachments,
+        'generatedAt'    => now(),
+    ];
+
+    Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
+    $pdf = Pdf::loadView('reports.ps.receive-row', $data)
+              ->setPaper('a4', 'portrait');
+
+    return $pdf->stream("ps-receive-{$psReceive->pi_no}.pdf");
+}
+
+
 }

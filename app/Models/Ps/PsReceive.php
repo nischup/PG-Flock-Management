@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Models\Ps;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Master\Supplier;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PsReceive extends Model
 {
@@ -39,7 +40,10 @@ class PsReceive extends Model
     {
         return $this->hasMany(PsReceiveAttachment::class);
     }
-
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
     public function chickCounts()
     {
         return $this->hasOne(PsChickCount::class);
