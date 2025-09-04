@@ -2,29 +2,40 @@
 
 namespace App\Models\Master;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Master\Company;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'company_id',
         'name',
-
-        'location',
-        'contact_person_name',
-        'contact_person_phone',
-        'contact_person_email',
-        'contact_person_designation',
+        'code',
+        'description',
+        'start_date',
+        'end_date',
         'status',
     ];
 
-    // Project belongs to a company
-    public function company()
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+    ];
+
+    /**
+     * Get the company that owns the project.
+     */
+    public function company(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(\App\Models\Master\Company::class);
+    }
+
+    /**
+     * Get the vaccine schedules for the project.
+     */
+    public function vaccineSchedules(): HasMany
+    {
+        return $this->hasMany(VaccineSchedule::class);
     }
 }
