@@ -10,6 +10,7 @@ import Pagination from '@/components/Pagination.vue'
 import { Trash2, Pencil } from 'lucide-vue-next'
 import dayjs from 'dayjs'
 import { useDropdownOptions } from '@/composables/dropdownOptions'
+
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Shed', href: '/shed' },
   { title: 'Assign Batch', href: '/shed/batch-assign' },
@@ -17,9 +18,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const { batchOptions, levelOptions  } = useDropdownOptions()
 
-function getBatchLabel(value: number) {
-  const found = batchOptions.find(b => b.value === value)
-  return found ? found.label : `Batch ${value}`
+function getBatchLabel(value: number | string) {
+  const found = batchOptions.find(b => b.value === Number(value)) // ensure both work
+  return found ? found.label : '-'
 }
 
 
@@ -196,7 +197,7 @@ const selectedPI = ref('PI001')
 // Cards to show based on selected PI
 const cardData = computed(() => piCardData[selectedPI.value] || [])
 
-// Dropdown state
+
 const openDropdownId = ref<number | null>(null)
 
 function toggleDropdown(id: number) {
@@ -205,11 +206,14 @@ function toggleDropdown(id: number) {
 
 // Close dropdown when clicking outside
 function handleClickOutside(e: MouseEvent) {
-  if (!(e.target as HTMLElement).closest(".dropdown-wrapper")) {
+  if (!(e.target as HTMLElement).closest('.dropdown-wrapper')) {
     openDropdownId.value = null
   }
 }
-document.addEventListener("click", handleClickOutside)
+document.addEventListener('click', handleClickOutside)
+
+
+
 
 </script>
 
@@ -273,29 +277,45 @@ document.addEventListener("click", handleClickOutside)
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ getBatchLabel(batch.batch_no ?? '-') }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.company_name ?? '-' }}</td>
               <td class="px-6 py-4 relative">
-                <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(batch.id)">
-                  Actions ▼
-                </Button>
-                <div v-if="openDropdownId === batch.id"
-                     class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10 flex flex-col"
-                     @click.stop>
-                  <!-- Edit -->
-                  <Link
-                    :href="`/batch-assign/${batch.id}/edit`"
-                    class="px-4 py-2 text-left hover:bg-blue-50 text-blue-600 flex items-center gap-2"
+                <div class="dropdown-wrapper relative">
+                  <Button
+                    size="sm"
+                    class="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded"
+                    @click.stop="toggleDropdown(batch.id)"
                   >
-                    <Pencil class="w-4 h-4" />
-                    <span>Edit</span>
-                  </Link>
+                    Actions ▼
+                  </Button>
 
-                  <!-- Delete -->
-                  <button
-                    @click="deleteBatch(batch.id)"
-                    class="px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2 w-full"
+                  <div
+                    v-if="openDropdownId === batch.id"
+                    class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10 flex flex-col"
                   >
-                    <Trash2 class="w-4 h-4" />
-                    <span>Delete</span>
-                  </button>
+                    <!-- Edit -->
+                    <Link
+                      :href="`/batch-assign/${batch.id}/edit`"
+                      class="px-4 py-2 text-left hover:bg-blue-50 text-blue-600 flex items-center gap-2"
+                    >
+                      <Pencil class="w-4 h-4" />
+                      <span>Edit</span>
+                    </Link>
+
+                    <!-- Transfer (optional) -->
+                    <Link
+                      :href="`/bird-transfer/create`"
+                      class="px-4 py-2 text-left hover:bg-yellow-50 text-yellow-600 flex items-center gap-2"
+                    >
+                      <span>Transfer</span>
+                    </Link>
+
+                    <!-- Delete -->
+                    <button
+                      @click="deleteBatch(batch.id)"
+                      class="px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2 w-full"
+                    >
+                      <Trash2 class="w-4 h-4" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -312,51 +332,51 @@ document.addEventListener("click", handleClickOutside)
       <!-- Pagination -->
       <Pagination :meta="props.batchAssigns?.meta ?? {}" class="mt-6" />
 
-<!-- Transfer Modal -->
-<div
-  v-if="showTransferModal"
-  class="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
-  @click="showTransferModal = false"
->
-  <div
-    class="bg-white rounded-lg shadow-lg w-[700px] max-w-full"
-    @click.stop
-  >
-    <!-- Header -->
-    <div class="p-3 bg-gray-200 rounded-t-lg">
-      <h2 class="font-bold">Transfer Flock</h2>
-    </div>
+    <!-- Transfer Modal -->
+    <div
+      v-if="showTransferModal"
+      class="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
+      @click="showTransferModal = false"
+    >
+      <div
+        class="bg-white rounded-lg shadow-lg w-[700px] max-w-full"
+        @click.stop
+      >
+        <!-- Header -->
+        <div class="p-3 bg-gray-200 rounded-t-lg">
+          <h2 class="font-bold">Transfer Flock</h2>
+        </div>
 
-    <!-- Body -->
-    <div class="p-6 space-y-4">
-      <!-- Company -->
- <!-- Company (From & To) -->
-<div>
-
-  <div class="grid grid-cols-2 gap-4">
-    <!-- From Company -->
+        <!-- Body -->
+        <div class="p-6 space-y-4">
+          <!-- Company -->
+    <!-- Company (From & To) -->
     <div>
-      <label class="block text-xs font-medium mb-1">From</label>
-      <select v-model="transferFromCompany" class="w-full border rounded px-3 py-2">
-        <option disabled value="">Select From Project</option>
-        <option v-for="company in companyOptions" :key="company.id" :value="company.name">
-          {{ company.name }}
-        </option>
-      </select>
-    </div>
 
-    <!-- To Company -->
-    <div>
-      <label class="block text-xs font-medium mb-1">To</label>
-      <select v-model="transferToCompany" class="w-full border rounded px-3 py-2">
-        <option disabled value="">Select To Project</option>
-        <option v-for="company in companyOptions" :key="company.id" :value="company.name">
-          {{ company.name }}
-        </option>
-      </select>
+      <div class="grid grid-cols-2 gap-4">
+        <!-- From Company -->
+        <div>
+          <label class="block text-xs font-medium mb-1">From</label>
+          <select v-model="transferFromCompany" class="w-full border rounded px-3 py-2">
+            <option disabled value="">Select From Project</option>
+            <option v-for="company in companyOptions" :key="company.id" :value="company.name">
+              {{ company.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- To Company -->
+        <div>
+          <label class="block text-xs font-medium mb-1">To</label>
+          <select v-model="transferToCompany" class="w-full border rounded px-3 py-2">
+            <option disabled value="">Select To Project</option>
+            <option v-for="company in companyOptions" :key="company.id" :value="company.name">
+              {{ company.name }}
+            </option>
+          </select>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
       <!-- Flock (readonly to show which one is being transferred) -->
       <div>
