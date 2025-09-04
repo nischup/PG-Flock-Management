@@ -11,7 +11,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 import { FileText, Pencil } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 // ✅ Props
 const props = defineProps<{
@@ -46,11 +46,13 @@ const closeDropdown = () => (openDropdownId.value = null);
 
 // ✅ Close on outside click
 const handleClick = (e: MouseEvent) => {
-    if (!(e.target as HTMLElement).closest('.action-dropdown, .action-btn')) {
+    if (!(e.target as HTMLElement).closest('.action-dropdown, .action-btn, .pdf-dropdown, .pdf-button')) {
         closeDropdown();
+        openExportDropdown.value = false;
     }
 };
-document.addEventListener('click', handleClick);
+onMounted(() => document.addEventListener('click', handleClick));
+onBeforeUnmount(() => document.removeEventListener('click', handleClick));
 
 // ✅ Delete action
 const deleteReceive = (id: number) => {
@@ -59,6 +61,24 @@ const deleteReceive = (id: number) => {
         text: 'This will permanently delete the record.',
         successMessage: 'PS Receive deleted.',
     });
+};
+
+// ✅ Export filters
+const filters = ref({
+    search: props.filters?.search ?? '',
+    per_page: props.filters?.per_page ?? 10,
+});
+
+const openExportDropdown = ref(false);
+
+const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
+    const url = route('reports.ps-receive.pdf', { ...filters.value, orientation });
+    window.open(url, '_blank');
+};
+
+const exportExcel = () => {
+    const url = route('reports.ps-receive.excel', { ...filters.value });
+    window.open(url, '_blank');
 };
 
 // ✅ Demo data for cards
@@ -108,13 +128,42 @@ const breadcrumbs: BreadcrumbItem[] = [
             <!-- Header -->
             <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h1 class="text-xl font-semibold text-gray-800 dark:text-white">Parent Stock Receive Information</h1>
-                <Link
-                    v-if="can('ps-receive.create')"
-                    href="/ps-receive/create"
-                    class="rounded bg-chicken px-4 py-2 text-sm font-semibold text-white shadow hover:bg-chicken/90"
-                >
-                    + Add
-                </Link>
+                <div class="flex items-center gap-2">
+                    <Link
+                        v-if="can('ps-receive.create')"
+                        href="/ps-receive/create"
+                        class="rounded bg-chicken px-4 py-2 text-sm font-semibold text-white shadow hover:bg-chicken/90"
+                    >
+                        + Add
+                    </Link>
+
+                    <!-- Export Dropdown -->
+                    <div class="pdf-dropdown relative">
+                        <Button class="pdf-button bg-green-600 text-white hover:bg-green-700" @click="openExportDropdown = !openExportDropdown">
+                            Export Report ▼
+                        </Button>
+                        <div v-if="openExportDropdown" class="absolute right-0 z-20 mt-2 w-40 rounded border bg-white shadow-lg">
+                            <button
+                                @click="
+                                    exportPdf('portrait');
+                                    openExportDropdown = false;
+                                "
+                                class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                            >
+                                PDF
+                            </button>
+                            <button
+                                @click="
+                                    exportExcel();
+                                    openExportDropdown = false;
+                                "
+                                class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                            >
+                                Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <FilterControls :filters="props.filters" routeName="/ps-receive" />
