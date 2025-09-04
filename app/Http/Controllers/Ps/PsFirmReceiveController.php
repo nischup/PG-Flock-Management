@@ -66,7 +66,7 @@ class PsFirmReceiveController extends Controller
      */
     public function create()
     {
-         // Fetch all PS Receives (you may filter by status if needed)
+        // Fetch all PS Receives (you may filter by status if needed)
         $psReceives = PsReceive::with('chickCounts', 'labTransfers')
         ->get()
         ->map(function($ps) {

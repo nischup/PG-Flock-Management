@@ -6,12 +6,25 @@ import { ref, computed } from "vue";
 import listInfocard from '@/components/ListinfoCard.vue'
 import { useAgeCalculator } from '@/composables/useAgeCalculator'
 import { usePermissions } from '@/composables/usePermissions'
-
+import Pagination from '@/components/Pagination.vue'
+import { Trash2, Pencil } from 'lucide-vue-next'
+import dayjs from 'dayjs'
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Shed', href: '/shed' },
   { title: 'Assign Batch', href: '/shed/batch-assign' },
 ];
 
+const props = defineProps<{
+  batchAssigns: any // paginated data from controller
+}>()
+
+
+
+const deleteBatch = (id: number) => {
+  if (!confirm('Are you sure you want to delete this batch?')) return
+  // call your delete route via Inertia or Axios
+  // router.delete(`/batch-assign/${id}`)
+}
 // Dummy stats
 const totalFlock = ref(50);
 const assignShed = ref(250);
@@ -169,6 +182,21 @@ const selectedPI = ref('PI001')
 // Cards to show based on selected PI
 const cardData = computed(() => piCardData[selectedPI.value] || [])
 
+// Dropdown state
+const openDropdownId = ref<number | null>(null)
+
+function toggleDropdown(id: number) {
+  openDropdownId.value = openDropdownId.value === id ? null : id
+}
+
+// Close dropdown when clicking outside
+function handleClickOutside(e: MouseEvent) {
+  if (!(e.target as HTMLElement).closest(".dropdown-wrapper")) {
+    openDropdownId.value = null
+  }
+}
+document.addEventListener("click", handleClickOutside)
+
 </script>
 
 
@@ -202,50 +230,73 @@ const cardData = computed(() => piCardData[selectedPI.value] || [])
       </div>
       <listInfocard :cards="cardData" />
 
-      <!-- List Table -->
-      <div class="overflow-x-auto rounded-xl shadow bg-white dark:bg-gray-800 mt-4">
-        <table class="w-full text-left border-collapse">
-          <thead class="bg-gray-100 dark:bg-gray-700">
+      <!-- Table -->
+      <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
             <tr>
-              <th class="px-4 py-2 border-b">#SL</th>
-              <th class="px-4 py-2 border-b">Company</th>
-              <th class="px-4 py-2 border-b">Project</th>
-              <th class="px-4 py-2 border-b">Flock No</th>
-              <th class="px-4 py-2 border-b">Label</th>
-              <th class="px-4 py-2 border-b">Shed</th>
-              <th class="px-4 py-2 border-b">Batch</th>
-              <th class="px-4 py-2 border-b">Action</th>
+              <th class="px-6 py-3 text-left font-bold">Job No</th>
+              <th class="px-6 py-3 text-left font-bold">Flock</th>
+              <th class="px-6 py-3 text-left font-bold">Shed</th>
+              <th class="px-6 py-3 text-left font-bold">Female Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Male Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Total Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Level</th>
+              <th class="px-6 py-3 text-left font-bold">Batch No</th>
+              <th class="px-6 py-3 text-left font-bold">Company</th>
+              <th class="px-6 py-3 text-left font-bold">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            <tr
-              v-for="(flock, index) in flocks"
-              :key="flock.id"
-              class="hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-              <td class="px-4 py-2 border-b">PHL</td>
-              <td class="px-4 py-2 border-b">PHL-1</td>
-              <td class="px-4 py-2 border-b">{{ flock.name }}</td>
-              <td class="px-4 py-2 border-b">Label-01</td>
-              <td class="px-4 py-2 border-b">Shed-1</td>
-              <td class="px-4 py-2 border-b">{{ flock.batch }}</td>
-              <td class="px-4 py-2 border-b">
-                <button class="px-3 py-1 bg-chicken text-white rounded hover:bg-chicken mr-2 mb-2">Edit</button>
+          <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            <tr v-for="batch in props.batchAssigns ?? []" :key="batch.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100">
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.job_no ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.flock_name ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.shed_name ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.batch_female_qty ?? 0 }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.batch_male_qty ?? 0 }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100 font-bold">{{ batch.batch_total_qty ?? 0 }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.level ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.batch_no ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.company_name ?? '-' }}</td>
+              <td class="px-6 py-4 relative">
+                <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(batch.id)">
+                  Actions ▼
+                </Button>
+                <div v-if="openDropdownId === batch.id"
+                     class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10 flex flex-col"
+                     @click.stop>
+                  <!-- Edit -->
+                  <Link
+                    :href="`/batch-assign/${batch.id}/edit`"
+                    class="px-4 py-2 text-left hover:bg-blue-50 text-blue-600 flex items-center gap-2"
+                  >
+                    <Pencil class="w-4 h-4" />
+                    <span>Edit</span>
+                  </Link>
 
-              <Link 
-                href="/bird-transfer/create" 
-                class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 mr-2 flex items-center"
-              >
-                <ArrowLeft class="w-1 h4" /> Transfer
-              </Link>
+                  <!-- Delete -->
+                  <button
+                    @click="deleteBatch(batch.id)"
+                    class="px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2 w-full"
+                  >
+                    <Trash2 class="w-4 h-4" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
 
+            <tr v-if="(props.batchAssigns?.data ?? []).length === 0">
+              <td colspan="10" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
+                No batch assigned yet.
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
+      <!-- Pagination -->
+      <Pagination :meta="props.batchAssigns?.meta ?? {}" class="mt-6" />
 
 <!-- Transfer Modal -->
 <div

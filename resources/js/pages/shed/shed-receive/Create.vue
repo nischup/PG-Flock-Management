@@ -121,9 +121,9 @@ function submit() {
       <div class="grid grid-cols-1 gap-4">
         <!-- Batch Dropdown -->
         <div>
-          <Label>Job No (Firm Receive)</Label>
+          <Label>Firm Receive Code</Label>
           <select v-model="selectedJobId" @change="toggleInfo" class="w-full mt-1 border rounded px-3 py-2">
-            <option value="">Select Job No</option>
+            <option value="">Select Firm Receive Code</option>
             <option v-for="job in props.firmReceives" :key="job.id" :value="job.id">
               {{ job.job_no }}
             </option>

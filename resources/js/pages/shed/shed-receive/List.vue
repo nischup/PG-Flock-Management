@@ -146,7 +146,7 @@ const cardData = computed(() => piCardData[selectedPI.value] || [])
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
             <tr class="throw">
-              <th class="px-6 py-3 text-left font-bold">Job No</th>
+              <th class="px-6 py-3 text-left font-bold">Firm Receive Code</th>
               <th class="px-6 py-3 text-left font-bold">Flock</th>
               <th class="px-6 py-3 text-left font-bold">Shed</th>
               <th class="px-6 py-3 text-left font-bold">Female Qty</th>
