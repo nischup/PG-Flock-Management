@@ -81,6 +81,11 @@ const exportExcel = () => {
     window.open(url, '_blank');
 };
 
+const exportRowPdf = (id: number) => {
+    const url = `/ps-receive/${id}/pdf`; // route to new controller method
+    window.open(url, '_blank');
+};
+
 // ✅ Demo data for cards
 const piCardData: Record<string, any[]> = {
     PI001: [
@@ -219,7 +224,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     <!-- Report -->
                                     <button
                                         v-if="can('ps-receive.delete')"
-                                        @click="deleteReceive(item.id)"
+                                        @click="exportRowPdf(item.id)"
                                         class="flex w-full items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50"
                                     >
                                         <FileText class="h-4 w-4" />

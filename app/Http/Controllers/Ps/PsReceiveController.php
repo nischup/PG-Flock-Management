@@ -458,6 +458,36 @@ class PsReceiveController extends Controller
 
     return Excel::download(new ArrayExport($headings, $body), 'ps-receive-report.xlsx');
 }
+public function downloadRowPdf($id)
+{
+    ini_set('memory_limit', '512M');
+    set_time_limit(120);
+
+    $psReceive = PsReceive::with([
+        'chickCounts',
+        'supplier',
+        'labTransfers',
+        'attachments'
+    ])->findOrFail($id);
+
+    $data = [
+        'pi_no'          => $psReceive->pi_no,
+        'shipment_type'  => $psReceive->shipment_type_id == 1 ? 'Local' : 'Foreign',
+        'receive_date'   => $psReceive->pi_date?->format('Y-m-d') ?? '',
+        'supplier'       => $psReceive->supplier->name ?? 'N/A',
+        'remarks'        => $psReceive->remarks ?? '',
+        'chick_counts'   => $psReceive->chickCounts,
+        'lab_transfers'  => $psReceive->labTransfers,
+        'attachments'    => $psReceive->attachments,
+        'generatedAt'    => now(),
+    ];
+
+    Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
+    $pdf = Pdf::loadView('reports.ps.receive-row', $data)
+              ->setPaper('a4', 'portrait');
+
+    return $pdf->stream("ps-receive-{$psReceive->pi_no}.pdf");
+}
 
 
 }

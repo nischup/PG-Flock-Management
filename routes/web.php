@@ -109,3 +109,5 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('ps-receive/pdf', [PsReceiveController::class, 'downloadPdf'])->name('ps-receive.pdf');
     Route::get('ps-receive/excel', [PsReceiveController::class, 'downloadExcel'])->name('ps-receive.excel');
 });
+Route::get('/ps-receive/{id}/pdf', [PsReceiveController::class, 'downloadRowPdf'])
+    ->name('ps-receive.row-pdf');
