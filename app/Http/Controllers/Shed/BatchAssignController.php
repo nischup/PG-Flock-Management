@@ -91,22 +91,6 @@ class BatchAssignController extends Controller
         'companies' => $companies,
     ]);
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         //return Inertia::render('shed/batch-assign/Create');
     }
 

@@ -9,10 +9,24 @@ import { usePermissions } from '@/composables/usePermissions'
 import Pagination from '@/components/Pagination.vue'
 import { Trash2, Pencil } from 'lucide-vue-next'
 import dayjs from 'dayjs'
+import { useDropdownOptions } from '@/composables/dropdownOptions'
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Shed', href: '/shed' },
   { title: 'Assign Batch', href: '/shed/batch-assign' },
 ];
+
+const { batchOptions, levelOptions  } = useDropdownOptions()
+
+function getBatchLabel(value: number) {
+  const found = batchOptions.find(b => b.value === value)
+  return found ? found.label : `Batch ${value}`
+}
+
+
+function getLevelLabel(value: number) {
+  const found = levelOptions.find(l => l.value === value)
+  return found ? found.label : `Level ${value}`
+}
 
 const props = defineProps<{
   batchAssigns: any // paginated data from controller
@@ -75,7 +89,7 @@ const shedOptions = ["Shed 1", "Shed 2", "Shed 3"];
 
 // Batch (corrected as array of objects)
 const batches = ref([{ batchNo: "", femaleQty: 0, maleQty: 0 }]);
-const batchOptions = ["Batch A", "Batch B", "Batch C", "Batch D", "Batch E"];
+
 
 const addBatch = () => {
   batches.value.push({ batchNo: "", femaleQty: 0, maleQty: 0 });
@@ -235,7 +249,7 @@ document.addEventListener("click", handleClickOutside)
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
             <tr>
-              <th class="px-6 py-3 text-left font-bold">Job No</th>
+              
               <th class="px-6 py-3 text-left font-bold">Flock</th>
               <th class="px-6 py-3 text-left font-bold">Shed</th>
               <th class="px-6 py-3 text-left font-bold">Female Qty</th>
@@ -249,14 +263,14 @@ document.addEventListener("click", handleClickOutside)
           </thead>
           <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             <tr v-for="batch in props.batchAssigns ?? []" :key="batch.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100">
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.job_no ?? '-' }}</td>
+              
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.flock_name ?? '-' }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.shed_name ?? '-' }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.batch_female_qty ?? 0 }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.batch_male_qty ?? 0 }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100 font-bold">{{ batch.batch_total_qty ?? 0 }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.level ?? '-' }}</td>
-              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.batch_no ?? '-' }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ getLevelLabel(batch.level ?? '-') }}</td>
+              <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ getBatchLabel(batch.batch_no ?? '-') }}</td>
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ batch.company_name ?? '-' }}</td>
               <td class="px-6 py-4 relative">
                 <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(batch.id)">

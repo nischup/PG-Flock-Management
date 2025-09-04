@@ -87,14 +87,7 @@ class PsReceiveController extends Controller
         try {
             //DB::beginTransaction();
 
-            // 1️⃣ Create main PS Receive
-
-<<<<<<< HEAD
-               dd($request->all()); 
-=======
-
->>>>>>> b83b31ab2cba766ab15511924f6b7f51e390cc0e
-            //dd($request);
+           
             $psReceive = PsReceive::create([
                 'shipment_type_id' => (int) $request->shipment_type_id,
                 'pi_no' => $request->pi_no,
