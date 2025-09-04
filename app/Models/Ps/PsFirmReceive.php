@@ -10,7 +10,7 @@ class PsFirmReceive extends Model
    protected $fillable = [
         'ps_receive_id',
         'job_no',
-        'receipt_type',
+        'receive_type',
         'source_type',
         'source_id',
         'flock_id',

@@ -19,11 +19,13 @@ return new class extends Migration
 
             // Modify other existing columns if needed
             $table->string('job_no')->nullable()->change();
-            $table->string('receipt_type')->nullable()->change();
-            $table->string('source_type')->nullable()->change();
-            $table->unsignedTinyInteger('source_id')->nullable()->change();
-            $table->unsignedTinyInteger('flock_id')->nullable()->change();
-            $table->string('flock_name')->nullable()->change();
+            $table->string('receive_type')->nullable()->default('box');
+
+            
+            $table->string('source_type')->nullable();
+            $table->unsignedTinyInteger('source_id');
+            $table->unsignedTinyInteger('flock_id')->nullable();
+            $table->string('flock_name')->nullable();
             $table->unsignedTinyInteger('receiving_company_id')->default(0)->change();
             $table->string('remarks')->nullable()->change();
             $table->unsignedTinyInteger('created_by')->nullable()->change();

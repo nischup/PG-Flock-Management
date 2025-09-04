@@ -129,7 +129,7 @@ class PsFirmReceiveController extends Controller
         $firmReceive = PsFirmReceive::create([
             'ps_receive_id' => $request->ps_receive_id,
             'job_no' => $jobNo,
-            'receipt_type' => 'box',
+            'receive_type' => 'box',
             'source_type' => 'psreceive',
             'source_id' => $request->ps_receive_id,
             'flock_id' => $request->flock_id,
