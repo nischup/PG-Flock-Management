@@ -117,6 +117,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('feed/excel', [FeedController::class, 'exportExcel'])->name('feed.excel');
     Route::get('shed/pdf', [ShedController::class, 'exportPdf'])->name('shed.pdf');
     Route::get('shed/excel', [ShedController::class, 'exportExcel'])->name('shed.excel');
+    Route::get('vaccine-type/pdf', [VaccineTypeController::class, 'exportPdf'])->name('vaccine-type.pdf');
+    Route::get('vaccine-type/excel', [VaccineTypeController::class, 'exportExcel'])->name('vaccine-type.excel');
 });
 
 
