@@ -22,6 +22,8 @@ class ProjectSeeder extends Seeder
                 'contact_person_email' => 'karim@provita.com',
                 'contact_person_designation' => 'Project Manager',
                 'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'company_id' => 1,
@@ -32,6 +34,8 @@ class ProjectSeeder extends Seeder
                 'contact_person_email' => 'sadia@provita.com',
                 'contact_person_designation' => 'Assistant Manager',
                 'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'company_id' => 2,
@@ -42,6 +46,8 @@ class ProjectSeeder extends Seeder
                 'contact_person_email' => 'rafiq@kazifarms.com',
                 'contact_person_designation' => 'Project Coordinator',
                 'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),          
             ],
             [
                 'company_id' => 2,
@@ -52,6 +58,8 @@ class ProjectSeeder extends Seeder
                 'contact_person_email' => 'mahbub@aftabhatchery.com',
                 'contact_person_designation' => 'Site Manager',
                 'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ]);
     }

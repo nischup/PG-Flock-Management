@@ -14,10 +14,10 @@ class ChickTypeSeeder extends Seeder
     public function run(): void
     {
         DB::table('chick_types')->insert([
-            ['name' => 'Broiler', 'status' => 1],
-            ['name' => 'Layer', 'status' => 1],
-            ['name' => 'Breeder', 'status' => 1],
-            ['name' => 'Dual Purpose', 'status' => 1],
+            ['name' => 'Broiler', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Layer', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Breeder', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Dual Purpose', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

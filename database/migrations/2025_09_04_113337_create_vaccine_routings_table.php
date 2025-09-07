@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('vaccine_routings', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->integer('status')->default(1);
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

@@ -13,10 +13,10 @@ class BreedTypeSeeder extends Seeder
      */
     public function run(): void
     {
-             DB::table('breed_types')->insert([
-            ['name' => 'Ross', 'status' => '1'],
-            ['name' => 'Rainbow', 'status' => '1'],
-            ['name' => 'Ruby', 'status' => '1'],
+        DB::table('breed_types')->insert([
+            ['name' => 'Ross', 'status' => '1', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Rainbow', 'status' => '1', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Ruby', 'status' => '1', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

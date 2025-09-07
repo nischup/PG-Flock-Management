@@ -13,16 +13,16 @@ class MedicineSeeder extends Seeder
     public function run(): void
     {
         DB::table('medicines')->insert([
-            ['name' => 'Amoxicillin', 'status' => 1],
-            ['name' => 'Tylosin', 'status' => 1],
-            ['name' => 'Doxycycline', 'status' => 1],
-            ['name' => 'Ivermectin', 'status' => 1],
-            ['name' => 'Vitamin Supplement', 'status' => 1],
-            ['name' => 'Coccidiostat', 'status' => 1],
-            ['name' => 'Probiotic', 'status' => 1],
-            ['name' => 'Multivitamin', 'status' => 1],
-            ['name' => 'Oxytetracycline', 'status' => 1],
-            ['name' => 'Enrofloxacin', 'status' => 1],
+            ['name' => 'Amoxicillin', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Tylosin', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Doxycycline', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Ivermectin', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Vitamin Supplement', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Coccidiostat', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Probiotic', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Multivitamin', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Oxytetracycline', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Enrofloxacin', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

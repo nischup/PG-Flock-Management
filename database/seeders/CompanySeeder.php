@@ -22,6 +22,8 @@ class CompanySeeder extends Seeder
                 'contact_person_email' => 'karim@provita.com',
                 'contact_person_designation' => 'General Manager',
                 'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'name' => 'Provita Breed Limited',
@@ -32,6 +34,8 @@ class CompanySeeder extends Seeder
                 'contact_person_email' => 'sadia@provita.com',
                 'contact_person_designation' => 'Managing Director',
                 'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ]);
     }

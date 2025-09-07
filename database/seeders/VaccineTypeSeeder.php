@@ -13,11 +13,11 @@ class VaccineTypeSeeder extends Seeder
     public function run(): void
     {
         DB::table('vaccine_types')->insert([
-            ['name' => 'Live Vaccine', 'status' => 1],
-            ['name' => 'Inactivated Vaccine', 'status' => 1],
-            ['name' => 'Combination Vaccine', 'status' => 1],
-            ['name' => 'Recombinant Vaccine', 'status' => 1],
-            ['name' => 'Vector Vaccine', 'status' => 1],
+            ['name' => 'Live Vaccine', 'status' => 1,'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Inactivated Vaccine', 'status' => 1,'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Combination Vaccine', 'status' => 1,'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Recombinant Vaccine', 'status' => 1,'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Vector Vaccine', 'status' => 1,'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

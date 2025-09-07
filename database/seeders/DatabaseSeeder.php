@@ -35,9 +35,9 @@ class DatabaseSeeder extends Seeder
             VaccineSeeder::class,
         ]);
 
-        // User::factory()->create([
-        //     'name' => 'Provita',
-        //     'email' => 'provita@mail.com',
-        // ]);
+        User::factory()->create([
+            'name' => 'Provita',
+            'email' => 'provita@mail.com',
+        ]);
     }
 }

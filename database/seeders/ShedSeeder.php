@@ -13,16 +13,16 @@ class ShedSeeder extends Seeder
     public function run(): void
     {
         DB::table('sheds')->insert([
-            ['name' => 'Shed-1', 'status' => 1],
-            ['name' => 'Shed-2', 'status' => 1],
-            ['name' => 'Shed-3', 'status' => 1],
-            ['name' => 'Shed-4', 'status' => 1],
-            ['name' => 'Shed-5', 'status' => 1],
-            ['name' => 'Shed-6', 'status' => 1],
-            ['name' => 'Shed-7', 'status' => 1],
-            ['name' => 'Shed-8', 'status' => 1],
-            ['name' => 'Shed-9', 'status' => 1],
-            ['name' => 'Shed-10', 'status' => 1],
+            ['name' => 'Shed-1', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Shed-2', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Shed-3', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Shed-4', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Shed-5', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Shed-6', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Shed-7', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Shed-8', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Shed-9', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Shed-10', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }
