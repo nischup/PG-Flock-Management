@@ -117,7 +117,7 @@ class FeedController extends Controller
                 'feed_type' => $f->feedType->name ?? '',
                 'feed_name' => $f->feed_name,
                 'status' => $f->status,
-                'created_at' => $f->created_at ? $f->created_at->format('Y-m-d H:i') : '',
+                'created_at' => $f->created_at ? $f->created_at->format('d-m-Y') : '',
             ])->toArray();
 
         $columns = [
@@ -145,7 +145,7 @@ class FeedController extends Controller
     }
 
     // ------------------- EXCEL EXPORT -------------------
-    public function downloadExcel(Request $request)
+    public function exportExcel(Request $request)
     {
         ini_set('memory_limit', '512M');
         set_time_limit(120);
@@ -156,7 +156,7 @@ class FeedController extends Controller
                 'feed_type' => $f->feedType->name ?? '',
                 'feed_name' => $f->feed_name,
                 'status' => $f->status,
-                'created_at' => $f->created_at ? $f->created_at->format('Y-m-d H:i') : '',
+                'created_at' => $f->created_at ? $f->created_at->format('d-m-Y') : '',
             ])->toArray();
 
         $columns = [

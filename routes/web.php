@@ -39,8 +39,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
 
 
 
@@ -86,7 +86,7 @@ Route::resource('production/egg-classification', EggClassificationController::cl
 
 Route::get('/weather', [WeatherController::class, 'get']);
 
- Route::resource('flocks', FlockController::class)->only(['store']);
+Route::resource('flocks', FlockController::class)->only(['store']);
 
 
 //Report
@@ -115,6 +115,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('medicine/excel', [MedicineController::class, 'downloadExcel'])->name('medicine.excel');
     Route::get('feed/pdf', [FeedController::class, 'exportPdf'])->name('feed.pdf');
     Route::get('feed/excel', [FeedController::class, 'exportExcel'])->name('feed.excel');
+    Route::get('shed/pdf', [ShedController::class, 'exportPdf'])->name('shed.pdf');
+    Route::get('shed/excel', [ShedController::class, 'exportExcel'])->name('shed.excel');
 });
 
 
