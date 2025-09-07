@@ -20,6 +20,8 @@ class PsReceive extends Model
         'breed_type',
         'country_of_origin',
         'transport_type',
+        'company_id',
+        'transport_inside_temp',
         'remarks',
         'created_by',
         'updated_by',

@@ -301,7 +301,7 @@ document.addEventListener('click', handleClickOutside)
 
                     <!-- Transfer (optional) -->
                     <Link
-                      :href="`/bird-transfer/create`"
+                      :href="route('bird-transfers.create', batch.id)"
                       class="px-4 py-2 text-left hover:bg-yellow-50 text-yellow-600 flex items-center gap-2"
                     >
                       <span>Transfer</span>
