@@ -4,6 +4,7 @@ namespace App\Models\Ps;
 use App\Models\Master\Supplier;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Master\Company;
 
 class PsReceive extends Model
 {
@@ -54,5 +55,9 @@ class PsReceive extends Model
     public function labTransfers()
     {
         return $this->hasMany(PsLabTest::class);
+    }
+     public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id');
     }
 }

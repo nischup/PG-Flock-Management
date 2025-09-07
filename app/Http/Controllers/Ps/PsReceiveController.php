@@ -87,7 +87,7 @@ class PsReceiveController extends Controller
         try {
             //DB::beginTransaction();
 
-           
+
             $psReceive = PsReceive::create([
                 'shipment_type_id' => (int) $request->shipment_type_id,
                 'pi_no' => $request->pi_no,
@@ -455,6 +455,7 @@ class PsReceiveController extends Controller
 
     return Excel::download(new ArrayExport($headings, $body), 'ps-receive-report.xlsx');
 }
+
 public function downloadRowPdf($id)
 {
     ini_set('memory_limit', '512M');
@@ -464,22 +465,47 @@ public function downloadRowPdf($id)
         'chickCounts',
         'supplier',
         'labTransfers',
-        'attachments'
+        'attachments',
+        'company'
     ])->findOrFail($id);
+    //dd($psReceive);
+
+    // Map breed_type IDs to names
+    $breedTypes = [];
+    if (!empty($psReceive->breed_type) && is_array($psReceive->breed_type)) {
+        $breedTypes = BreedType::whereIn('id', $psReceive->breed_type)
+            ->pluck('name')
+            ->toArray();
+    }
 
     $data = [
-        'pi_no'          => $psReceive->pi_no,
-        'shipment_type'  => $psReceive->shipment_type_id == 1 ? 'Local' : 'Foreign',
-        'receive_date'   => $psReceive->pi_date?->format('Y-m-d') ?? '',
-        'supplier'       => $psReceive->supplier->name ?? 'N/A',
-        'remarks'        => $psReceive->remarks ?? '',
-        'chick_counts'   => $psReceive->chickCounts,
-        'lab_transfers'  => $psReceive->labTransfers,
-        'attachments'    => $psReceive->attachments,
-        'generatedAt'    => now(),
+        'pi_no'              => $psReceive->pi_no,
+        'shipment_type'      => $psReceive->shipment_type_id == 1 ? 'Local' : 'Foreign',
+        'receive_date'       => $psReceive->pi_date?->format('Y-m-d') ?? '',
+        'supplier'           => $psReceive->supplier->name ?? 'N/A',
+        'company'            => $psReceive->company,
+        'order_no'           => $psReceive->order_no,
+        'order_date'         => $psReceive->order_date?->format('Y-m-d') ?? '',
+        'breed_types'        => $breedTypes,
+        'remarks'            => $psReceive->remarks ?? '',
+        'transport_type'     => $psReceive->transport_type,
+        'vehicle_temp'       => $psReceive->transport_inside_temp,
+        'chick_counts'       => $psReceive->chickCounts,
+        'lab_transfers'      => $psReceive->labTransfers,
+        'attachments'        => $psReceive->attachments,
+        'lc_no'              => $psReceive->lc_no,
+        'lc_date'            => $psReceive->lc_date,
+        'country_of_origin' => $psReceive->country_of_origin,
+        'generatedAt'        => now(),
     ];
+    //dd($data);
 
-    Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
+    Pdf::setOptions([
+        'isHtml5ParserEnabled' => true,
+        'isRemoteEnabled' => true,
+        'defaultFont' => 'DejaVu Sans'
+    ]);
+
     $pdf = Pdf::loadView('reports.ps.receive-row', $data)
               ->setPaper('a4', 'portrait');
 
