@@ -13,12 +13,12 @@ class TransportTypeSeeder extends Seeder
     public function run(): void
     {
         DB::table('transport_types')->insert([
-            ['name' => 'Truck', 'status' => 1],
-            ['name' => 'Van', 'status' => 1],
-            ['name' => 'Pickup', 'status' => 1],
-            ['name' => 'Motorbike', 'status' => 1],
-            ['name' => 'Boat', 'status' => 1],
-            ['name' => 'Air Cargo', 'status' => 1],
+            ['name' => 'Truck', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Van', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Pickup', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Motorbike', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Boat', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Air Cargo', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

@@ -22,6 +22,8 @@ class SupplierSeeder extends Seeder
                 'contact_person_email' => 'karim@provita.com',
                 'contact_person_mobile' => '+8801711223344',
                 'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'name' => 'Aftab Medicines Ltd.',
@@ -32,6 +34,8 @@ class SupplierSeeder extends Seeder
                 'contact_person_email' => 'sadia@aftabmed.com',
                 'contact_person_mobile' => '+8801811556677',
                 'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'name' => 'Kazi Hatchery Supplies',
@@ -42,6 +46,8 @@ class SupplierSeeder extends Seeder
                 'contact_person_email' => 'rafiq@kazihatchery.com',
                 'contact_person_mobile' => '+8801911998877',
                 'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'name' => 'Golden Agro Ltd.',
@@ -52,6 +58,8 @@ class SupplierSeeder extends Seeder
                 'contact_person_email' => 'mahbub@goldenagro.com',
                 'contact_person_mobile' => '+8801711667788',
                 'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'name' => 'Paragon Vet Supplies',
@@ -62,6 +70,8 @@ class SupplierSeeder extends Seeder
                 'contact_person_email' => 'nazmul@paragonvet.com',
                 'contact_person_mobile' => '+8801711445566',
                 'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ]);
     }
