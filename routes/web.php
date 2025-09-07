@@ -113,6 +113,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('ps-receive/excel', [PsReceiveController::class, 'downloadExcel'])->name('ps-receive.excel');
     Route::get('medicine/pdf', [MedicineController::class, 'downloadPdf'])->name('medicine.pdf');
     Route::get('medicine/excel', [MedicineController::class, 'downloadExcel'])->name('medicine.excel');
+    Route::get('feed/pdf', [FeedController::class, 'exportPdf'])->name('feed.pdf');
+    Route::get('feed/excel', [FeedController::class, 'exportExcel'])->name('feed.excel');
 });
 
 
