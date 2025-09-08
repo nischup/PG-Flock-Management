@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('daily_operations', function (Blueprint $table) {
+        Schema::create('daily_lights', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('daily_operation_id')->constrained()->cascadeOnDelete();
+            $table->integer('hour')->default(0);
+            $table->integer('minute')->default(0);
+            $table->text('note')->nullable();
             $table->timestamps();
         });
     }
@@ -22,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('daily_operations');
+        Schema::dropIfExists('daily_lights');
     }
 };

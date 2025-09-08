@@ -75,6 +75,9 @@ Route::prefix('daily-operation')->group(function () {
     Route::get('/stage/{stage}/create', [DailyOperationController::class, 'create'])
         ->where('stage', 'brooding|growing|laying|closing')
         ->name('daily-operation.stage.create');
+
+    Route::post('/store', [DailyOperationController::class, 'store'])
+        ->name('daily-operation.store');
 });
 
 
