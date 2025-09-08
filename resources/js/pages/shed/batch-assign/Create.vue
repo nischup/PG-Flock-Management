@@ -4,19 +4,21 @@ import { ref } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { type BreadcrumbItem } from '@/types'
 import { ArrowLeft, Trash2 } from 'lucide-vue-next'
-import { useDropdownOptions } from '@/composables/dropdownOptions'
+// Removed useDropdownOptions import as we're now using database data
 
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Assign Batch', href: '/batch-assign' },
   { title: 'Create', href: '' },
 ]
-const { batchOptions, levelOptions  } = useDropdownOptions()
+// Remove hardcoded dropdown options - now using database data from props
 
 const props = defineProps<{
   shedReceives: Array<any>,
   flocks: Array<any>,
-  companies: Array<any>
+  companies: Array<any>,
+  levels: Array<any>,
+  batches: Array<any>
 }>()
 
 const selectedShedReceiveId = ref<number | string>("")
@@ -172,8 +174,8 @@ const isSubmitDisabled = () => {
                 <label class="block text-sm mb-1">Level</label>
                 <select v-model="batch.level" class="w-full border rounded px-3 py-2">
                 <option disabled value="">Select Level</option>
-                <option v-for="option in levelOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
+                <option v-for="level in props.levels" :key="level.id" :value="level.id">
+                  {{ level.name }}
                 </option>
                 </select>
             </div>
@@ -182,8 +184,8 @@ const isSubmitDisabled = () => {
                 <label class="block text-sm mb-1">Batch</label>
                 <select v-model="batch.batch_no" class="w-full border rounded px-3 py-2">
                 <option disabled value="">Select Batch</option>
-                <option v-for="option in batchOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
+                <option v-for="batchItem in props.batches" :key="batchItem.id" :value="batchItem.id">
+                  {{ batchItem.name }}
                 </option>
                 </select>
             </div>

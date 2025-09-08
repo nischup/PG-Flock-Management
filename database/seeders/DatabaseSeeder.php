@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             PermissionSeeder::class,
+            BatchSeeder::class,
             BreedTypeSeeder::class,
             ChickTypeSeeder::class,
             CompanySeeder::class,
@@ -25,6 +26,7 @@ class DatabaseSeeder extends Seeder
             DiseaseSeeder::class,
             FeedSeeder::class,
             FeedTypeSeeder::class,
+            LevelSeeder::class,
             MedicineSeeder::class,
             ProjectSeeder::class,
             ShedSeeder::class,

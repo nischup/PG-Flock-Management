@@ -7,6 +7,8 @@ use App\Models\Shed\ShedReceive;
 use App\Models\Shed\BatchAssign;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
+use App\Models\Master\Level;
+use App\Models\Master\Batch;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -85,10 +87,18 @@ class BatchAssignController extends Controller
     // Companies (if needed in assign)
     $companies = Company::select('id', 'name')->get();
 
+    // Levels from database
+    $levels = Level::where('status', true)->select('id', 'name')->get();
+
+    // Batches from database
+    $batches = Batch::where('status', true)->select('id', 'name')->get();
+
     return Inertia::render('shed/batch-assign/Create', [
         'shedReceives' => $shedReceives,
         'flocks' => $flocks,
         'companies' => $companies,
+        'levels' => $levels,
+        'batches' => $batches,
     ]);
         
         //return Inertia::render('shed/batch-assign/Create');
