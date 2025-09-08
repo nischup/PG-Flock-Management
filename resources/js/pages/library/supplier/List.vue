@@ -67,9 +67,18 @@ const showModal = ref(false);
 const editingSupplier = ref<Supplier | null>(null);
 
 // Form
-const form = useForm({
+const form = useForm<{
+    name: string;
+    supplier_type: 'Local' | 'Foreign';
+    address: string;
+    origin: string;
+    contact_person: string;
+    contact_person_email: string;
+    contact_person_mobile: string;
+    status: number;
+}>({
     name: '',
-    supplier_type: 'Local',
+    supplier_type: 'Local', // Type now matches union
     address: '',
     origin: '',
     contact_person: '',

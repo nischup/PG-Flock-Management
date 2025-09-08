@@ -281,7 +281,11 @@ const breadcrumbs = [
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
-                        <tr v-for="(company, index) in companies" :key="company.id">
+                        <tr
+                            v-for="(company, index) in companies"
+                            :key="company.id"
+                            class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
                             <td class="px-6 py-4">{{ index + 1 }}</td>
                             <td class="px-6 py-4">{{ company.name }}</td>
                             <td class="px-6 py-4">{{ company.company_type }}</td>

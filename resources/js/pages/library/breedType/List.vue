@@ -245,7 +245,11 @@ const breadcrumbs = [
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                        <tr v-for="(breedType, index) in breedTypes" :key="breedType.id">
+                        <tr
+                            v-for="(breedType, index) in breedTypes"
+                            :key="breedType.id"
+                            class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
                             <td class="px-6 py-4">{{ index + 1 }}</td>
                             <td class="px-6 py-4">{{ breedType.name }}</td>
                             <td class="px-6 py-4">
