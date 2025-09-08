@@ -7,6 +7,7 @@ import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
+import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
@@ -270,7 +271,7 @@ const breadcrumbs = [
                                     {{ feed.status === 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ feed.created_at }}</td>
+                            <td class="px-6 py-4">{{ dayjs(feed.created_at).format('YYYY-MM-DD') }}</td>
                             <td class="relative px-6 py-4">
                                 <Button
                                     size="sm"

@@ -284,7 +284,7 @@ const breadcrumbs = [
                                     {{ v.status === 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ dayjs(v.created_at).format('DD MMM YYYY') }}</td>
+                            <td class="px-6 py-4">{{ dayjs(v.created_at).format('YYYY-MM-DD') }}</td>
                             <td class="relative flex items-center gap-2 px-6 py-4">
                                 <Button size="sm" class="actions-button bg-gray-500 text-white hover:bg-gray-600" @click.stop="toggleDropdown(v.id)">
                                     Actions ▼

@@ -20,7 +20,7 @@ class ProjectController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where('name', 'like', "%{$search}%")
-                  ->orWhereHas('company', fn($q) => $q->where('name', 'like', "%{$search}%"));
+                ->orWhereHas('company', fn($q) => $q->where('name', 'like', "%{$search}%"));
         }
 
         $projects = $query->get();
@@ -104,7 +104,7 @@ class ProjectController extends Controller
         $projects = Project::with('company')
             ->when($request->search, function ($q, $search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhereHas('company', fn($q2) => $q2->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('company', fn($q2) => $q2->where('name', 'like', "%{$search}%"));
             })
             ->orderBy($request->get('sort', 'id'), $request->get('direction', 'desc'))
             ->get()
@@ -146,7 +146,7 @@ class ProjectController extends Controller
 
         Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
         $pdf = Pdf::loadView('reports.common.list', $data)
-                  ->setPaper('a4', $data['orientation']);
+            ->setPaper('a4', $data['orientation']);
 
         return $pdf->stream('projects-report.pdf');
     }
@@ -162,7 +162,7 @@ class ProjectController extends Controller
         $projects = Project::with('company')
             ->when($request->search, function ($q, $search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhereHas('company', fn($q2) => $q2->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('company', fn($q2) => $q2->where('name', 'like', "%{$search}%"));
             })
             ->orderBy($request->get('sort', 'id'), $request->get('direction', 'desc'))
             ->get()
@@ -176,7 +176,7 @@ class ProjectController extends Controller
                 'email' => $p->contact_person_email,
                 'designation' => $p->contact_person_designation,
                 'status' => $p->status,
-                'created_at' => $p->created_at?->format('Y-m-d H:i'),
+                'created_at' => $p->created_at?->format('Y-m-d'),
             ])->toArray();
 
         $columns = [

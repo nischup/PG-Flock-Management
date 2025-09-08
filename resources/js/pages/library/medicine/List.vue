@@ -262,7 +262,7 @@ const breadcrumbs = [
                                     {{ medicine.status == 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ dayjs(medicine.created_at).format('DD MMM YYYY') }}</td>
+                            <td class="px-6 py-4">{{ dayjs(medicine.created_at).format('YYYY-MM-DD') }}</td>
                             <td class="relative px-6 py-4">
                                 <Button size="sm" class="actions-button bg-gray-500 text-white hover:bg-gray-600" @click="toggleDropdown(medicine.id)"
                                     >Actions ▼</Button
