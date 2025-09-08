@@ -1,307 +1,323 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { Head, useForm, router } from '@inertiajs/vue3'
-import Swal from 'sweetalert2'
-import AppLayout from '@/layouts/AppLayout.vue'
-import HeadingSmall from '@/components/HeadingSmall.vue'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useNotifier } from '@/composables/useNotifier'
-import { useListFilters } from '@/composables/useListFilters'
-import { usePermissions } from '@/composables/usePermissions'
+import HeadingSmall from '@/components/HeadingSmall.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useNotifier } from '@/composables/useNotifier';
+import { usePermissions } from '@/composables/usePermissions';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import dayjs from 'dayjs';
+import Swal from 'sweetalert2';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 interface ChickType {
-  id: number
-  name: string
-  status: number
-  created_at: string
+    id: number;
+    name: string;
+    status: number;
+    created_at: string;
 }
 
 const props = defineProps<{
-  chickTypes: ChickType[]
-  filters: { search?: string; per_page?: number; page?: number }
-}>()
+    chickTypes: ChickType[];
+    filters: { search?: string; per_page?: number; page?: number };
+}>();
 
-useListFilters({
-  routeName: '/chick-type',
-  filters: props.filters,
-})
+useNotifier();
+const { can } = usePermissions();
+const chickTypes = ref<ChickType[]>([...props.chickTypes]);
 
-const { can } = usePermissions()
-const chickTypes = ref<ChickType[]>([...props.chickTypes])
+// Filters for export
+const filters = ref({ ...props.filters, sort: 'name', direction: 'asc' });
+
+// Export dropdown
+const openExportDropdown = ref(false);
+const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
+    const url = route('reports.chick-type.pdf', { ...filters.value, orientation });
+    window.open(url, '_blank');
+};
+const exportExcel = () => {
+    const url = route('reports.chick-type.excel', { ...filters.value });
+    window.open(url, '_blank');
+};
 
 // Modal state
-const showModal = ref(false)
-const editingChickType = ref<ChickType | null>(null)
+const showModal = ref(false);
+const editingChickType = ref<ChickType | null>(null);
 
-// Modal form
+// Form
 const form = useForm({
-  name: '',
-  status: 1,
-})
+    name: '',
+    status: 1,
+});
 
 // Draggable modal
-const modalRef = ref<HTMLElement | null>(null)
-let offsetX = 0, offsetY = 0, isDragging = false
+const modalRef = ref<HTMLElement | null>(null);
+let offsetX = 0,
+    offsetY = 0,
+    isDragging = false;
 
 const startDrag = (event: MouseEvent) => {
-  if (!modalRef.value) return
-
-  // Prevent drag if clicking a button
-  const target = event.target as HTMLElement
-  if (target.closest('button')) return
-
-  isDragging = true
-  const rect = modalRef.value.getBoundingClientRect()
-  offsetX = event.clientX - rect.left
-  offsetY = event.clientY - rect.top
-  event.preventDefault()
-}
+    if (!modalRef.value) return;
+    isDragging = true;
+    const rect = modalRef.value.getBoundingClientRect();
+    offsetX = event.clientX - rect.left;
+    offsetY = event.clientY - rect.top;
+};
 
 const onDrag = (event: MouseEvent) => {
-  if (!isDragging || !modalRef.value) return
-  Object.assign(modalRef.value.style, {
-    left: `${event.clientX - offsetX}px`,
-    top: `${event.clientY - offsetY}px`,
-    position: 'absolute',
-    margin: '0',
-  })
-}
+    if (!isDragging || !modalRef.value) return;
+    modalRef.value.style.left = `${event.clientX - offsetX}px`;
+    modalRef.value.style.top = `${event.clientY - offsetY}px`;
+    modalRef.value.style.position = 'absolute';
+    modalRef.value.style.margin = '0';
+};
 
-const stopDrag = () => (isDragging = false)
+const stopDrag = () => {
+    isDragging = false;
+};
 
-// Open modal
-const openModal = (chickType: ChickType | null = null) => {
-  if (chickType) {
-    editingChickType.value = chickType
-    Object.assign(form, { ...chickType })
-  } else {
-    resetForm()
-  }
-  showModal.value = true
-}
-
-// Reset form
-const resetForm = () => {
-  form.reset()
-  Object.assign(form, { status: 1 })
-  editingChickType.value = null
-  showModal.value = false
-}
-
-useNotifier()
-
-// Submit (Create/Update)
-const submit = () => {
-  if (!form.name.trim()) return
-
-  if (editingChickType.value) {
-    form.put(route('chick-type.update', editingChickType.value.id), {
-      preserveScroll: true,
-      onSuccess: () => {
-        const i = chickTypes.value.findIndex(c => c.id === editingChickType.value!.id)
-        if (i !== -1) chickTypes.value[i] = { ...chickTypes.value[i], ...form }
-        resetForm()
-      },
-    })
-  } else {
-    form.post(route('chick-type.store'), {
-      preserveScroll: true,
-      onSuccess: (page) => {
-        if ((page as any).props?.chickTypes) {
-          chickTypes.value = (page as any).props.chickTypes
-        }
-        resetForm()
-      },
-    })
-  }
-}
-
-// Dropdown for actions
-const openDropdownId = ref<number | null>(null)
+// Dropdown
+const openDropdownId = ref<number | null>(null);
 const toggleDropdown = (id: number) => {
-  openDropdownId.value = openDropdownId.value === id ? null : id
-}
+    openDropdownId.value = openDropdownId.value === id ? null : id;
+};
 
-// Close dropdown when clicking outside
+// Click outside
 const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as HTMLElement
-  const dropdowns = document.querySelectorAll('.dropdown, .dropdown-button')
-  for (let i = 0; i < dropdowns.length; i++) {
-    if (dropdowns[i].contains(target)) return
-  }
-  openDropdownId.value = null
-}
+    const target = event.target as HTMLElement;
+    if (!target.closest('.dropdown-menu') && !target.closest('.actions-button') && !target.closest('.export-button')) {
+        openDropdownId.value = null;
+        openExportDropdown.value = false;
+    }
+};
 
-// Lifecycle
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-  document.addEventListener('mousemove', onDrag)
-  document.addEventListener('mouseup', stopDrag)
-})
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('click', handleClickOutside);
+});
 onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
-  document.removeEventListener('mousemove', onDrag)
-  document.removeEventListener('mouseup', stopDrag)
-})
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('click', handleClickOutside);
+});
+
+// Modal
+const openModal = (chickType: ChickType | null = null) => {
+    if (chickType) {
+        editingChickType.value = chickType;
+        form.name = chickType.name;
+        form.status = chickType.status;
+    } else {
+        editingChickType.value = null;
+        form.reset();
+        form.status = 1;
+    }
+    showModal.value = true;
+};
+
+const resetForm = () => {
+    form.reset();
+    form.status = 1;
+    editingChickType.value = null;
+    showModal.value = false;
+};
+
+// Submit
+const submit = () => {
+    if (!form.name.trim()) return;
+
+    if (editingChickType.value) {
+        form.put(route('chick-type.update', editingChickType.value.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                const i = chickTypes.value.findIndex((c) => c.id === editingChickType.value!.id);
+                if (i !== -1) {
+                    chickTypes.value[i] = { ...chickTypes.value[i], name: form.name, status: form.status };
+                }
+                resetForm();
+            },
+            onError: () => Swal.fire('Error!', 'Could not update chick type.', 'error'),
+        });
+    } else {
+        form.post(route('chick-type.store'), {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                if ((page as any).props?.chickTypes) {
+                    chickTypes.value = (page as any).props.chickTypes;
+                } else {
+                    chickTypes.value.unshift({
+                        id: Date.now(),
+                        name: form.name,
+                        status: form.status,
+                        created_at: new Date().toISOString(),
+                    });
+                }
+                resetForm();
+            },
+            onError: () => Swal.fire('Error!', 'Could not create chick type.', 'error'),
+        });
+    }
+};
 
 // Toggle status
 const toggleStatus = (chickType: ChickType) => {
-  const newStatus = chickType.status === 1 ? 0 : 1
-  router.put(
-    route('chick-type.update', chickType.id),
-    { name: chickType.name, status: newStatus },
-    {
-      preserveScroll: true,
-      onSuccess: () => {
-        const i = chickTypes.value.findIndex(c => c.id === chickType.id)
-        if (i !== -1) chickTypes.value[i].status = newStatus
-        openDropdownId.value = null
-      },
-      onError: () => {
-        Swal.fire('Error!', 'Could not update status.', 'error')
-      },
-    }
-  )
-}
+    const newStatus = chickType.status === 1 ? 0 : 1;
+    router.put(
+        route('chick-type.update', chickType.id),
+        { name: chickType.name, status: newStatus },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                const i = chickTypes.value.findIndex((c) => c.id === chickType.id);
+                if (i !== -1) chickTypes.value[i].status = newStatus;
+            },
+            onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
+            onFinish: () => {
+                openDropdownId.value = null;
+            },
+        },
+    );
+};
 
 // Breadcrumbs
 const breadcrumbs = [
-  { title: 'Master Setup', href: '/master-setup' },
-  { title: 'Chick Type', href: '/master-setup/chick-type' },
-]
+    { title: 'Master Setup', href: '/master-setup' },
+    { title: 'Chick Type', href: '/master-setup/chick-type' },
+];
 </script>
 
 <template>
-  <AppLayout>
-    <template #breadcrumbs>
-      <nav class="flex flex-wrap items-center gap-2 text-sm sm:text-base text-gray-600">
-        <template v-for="(crumb, index) in breadcrumbs" :key="index">
-          <a :href="crumb.href" class="hover:underline truncate max-w-[120px] sm:max-w-[200px] block">
-            {{ crumb.title }}
-          </a>
-          <span v-if="index < breadcrumbs.length - 1">/</span>
-        </template>
-      </nav>
-    </template>
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <Head title="Chick Types" />
 
-    <Head title="Chick Types" />
+        <div class="px-4 py-6">
+            <div class="mb-4 flex items-center justify-between">
+                <HeadingSmall title="Chick Types List" />
 
-    <div class="px-2 sm:px-4 py-6">
-      <!-- Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-        <HeadingSmall title="Chick Types List" />
-        <Button
-          v-if="can('chick-type.create')"
-          class="bg-chicken hover:bg-yellow-600 text-white w-full sm:w-auto"
-          @click="openModal()"
-        >
-          + Add New
-        </Button>
-      </div>
+                <div class="relative flex items-center gap-2">
+                    <!-- Add New Button -->
+                    <Button v-if="can('chick-type.create')" class="bg-chicken text-white hover:bg-yellow-600" @click="openModal()">+ Add New</Button>
 
-      <!-- Table wrapper -->
-      <div class="overflow-x-auto md:overflow-x-visible border-t border-gray-300 w-full">
-        <table class="min-w-[700px] w-full">
-          <thead>
-            <tr class="bg-gray-100">
-              <th class="p-2 border text-left">#</th>
-              <th class="p-2 border text-left">Name</th>
-              <th class="p-2 border text-left">Status</th>
-              <th class="p-2 border text-left">Created At</th>
-              <th class="p-2 border text-left">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(chickType, index) in chickTypes" :key="chickType.id">
-              <td class="p-2 border">{{ index + 1 }}</td>
-              <td class="p-2 border">{{ chickType.name }}</td>
-              <td class="p-2 border">
-                <span :class="chickType.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-                  {{ chickType.status === 1 ? 'Active' : 'Inactive' }}
-                </span>
-              </td>
-              <td class="p-2 border">{{ chickType.created_at }}</td>
-              <td class="p-2 border relative">
-                <Button
-                  size="sm"
-                  class="bg-gray-500 hover:bg-gray-600 text-white dropdown-button"
-                  @click.stop="toggleDropdown(chickType.id)"
-                >
-                  Actions ▼
-                </Button>
-
-                <div
-                  v-if="openDropdownId === chickType.id"
-                  class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown"
-                  @click.stop
-                >
-                  <button
-                    v-if="can('chick-type.edit')"
-                    class="w-full text-left px-4 py-2 hover:bg-gray-100"
-                    @click="openModal(chickType)"
-                  >
-                    ✏ Edit
-                  </button>
-                  <button
-                    v-if="can('chick-type.edit')"
-                    class="w-full text-left px-4 py-2 hover:bg-gray-100"
-                    @click="toggleStatus(chickType)"
-                  >
-                    {{ chickType.status === 1 ? 'Inactive' : 'Activate' }}
-                  </button>
+                    <!-- Export Dropdown -->
+                    <div class="relative">
+                        <Button class="export-button bg-green-600 text-white hover:bg-green-700" @click="openExportDropdown = !openExportDropdown">
+                            Export Report ▼
+                        </Button>
+                        <div v-if="openExportDropdown" class="absolute right-0 z-20 mt-2 w-44 rounded border bg-white shadow-lg">
+                            <button
+                                @click="
+                                    exportPdf('portrait');
+                                    openExportDropdown = false;
+                                "
+                                class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                            >
+                                PDF
+                            </button>
+                            <button
+                                @click="
+                                    exportExcel();
+                                    openExportDropdown = false;
+                                "
+                                class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                            >
+                                Excel
+                            </button>
+                        </div>
+                    </div>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Draggable & Responsive Modal -->
-    <div v-if="showModal" class="fixed inset-0 z-50 flex items-start justify-center pt-6 px-2 sm:px-4" @click.self="resetForm">
-      <div
-        ref="modalRef"
-        class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-full sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-y-auto"
-        style="top: 100px; position: absolute;"
-      >
-        <!-- Header -->
-        <div class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move" @mousedown="startDrag">
-          <h3 class="text-lg sm:text-xl font-semibold text-gray-900">
-            {{ editingChickType ? 'Edit Chick Type' : 'Add New Chick Type' }}
-          </h3>
-          <button type="button" class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 flex justify-center items-center" @click="resetForm">
-            ✕
-          </button>
-        </div>
-
-        <!-- Form -->
-        <div class="p-4 sm:p-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label for="name" class="mb-2">Chick Type Name</Label>
-              <Input v-model="form.name" id="name" />
-              <span v-if="form.errors.name" class="text-red-600 text-sm">{{ form.errors.name }}</span>
             </div>
-            <div>
-              <Label for="status" class="mb-2">Status</Label>
-              <select v-model="form.status" id="status" class="w-full border rounded p-2">
-                <option :value="1">Active</option>
-                <option :value="0">Inactive</option>
-              </select>
+
+            <!-- Chick Type Table -->
+            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
+                    <thead class="bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                        <tr>
+                            <th class="px-6 py-3 text-left font-semibold">#</th>
+                            <th class="px-6 py-3 text-left font-semibold">Name</th>
+                            <th class="px-6 py-3 text-left font-semibold">Status</th>
+                            <th class="px-6 py-3 text-left font-semibold">Created At</th>
+                            <th class="px-6 py-3 text-left font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                        <tr
+                            v-for="(chickType, index) in chickTypes"
+                            :key="chickType.id"
+                            class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
+                            <td class="px-6 py-4">{{ index + 1 }}</td>
+                            <td class="px-6 py-4">{{ chickType.name }}</td>
+                            <td class="px-6 py-4">
+                                <span :class="chickType.status === 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
+                                    {{ chickType.status === 1 ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">{{ dayjs(chickType.created_at).format('YYYY-MM-DD') }}</td>
+                            <td class="relative px-6 py-4">
+                                <Button
+                                    size="sm"
+                                    class="actions-button bg-gray-500 text-white hover:bg-gray-600"
+                                    @click.stop="toggleDropdown(chickType.id)"
+                                >
+                                    Actions ▼
+                                </Button>
+                                <div
+                                    v-if="openDropdownId === chickType.id"
+                                    class="dropdown-menu absolute z-10 mt-1 w-40 rounded border bg-white shadow-md"
+                                >
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="openModal(chickType)">✏ Edit</button>
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="toggleStatus(chickType)">
+                                        {{ chickType.status === 1 ? 'Inactive' : 'Activate' }}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr v-if="chickTypes.length === 0">
+                            <td colspan="5" class="px-6 py-6 text-center text-gray-500">No chick types found.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-          </div>
         </div>
 
-        <!-- Footer -->
-        <div class="flex flex-col sm:flex-row justify-end p-4 border-t border-gray-200 gap-2 sm:gap-2">
-          <Button class="bg-gray-300 text-black w-full sm:w-auto" @click="resetForm">Cancel</Button>
-          <Button class="bg-chicken text-white w-full sm:w-auto" @click="submit">
-            {{ editingChickType ? 'Update' : 'Save' }}
-          </Button>
+        <!-- Draggable Modal -->
+        <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center bg-black/30 pt-6" @click.self="resetForm">
+            <div ref="modalRef" class="w-full max-w-2xl rounded-lg border border-gray-300 bg-white shadow-lg" style="top: 100px; position: absolute">
+                <div class="flex cursor-move items-center justify-between border-b border-gray-200 p-4" @mousedown="startDrag">
+                    <h3 class="text-xl font-semibold text-gray-900">{{ editingChickType ? 'Edit Chick Type' : 'Add New Chick Type' }}</h3>
+                    <button
+                        type="button"
+                        class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-900"
+                        @click="resetForm"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <div class="space-y-4 p-4">
+                    <div>
+                        <Label for="name" class="mb-2">Chick Type Name</Label>
+                        <Input v-model="form.name" id="name" />
+                        <span v-if="form.errors.name" class="text-sm text-red-600">{{ form.errors.name }}</span>
+                    </div>
+
+                    <div>
+                        <Label for="status" class="mb-2">Status</Label>
+                        <select v-model="form.status" id="status" class="w-full rounded border p-2">
+                            <option :value="1">Active</option>
+                            <option :value="0">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end border-t border-gray-200 p-4">
+                    <Button class="mr-2 bg-gray-300 text-black" @click="resetForm">Cancel</Button>
+                    <Button class="bg-chicken text-white" @click="submit">{{ editingChickType ? 'Update' : 'Save' }}</Button>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </AppLayout>
+    </AppLayout>
 </template>

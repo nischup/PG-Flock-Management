@@ -23,21 +23,18 @@ interface Vaccine {
     note: string;
 }
 
-// for pdf
+// Export filters
 const filters = ref({
     search: '',
     sort: 'name',
     direction: 'asc',
 });
 
-const openDropdown = ref(false);
-
+const openExportDropdown = ref(false);
 const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
     const url = route('reports.vaccines.pdf', { ...filters.value, orientation });
     window.open(url, '_blank');
 };
-
-//for excel
 const exportExcel = () => {
     const url = route('reports.vaccines.excel', { ...filters.value });
     window.open(url, '_blank');
@@ -79,8 +76,6 @@ const startDrag = (event: MouseEvent) => {
     const rect = modalRef.value.getBoundingClientRect();
     offsetX = event.clientX - rect.left;
     offsetY = event.clientY - rect.top;
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', stopDrag);
 };
 const onDrag = (event: MouseEvent) => {
     if (!isDragging || !modalRef.value) return;
@@ -91,8 +86,6 @@ const onDrag = (event: MouseEvent) => {
 };
 const stopDrag = () => {
     isDragging = false;
-    document.removeEventListener('mousemove', onDrag);
-    document.removeEventListener('mouseup', stopDrag);
 };
 
 // Open modal
@@ -173,24 +166,30 @@ const submit = () => {
     }
 };
 
-// Actions dropdown
+// Actions dropdown (like vaccineType List.vue)
 const openDropdownId = ref<number | null>(null);
 const toggleDropdown = (id: number) => {
     openDropdownId.value = openDropdownId.value === id ? null : id;
 };
 
-// Close dropdowns when clicking outside
+// Click outside
 const handleClickOutside = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
-    if (!target.closest('.dropdown-menu') && !target.closest('.actions-button')) {
+    if (!target.closest('.dropdown-menu') && !target.closest('.actions-button') && !target.closest('.export-button')) {
         openDropdownId.value = null;
-    }
-    if (!target.closest('.pdf-dropdown') && !target.closest('.pdf-button')) {
-        openDropdown.value = false;
+        openExportDropdown.value = false;
     }
 };
-onMounted(() => document.addEventListener('click', handleClickOutside));
-onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside));
+onMounted(() => {
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('click', handleClickOutside);
+});
+onBeforeUnmount(() => {
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('click', handleClickOutside);
+});
 
 // Toggle status
 const toggleStatus = (vaccine: Vaccine) => {
@@ -205,9 +204,7 @@ const toggleStatus = (vaccine: Vaccine) => {
                 if (i !== -1) vaccines.value[i].status = newStatus;
             },
             onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
-            onFinish: () => {
-                openDropdownId.value = null;
-            },
+            onFinish: () => (openDropdownId.value = null),
         },
     );
 };
@@ -227,50 +224,41 @@ const breadcrumbs = [
             <div class="mb-4 flex items-center justify-between">
                 <HeadingSmall title="Vaccine List" />
                 <div class="relative flex items-center gap-2">
-                    <Button v-if="can('vaccine.create')" class="bg-chicken text-white hover:bg-yellow-600" @click="openModal()"> + Add New </Button>
+                    <Button v-if="can('vaccine.create')" class="bg-chicken text-white hover:bg-yellow-600" @click="openModal()">+ Add New</Button>
 
-                    <!-- Export PDF Dropdown -->
-                    <div class="pdf-dropdown relative">
-                        <Button class="pdf-button bg-green-600 text-white hover:bg-green-700" @click="openDropdown = !openDropdown">
+                    <!-- Export Dropdown -->
+                    <div class="relative">
+                        <Button class="export-button bg-green-600 text-white hover:bg-green-700" @click="openExportDropdown = !openExportDropdown">
                             Export Report ▼
                         </Button>
-                        <div v-if="openDropdown" class="absolute right-0 z-20 mt-2 w-40 rounded border bg-white shadow-lg">
+                        <div v-if="openExportDropdown" class="absolute right-0 z-20 mt-2 w-44 rounded border bg-white shadow-lg">
                             <button
                                 @click="
                                     exportPdf('portrait');
-                                    openDropdown = false;
+                                    openExportDropdown = false;
                                 "
                                 class="block w-full px-4 py-2 text-left hover:bg-gray-100"
                             >
                                 PDF
                             </button>
                             <button
-                                class="block w-full px-4 py-2 text-left hover:bg-gray-100"
                                 @click="
                                     exportExcel();
-                                    openDropdown = false;
+                                    openExportDropdown = false;
                                 "
+                                class="block w-full px-4 py-2 text-left hover:bg-gray-100"
                             >
                                 Excel
                             </button>
-                            <!-- <button
-                                @click="
-                                    exportPdf('landscape');
-                                    openDropdown = false;
-                                "
-                                class="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                            >
-                                Landscape
-                            </button> -->
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Vaccine Table -->
-            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
-                    <thead class="bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+            <!-- Table -->
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50 text-gray-600">
                         <tr>
                             <th class="px-6 py-3 text-left font-semibold">#</th>
                             <th class="px-6 py-3 text-left font-semibold">Vaccine Type</th>
@@ -283,49 +271,49 @@ const breadcrumbs = [
                             <th class="px-6 py-3 text-left font-semibold">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                        <tr
-                            v-for="(vaccine, index) in vaccines"
-                            :key="vaccine.id"
-                            class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
-                        >
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ index + 1 }}</td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ vaccine.vaccine_type_name }}</td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ vaccine.name }}</td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ vaccine.applicator }}</td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ vaccine.dose }}</td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ vaccine.note }}</td>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        <tr v-for="(v, index) in vaccines" :key="v.id" class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <td class="px-6 py-4">{{ index + 1 }}</td>
+                            <td class="px-6 py-4">{{ v.vaccine_type_name }}</td>
+                            <td class="px-6 py-4">{{ v.name }}</td>
+                            <td class="px-6 py-4">{{ v.applicator }}</td>
+                            <td class="px-6 py-4">{{ v.dose }}</td>
+                            <td class="px-6 py-4">{{ v.note }}</td>
                             <td class="px-6 py-4">
-                                <span :class="vaccine.status === 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
-                                    {{ vaccine.status === 1 ? 'Active' : 'Inactive' }}
+                                <span :class="v.status === 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
+                                    {{ v.status === 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                                {{ dayjs(vaccine.created_at).format('DD MMM YYYY,') }}
-                            </td>
-                            <td class="flex gap-4 px-6 py-4">
-                                <button class="font-medium text-indigo-600 hover:underline" @click="openModal(vaccine)">Edit</button>
-                                <button class="font-medium text-red-600 hover:underline" @click="toggleStatus(vaccine)">
-                                    {{ vaccine.status === 1 ? 'Inactive' : 'Activate' }}
-                                </button>
+                            <td class="px-6 py-4">{{ dayjs(v.created_at).format('YYYY-MM-DD') }}</td>
+                            <td class="relative flex items-center gap-2 px-6 py-4">
+                                <Button size="sm" class="actions-button bg-gray-500 text-white hover:bg-gray-600" @click.stop="toggleDropdown(v.id)">
+                                    Actions ▼
+                                </Button>
+                                <div
+                                    v-if="openDropdownId === v.id"
+                                    class="dropdown-menu absolute right-0 z-10 mt-1 w-40 rounded border bg-white shadow-md"
+                                >
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="openModal(v)">✏ Edit</button>
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="toggleStatus(v)">
+                                        {{ v.status === 1 ? 'Inactive' : 'Activate' }}
+                                    </button>
+                                </div>
                             </td>
                         </tr>
 
                         <tr v-if="vaccines.length === 0">
-                            <td colspan="9" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No vaccines found.</td>
+                            <td colspan="9" class="px-6 py-6 text-center text-gray-500">No vaccines found.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Modal -->
+        <!-- Draggable Modal -->
         <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center bg-black/30 pt-6" @click.self="resetForm">
             <div ref="modalRef" class="w-full max-w-2xl rounded-lg border border-gray-300 bg-white shadow-lg" style="top: 100px; position: absolute">
                 <div class="flex cursor-move items-center justify-between border-b border-gray-200 p-4" @mousedown="startDrag">
-                    <h3 class="text-xl font-semibold text-gray-900">
-                        {{ editingVaccine ? 'Edit Vaccine' : 'Add New Vaccine' }}
-                    </h3>
+                    <h3 class="text-xl font-semibold text-gray-900">{{ editingVaccine ? 'Edit Vaccine' : 'Add New Vaccine' }}</h3>
                     <button
                         type="button"
                         class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-900"
@@ -338,31 +326,26 @@ const breadcrumbs = [
                 <div class="space-y-4 p-4">
                     <div>
                         <Label for="vaccine_type_id" class="mb-2">Vaccine Type</Label>
-                        <select v-model="form.vaccine_type_id" id="vaccine_type_id" class="w-full rounded-md border p-2">
-                            <option v-for="vt in vaccineTypes" :key="vt.id" :value="vt.id">{{ vt.name }}</option>
+                        <select v-model="form.vaccine_type_id" id="vaccine_type_id" class="w-full rounded border p-2">
+                            <option v-for="vt in props.vaccineTypes" :key="vt.id" :value="vt.id">{{ vt.name }}</option>
                         </select>
                     </div>
-
                     <div>
                         <Label for="name" class="mb-2">Vaccine Name</Label>
                         <Input v-model="form.name" id="name" />
                     </div>
-
                     <div>
                         <Label for="applicator" class="mb-2">Applicator</Label>
                         <Input v-model="form.applicator" id="applicator" />
                     </div>
-
                     <div>
                         <Label for="dose" class="mb-2">Dose</Label>
                         <Input v-model="form.dose" id="dose" />
                     </div>
-
                     <div>
                         <Label for="note" class="mb-2">Note</Label>
                         <textarea v-model="form.note" id="note" class="w-full rounded border p-2"></textarea>
                     </div>
-
                     <div>
                         <Label for="status" class="mb-2">Status</Label>
                         <select v-model="form.status" id="status" class="w-full rounded border p-2">

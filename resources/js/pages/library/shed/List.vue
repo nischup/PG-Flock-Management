@@ -7,6 +7,7 @@ import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
+import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
@@ -229,9 +230,9 @@ const breadcrumbs = [
             </div>
 
             <!-- Shed Table -->
-            <div class="overflow-x-auto rounded-lg border border-gray-200">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50 text-gray-600">
+            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
+                    <thead class="bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                         <tr>
                             <th class="px-6 py-3 text-left font-semibold">#</th>
                             <th class="px-6 py-3 text-left font-semibold">Name</th>
@@ -240,8 +241,12 @@ const breadcrumbs = [
                             <th class="px-6 py-3 text-left font-semibold">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
-                        <tr v-for="(shed, index) in sheds" :key="shed.id">
+                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                        <tr
+                            v-for="(shed, index) in sheds"
+                            :key="shed.id"
+                            class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
                             <td class="px-6 py-4">{{ index + 1 }}</td>
                             <td class="px-6 py-4">{{ shed.name }}</td>
                             <td class="px-6 py-4">
@@ -249,7 +254,7 @@ const breadcrumbs = [
                                     {{ shed.status === 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ shed.created_at }}</td>
+                            <td class="px-6 py-4">{{ dayjs(shed.created_at).format('YYYY-MM-DD') }}</td>
                             <td class="relative px-6 py-4">
                                 <Button
                                     size="sm"

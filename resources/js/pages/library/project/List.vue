@@ -8,6 +8,7 @@ import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import dayjs from 'dayjs';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 // -------------------- Types --------------------
@@ -69,8 +70,17 @@ const projects = ref<Project[]>([...props.projects]);
 const showModal = ref(false);
 const editingProject = ref<Project | null>(null);
 
-const form = useForm({
-    company_id: '',
+const form = useForm<{
+    company_id: number | null;
+    name: string;
+    contact_person_name: string;
+    contact_person_phone: string;
+    contact_person_email: string;
+    contact_person_designation: string;
+    location: string;
+    status: number;
+}>({
+    company_id: null,
     name: '',
     contact_person_name: '',
     contact_person_phone: '',
@@ -147,6 +157,7 @@ const openModal = (project: Project | null = null) => {
     } else {
         editingProject.value = null;
         form.reset();
+        form.company_id = null;
         form.status = 1;
     }
     showModal.value = true;
@@ -154,6 +165,7 @@ const openModal = (project: Project | null = null) => {
 
 const resetForm = () => {
     form.reset();
+    form.company_id = null;
     form.status = 1;
     editingProject.value = null;
     showModal.value = false;
@@ -161,23 +173,47 @@ const resetForm = () => {
 
 // -------------------- Submit --------------------
 const submit = () => {
-    if (!form.name.trim() || !form.company_id) return;
+    if (!form.name.trim() || form.company_id === null) return;
+
+    const payload = {
+        ...form,
+        company_id: form.company_id as number,
+    };
 
     if (editingProject.value) {
         form.put(route('project.update', editingProject.value.id), {
             preserveScroll: true,
             onSuccess: () => {
                 const i = projects.value.findIndex((c) => c.id === editingProject.value!.id);
-                if (i !== -1) projects.value[i] = { ...projects.value[i], ...form };
+                if (i !== -1) {
+                    projects.value[i] = {
+                        ...projects.value[i],
+                        ...payload,
+                        created_at: projects.value[i].created_at,
+                        company: projects.value[i].company,
+                    };
+                }
                 resetForm();
             },
         });
     } else {
         form.post(route('project.store'), {
             preserveScroll: true,
-            onSuccess: (page) => {
-                if ((page as any).props?.projects) projects.value = (page as any).props.projects;
-                else projects.value.unshift({ id: Date.now(), ...form, created_at: new Date().toISOString() });
+            onSuccess: () => {
+                const newProject: Project = {
+                    id: Date.now(),
+                    company_id: form.company_id as number,
+                    name: form.name,
+                    location: form.location || '',
+                    contact_person_name: form.contact_person_name || '',
+                    contact_person_phone: form.contact_person_phone || '',
+                    contact_person_email: form.contact_person_email || '',
+                    contact_person_designation: form.contact_person_designation || '',
+                    status: form.status,
+                    created_at: new Date().toISOString(),
+                    company: props.companies.find((c) => c.id === form.company_id) || undefined,
+                };
+                projects.value.unshift(newProject);
                 resetForm();
             },
         });
@@ -197,6 +233,9 @@ const toggleStatus = (project: Project) => {
     });
 };
 
+// -------------------- Day.js Helper --------------------
+const formatDate = (dateStr: string) => dayjs(dateStr).format('DD-MM-YYYY');
+
 useNotifier();
 </script>
 
@@ -208,13 +247,11 @@ useNotifier();
         ]"
     >
         <Head title="Projects" />
-
         <div class="px-4 py-6">
             <div class="mb-4 flex items-center justify-between">
                 <HeadingSmall title="Projects List" />
                 <div class="relative flex items-center gap-2">
                     <Button v-if="can('project.create')" class="bg-chicken text-white hover:bg-yellow-600" @click="openModal()"> + Add New </Button>
-
                     <div class="relative">
                         <Button class="bg-green-600 text-white hover:bg-green-700" @click="openDropdown = !openDropdown"> Export Report ▼ </Button>
                         <div v-if="openDropdown" class="absolute right-0 z-20 mt-2 w-44 rounded border bg-white shadow-lg">
@@ -260,7 +297,7 @@ useNotifier();
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
-                        <tr v-for="(project, index) in projects" :key="project.id">
+                        <tr v-for="(project, index) in projects" :key="project.id" class="odd:bg-white even:bg-gray-100 hover:bg-gray-50">
                             <td class="px-6 py-4">{{ index + 1 }}</td>
                             <td class="px-6 py-4">{{ project.company?.name || '-' }}</td>
                             <td class="px-6 py-4">{{ project.name }}</td>
@@ -274,11 +311,11 @@ useNotifier();
                                     {{ project.status === 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ project.created_at }}</td>
+                            <td class="px-6 py-4">{{ dayjs(project.created_at).format('YYYY-MM-DD') }}</td>
                             <td class="relative px-6 py-4">
-                                <Button size="sm" class="actions-button bg-gray-500 text-white hover:bg-gray-600" @click="toggleDropdown(project.id)">
-                                    Actions ▼
-                                </Button>
+                                <Button size="sm" class="actions-button bg-gray-500 text-white hover:bg-gray-600" @click="toggleDropdown(project.id)"
+                                    >Actions ▼</Button
+                                >
                                 <div
                                     v-if="openDropdownId === project.id"
                                     class="dropdown-menu absolute z-10 mt-1 w-40 rounded border bg-white shadow-md"
@@ -309,12 +346,11 @@ useNotifier();
                         ✕
                     </button>
                 </div>
-
                 <div class="space-y-4 p-4">
                     <div>
                         <Label for="company_id" class="mb-2">Company</Label>
-                        <select v-model="form.company_id" id="company_id" class="w-full rounded border p-2">
-                            <option value="">-- Select Company --</option>
+                        <select v-model.number="form.company_id" id="company_id" class="w-full rounded border p-2">
+                            <option :value="null">-- Select Company --</option>
                             <option v-for="c in props.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
                         </select>
                     </div>
@@ -322,7 +358,6 @@ useNotifier();
                         <Label for="name" class="mb-2">Project Name</Label>
                         <Input v-model="form.name" id="name" />
                     </div>
-
                     <div>
                         <Label for="location" class="mb-2">Location</Label>
                         <Input v-model="form.location" id="location" />
@@ -351,7 +386,6 @@ useNotifier();
                         </select>
                     </div>
                 </div>
-
                 <div class="flex justify-end border-t border-gray-200 p-4">
                     <Button class="mr-2 bg-gray-300 text-black" @click="resetForm">Cancel</Button>
                     <Button class="bg-chicken text-white" @click="submit">{{ editingProject ? 'Update' : 'Save' }}</Button>

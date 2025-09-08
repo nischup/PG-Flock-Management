@@ -250,7 +250,11 @@ const breadcrumbs = [
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
-                        <tr v-for="(medicine, index) in medicines" :key="medicine.id">
+                        <tr
+                            v-for="(medicine, index) in medicines"
+                            :key="medicine.id"
+                            class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
                             <td class="px-6 py-4">{{ index + 1 }}</td>
                             <td class="px-6 py-4">{{ medicine.name }}</td>
                             <td class="px-6 py-4">
@@ -258,7 +262,7 @@ const breadcrumbs = [
                                     {{ medicine.status == 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ dayjs(medicine.created_at).format('DD MMM YYYY') }}</td>
+                            <td class="px-6 py-4">{{ dayjs(medicine.created_at).format('YYYY-MM-DD') }}</td>
                             <td class="relative px-6 py-4">
                                 <Button size="sm" class="actions-button bg-gray-500 text-white hover:bg-gray-600" @click="toggleDropdown(medicine.id)"
                                     >Actions ▼</Button

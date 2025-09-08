@@ -7,6 +7,7 @@ import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
+import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
@@ -234,7 +235,11 @@ const breadcrumbs = [
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
-                        <tr v-for="(v, index) in vaccineTypes" :key="v.id">
+                        <tr
+                            v-for="(v, index) in vaccineTypes"
+                            :key="v.id"
+                            class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
                             <td class="px-6 py-4">{{ index + 1 }}</td>
                             <td class="px-6 py-4">{{ v.name }}</td>
                             <td class="px-6 py-4">
@@ -242,7 +247,7 @@ const breadcrumbs = [
                                     {{ v.status === 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ v.created_at }}</td>
+                            <td class="px-6 py-4">{{ dayjs(v.created_at).format('YYYY-MM-DD') }}</td>
                             <td class="relative px-6 py-4">
                                 <Button size="sm" class="actions-button bg-gray-500 text-white hover:bg-gray-600" @click.stop="toggleDropdown(v.id)">
                                     Actions ▼

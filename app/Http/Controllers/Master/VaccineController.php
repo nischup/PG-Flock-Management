@@ -8,20 +8,18 @@ use Inertia\Inertia;
 use App\Models\Master\Vaccine;
 use App\Models\Master\VaccineType;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ArrayExport;
 
 class VaccineController extends Controller
 {
     public function index(Request $request)
     {
-
-
-
-
         try {
             $vaccines = Vaccine::with('vaccineType')
                 ->orderBy('id', 'desc')
                 ->get();
-
 
             $vaccineTypes = VaccineType::where('status', 1)
                 ->orderBy('name')
@@ -44,12 +42,10 @@ class VaccineController extends Controller
 
             return Inertia::render('library/vaccine/List', [
                 'vaccines' => $mappedVaccines->toArray(),
-                'vaccineTypes' => $vaccineTypes->map(function ($vt) {
-                    return [
-                        'id' => $vt->id,
-                        'name' => $vt->name,
-                    ];
-                })->toArray(),
+                'vaccineTypes' => $vaccineTypes->map(fn($vt) => [
+                    'id' => $vt->id,
+                    'name' => $vt->name,
+                ])->toArray(),
             ]);
         } catch (\Exception $e) {
             Log::error('Vaccine Index Error: ' . $e->getMessage());
@@ -155,5 +151,96 @@ class VaccineController extends Controller
             Log::error('Vaccine Delete Error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to delete vaccine.');
         }
+    }
+
+    // ------------------- PDF EXPORT -------------------
+    public function exportPdf(Request $request)
+    {
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
+
+        $rows = Vaccine::with('vaccineType')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(fn($v) => [
+                'vaccine_type' => $v->vaccineType->name ?? '',
+                'name' => $v->name,
+                'applicator' => $v->applicator,
+                'dose' => $v->dose,
+                'note' => $v->note,
+                'status' => $v->status,
+                'created_at' => $v->created_at ? $v->created_at->format('d-m-Y') : '',
+            ])->toArray();
+
+        $columns = [
+            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
+            ['label' => 'Vaccine Type', 'key' => 'vaccine_type'],
+            ['label' => 'Vaccine Name', 'key' => 'name'],
+            ['label' => 'Applicator', 'key' => 'applicator'],
+            ['label' => 'Dose', 'key' => 'dose'],
+            ['label' => 'Note', 'key' => 'note'],
+            ['label' => 'Status', 'key' => 'status', 'callback' => fn($r) => $r['status'] ? 'Active' : 'Inactive'],
+            ['label' => 'Created At', 'key' => 'created_at'],
+        ];
+
+        $data = [
+            'title' => 'Vaccine Report',
+            'columns' => $columns,
+            'rows' => $rows,
+            'filters' => $request->all(),
+            'generatedAt' => now(),
+            'orientation' => $request->get('orientation', 'portrait'),
+        ];
+
+        Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
+        $pdf = Pdf::loadView('reports.common.list', $data)
+            ->setPaper('a4', $data['orientation']);
+
+        return $pdf->stream('vaccine-report.pdf');
+    }
+
+    // ------------------- EXCEL EXPORT -------------------
+    public function exportExcel(Request $request)
+    {
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
+
+        $rows = Vaccine::with('vaccineType')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(fn($v) => [
+                'vaccine_type' => $v->vaccineType->name ?? '',
+                'name' => $v->name,
+                'applicator' => $v->applicator,
+                'dose' => $v->dose,
+                'note' => $v->note,
+                'status' => $v->status,
+                'created_at' => $v->created_at ? $v->created_at->format('d-m-Y') : '',
+            ])->toArray();
+
+        $columns = [
+            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
+            ['label' => 'Vaccine Type', 'key' => 'vaccine_type'],
+            ['label' => 'Vaccine Name', 'key' => 'name'],
+            ['label' => 'Applicator', 'key' => 'applicator'],
+            ['label' => 'Dose', 'key' => 'dose'],
+            ['label' => 'Note', 'key' => 'note'],
+            ['label' => 'Status', 'key' => 'status', 'callback' => fn($r) => $r['status'] ? 'Active' : 'Inactive'],
+            ['label' => 'Created At', 'key' => 'created_at'],
+        ];
+
+        $headings = array_map(fn($c) => $c['label'], $columns);
+
+        $body = [];
+        foreach ($rows as $i => $row) {
+            $line = [];
+            foreach ($columns as $col) {
+                $val = $col['callback'] ?? null;
+                $line[] = $val && is_callable($val) ? $val($row, $i) : ($row[$col['key']] ?? '');
+            }
+            $body[] = $line;
+        }
+
+        return Excel::download(new ArrayExport($headings, $body), 'vaccine-report.xlsx');
     }
 }
