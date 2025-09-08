@@ -7,36 +7,15 @@ import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
-// Interface
 interface Disease {
     id: number;
     name: string;
-    status: string; // 'Active' | 'Inactive'
+    status: string; // Active | Inactive
     created_at: string;
 }
-
-// Filters for export
-const filters = ref({
-    search: '',
-    sort: 'name',
-    direction: 'asc',
-});
-
-const openDropdown = ref(false);
-
-const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
-    const url = route('reports.disease.pdf', { ...filters.value, orientation });
-    window.open(url, '_blank');
-};
-
-const exportExcel = () => {
-    const url = route('reports.disease.excel', { ...filters.value });
-    window.open(url, '_blank');
-};
 
 const props = defineProps<{
     diseases: Disease[];
@@ -45,14 +24,27 @@ const props = defineProps<{
 
 useNotifier();
 const { can } = usePermissions();
-
-// State
 const diseases = ref<Disease[]>([...props.diseases]);
+
+// Filters for export
+const filters = ref({ ...props.filters, sort: 'name', direction: 'asc' });
+
+// Export dropdown
+const openExportDropdown = ref(false);
+const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
+    const url = route('reports.disease.pdf', { ...filters.value, orientation });
+    window.open(url, '_blank');
+};
+const exportExcel = () => {
+    const url = route('reports.disease.excel', { ...filters.value });
+    window.open(url, '_blank');
+};
 
 // Modal state
 const showModal = ref(false);
 const editingDisease = ref<Disease | null>(null);
 
+// Form
 const form = useForm({
     name: '',
     status: 'Active',
@@ -70,8 +62,6 @@ const startDrag = (event: MouseEvent) => {
     const rect = modalRef.value.getBoundingClientRect();
     offsetX = event.clientX - rect.left;
     offsetY = event.clientY - rect.top;
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', stopDrag);
 };
 
 const onDrag = (event: MouseEvent) => {
@@ -84,11 +74,35 @@ const onDrag = (event: MouseEvent) => {
 
 const stopDrag = () => {
     isDragging = false;
-    document.removeEventListener('mousemove', onDrag);
-    document.removeEventListener('mouseup', stopDrag);
 };
 
-// Modal handlers
+// Dropdown
+const openDropdownId = ref<number | null>(null);
+const toggleDropdown = (id: number) => {
+    openDropdownId.value = openDropdownId.value === id ? null : id;
+};
+
+// Click outside
+const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.dropdown-menu') && !target.closest('.actions-button') && !target.closest('.export-button')) {
+        openDropdownId.value = null;
+        openExportDropdown.value = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('click', handleClickOutside);
+});
+onBeforeUnmount(() => {
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('click', handleClickOutside);
+});
+
+// Modal
 const openModal = (disease: Disease | null = null) => {
     if (disease) {
         editingDisease.value = disease;
@@ -159,19 +173,12 @@ const toggleStatus = (disease: Disease) => {
                 if (i !== -1) diseases.value[i].status = newStatus;
             },
             onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
+            onFinish: () => {
+                openDropdownId.value = null;
+            },
         },
     );
 };
-
-// Close dropdowns on outside click
-const handleClickOutside = (event: MouseEvent) => {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.pdf-dropdown') && !target.closest('.pdf-button')) {
-        openDropdown.value = false;
-    }
-};
-onMounted(() => document.addEventListener('click', handleClickOutside));
-onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside));
 
 // Breadcrumbs
 const breadcrumbs = [
@@ -187,19 +194,21 @@ const breadcrumbs = [
         <div class="px-4 py-6">
             <div class="mb-4 flex items-center justify-between">
                 <HeadingSmall title="Disease List" />
+
                 <div class="relative flex items-center gap-2">
-                    <Button v-if="can('disease.create')" class="bg-chicken text-white hover:bg-yellow-600" @click="openModal()"> + Add New </Button>
+                    <!-- Add New Button -->
+                    <Button v-if="can('disease.create')" class="bg-chicken text-white hover:bg-yellow-600" @click="openModal()">+ Add New</Button>
 
                     <!-- Export Dropdown -->
-                    <div class="pdf-dropdown relative">
-                        <Button class="pdf-button bg-green-600 text-white hover:bg-green-700" @click="openDropdown = !openDropdown">
+                    <div class="relative">
+                        <Button class="export-button bg-green-600 text-white hover:bg-green-700" @click="openExportDropdown = !openExportDropdown">
                             Export Report ▼
                         </Button>
-                        <div v-if="openDropdown" class="absolute right-0 z-20 mt-2 w-40 rounded border bg-white shadow-lg">
+                        <div v-if="openExportDropdown" class="absolute right-0 z-20 mt-2 w-44 rounded border bg-white shadow-lg">
                             <button
                                 @click="
                                     exportPdf('portrait');
-                                    openDropdown = false;
+                                    openExportDropdown = false;
                                 "
                                 class="block w-full px-4 py-2 text-left hover:bg-gray-100"
                             >
@@ -208,7 +217,7 @@ const breadcrumbs = [
                             <button
                                 @click="
                                     exportExcel();
-                                    openDropdown = false;
+                                    openExportDropdown = false;
                                 "
                                 class="block w-full px-4 py-2 text-left hover:bg-gray-100"
                             >
@@ -244,24 +253,36 @@ const breadcrumbs = [
                                     {{ disease.status }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ dayjs(disease.created_at).format('DD MMM YYYY') }}</td>
-                            <td class="flex gap-4 px-6 py-4">
-                                <button class="font-medium text-indigo-600 hover:underline" @click="openModal(disease)">Edit</button>
-                                <button class="font-medium text-red-600 hover:underline" @click="toggleStatus(disease)">
-                                    {{ disease.status === 'Active' ? 'Inactive' : 'Activate' }}
-                                </button>
+                            <td class="px-6 py-4">{{ disease.created_at }}</td>
+                            <td class="relative px-6 py-4">
+                                <Button
+                                    size="sm"
+                                    class="actions-button bg-gray-500 text-white hover:bg-gray-600"
+                                    @click.stop="toggleDropdown(disease.id)"
+                                >
+                                    Actions ▼
+                                </Button>
+                                <div
+                                    v-if="openDropdownId === disease.id"
+                                    class="dropdown-menu absolute z-10 mt-1 w-40 rounded border bg-white shadow-md"
+                                >
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="openModal(disease)">✏ Edit</button>
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="toggleStatus(disease)">
+                                        {{ disease.status === 'Active' ? 'Inactive' : 'Activate' }}
+                                    </button>
+                                </div>
                             </td>
                         </tr>
 
                         <tr v-if="diseases.length === 0">
-                            <td colspan="5" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No diseases found.</td>
+                            <td colspan="5" class="px-6 py-6 text-center text-gray-500">No diseases found.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Modal -->
+        <!-- Draggable Modal -->
         <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center bg-black/30 pt-6" @click.self="resetForm">
             <div ref="modalRef" class="w-full max-w-2xl rounded-lg border border-gray-300 bg-white shadow-lg" style="top: 100px; position: absolute">
                 <div class="flex cursor-move items-center justify-between border-b border-gray-200 p-4" @mousedown="startDrag">
