@@ -119,6 +119,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('shed/excel', [ShedController::class, 'exportExcel'])->name('shed.excel');
     Route::get('vaccine-type/pdf', [VaccineTypeController::class, 'exportPdf'])->name('vaccine-type.pdf');
     Route::get('vaccine-type/excel', [VaccineTypeController::class, 'exportExcel'])->name('vaccine-type.excel');
+    Route::get('feed-type/pdf', [FeedTypeController::class, 'exportPdf'])->name('feed-type.pdf');
+    Route::get('feed-type/excel', [FeedTypeController::class, 'exportExcel'])->name('feed-type.excel');
 });
 
 
@@ -128,4 +130,3 @@ Route::get('/ps-receive/{id}/pdf', [PsReceiveController::class, 'downloadRowPdf'
     ->name('ps-receive.row-pdf');
 
 Route::get('/bird-transfer/create/{batchAssignid}', [BirdTransferController::class, 'create']);
-
