@@ -22,3 +22,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Ignore Cursor AI files (only keep them in dev_ai branch)
+.cursor/
+.cursor-config.json
