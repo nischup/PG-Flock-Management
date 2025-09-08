@@ -110,22 +110,22 @@ class BirdTransferController extends Controller
             'status'                => 1,
         ]);
 
-        PsFirmReceive::create([
-            'ps_receive_id'        => $transfer->id, // link to transfer
-            'job_no'               =>  null,
-            'receive_type'         => 'chicks', // indicate it's a transfer
-            'source_type'          => 'transfer',
-            'source_id'            => $transfer->id,
-            'flock_id'             => $request->flock_id,
-            'flock_name'           => $transfer->flock_no ?? '', // if you have flock relationship
-            'receiving_company_id' => $request->to_company_id,
-            'firm_female_qty'      => $request->transfer_female_qty,
-            'firm_male_qty'        => $request->transfer_male_qty,
-            'firm_total_qty'       => $request->transfer_male_qty + $request->transfer_female_qty,
-            'remarks'              => $request->transfer_note ?? null,
-            'created_by'           => Auth::id(),
-            'status'               => 1,
-        ]);
+        // PsFirmReceive::create([
+        //     'ps_receive_id'        => $transfer->id, // link to transfer
+        //     'job_no'               =>  null,
+        //     'receive_type'         => 'chicks', // indicate it's a transfer
+        //     'source_type'          => 'transfer',
+        //     'source_id'            => $transfer->id,
+        //     'flock_id'             => $request->flock_id,
+        //     'flock_name'           => $transfer->flock_no ?? '', // if you have flock relationship
+        //     'receiving_company_id' => $request->to_company_id,
+        //     'firm_female_qty'      => $request->transfer_female_qty,
+        //     'firm_male_qty'        => $request->transfer_male_qty,
+        //     'firm_total_qty'       => $request->transfer_male_qty + $request->transfer_female_qty,
+        //     'remarks'              => $request->transfer_note ?? null,
+        //     'created_by'           => Auth::id(),
+        //     'status'               => 1,
+        // ]);
 
         return redirect()->route('batch-assign.index')->with('success', 'Bird transfer recorded successfully.');
         

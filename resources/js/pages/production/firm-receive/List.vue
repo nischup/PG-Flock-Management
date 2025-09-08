@@ -1,189 +1,101 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
-import { ref, computed } from "vue";
-
+import AppLayout from '@/layouts/AppLayout.vue'
+import { Head, useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
+import { type BreadcrumbItem } from '@/types'
+import { useNotifier } from '@/composables/useNotifier'
+// Props from Laravel
+const props = defineProps<{
+  transferBirds: Array<any>
+  companies: Array<any>
+  flocks: Array<any>
+}>()
+const { confirmDelete } = useNotifier();
+// Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Production', href: '/flock' },
   { title: 'Farm Receive', href: '/flock/assign' },
-];
-
-// Dummy stats
-const totalFlock = ref(50);
-const assignShed = ref(250);
-const assignBatch = ref(350);
-
-// Dummy flock list
-const flocks = ref([
-  { id: 1, name: "000001", shed: "Shed 1", batch: "Batch A, Batch B" },
-  { id: 2, name: "000002", shed: "Shed 2", batch: "Batch B" },
-  { id: 3, name: "000003", shed: "Shed 3", batch: "Batch C" },
-]);
-
-const flockOptions = ref([
-  { id: 1, name: "000001" },
-  { id: 2, name: "000002" },
-  { id: 3, name: "000003" },
-]);
+]
 
 // Modal state
-const showModal = ref(false);
-const newFlockName = ref("");
+const showTransferModal = ref(false)
 
-// Dragging state
-const position = ref({ x: 0, y: 0 });
-const offset = ref({ x: 0, y: 0 });
-const dragging = ref(false);
+// Form
+const form = useForm({
+  transfer_bird_id: null,
+  flock_id: 0,
+  receive_company_id: null,
+  transfer_date: '',
+  receive_date: '',
+  challan_female_qty: 0,
+  challan_male_qty: 0,
+  challan_total_qty: 0,
+  receive_female_qty: 0,
+  receive_male_qty: 0,
+  receive_total_qty: 0,
+  deviation_female_qty: 0,
+  deviation_male_qty: 0,
+  deviation_total_qty: 0,
+  note: '',
+})
 
-const startDrag = (event: MouseEvent) => {
-  dragging.value = true;
-  offset.value = {
-    x: event.clientX - position.value.x,
-    y: event.clientY - position.value.y,
-  };
-};
-const onDrag = (event: MouseEvent) => {
-  if (!dragging.value) return;
-  position.value = {
-    x: event.clientX - offset.value.x,
-    y: event.clientY - offset.value.y,
-  };
-};
-const stopDrag = () => (dragging.value = false);
+// Open modal with transfer data
+const openTransferModal = (transfer: any) => {
+  form.transfer_bird_id = transfer.id
+  form.flock_id = transfer.flock_id
+  form.receive_company_id = transfer.to_company_id
+  form.transfer_date = transfer.transfer_date
+  form.receive_date = new Date().toISOString().split('T')[0]
 
-// Shed
-const selectedShed = ref("");
-const shedOptions = ["Shed 1", "Shed 2", "Shed 3"];
+  form.challan_female_qty = transfer.transfer_female_qty
+  form.challan_male_qty = transfer.transfer_male_qty
+  form.challan_total_qty = transfer.transfer_total_qty
 
-// Batch (corrected as array of objects)
-const batches = ref([{ batchNo: "", femaleQty: 0, maleQty: 0 }]);
-const batchOptions = ["Batch A", "Batch B", "Batch C", "Batch D", "Batch E"];
+  form.receive_female_qty = 0
+  form.receive_male_qty = 0
+  form.receive_total_qty = 0
+  form.deviation_female_qty = 0
+  form.deviation_male_qty = 0
+  form.deviation_total_qty = 0
+  form.note = ''
 
-const addBatch = () => {
-  batches.value.push({ batchNo: "", femaleQty: 0, maleQty: 0 });
-};
+  showTransferModal.value = true
+}
 
-// Total qty across all batches
-const overallTotal = computed(() =>
-  batches.value.reduce((sum, b) => sum + b.femaleQty + b.maleQty, 0)
-);
-
-// Save flock
-const saveFlock = () => {
-  if (!newFlockName.value.trim()) return;
-
-  flocks.value.push({
-    id: flocks.value.length + 1,
-    name: newFlockName.value,
-    shed: selectedShed.value,
-    batch: batches.value
-      .map(b => `${b.batchNo} (F:${b.femaleQty}, M:${b.maleQty}, T:${b.femaleQty + b.maleQty})`)
-      .join(", ")
-  });
-
-  // Reset form
-  newFlockName.value = "";
-  selectedShed.value = "";
-  batches.value = [{ batchNo: "", femaleQty: 0, maleQty: 0 }];
-  showModal.value = false;
-  totalFlock.value++;
-};
-
-// Close modal on background click
-const closeModal = (event: MouseEvent) => {
-  const modalContent = document.getElementById("modal-content");
-  if (modalContent && !modalContent.contains(event.target as Node)) {
-    showModal.value = false;
-  }
-};
-
-
-// Transfer Modal state
-const showTransferModal = ref(false);
-const transferFlock = ref<any>(null);
-
-// Company list
-const companyOptions = ref([
-  { id: 1, name: "PBL" },
-  { id: 2, name: "PCL" },
-
-]);
-
-const selectedCompany = ref("");
-
-// Open transfer modal with flock data
-const openTransferModal = (flock: any) => {
-  transferFlock.value = flock;
-  selectedCompany.value = "";
-  batches.value = [{ batchNo: "", femaleQty: 0, maleQty: 0 }];
-  showTransferModal.value = true;
-};
-
-// Save transfer logic
+// Save transfer
 const saveTransfer = () => {
-  if (!selectedCompany.value) return;
-
-  console.log("Transferring", transferFlock.value, "to", selectedCompany.value);
-
-  // Example: you could push to another list or send API request
-  showTransferModal.value = false;
-};
-
-
-
+  form.receive_total_qty = (form.receive_female_qty || 0) + (form.receive_male_qty || 0)
+  form.deviation_female_qty = form.challan_female_qty - form.receive_female_qty
+  form.deviation_male_qty = form.challan_male_qty - form.receive_male_qty
+  form.deviation_total_qty = form.challan_total_qty - form.receive_total_qty
+  
+  form.post(route('production-firm-receive.store'), {
+    onSuccess: () => {
+      showTransferModal.value = false
+    },
+  })
+}
 </script>
 
-
 <template>
-  <Head title="Flock List" />
+  <Head title="Production Firm Receive" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
-      
-      <!-- Add Flock Button -->
-      <!-- <div class="flex justify-end">
-        <button
-          @click="showModal = true"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        ><div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+    <div class="p-6">
+      <!-- Title -->
+      <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">
-         Transfer Details List
+          Transfer Birds
         </h1>
-      <Link 
-        href="/bird-transfer/create" class="inline-flex items-center px-4 py-2 bg-chicken hover:bg-chicken text-white text-sm font-semibold rounded shadow transition"
-      >
-        + Add
-      </Link>
       </div>
-          + Assign Flock
-        </button>
-      </div> -->
-
-      <!-- Cards -->
-      <!-- <div class="grid gap-4 md:grid-cols-3">
-        <div class="p-5 rounded-xl shadow bg-white dark:bg-gray-800">
-          <p class="text-sm font-semibold">Total Flock</p>
-          <p class="text-3xl font-bold mt-2">{{ totalFlock }}</p>
-        </div>
-        <div class="p-5 rounded-xl shadow bg-white dark:bg-gray-800">
-          <p class="text-sm font-semibold">Assign Shed</p>
-          <p class="text-3xl font-bold mt-2">{{ assignShed }}</p>
-        </div>
-        <div class="p-5 rounded-xl shadow bg-white dark:bg-gray-800">
-          <p class="text-sm font-semibold">Assign Batch</p>
-          <p class="text-3xl font-bold mt-2">{{ assignBatch }}</p>
-        </div>
-      </div> -->
 
       <!-- List Table -->
-      <div class="overflow-x-auto rounded-xl shadow bg-white dark:bg-gray-800 mt-4">
+      <div class="overflow-x-auto rounded-xl shadow bg-white dark:bg-gray-800">
         <table class="w-full text-left border-collapse">
           <thead class="bg-gray-100 dark:bg-gray-700">
             <tr>
-              <th class="px-4 py-2 border-b">#SL</th>
-              <th class="px-4 py-2 border-b">From Project</th>
-              <th class="px-4 py-2 border-b">Receive Project</th>
+              <th class="px-4 py-2 border-b">#</th>
+              <th class="px-4 py-2 border-b">Job No</th>
               <th class="px-4 py-2 border-b">Flock No</th>
               <th class="px-4 py-2 border-b">Female Qty</th>
               <th class="px-4 py-2 border-b">Male Qty</th>
@@ -193,153 +105,149 @@ const saveTransfer = () => {
           </thead>
           <tbody>
             <tr
-              v-for="(flock, index) in flocks"
-              :key="flock.id"
+              v-for="(transfer, index) in props.transferBirds"
+              :key="transfer.id"
               class="hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-              <td class="px-4 py-2 border-b">PBL</td>
-              <td class="px-4 py-2 border-b">PCL</td>
-              <td class="px-4 py-2 border-b">{{ flock.name }}</td>
-              <td class="px-4 py-2 border-b">10000</td>
-              <td class="px-4 py-2 border-b">200</td>
-              <td class="px-4 py-2 border-b">10200</td>
+              <td class="px-4 py-2 border-b">{{ transfer.job_no }}</td>
+              <td class="px-4 py-2 border-b">{{ transfer.flock_no }}</td>
+              <td class="px-4 py-2 border-b">{{ transfer.transfer_female_qty }}</td>
+              <td class="px-4 py-2 border-b">{{ transfer.transfer_male_qty }}</td>
+              <td class="px-4 py-2 border-b font-bold">{{ transfer.transfer_total_qty }}</td>
               <td class="px-4 py-2 border-b">
-                
                 <button
-                  class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 mr-2"
-                  @click="openTransferModal(flock)"
+                  class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                  @click="openTransferModal(transfer)"
                 >
                   Receive
                 </button>
-
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-<!-- Transfer Modal -->
-<!-- Transfer Modal -->
-<div
-  v-if="showTransferModal"
-  class="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
-  @click="showTransferModal = false"
->
-  <div
-    class="bg-white rounded-lg shadow-lg w-[800px] max-w-full"
-    @click.stop
-  >
-    <!-- Header -->
-    <div class="p-3 bg-gray-200 rounded-t-lg">
-      <h2 class="font-bold">Receive Flock</h2>
-    </div>
-
-    <!-- Body -->
-    <div class="p-6 space-y-4">
-      <!-- Info Section -->
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Flock ID</label>
-          <input type="text" class="w-full border rounded px-3 py-2 bg-gray-100" :value="transferFlock?.name" readonly />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Origin Project</label>
-          <input type="text" class="w-full border rounded px-3 py-2 bg-gray-100" value="PBL" readonly />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Receive Project</label>
-          <input type="text" class="w-full border rounded px-3 py-2 bg-gray-100" value="PCL" readonly />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Transfer Date</label>
-          <input type="date" class="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Receive Date</label>
-          <input type="date" class="w-full border rounded px-3 py-2" />
-        </div>
-      </div>
-
-      <!-- Challan Section -->
-      <div class="grid grid-cols-3 gap-4 mt-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Challan Female Qty</label>
-          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100" value="10000" readonly />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Challan Male Qty</label>
-          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100" value="200" readonly />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Challan Total</label>
-          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100" value="10200" readonly />
-        </div>
-      </div>
-
-      <!-- Receive Section -->
-      <div class="grid grid-cols-3 gap-4 mt-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Receive Female Qty</label>
-          <input v-model.number="transferFlock.receiveFemale" type="number" class="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Receive Male Qty</label>
-          <input v-model.number="transferFlock.receiveMale" type="number" class="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Total Receive Qty</label>
-          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100"
-            :value="(transferFlock.receiveMale || 0) + (transferFlock.receiveFemale || 0)" readonly />
-        </div>
-      </div>
-
-      <!-- Deviation Section -->
-      <div class="grid grid-cols-3 gap-4 mt-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Deviation Female</label>
-          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100"
-            :value="10000 - (transferFlock.receiveFemale || 0)" readonly />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Deviation Male</label>
-          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100"
-            :value="200 - (transferFlock.receiveMale || 0)" readonly />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Deviation Total</label>
-          <input type="number" class="w-full border rounded px-3 py-2 bg-gray-100"
-            :value="(10200 - ((transferFlock.receiveMale || 0) + (transferFlock.receiveFemale || 0)))" readonly />
-        </div>
-      </div>
-
-      <!-- Note -->
-      <div>
-        <label class="block text-sm font-medium mb-1">Note</label>
-        <textarea v-model="transferFlock.note" rows="2" class="w-full border rounded px-3 py-2"></textarea>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="p-4 flex justify-end border-t">
-      <button
-        class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mr-2"
+      <!-- Transfer Modal -->
+      <div
+        v-if="showTransferModal"
+        class="fixed inset-0 bg-black/20 flex items-center justify-center z-50"
         @click="showTransferModal = false"
       >
-        Cancel
-      </button>
-      <button
-        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        @click="saveTransfer"
-      >
-        Receive
-      </button>
-    </div>
-  </div>
-</div>
+        <div
+          class="bg-white rounded-lg shadow-lg w-[800px] max-w-full"
+          @click.stop
+        >
+          <!-- Header -->
+          <div class="p-3 bg-gray-200 rounded-t-lg">
+            <h2 class="font-bold">Receive Flock</h2>
+          </div>
 
+          <!-- Body -->
+          <div class="p-6 space-y-4">
+            <!-- Project & Flock -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Receive Project</label>
+                <select v-model="form.receive_company_id" class="w-full border rounded px-3 py-2">
+                  <option value="">Select Company</option>
+                  <option v-for="c in props.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Flock</label>
+                <select v-model="form.flock_id" class="w-full border rounded px-3 py-2">
+                  <option value="">Select Flock</option>
+                  <option v-for="f in props.flocks" :key="f.id" :value="f.id">{{ f.name }}</option>
+                </select>
+              </div>
+            </div>
 
+            <!-- Dates -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Transfer Date</label>
+                <input type="date" v-model="form.transfer_date" class="w-full border rounded px-3 py-2" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Receive Date</label>
+                <input type="date" v-model="form.receive_date" class="w-full border rounded px-3 py-2" />
+              </div>
+            </div>
 
+            <!-- Challan -->
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Challan Female</label>
+                <input type="number" v-model="form.challan_female_qty" readonly class="w-full border rounded px-3 py-2 bg-gray-100" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Challan Male</label>
+                <input type="number" v-model="form.challan_male_qty" readonly class="w-full border rounded px-3 py-2 bg-gray-100" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Challan Total</label>
+                <input type="number" v-model="form.challan_total_qty" readonly class="w-full border rounded px-3 py-2 bg-gray-100" />
+              </div>
+            </div>
+
+            <!-- Receive -->
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Receive Female</label>
+                <input type="number" v-model.number="form.receive_female_qty" class="w-full border rounded px-3 py-2" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Receive Male</label>
+                <input type="number" v-model.number="form.receive_male_qty" class="w-full border rounded px-3 py-2" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Total Receive</label>
+                <input type="number" :value="form.receive_female_qty + form.receive_male_qty" readonly class="w-full border rounded px-3 py-2 bg-gray-100" />
+              </div>
+            </div>
+
+            <!-- Deviation -->
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Deviation Female</label>
+                <input type="number" :value="form.challan_female_qty - (form.receive_female_qty || 0)" readonly class="w-full border rounded px-3 py-2 bg-gray-100" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Deviation Male</label>
+                <input type="number" :value="form.challan_male_qty - (form.receive_male_qty || 0)" readonly class="w-full border rounded px-3 py-2 bg-gray-100" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Deviation Total</label>
+                <input type="number" :value="form.challan_total_qty - ((form.receive_female_qty || 0) + (form.receive_male_qty || 0))" readonly class="w-full border rounded px-3 py-2 bg-gray-100" />
+              </div>
+            </div>
+
+            <!-- Note -->
+            <div>
+              <label class="block text-sm font-medium mb-1">Note</label>
+              <textarea v-model="form.note" rows="2" class="w-full border rounded px-3 py-2"></textarea>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="p-4 flex justify-end border-t">
+            <button
+              class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mr-2"
+              @click="showTransferModal = false"
+            >
+              Cancel
+            </button>
+            <button
+              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              @click="saveTransfer"
+              :disabled="form.processing"
+            >
+              Receive
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </AppLayout>
 </template>

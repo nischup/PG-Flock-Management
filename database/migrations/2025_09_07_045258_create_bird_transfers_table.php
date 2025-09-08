@@ -23,7 +23,6 @@ return new class extends Migration
             $table->foreignId('from_shed_id')->constrained('sheds');
             $table->unsignedInteger('to_shed_id')->nullable();
             $table->date('transfer_date');
-            
             $table->integer('transfer_female_qty')->default(0);
             $table->integer('transfer_male_qty')->default(0);
             $table->integer('transfer_total_qty')->default(0);
