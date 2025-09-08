@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('daily_waters', function (Blueprint $table) {
             $table->id();
             $table->foreignId('daily_operation_id')->constrained()->cascadeOnDelete();
+            $table->integer('water_type_id');
             $table->decimal('quantity', 10, 2)->default(0);
             $table->foreignId('unit_id')->nullable()->constrained('units')->nullOnDelete();
             $table->text('note')->nullable();

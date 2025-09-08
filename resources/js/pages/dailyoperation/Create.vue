@@ -485,7 +485,7 @@ function submit() {
               >
                 <option value="">Select Feed</option>
                 <option v-for="feed in feeds" :key="feed.id" :value="feed.id">
-                  {{ feed.name }}
+                  {{ feed.feed_name }}
                 </option>
               </select>
               <p v-if="errors.feed_type_id" class="text-red-600 text-sm mt-1">{{ errors.feed_type_id }}</p>

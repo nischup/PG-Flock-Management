@@ -16,7 +16,11 @@ class DailyOperation extends Model
         'status',           // Status (default 1)
     ];
 
-
+    protected $casts = [
+        
+        'operation_date' => 'date',
+        
+    ];
    
     public function batchAssign()
     {
