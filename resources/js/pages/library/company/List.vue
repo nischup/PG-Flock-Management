@@ -15,6 +15,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 interface Company {
     id: number;
     name: string;
+    short_name: string;
     company_type: string;
     contact_person_name?: string;
     contact_person_phone?: string;
@@ -67,6 +68,7 @@ const editingCompany = ref<Company | null>(null);
 // Form
 const form = useForm({
     name: '',
+    short_name: '',
     company_type: '',
     contact_person_name: '',
     contact_person_phone: '',
@@ -133,6 +135,7 @@ const openModal = (company: Company | null = null) => {
     if (company) {
         editingCompany.value = company;
         form.name = company.name;
+        form.short_name = company.short_name;
         form.company_type = company.company_type;
         form.location = company.location || '';
         form.contact_person_name = company.contact_person_name || '';
@@ -180,7 +183,19 @@ const submit = () => {
                 if ((page as any).props?.companies) {
                     companies.value = (page as any).props.companies;
                 } else {
-                    companies.value.unshift({ id: Date.now(), ...form, created_at: new Date().toISOString() });
+                    companies.value.unshift({
+                        id: Date.now(),
+                        name: form.name,
+                        short_name: form.short_name,
+                        company_type: form.company_type,
+                        location: form.location,
+                        contact_person_name: form.contact_person_name,
+                        contact_person_phone: form.contact_person_phone,
+                        contact_person_email: form.contact_person_email,
+                        contact_person_designation: form.contact_person_designation,
+                        status: form.status,
+                        created_at: new Date().toISOString(),
+                    });
                 }
                 resetForm();
             },
@@ -269,6 +284,7 @@ const breadcrumbs = [
                         <tr>
                             <th class="px-6 py-3 text-left font-semibold">#</th>
                             <th class="px-6 py-3 text-left font-semibold">Name</th>
+                            <th class="px-6 py-3 text-left font-semibold">Short Name</th>
                             <th class="px-6 py-3 text-left font-semibold">Type</th>
                             <th class="px-6 py-3 text-left font-semibold">Location</th>
                             <th class="px-6 py-3 text-left font-semibold">Contact Name</th>
@@ -288,6 +304,7 @@ const breadcrumbs = [
                         >
                             <td class="px-6 py-4">{{ index + 1 }}</td>
                             <td class="px-6 py-4">{{ company.name }}</td>
+                            <td class="px-6 py-4">{{ company.short_name }}</td>
                             <td class="px-6 py-4">{{ company.company_type }}</td>
                             <td class="px-6 py-4">{{ company.location || '-' }}</td>
                             <td class="px-6 py-4">{{ company.contact_person_name || '-' }}</td>
@@ -341,6 +358,10 @@ const breadcrumbs = [
                     <div>
                         <Label for="name" class="mb-2">Company Name</Label>
                         <Input v-model="form.name" id="name" />
+                    </div>
+                    <div>
+                        <Label for="short_name" class="mb-2">Short Name</Label>
+                        <Input v-model="form.short_name" id="short_name" />
                     </div>
                     <div>
                         <Label for="company_type" class="mb-2">Company Type</Label>

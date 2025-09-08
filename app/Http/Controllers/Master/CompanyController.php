@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Master\Company;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ArrayExport;
+use Illuminate\Support\Str;
 
 class CompanyController extends Controller
 {
@@ -19,16 +21,17 @@ class CompanyController extends Controller
         try {
             $companies = Company::orderBy('id', 'desc')->get()->map(function ($company) {
                 return [
-                    'id'                        => $company->id,
-                    'name'                      => $company->name,
-                    'company_type'              => $company->company_type,
-                    'location'                  => $company->location,
-                    'contact_person_name'       => $company->contact_person_name,
-                    'contact_person_phone'      => $company->contact_person_phone,
-                    'contact_person_email'      => $company->contact_person_email,
-                    'contact_person_designation'=> $company->contact_person_designation,
-                    'status'                    => (int) $company->status,
-                    'created_at'                => $company->created_at->format('d M Y'),
+                    'id'                         => $company->id,
+                    'name'                       => $company->name,
+                    'short_name'                 => $company->short_name,
+                    'company_type'               => $company->company_type,
+                    'location'                   => $company->location,
+                    'contact_person_name'        => $company->contact_person_name,
+                    'contact_person_phone'       => $company->contact_person_phone,
+                    'contact_person_email'       => $company->contact_person_email,
+                    'contact_person_designation' => $company->contact_person_designation,
+                    'status'                     => (int) $company->status,
+                    'created_at'                 => $company->created_at->format('d M Y'),
                 ];
             });
 
@@ -44,19 +47,46 @@ class CompanyController extends Controller
     // ------------------- CREATE COMPANY -------------------
     public function store(Request $request)
     {
-        $request->validate([
-            'name'                      => 'required|string|max:200',
-            'company_type'              => 'nullable|string|max:100',
-            'location'                  => 'nullable|string|max:200',
-            'contact_person_name'       => 'nullable|string|max:150',
-            'contact_person_phone'      => 'nullable|string|max:50',
-            'contact_person_email'      => 'nullable|string|email|max:100',
-            'contact_person_designation'=> 'nullable|string|max:100',
-            'status'                    => 'nullable|integer',
+        $data = $request->validate([
+            'name'                       => 'required|string|max:200',
+            'short_name'                 => 'nullable|string|max:200',
+            'company_type'               => 'nullable|string|max:100',
+            'location'                   => 'nullable|string|max:200',
+            'contact_person_name'        => 'nullable|string|max:150',
+            'contact_person_phone'       => 'nullable|string|max:50',
+            'contact_person_email'       => 'nullable|string|email|max:100',
+            'contact_person_designation' => 'nullable|string|max:100',
+            'status'                     => 'nullable|integer',
         ]);
 
         try {
-            Company::create($request->all());
+            // Auto-generate short_name if missing
+            if (empty($data['short_name']) && !empty($data['name'])) {
+                $data['short_name'] = strtoupper(Str::substr(Str::slug($data['name'], ''), 0, 10));
+            }
+
+            $company = Company::create($data);
+
+            // If contact email exists, create or get user
+            if (!empty($data['contact_person_email'])) {
+                $user = User::firstOrCreate(
+                    ['email' => $data['contact_person_email']],
+                    [
+                        'name'              => $data['contact_person_name'] ?: $company->name,
+                        'password'          => bcrypt(Str::random(12)),
+                        'email_verified_at' => now(),
+                        'company_id'        => $company->id,
+                        'remember_token'    => Str::random(10),
+                    ]
+                );
+
+                // Ensure the user is linked to this company
+                if (!$user->company_id) {
+                    $user->company_id = $company->id;
+                    $user->save();
+                }
+            }
+
             return redirect()->route('company.index')->with('success', 'Company created successfully.');
         } catch (\Exception $e) {
             Log::error('Company store error: ' . $e->getMessage());
@@ -67,20 +97,46 @@ class CompanyController extends Controller
     // ------------------- UPDATE COMPANY -------------------
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'name'                      => 'required|string|max:200',
-            'company_type'              => 'nullable|string|max:100',
-            'location'                  => 'nullable|string|max:200',
-            'contact_person_name'       => 'nullable|string|max:150',
-            'contact_person_phone'      => 'nullable|string|max:50',
-            'contact_person_email'      => 'nullable|string|email|max:100',
-            'contact_person_designation'=> 'nullable|string|max:100',
-            'status'                    => 'nullable|integer',
+        $data = $request->validate([
+            'name'                       => 'required|string|max:200',
+            'short_name'                 => 'nullable|string|max:200',
+            'company_type'               => 'nullable|string|max:100',
+            'location'                   => 'nullable|string|max:200',
+            'contact_person_name'        => 'nullable|string|max:150',
+            'contact_person_phone'       => 'nullable|string|max:50',
+            'contact_person_email'       => 'nullable|string|email|max:100',
+            'contact_person_designation' => 'nullable|string|max:100',
+            'status'                     => 'nullable|integer',
         ]);
 
         try {
             $company = Company::findOrFail($id);
-            $company->update($request->all());
+
+            // Auto-generate short_name if missing
+            if (empty($data['short_name']) && !empty($data['name'])) {
+                $data['short_name'] = strtoupper(Str::substr(Str::slug($data['name'], ''), 0, 10));
+            }
+
+            $company->update($data);
+
+            // Sync user if email provided
+            if (!empty($data['contact_person_email'])) {
+                $user = User::firstOrCreate(
+                    ['email' => $data['contact_person_email']],
+                    [
+                        'name'              => $data['contact_person_name'] ?: $company->name,
+                        'password'          => bcrypt(Str::random(12)),
+                        'email_verified_at' => now(),
+                        'company_id'        => $company->id,
+                        'remember_token'    => Str::random(10),
+                    ]
+                );
+
+                if (!$user->company_id) {
+                    $user->company_id = $company->id;
+                    $user->save();
+                }
+            }
 
             return redirect()->route('company.index')->with('success', 'Company updated successfully.');
         } catch (\Exception $e) {
@@ -112,42 +168,44 @@ class CompanyController extends Controller
         $companies = Company::orderBy('id', 'desc')
             ->get()
             ->map(fn($c) => [
-                'name' => $c->name,
-                'company_type' => $c->company_type,
-                'location' => $c->location,
-                'contact_person_name' => $c->contact_person_name,
-                'contact_person_phone' => $c->contact_person_phone,
-                'contact_person_email' => $c->contact_person_email,
+                'name'                      => $c->name,
+                'short_name'                => $c->short_name,
+                'company_type'              => $c->company_type,
+                'location'                  => $c->location,
+                'contact_person_name'       => $c->contact_person_name,
+                'contact_person_phone'      => $c->contact_person_phone,
+                'contact_person_email'      => $c->contact_person_email,
                 'contact_person_designation' => $c->contact_person_designation,
-                'status' => $c->status,
-                'created_at' => $c->created_at ? $c->created_at->format('Y-m-d H:i') : '',
+                'status'                    => $c->status,
+                'created_at'                => $c->created_at ? $c->created_at->format('Y-m-d H:i') : '',
             ])->toArray();
 
         $columns = [
-            ['label'=>'#', 'key'=>'index', 'callback'=>fn($r,$i)=>$i+1],
-            ['label'=>'Name', 'key'=>'name'],
-            ['label'=>'Type', 'key'=>'company_type'],
-            ['label'=>'Location', 'key'=>'location'],
-            ['label'=>'Contact Name', 'key'=>'contact_person_name'],
-            ['label'=>'Contact Phone', 'key'=>'contact_person_phone'],
-            ['label'=>'Contact Email', 'key'=>'contact_person_email'],
-            ['label'=>'Designation', 'key'=>'contact_person_designation'],
-            ['label'=>'Status', 'key'=>'status', 'callback'=>fn($r)=> $r['status'] ? 'Active' : 'Inactive'],
-            ['label'=>'Created', 'key'=>'created_at'],
+            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
+            ['label' => 'Name', 'key' => 'name'],
+            ['label' => 'Short Name', 'key' => 'short_name'],
+            ['label' => 'Type', 'key' => 'company_type'],
+            ['label' => 'Location', 'key' => 'location'],
+            ['label' => 'Contact Name', 'key' => 'contact_person_name'],
+            ['label' => 'Contact Phone', 'key' => 'contact_person_phone'],
+            ['label' => 'Contact Email', 'key' => 'contact_person_email'],
+            ['label' => 'Designation', 'key' => 'contact_person_designation'],
+            ['label' => 'Status', 'key' => 'status', 'callback' => fn($r) => $r['status'] ? 'Active' : 'Inactive'],
+            ['label' => 'Created', 'key' => 'created_at'],
         ];
 
         $data = [
-            'title' => 'Company List',
-            'columns' => $columns,
-            'rows' => $companies,
-            'filters' => $request->all(),
+            'title'       => 'Company List',
+            'columns'     => $columns,
+            'rows'        => $companies,
+            'filters'     => $request->all(),
             'generatedAt' => now(),
             'orientation' => $request->get('orientation', 'portrait'),
         ];
 
-        Pdf::setOptions(['isHtml5ParserEnabled'=>true, 'isRemoteEnabled'=>true, 'defaultFont'=>'DejaVu Sans']);
+        Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
         $pdf = Pdf::loadView('reports.common.list', $data)
-                  ->setPaper('a4', $data['orientation']);
+            ->setPaper('a4', $data['orientation']);
 
         return $pdf->stream('company-list.pdf');
     }
@@ -161,38 +219,40 @@ class CompanyController extends Controller
         $rows = Company::orderBy('id', 'desc')
             ->get()
             ->map(fn($c) => [
-                'name' => $c->name,
-                'company_type' => $c->company_type,
-                'location' => $c->location,
-                'contact_person_name' => $c->contact_person_name,
-                'contact_person_phone' => $c->contact_person_phone,
-                'contact_person_email' => $c->contact_person_email,
+                'name'                      => $c->name,
+                'short_name'                => $c->short_name,
+                'company_type'              => $c->company_type,
+                'location'                  => $c->location,
+                'contact_person_name'       => $c->contact_person_name,
+                'contact_person_phone'      => $c->contact_person_phone,
+                'contact_person_email'      => $c->contact_person_email,
                 'contact_person_designation' => $c->contact_person_designation,
-                'status' => $c->status,
-                'created_at' => $c->created_at ? $c->created_at->format('Y-m-d H:i') : '',
+                'status'                    => $c->status,
+                'created_at'                => $c->created_at ? $c->created_at->format('Y-m-d H:i') : '',
             ])->toArray();
 
         $columns = [
-            ['label'=>'#', 'key'=>'index', 'callback'=>fn($r,$i)=> $i+1],
-            ['label'=>'Name', 'key'=>'name'],
-            ['label'=>'Type', 'key'=>'company_type'],
-            ['label'=>'Location', 'key'=>'location'],
-            ['label'=>'Contact Name', 'key'=>'contact_person_name'],
-            ['label'=>'Contact Phone', 'key'=>'contact_person_phone'],
-            ['label'=>'Contact Email', 'key'=>'contact_person_email'],
-            ['label'=>'Designation', 'key'=>'contact_person_designation'],
-            ['label'=>'Status', 'key'=>'status', 'callback'=>fn($r)=> $r['status'] ? 'Active' : 'Inactive'],
-            ['label'=>'Created', 'key'=>'created_at'],
+            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
+            ['label' => 'Name', 'key' => 'name'],
+            ['label' => 'Short Name', 'key' => 'short_name'],
+            ['label' => 'Type', 'key' => 'company_type'],
+            ['label' => 'Location', 'key' => 'location'],
+            ['label' => 'Contact Name', 'key' => 'contact_person_name'],
+            ['label' => 'Contact Phone', 'key' => 'contact_person_phone'],
+            ['label' => 'Contact Email', 'key' => 'contact_person_email'],
+            ['label' => 'Designation', 'key' => 'contact_person_designation'],
+            ['label' => 'Status', 'key' => 'status', 'callback' => fn($r) => $r['status'] ? 'Active' : 'Inactive'],
+            ['label' => 'Created', 'key' => 'created_at'],
         ];
 
-        $headings = array_map(fn($c)=>$c['label'], $columns);
+        $headings = array_map(fn($c) => $c['label'], $columns);
 
         $body = [];
-        foreach($rows as $i => $row){
+        foreach ($rows as $i => $row) {
             $line = [];
-            foreach($columns as $col){
+            foreach ($columns as $col) {
                 $val = $col['callback'] ?? null;
-                $line[] = $val && is_callable($val) ? $val($row,$i) : ($row[$col['key']] ?? '');
+                $line[] = $val && is_callable($val) ? $val($row, $i) : ($row[$col['key']] ?? '');
             }
             $body[] = $line;
         }
