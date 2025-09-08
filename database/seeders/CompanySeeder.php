@@ -15,6 +15,7 @@ class CompanySeeder extends Seeder
         DB::table('companies')->insert([
             [
                 'name' => 'Provita Chicks Limited',
+                'short_name' => 'PCL',
                 'company_type' => 'Poultry Breeding',
                 'location' => 'Dhaka, Bangladesh',
                 'contact_person_name' => 'Abdul Karim',
@@ -27,6 +28,20 @@ class CompanySeeder extends Seeder
             ],
             [
                 'name' => 'Provita Breed Limited',
+                'short_name' => 'PBL',
+                'company_type' => 'Poultry Breeding',
+                'location' => 'Gazipur, Bangladesh',
+                'contact_person_name' => 'Sadia Akter',
+                'contact_person_phone' => '+8801811556677',
+                'contact_person_email' => 'sadia@provita.com',
+                'contact_person_designation' => 'Managing Director',
+                'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Provita Hatch Limited',
+                'short_name' => 'PHL',
                 'company_type' => 'Poultry Breeding',
                 'location' => 'Gazipur, Bangladesh',
                 'contact_person_name' => 'Sadia Akter',
