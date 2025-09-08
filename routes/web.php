@@ -99,8 +99,8 @@ Route::resource('flocks', FlockController::class)->only(['store']);
 Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('disease/pdf', [DiseaseController::class, 'exportPdf'])->name('disease.pdf');
     Route::get('disease/excel', [DiseaseController::class, 'exportExcel'])->name('disease.excel');
-    Route::get('vaccines/pdf', [VaccineController::class, 'downloadPdf'])->name('vaccines.pdf');
-    Route::get('vaccines/excel', [VaccineController::class, 'downloadExcel'])->name('vaccines.excel');
+    Route::get('vaccines/pdf', [VaccineController::class, 'exportPdf'])->name('vaccines.pdf');
+    Route::get('vaccines/excel', [VaccineController::class, 'exportExcel'])->name('vaccines.excel');
     Route::get('units/pdf', [UnitController::class, 'downloadPdf'])->name('unit.pdf');
     Route::get('units/excel', [UnitController::class, 'downloadExcel'])->name('unit.excel');
     Route::get('company/pdf', [CompanyController::class, 'downloadPdf'])->name('company.pdf');
@@ -121,6 +121,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('vaccine-type/excel', [VaccineTypeController::class, 'exportExcel'])->name('vaccine-type.excel');
     Route::get('feed-type/pdf', [FeedTypeController::class, 'exportPdf'])->name('feed-type.pdf');
     Route::get('feed-type/excel', [FeedTypeController::class, 'exportExcel'])->name('feed-type.excel');
+    Route::get('chick-type/pdf', [ChickTypeController::class, 'exportPdf'])->name('chick-type.pdf');
+    Route::get('chick-type/excel', [ChickTypeController::class, 'exportExcel'])->name('chick-type.excel');
 });
 
 

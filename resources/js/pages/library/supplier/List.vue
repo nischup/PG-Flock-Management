@@ -7,7 +7,6 @@ import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
@@ -24,30 +23,50 @@ interface Supplier {
     created_at: string;
 }
 
+// Props
+const props = defineProps<{
+    suppliers: Supplier[];
+    filters: { search?: string; per_page?: number; page?: number };
+}>();
+
+useNotifier();
+const { can } = usePermissions();
+const suppliers = ref<Supplier[]>([...props.suppliers]);
+
 // Filters for export
-const filters = ref({
-    search: '',
-    sort: 'name',
-    direction: 'asc',
-});
+const filters = ref({ ...props.filters, sort: 'name', direction: 'asc' });
 
-const openDropdown = ref(false);
-
+// Export dropdown
+const openExportDropdown = ref(false);
 const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
     const url = route('reports.supplier.pdf', { ...filters.value, orientation });
     window.open(url, '_blank');
 };
-
 const exportExcel = () => {
     const url = route('reports.supplier.excel', { ...filters.value });
     window.open(url, '_blank');
 };
 
-// Props & state
-const props = defineProps<{ suppliers: Supplier[] }>();
-const suppliers = ref<Supplier[]>([...props.suppliers]);
+// Dropdown
+const openDropdownId = ref<number | null>(null);
+const toggleDropdown = (id: number) => {
+    openDropdownId.value = openDropdownId.value === id ? null : id;
+};
+
+// Click outside
+const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.dropdown-menu') && !target.closest('.actions-button') && !target.closest('.export-button')) {
+        openDropdownId.value = null;
+        openExportDropdown.value = false;
+    }
+};
+
+// Modal state
 const showModal = ref(false);
 const editingSupplier = ref<Supplier | null>(null);
+
+// Form
 const form = useForm({
     name: '',
     supplier_type: 'Local',
@@ -71,8 +90,6 @@ const startDrag = (event: MouseEvent) => {
     const rect = modalRef.value.getBoundingClientRect();
     offsetX = event.clientX - rect.left;
     offsetY = event.clientY - rect.top;
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', stopDrag);
 };
 
 const onDrag = (event: MouseEvent) => {
@@ -85,11 +102,21 @@ const onDrag = (event: MouseEvent) => {
 
 const stopDrag = () => {
     isDragging = false;
-    document.removeEventListener('mousemove', onDrag);
-    document.removeEventListener('mouseup', stopDrag);
 };
 
-// Modal handlers
+// Lifecycle
+onMounted(() => {
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('click', handleClickOutside);
+});
+onBeforeUnmount(() => {
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('click', handleClickOutside);
+});
+
+// Modal
 const openModal = (supplier: Supplier | null = null) => {
     if (supplier) {
         editingSupplier.value = supplier;
@@ -120,9 +147,7 @@ const submit = () => {
             preserveScroll: true,
             onSuccess: () => {
                 const i = suppliers.value.findIndex((s) => s.id === editingSupplier.value!.id);
-                if (i !== -1) {
-                    suppliers.value[i] = { ...suppliers.value[i], ...form };
-                }
+                if (i !== -1) suppliers.value[i] = { ...suppliers.value[i], ...form };
                 resetForm();
             },
             onError: () => Swal.fire('Error!', 'Could not update supplier.', 'error'),
@@ -167,28 +192,18 @@ const toggleStatus = (supplier: Supplier) => {
                 if (i !== -1) suppliers.value[i].status = newStatus;
             },
             onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
+            onFinish: () => {
+                openDropdownId.value = null;
+            },
         },
     );
 };
-
-// Close dropdowns on outside click
-const handleClickOutside = (event: MouseEvent) => {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.pdf-dropdown') && !target.closest('.pdf-button')) {
-        openDropdown.value = false;
-    }
-};
-onMounted(() => document.addEventListener('click', handleClickOutside));
-onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside));
 
 // Breadcrumbs
 const breadcrumbs = [
     { title: 'Master Setup', href: '/master-setup' },
     { title: 'Supplier', href: '/master-setup/supplier' },
 ];
-
-useNotifier();
-const { can } = usePermissions();
 </script>
 
 <template>
@@ -198,19 +213,20 @@ const { can } = usePermissions();
         <div class="px-4 py-6">
             <div class="mb-4 flex items-center justify-between">
                 <HeadingSmall title="Suppliers List" />
+
                 <div class="relative flex items-center gap-2">
                     <Button v-if="can('supplier.create')" class="bg-chicken text-white hover:bg-yellow-600" @click="openModal()">+ Add New</Button>
 
                     <!-- Export Dropdown -->
-                    <div class="pdf-dropdown relative">
-                        <Button class="pdf-button bg-green-600 text-white hover:bg-green-700" @click="openDropdown = !openDropdown">
+                    <div class="relative">
+                        <Button class="export-button bg-green-600 text-white hover:bg-green-700" @click="openExportDropdown = !openExportDropdown">
                             Export Report ▼
                         </Button>
-                        <div v-if="openDropdown" class="absolute right-0 z-20 mt-2 w-40 rounded border bg-white shadow-lg">
+                        <div v-if="openExportDropdown" class="absolute right-0 z-20 mt-2 w-44 rounded border bg-white shadow-lg">
                             <button
                                 @click="
                                     exportPdf('portrait');
-                                    openDropdown = false;
+                                    openExportDropdown = false;
                                 "
                                 class="block w-full px-4 py-2 text-left hover:bg-gray-100"
                             >
@@ -219,7 +235,7 @@ const { can } = usePermissions();
                             <button
                                 @click="
                                     exportExcel();
-                                    openDropdown = false;
+                                    openExportDropdown = false;
                                 "
                                 class="block w-full px-4 py-2 text-left hover:bg-gray-100"
                             >
@@ -261,24 +277,36 @@ const { can } = usePermissions();
                                     {{ supplier.status === 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ dayjs(supplier.created_at).format('DD MMM YYYY') }}</td>
-                            <td class="flex gap-4 px-6 py-4">
-                                <button class="font-medium text-indigo-600 hover:underline" @click="openModal(supplier)">Edit</button>
-                                <button class="font-medium text-red-600 hover:underline" @click="toggleStatus(supplier)">
-                                    {{ supplier.status === 1 ? 'Inactive' : 'Activate' }}
-                                </button>
+                            <td class="px-6 py-4">{{ supplier.created_at }}</td>
+                            <td class="relative px-6 py-4">
+                                <Button
+                                    size="sm"
+                                    class="actions-button bg-gray-500 text-white hover:bg-gray-600"
+                                    @click.stop="toggleDropdown(supplier.id)"
+                                >
+                                    Actions ▼
+                                </Button>
+                                <div
+                                    v-if="openDropdownId === supplier.id"
+                                    class="dropdown-menu absolute z-10 mt-1 w-40 rounded border bg-white shadow-md"
+                                >
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="openModal(supplier)">✏ Edit</button>
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="toggleStatus(supplier)">
+                                        {{ supplier.status === 1 ? 'Inactive' : 'Activate' }}
+                                    </button>
+                                </div>
                             </td>
                         </tr>
 
                         <tr v-if="suppliers.length === 0">
-                            <td colspan="8" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No suppliers found.</td>
+                            <td colspan="8" class="px-6 py-6 text-center text-gray-500">No suppliers found.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Modal -->
+        <!-- Draggable Modal -->
         <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center bg-black/30 pt-6" @click.self="resetForm">
             <div ref="modalRef" class="w-full max-w-4xl rounded-lg border border-gray-300 bg-white shadow-lg" style="top: 100px; position: absolute">
                 <div class="flex cursor-move items-center justify-between border-b border-gray-200 p-4" @mousedown="startDrag">
