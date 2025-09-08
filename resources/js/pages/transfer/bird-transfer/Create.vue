@@ -1,147 +1,84 @@
 <script setup lang="ts">
-import { ref, watch, reactive, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { useNotifier } from "@/composables/useNotifier"
+import { useNotifier } from '@/composables/useNotifier'
+import { useDropdownOptions } from '@/composables/dropdownOptions'
 
 const { showInfo } = useNotifier()
 
-// Dummy data
-const flocks = [
-  { id: 1, flock_code: 'PCL-1-22', total_bird: 500, male_qty: 198, female_qty: 297, mortality: 5 },
-  { id: 2, flock_code: 'PCL-2-22', total_bird: 600, male_qty: 250, female_qty: 348, mortality: 2 },
-]
+// Props from backend
+const props = defineProps<{
+  batchAssign: any,
+  flocks: any[],
+  companies: any[],
+  sheds: any[],
+}>()
 
-const batches = [
-  { id: 1, batch_code: 'Batch A', flock_id: 1, total_bird: 100, male_qty: 20, female_qty: 80 , mortality:1 },
-  { id: 2, batch_code: 'Batch B', flock_id: 1, total_bird: 200, male_qty: 15, female_qty: 185 , mortality:2 },
-  { id: 3, batch_code: 'Batch B', flock_id: 2, total_bird: 200, male_qty: 10, female_qty: 190, mortality: 0 },
-]
+// Get batch dropdown from composable
+const { batchOptions } = useDropdownOptions()
 
-const companies = [
-  { id: 1, code: 'PCL', name: 'PCL' },
-  { id: 2, code: 'PBL', name: 'PBL' },
-]
-
-// dummy sheds
-const sheds = [
-  { id: 1, name: 'Shed 1' },
-  { id: 2, name: 'Shed 2' },
-]
-
-// Form
+// Form pre-filled with backend data
 const form = useForm({
-  flock_id: '',
-  batch_id: '',
-  total_bird: 0,
-  male_qty: 0,
-  female_qty: 0,
-  mortality: 0,
+  batch_assign_id: props.batchAssign.id,
+  flock_id: props.batchAssign.flock_id,
+  from_company_id: props.batchAssign.company_id,
+  from_shed_id: props.batchAssign.shed_id,
+  to_company_id: null,
+  to_shed_id: null,
+
+  total_bird: props.batchAssign.batch_total_qty,
+  male_qty: props.batchAssign.batch_male_qty - props.batchAssign.batch_male_mortality,
+  female_qty: props.batchAssign.batch_female_qty - props.batchAssign.batch_female_mortality,
+
   transfer_male_qty: 0,
   transfer_female_qty: 0,
+  transfer_total_qty: 0,
+  transfer_date: '', 
+
+  medical_male_qty: 0,
+  medical_female_qty: 0,
+  medical_total_qty: 0,
+
+  deviation_male_qty: 0,
+  deviation_female_qty: 0,
+  deviation_total_qty: 0,
+
   transfer_note: '',
-  transfer_company: '',
-  transfer_shed: '',
-  medical_female: 0,
-  medical_male: 0,
 })
 
-// Computed
-const total_transfer_chicks = computed(() => {
-  return (form.transfer_male_qty || 0) + (form.transfer_female_qty || 0)
-})
+// Computed values
+const current_male_chicks = computed(() => form.male_qty)
+const current_female_chicks = computed(() => form.female_qty)
+const current_total_chicks = computed(() => current_male_chicks.value + current_female_chicks.value)
 
-// Current chicks after mortality
-const current_chicks = computed(() => (form.total_bird || 0) - (form.mortality || 0))
+const total_transfer_chicks = computed(() => form.transfer_male_qty + form.transfer_female_qty)
+const total_medical_bird = computed(() => form.medical_male_qty + form.medical_female_qty)
 
-const current_female_chicks = computed(() => {
-  const femaleRatio = (form.female_qty || 0) / (form.total_bird || 1)
-  return Math.round(current_chicks.value * femaleRatio)
-})
+const deviation_male = computed(() => current_male_chicks.value - form.transfer_male_qty - form.medical_male_qty)
+const deviation_female = computed(() => current_female_chicks.value - form.transfer_female_qty - form.medical_female_qty)
+const deviation_total = computed(() => deviation_male.value + deviation_female.value)
 
-const current_male_chicks = computed(() => {
-  const maleRatio = (form.male_qty || 0) / (form.total_bird || 1)
-  return Math.round(current_chicks.value * maleRatio)
-})
+// Show shed only if same company
+const showShed = computed(() => props.batchAssign.company_id === form.to_company_id)
 
-
-
-// Deviation based on current chicks
-const deviation_female = computed(() => {
-  return current_female_chicks.value - (form.transfer_female_qty || 0) - (form.medical_female || 0)
-})
-
-const deviation_male = computed(() => {
-  return current_male_chicks.value - (form.transfer_male_qty || 0) - (form.medical_male || 0)
-})
-
-const deviation_total = computed(() => {
-  return deviation_female.value + deviation_male.value
-})
-
-
-// Current chicks = total birds - mortality
-const current_total_chicks = computed(() => {
-  return (form.total_bird || 0) - (form.mortality || 0)
-})
-
-
-const total_medical_bird = computed(() => {
-  return (form.medical_female || 0) + (form.medical_male || 0)
-})
-
-// Watch flock
-watch(() => form.flock_id, (id) => {
-  if (!id) {
-    form.total_bird = 0
-    form.male_qty = 0
-    form.female_qty = 0
-    form.mortality = 0
-    form.batch_id = ''
-    return
-  }
-  const flock = flocks.find(f => f.id == id)
-  if (flock) {
-    form.total_bird = flock.total_bird
-    form.male_qty = flock.male_qty
-    form.female_qty = flock.female_qty
-    form.mortality = flock.mortality
-  }
-  form.batch_id = ''
-})
-
-// Watch batch
-watch(() => form.batch_id, (id) => {
-  if (!id) return
-  const batch = batches.find(b => b.id == id)
-  if (batch) {
-    form.total_bird = batch.total_bird
-    form.male_qty = batch.male_qty
-    form.female_qty = batch.female_qty
-    form.mortality = batch.mortality
-  }
-})
-
-
-
+// Submit
 function submit() {
   if (!form.flock_id) return showInfo("Please select a flock")
-  if (!form.transfer_company) return showInfo("Please select a transfer company")
-
-  const payload = { 
-    ...form.data(), 
-    total_transfer_chicks: total_transfer_chicks.value,
-    deviation_female: deviation_female.value,
-    deviation_male: deviation_male.value,
-    deviation_total: deviation_total.value,
-    total_medical_bird: total_medical_bird.value
-  }
+  if (!form.to_company_id) return showInfo("Please select a transfer company")
 
   form.post(route('bird-transfer.store'), {
-    data: payload,
+    data: {
+      ...form.data(),
+      transfer_total_qty: total_transfer_chicks.value,
+      medical_total_qty: total_medical_bird.value,
+      deviation_male_qty: deviation_male.value,
+      deviation_female_qty: deviation_female.value,
+      deviation_total_qty: deviation_total.value,
+    },
     onSuccess: () => showInfo("Bird transfer saved successfully")
   })
 }
@@ -153,77 +90,89 @@ function submit() {
 
       <!-- Selection -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Flock -->
         <div>
           <Label>Select Flock</Label>
-          <select v-model="form.flock_id" class="w-full mt-1 border rounded px-3 py-2">
+          <select v-model.number="form.flock_id" class="w-full mt-1 border rounded px-3 py-2">
             <option value="">Select Flock</option>
-            <option v-for="flock in flocks" :key="flock.id" :value="flock.id">
-              {{ flock.flock_code }}
+            <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">
+              {{ flock.name }}
             </option>
           </select>
         </div>
+
+        <!-- Batch -->
         <div>
-          <Label>Select Batch (Optional)</Label>
-          <select v-model="form.batch_id" class="w-full mt-1 border rounded px-3 py-2" :disabled="!form.flock_id">
+          <Label>Select Batch</Label>
+          <select v-model.number="form.batch_assign_id" class="w-full mt-1 border rounded px-3 py-2">
             <option value="">Select Batch</option>
-            <option v-for="batch in batches.filter(b => b.flock_id == form.flock_id)" :key="batch.id" :value="batch.id">
-              {{ batch.batch_code }}
+            <option v-for="batch in batchOptions" :key="batch.value" :value="Number(batch.value)">
+              {{ batch.label }}
             </option>
           </select>
         </div>
+
+        <!-- Company -->
         <div>
           <Label>Transfer To Company</Label>
-          <select v-model="form.transfer_company" class="w-full mt-1 border rounded px-3 py-2">
+          <select v-model.number="form.to_company_id" class="w-full mt-1 border rounded px-3 py-2">
             <option value="">Select Company</option>
-            <option v-for="company in companies" :key="company.id" :value="company.code">
+            <option v-for="company in props.companies" :key="company.id" :value="company.id">
               {{ company.name }}
             </option>
           </select>
         </div>
+        <div>
+          <Label>Transfer Date</Label>
+          <Input v-model="form.transfer_date" type="date" class="w-full mt-1" />
+        </div>
       </div>
-      <div v-if="form.transfer_company && form.transfer_company == 'PCL'" class="mt-4">
+
+      <!-- Shed -->
+      <div v-if="showShed" class="mt-4">
         <Label>Select Shed</Label>
-        <select v-model="form.transfer_shed" class="w-full mt-1 border rounded px-3 py-2">
+        <select v-model.number="form.to_shed_id" class="w-full mt-1 border rounded px-3 py-2">
           <option value="">Select Shed</option>
-          <option v-for="shed in sheds" :key="shed.id" :value="shed.id">
+          <option v-for="shed in props.sheds" :key="shed.shed_id" :value="shed.shed_id">
             {{ shed.name }}
           </option>
         </select>
+        
       </div>
 
-      <!-- Card -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+      <!-- Info Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
         <div class="bg-yellow-100 p-4 rounded shadow text-center">
-          <p class="text-gray-700 font-medium">Total Birds</p>
+          <p>Total Birds</p>
           <p class="text-2xl font-bold">{{ form.total_bird }}</p>
         </div>
         <div class="bg-red-100 p-4 rounded shadow text-center">
-          <p class="text-gray-700 font-medium">Mortality</p>
-          <p class="text-2xl font-bold">{{ form.mortality }}</p>
-        </div>
-        <div class="bg-blue-100 p-4 rounded shadow text-center">
-          <p class="text-gray-700 font-medium">Male Birds</p>
-          <p class="text-2xl font-bold">{{ form.male_qty }}</p>
+          <p>Mortality</p>
+          <p class="text-2xl font-bold">{{ form.total_bird - current_total_chicks }}</p>
         </div>
         <div class="bg-green-100 p-4 rounded shadow text-center">
-          <p class="text-gray-700 font-medium">Female Birds</p>
-          <p class="text-2xl font-bold">{{ form.female_qty }}</p>
+          <p>Female Birds</p>
+          <p class="text-2xl font-bold">{{ current_female_chicks }}</p>
+        </div>
+        <div class="bg-blue-100 p-4 rounded shadow text-center">
+          <p>Male Birds</p>
+          <p class="text-2xl font-bold">{{ current_male_chicks }}</p>
         </div>
         <div class="bg-purple-100 p-4 rounded shadow text-center">
-            <p class="text-gray-700 font-medium">Current Chicks</p>
-            <p class="text-2xl font-bold">{{ current_chicks }}</p>
+          <p>Current Chicks</p>
+          <p class="text-2xl font-bold">{{ current_total_chicks }}</p>
         </div>
       </div>
 
       <!-- Transfer Inputs -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
         <div>
-          <Label>Transfer Male Qty</Label>
-          <Input v-model.number="form.transfer_male_qty" type="number" min="0" />
-        </div>
-        <div>
           <Label>Transfer Female Qty</Label>
           <Input v-model.number="form.transfer_female_qty" type="number" min="0" />
+        </div>
+        <div>
+          <Label>Transfer Male Qty</Label>
+          <Input v-model.number="form.transfer_male_qty" type="number" min="0" />
         </div>
         <div>
           <Label>Total Transfer Chicks</Label>
@@ -231,17 +180,15 @@ function submit() {
         </div>
       </div>
 
-      
-
-      <!-- Medical Section -->
+      <!-- Medical Birds -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         <div>
           <Label>Medical Female</Label>
-          <Input v-model.number="form.medical_female" type="number" min="0" />
+          <Input v-model.number="form.medical_female_qty" type="number" min="0" />
         </div>
         <div>
           <Label>Medical Male</Label>
-          <Input v-model.number="form.medical_male" type="number" min="0" />
+          <Input v-model.number="form.medical_male_qty" type="number" min="0" />
         </div>
         <div>
           <Label>Total Medical Birds</Label>
@@ -249,7 +196,7 @@ function submit() {
         </div>
       </div>
 
-      <!-- Deviation Section -->
+      <!-- Deviations -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         <div>
           <Label>Deviation Female</Label>

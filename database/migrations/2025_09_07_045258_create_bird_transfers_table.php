@@ -21,8 +21,8 @@ return new class extends Migration
             $table->foreignId('from_company_id')->constrained('companies');
             $table->foreignId('to_company_id')->constrained('companies');
             $table->foreignId('from_shed_id')->constrained('sheds');
-            $table->foreignId('to_shed_id')->constrained('sheds');
-            $table->string('transfer_date')->nullable();
+            $table->unsignedInteger('to_shed_id')->nullable();
+            $table->date('transfer_date');
             
             $table->integer('transfer_female_qty')->default(0);
             $table->integer('transfer_male_qty')->default(0);
@@ -35,6 +35,7 @@ return new class extends Migration
             $table->integer('deviation_total_qty')->default(0);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
+            $table->unsignedTinyInteger('status')->default(1);
             $table->timestamps();
 
 

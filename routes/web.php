@@ -114,3 +114,6 @@ Route::prefix('reports')->name('reports.')->group(function () {
 });
 Route::get('/ps-receive/{id}/pdf', [PsReceiveController::class, 'downloadRowPdf'])
     ->name('ps-receive.row-pdf');
+
+Route::get('/bird-transfer/create/{batchAssignid}', [BirdTransferController::class, 'create']);
+
