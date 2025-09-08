@@ -123,6 +123,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('feed-type/excel', [FeedTypeController::class, 'exportExcel'])->name('feed-type.excel');
     Route::get('chick-type/pdf', [ChickTypeController::class, 'exportPdf'])->name('chick-type.pdf');
     Route::get('chick-type/excel', [ChickTypeController::class, 'exportExcel'])->name('chick-type.excel');
+    Route::get('breed-type/pdf', [BreedTypeController::class, 'exportPdf'])->name('breed-type.pdf');
+    Route::get('breed-type/excel', [BreedTypeController::class, 'exportExcel'])->name('breed-type.excel');
 });
 
 
