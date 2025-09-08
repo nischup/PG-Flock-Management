@@ -51,10 +51,33 @@
 </head>
 
 <body>
-    <div class="header">
-        <h1>PS Receive Report</h1>
-        <h3>PI No: {{ $pi_no ?? 'N/A' }}</h3>
-        <p>Generated at: {{ $generatedAt?->format('Y-m-d H:i') }}</p>
+    <!-- Unified Report Header -->
+    <div style="text-align: center; margin-bottom: 25px; font-family: DejaVu Sans, sans-serif; color: #1a202c;">
+
+        <!-- Company Info -->
+        <h1 style="margin: 0; font-size: 22px; font-weight: bold; color: #d97706;">
+            PROVITA GROUP
+        </h1>
+        <p style="margin: 4px 0; font-size: 14px; color: #4a5568;">
+            Provita Tower, House #21, Road #35, Gulshan-02, Dhaka 1212
+        </p>
+        <p style="margin: 2px 0; font-size: 14px; color: #4a5568;">
+            Phone: +880248811872 | Email: hrm@provitagroupbd.com
+        </p>
+
+        <!-- Divider (yellow highlight) -->
+        <hr style="border: 0; border-top: 2px solid #fbbf24; margin: 14px 0;">
+
+        <!-- Report Title -->
+        <h2 style="margin: 0; font-size: 16px; font-weight: bold; color: #b45309;">
+            📑 PS Receive Report
+        </h2>
+        <h3 style="margin: 4px 0; font-size: 16px; font-weight: normal; color: #78350f;">
+            PI No: <span style="color: #d97706;">{{ $pi_no ?? 'N/A' }}</span>
+        </h3>
+        <p style="margin: 2px 0; font-size: 13px; color: #4a5568;">
+            Generated at: <span style="color: #ca8a04;">{{ $generatedAt?->format('Y-m-d H:i') }}</span>
+        </p>
     </div>
 
     {{-- General Info --}}

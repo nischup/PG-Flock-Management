@@ -1,280 +1,343 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { Head, useForm, router } from '@inertiajs/vue3'
-import Swal from 'sweetalert2'
-import AppLayout from '@/layouts/AppLayout.vue'
-import HeadingSmall from '@/components/HeadingSmall.vue'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useNotifier } from '@/composables/useNotifier'
-import { usePermissions } from '@/composables/usePermissions'
+import HeadingSmall from '@/components/HeadingSmall.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useNotifier } from '@/composables/useNotifier';
+import { usePermissions } from '@/composables/usePermissions';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 
+// Feed interface
 interface Feed {
-  id: number
-  feed_type_id: number
-  feed_type_name: string
-  feed_name: string
-  status: number
-  created_at: string
+    id: number;
+    feed_type_id: number;
+    feed_type_name: string;
+    feed_name: string;
+    status: number; // 0 or 1
+    created_at: string;
 }
 
+// Props
 const props = defineProps<{
-  feeds: Feed[]
-  feedTypes: Array<{ id: number; name: string }>
-  filters: { search?: string; per_page?: number; page?: number }
-}>()
+    feeds: Feed[];
+    feedTypes: Array<{ id: number; name: string }>;
+    filters: { search?: string; per_page?: number; page?: number };
+}>();
 
-useNotifier()
-const { can } = usePermissions()
+useNotifier();
+const { can } = usePermissions();
+const feeds = ref<Feed[]>([...props.feeds]);
 
-// Local state
-const feeds = ref<Feed[]>([...props.feeds])
+// Filters for export
+const filters = ref({ ...props.filters, sort: 'feed_name', direction: 'asc' });
+
+// Export dropdown state
+const openExportDropdown = ref(false);
+const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
+    const url = route('reports.feed.pdf', { ...filters.value, orientation });
+    window.open(url, '_blank');
+};
+const exportExcel = () => {
+    const url = route('reports.feed.excel', { ...filters.value });
+    window.open(url, '_blank');
+};
 
 // Modal state
-const showModal = ref(false)
-const editingFeed = ref<Feed | null>(null)
+const showModal = ref(false);
+const editingFeed = ref<Feed | null>(null);
 
-// Modal form (feed_type_id is always a number)
+// Form
 const form = useForm({
-  feed_type_id: props.feedTypes.length ? props.feedTypes[0].id : 0,
-  feed_name: '',
-  status: 1,
-})
+    feed_type_id: props.feedTypes.length ? props.feedTypes[0].id : 0,
+    feed_name: '',
+    status: 1,
+});
 
 // Draggable modal
-const modalRef = ref<HTMLElement | null>(null)
-let offsetX = 0, offsetY = 0, isDragging = false
-
+const modalRef = ref<HTMLElement | null>(null);
+let offsetX = 0,
+    offsetY = 0,
+    isDragging = false;
 const startDrag = (event: MouseEvent) => {
-  if (!modalRef.value) return
-  isDragging = true
-  const rect = modalRef.value.getBoundingClientRect()
-  offsetX = event.clientX - rect.left
-  offsetY = event.clientY - rect.top
-  document.addEventListener('mousemove', onDrag)
-  document.addEventListener('mouseup', stopDrag)
-}
-
+    if (!modalRef.value) return;
+    isDragging = true;
+    const rect = modalRef.value.getBoundingClientRect();
+    offsetX = event.clientX - rect.left;
+    offsetY = event.clientY - rect.top;
+};
 const onDrag = (event: MouseEvent) => {
-  if (!isDragging || !modalRef.value) return
-  modalRef.value.style.left = `${event.clientX - offsetX}px`
-  modalRef.value.style.top = `${event.clientY - offsetY}px`
-  modalRef.value.style.position = 'absolute'
-  modalRef.value.style.margin = '0'
-}
-
+    if (!isDragging || !modalRef.value) return;
+    modalRef.value.style.left = `${event.clientX - offsetX}px`;
+    modalRef.value.style.top = `${event.clientY - offsetY}px`;
+    modalRef.value.style.position = 'absolute';
+    modalRef.value.style.margin = '0';
+};
 const stopDrag = () => {
-  isDragging = false
-  document.removeEventListener('mousemove', onDrag)
-  document.removeEventListener('mouseup', stopDrag)
-}
+    isDragging = false;
+};
+
+// Dropdown state
+const openDropdownId = ref<number | null>(null);
+const toggleDropdown = (id: number) => {
+    openDropdownId.value = openDropdownId.value === id ? null : id;
+};
+
+// Click outside dropdown
+const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.dropdown-menu') && !target.closest('.actions-button') && !target.closest('.export-button')) {
+        openDropdownId.value = null;
+        openExportDropdown.value = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('click', handleClickOutside);
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('click', handleClickOutside);
+});
 
 // Open modal
 const openModal = (feed: Feed | null = null) => {
-  if (feed) {
-    editingFeed.value = feed
-    form.feed_type_id = feed.feed_type_id
-    form.feed_name = feed.feed_name
-    form.status = feed.status
-  } else {
-    editingFeed.value = null
-    form.reset()
-    form.feed_type_id = props.feedTypes.length ? props.feedTypes[0].id : 0
-    form.status = 1
-  }
-  showModal.value = true
-}
+    if (feed) {
+        editingFeed.value = feed;
+        form.feed_type_id = feed.feed_type_id;
+        form.feed_name = feed.feed_name;
+        form.status = feed.status;
+    } else {
+        editingFeed.value = null;
+        form.reset();
+        form.feed_type_id = props.feedTypes.length ? props.feedTypes[0].id : 0;
+        form.status = 1;
+    }
+    showModal.value = true;
+};
 
 // Reset modal
 const resetForm = () => {
-  form.reset()
-  form.feed_type_id = props.feedTypes.length ? props.feedTypes[0].id : 0
-  form.status = 1
-  editingFeed.value = null
-  showModal.value = false
-}
+    form.reset();
+    form.feed_type_id = props.feedTypes.length ? props.feedTypes[0].id : 0;
+    form.status = 1;
+    editingFeed.value = null;
+    showModal.value = false;
+};
 
-// Submit (Create/Update)
+// Submit
 const submit = () => {
-  if (!form.feed_name.trim()) return
+    if (!form.feed_name.trim()) return;
 
-  if (editingFeed.value) {
-    form.put(route('feed.update', editingFeed.value.id), {
-      preserveScroll: true,
-      onSuccess: () => {
-        const i = feeds.value.findIndex(f => f.id === editingFeed.value!.id)
-        if (i !== -1) {
-          feeds.value[i] = {
-            ...feeds.value[i],
-            feed_type_id: form.feed_type_id,
-            feed_name: form.feed_name,
-            status: form.status,
-          }
-        }
-        resetForm()
-      },
-      onError: () => Swal.fire('Error!', 'Could not update feed.', 'error'),
-    })
-  } else {
-    form.post(route('feed.store'), {
-      preserveScroll: true,
-      onSuccess: (page) => {
-        if ((page as any).props?.feeds) {
-          feeds.value = (page as any).props.feeds
-        } else {
-          feeds.value.unshift({
-            id: Date.now(),
-            feed_type_id: form.feed_type_id!,
-            feed_type_name: props.feedTypes.find(ft => ft.id === form.feed_type_id!)?.name || '',
-            feed_name: form.feed_name,
-            status: form.status,
-            created_at: new Date().toISOString(),
-          })
-        }
-        resetForm()
-      },
-      onError: () => Swal.fire('Error!', 'Could not create feed.', 'error'),
-    })
-  }
-}
-
-// Dropdown
-const openDropdownId = ref<number | null>(null)
-const toggleDropdown = (id: number) => {
-  openDropdownId.value = openDropdownId.value === id ? null : id
-}
-
-// Close dropdown on outside click
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as HTMLElement
-  if (!target.closest('.dropdown-menu') && !target.closest('.actions-button')) {
-    openDropdownId.value = null
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
+    if (editingFeed.value) {
+        form.put(route('feed.update', editingFeed.value.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                const i = feeds.value.findIndex((f) => f.id === editingFeed.value!.id);
+                if (i !== -1) {
+                    feeds.value[i] = {
+                        ...feeds.value[i],
+                        feed_type_id: form.feed_type_id,
+                        feed_type_name: props.feedTypes.find((ft) => ft.id === form.feed_type_id!)?.name || '',
+                        feed_name: form.feed_name,
+                        status: form.status,
+                    };
+                }
+                resetForm();
+            },
+            onError: () => Swal.fire('Error!', 'Could not update feed.', 'error'),
+        });
+    } else {
+        form.post(route('feed.store'), {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                if ((page as any).props?.feeds) {
+                    feeds.value = (page as any).props.feeds;
+                } else {
+                    feeds.value.unshift({
+                        id: Date.now(),
+                        feed_type_id: form.feed_type_id!,
+                        feed_type_name: props.feedTypes.find((ft) => ft.id === form.feed_type_id!)?.name || '',
+                        feed_name: form.feed_name,
+                        status: form.status,
+                        created_at: new Date().toISOString(),
+                    });
+                }
+                resetForm();
+            },
+            onError: () => Swal.fire('Error!', 'Could not create feed.', 'error'),
+        });
+    }
+};
 
 // Toggle status
 const toggleStatus = (feed: Feed) => {
-  const newStatus = feed.status === 1 ? 0 : 1
-  router.put(route('feed.update', feed.id), { ...feed, status: newStatus }, {
-    preserveScroll: true,
-    onSuccess: () => {
-      const i = feeds.value.findIndex(f => f.id === feed.id)
-      if (i !== -1) feeds.value[i].status = newStatus
-    },
-    onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
-    onFinish: () => { openDropdownId.value = null },
-  })
-}
+    const newStatus = feed.status === 1 ? 0 : 1;
+    router.put(
+        route('feed.update', feed.id),
+        { ...feed, status: newStatus },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                const i = feeds.value.findIndex((f) => f.id === feed.id);
+                if (i !== -1) feeds.value[i].status = newStatus;
+            },
+            onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
+            onFinish: () => {
+                openDropdownId.value = null;
+            },
+        },
+    );
+};
 
 // Breadcrumbs
 const breadcrumbs = [
-  { title: 'Master Setup', href: '/master-setup' },
-  { title: 'Feed', href: '/master-setup/feed' },
-]
+    { title: 'Master Setup', href: '/master-setup' },
+    { title: 'Feed', href: '/master-setup/feed' },
+];
 </script>
 
 <template>
-<AppLayout :breadcrumbs="breadcrumbs">
-  <Head title="Feeds" />
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <Head title="Feeds" />
 
-  <div class="px-4 py-6">
-    <div class="flex items-center justify-between mb-4">
-      <HeadingSmall title="Feeds List" />
-      <Button v-if="can('feed.create')" class="bg-chicken hover:bg-yellow-600 text-white" @click="openModal()">
-        + Add New
-      </Button>
-    </div>
+        <div class="px-4 py-6">
+            <div class="mb-4 flex items-center justify-between">
+                <HeadingSmall title="Feeds List" />
+                <div class="relative flex items-center gap-2">
+                    <!-- Add New Button -->
+                    <Button v-if="can('feed.create')" class="bg-chicken text-white hover:bg-yellow-600" @click="openModal()"> + Add New </Button>
 
-    <table class="w-full border">
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="p-2 border text-left">#</th>
-          <th class="p-2 border text-left">Feed Type</th>
-          <th class="p-2 border text-left">Feed Name</th>
-          <th class="p-2 border text-left">Status</th>
-          <th class="p-2 border text-left">Created At</th>
-          <th class="p-2 border text-left">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(feed, index) in feeds" :key="feed.id">
-          <td class="p-2 border">{{ index + 1 }}</td>
-          <td class="p-2 border">{{ feed.feed_type_name }}</td>
-          <td class="p-2 border">{{ feed.feed_name }}</td>
-          <td class="p-2 border">
-            <span :class="feed.status === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-              {{ feed.status === 1 ? 'Active' : 'Inactive' }}
-            </span>
-          </td>
-          <td class="p-2 border">{{ feed.created_at }}</td>
-          <td class="p-2 border relative">
-            <Button
-              size="sm"
-              class="bg-gray-500 hover:bg-gray-600 text-white actions-button"
-              @click.stop="toggleDropdown(feed.id)"
-            >
-              Actions ▼
-            </Button>
-            <div
-              v-if="openDropdownId === feed.id"
-              class="absolute mt-1 w-40 bg-white border rounded shadow-md z-10 dropdown-menu"
-              @click.stop
-            >
-              <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="openModal(feed)">✏ Edit</button>
-              <button class="w-full text-left px-4 py-2 hover:bg-gray-100" @click="toggleStatus(feed)">
-                {{ feed.status === 1 ? 'Inactive' : 'Activate' }}
-              </button>
+                    <!-- Export Report Dropdown -->
+                    <div class="relative">
+                        <Button class="export-button bg-green-600 text-white hover:bg-green-700" @click="openExportDropdown = !openExportDropdown">
+                            Export Report ▼
+                        </Button>
+                        <div v-if="openExportDropdown" class="absolute right-0 z-20 mt-2 w-44 rounded border bg-white shadow-lg">
+                            <button
+                                @click="
+                                    exportPdf('portrait');
+                                    openExportDropdown = false;
+                                "
+                                class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                            >
+                                PDF
+                            </button>
+                            <button
+                                @click="
+                                    exportExcel();
+                                    openExportDropdown = false;
+                                "
+                                class="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                            >
+                                Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
 
-  <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center pt-6" @click.self="resetForm">
-    <div ref="modalRef" class="bg-white rounded-lg border border-gray-300 shadow-lg w-full max-w-2xl" style="top: 100px; position: absolute">
-      <div class="flex items-center justify-between p-4 border-b border-gray-200 cursor-move" @mousedown="startDrag">
-        <h3 class="text-xl font-semibold text-gray-900">{{ editingFeed ? 'Edit Feed' : 'Add New Feed' }}</h3>
-        <button type="button" class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg w-8 h-8 flex justify-center items-center" @click="resetForm">✕</button>
-      </div>
+            <!-- Feed Table -->
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50 text-gray-600">
+                        <tr>
+                            <th class="px-6 py-3 text-left font-semibold">#</th>
+                            <th class="px-6 py-3 text-left font-semibold">Feed Type</th>
+                            <th class="px-6 py-3 text-left font-semibold">Feed Name</th>
+                            <th class="px-6 py-3 text-left font-semibold">Status</th>
+                            <th class="px-6 py-3 text-left font-semibold">Created At</th>
+                            <th class="px-6 py-3 text-left font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        <tr v-for="(feed, index) in feeds" :key="feed.id">
+                            <td class="px-6 py-4">{{ index + 1 }}</td>
+                            <td class="px-6 py-4">{{ feed.feed_type_name }}</td>
+                            <td class="px-6 py-4">{{ feed.feed_name }}</td>
+                            <td class="px-6 py-4">
+                                <span :class="feed.status === 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
+                                    {{ feed.status === 1 ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">{{ feed.created_at }}</td>
+                            <td class="relative px-6 py-4">
+                                <Button
+                                    size="sm"
+                                    class="actions-button bg-gray-500 text-white hover:bg-gray-600"
+                                    @click.stop="toggleDropdown(feed.id)"
+                                >
+                                    Actions ▼
+                                </Button>
+                                <div
+                                    v-if="openDropdownId === feed.id"
+                                    class="dropdown-menu absolute z-10 mt-1 w-40 rounded border bg-white shadow-md"
+                                    @click.stop
+                                >
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="openModal(feed)">✏ Edit</button>
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="toggleStatus(feed)">
+                                        {{ feed.status === 1 ? 'Inactive' : 'Activate' }}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
 
-      <div class="p-4 space-y-4">
-        <div>
-          <Label for="feed_type" class="mb-2">Feed Type</Label>
-          <select v-model="form.feed_type_id" id="feed_type" class="w-full border rounded p-2">
-            <option v-for="ft in props.feedTypes" :key="ft.id" :value="ft.id">{{ ft.name }}</option>
-          </select>
+                        <tr v-if="feeds.length === 0">
+                            <td colspan="6" class="px-6 py-6 text-center text-gray-500">No feeds found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div>
-          <Label for="feed_name" class="mb-2">Feed Name</Label>
-          <Input v-model="form.feed_name" id="feed_name" />
-          <span v-if="form.errors.feed_name" class="text-red-600 text-sm">{{ form.errors.feed_name }}</span>
-        </div>
+        <!-- Modal -->
+        <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center bg-black/30 pt-6" @click.self="resetForm">
+            <div ref="modalRef" class="w-full max-w-2xl rounded-lg border border-gray-300 bg-white shadow-lg" style="top: 100px; position: absolute">
+                <div class="flex cursor-move items-center justify-between border-b border-gray-200 p-4" @mousedown="startDrag">
+                    <h3 class="text-xl font-semibold text-gray-900">{{ editingFeed ? 'Edit Feed' : 'Add New Feed' }}</h3>
+                    <button
+                        type="button"
+                        class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-900"
+                        @click="resetForm"
+                    >
+                        ✕
+                    </button>
+                </div>
 
-        <div>
-          <Label for="status" class="mb-2">Status</Label>
-          <select v-model="form.status" id="status" class="w-full border rounded p-2">
-            <option :value="1">Active</option>
-            <option :value="0">Inactive</option>
-          </select>
-        </div>
-      </div>
+                <div class="space-y-4 p-4">
+                    <div>
+                        <Label for="feed_type" class="mb-2">Feed Type</Label>
+                        <select v-model="form.feed_type_id" id="feed_type" class="w-full rounded border p-2">
+                            <option v-for="ft in props.feedTypes" :key="ft.id" :value="ft.id">{{ ft.name }}</option>
+                        </select>
+                    </div>
 
-      <div class="flex justify-end p-4 border-t border-gray-200">
-        <Button class="bg-gray-300 text-black mr-2" @click="resetForm">Cancel</Button>
-        <Button class="bg-chicken text-white" @click="submit">{{ editingFeed ? 'Update' : 'Save' }}</Button>
-      </div>
-    </div>
-  </div>
-</AppLayout>
+                    <div>
+                        <Label for="feed_name" class="mb-2">Feed Name</Label>
+                        <Input v-model="form.feed_name" id="feed_name" />
+                        <span v-if="form.errors.feed_name" class="text-sm text-red-600">{{ form.errors.feed_name }}</span>
+                    </div>
+
+                    <div>
+                        <Label for="status" class="mb-2">Status</Label>
+                        <select v-model="form.status" id="status" class="w-full rounded border p-2">
+                            <option :value="1">Active</option>
+                            <option :value="0">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end border-t border-gray-200 p-4">
+                    <Button class="mr-2 bg-gray-300 text-black" @click="resetForm">Cancel</Button>
+                    <Button class="bg-chicken text-white" @click="submit">{{ editingFeed ? 'Update' : 'Save' }}</Button>
+                </div>
+            </div>
+        </div>
+    </AppLayout>
 </template>

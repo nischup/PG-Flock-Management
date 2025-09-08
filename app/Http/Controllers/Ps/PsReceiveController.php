@@ -14,6 +14,7 @@ use App\Models\Ps\PsLabTest;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ArrayExport;
+use App\Models\Country;
 
 use App\Models\Master\BreedType;
 
@@ -26,7 +27,7 @@ class PsReceiveController extends Controller
     public function index(Request $request)
     {
         $psReceives = PsReceive::query()
-            ->with(['chickCounts'])
+            ->with(['supplier', 'chickCounts'])
             ->when($request->search, fn($q) =>
                 $q->where('pi_no', 'like', "%{$request->search}%")
                   ->orWhere('order_no', 'like', "%{$request->search}%")
@@ -47,6 +48,8 @@ class PsReceiveController extends Controller
             'suppliers' => Supplier::all(),
             'breedTypes' => BreedType::all(),
             'companies' => Company::all(),
+            'countries' => Country::all(),
+
         ]);
 
 
@@ -98,7 +101,6 @@ class PsReceiveController extends Controller
                 'lc_date' => $request->lc_date,
                 'supplier_id' => (int) ($request->supplier_id ?? 0),
                 'breed_type' => collect($request->breed_type)->pluck('id')->map(fn($id) => (int) $id)->unique()->toArray(),
-                'country_of_origin' => (int) ($request->country_of_origin ?? 0),
                 'transport_type' => (int) ($request->transport_type ?? 0),
                 'company_id' => (int) ($request->company_id ?? 0),
                 'remarks' => $request->remarks,
@@ -350,6 +352,7 @@ class PsReceiveController extends Controller
             'ps_net_weight' => $psReceive->chickCounts->ps_net_weight ?? 0,
         ];
 
+
         // Return Inertia response instead of JSON
         return Inertia::render('ps/ps-receive/PsReceive', [
             'psReceive' => $data
@@ -466,9 +469,9 @@ public function downloadRowPdf($id)
         'supplier',
         'labTransfers',
         'attachments',
-        'company'
+        'company',
+        'country'
     ])->findOrFail($id);
-    //dd($psReceive);
 
     // Map breed_type IDs to names
     $breedTypes = [];
@@ -495,10 +498,10 @@ public function downloadRowPdf($id)
         'attachments'        => $psReceive->attachments,
         'lc_no'              => $psReceive->lc_no,
         'lc_date'            => $psReceive->lc_date,
-        'country_of_origin' => $psReceive->country_of_origin,
+        'country_of_origin'  => $psReceive->country?->name ?? 'N/A',
         'generatedAt'        => now(),
     ];
-    //dd($data);
+
 
     Pdf::setOptions([
         'isHtml5ParserEnabled' => true,
@@ -511,6 +514,5 @@ public function downloadRowPdf($id)
 
     return $pdf->stream("ps-receive-{$psReceive->pi_no}.pdf");
 }
-
 
 }

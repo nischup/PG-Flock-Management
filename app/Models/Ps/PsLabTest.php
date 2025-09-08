@@ -22,8 +22,8 @@ class PsLabTest extends Model
         'created_at' => 'date',
         'updated_at' => 'date',
     ];
-    
-    
+
+
     public function psReceive()
     {
         return $this->belongsTo(PsReceive::class, 'ps_receive_id', 'id');
