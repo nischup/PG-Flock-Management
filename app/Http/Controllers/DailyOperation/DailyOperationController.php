@@ -6,6 +6,10 @@ use App\Models\DailyOperation\DailyOperation;
 use App\Models\Shed\BatchAssign;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Master\Feed;
+use App\Models\Master\Medicine;
+use App\Models\Master\Vaccine;
+use App\Models\Master\Unit;
 use Illuminate\Support\Facades\Auth;
 
 class DailyOperationController extends Controller
@@ -66,7 +70,7 @@ class DailyOperationController extends Controller
                 ];
             });
 
-           
+          
 
         // You can pass dummy tab counts or fetch from DB if needed
         $tabCounts = [
@@ -93,10 +97,16 @@ class DailyOperationController extends Controller
             ],
         ];
 
+
+        
         return Inertia::render('dailyoperation/Create', [
             'stage'      => $stage,   // ✅ Pass stage here
             'flocks'     => $flocks,
             'tabCounts'  => $tabCounts,
+            'feeds'=>Feed::all(),
+            'units'=>Unit::all(),
+            'medicines'=>Medicine::all(),
+            'vaccines'=>Vaccine::all(),
         ]);
     }
 
