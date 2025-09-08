@@ -7,10 +7,10 @@ import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
+// Interface
 interface Unit {
     id: number;
     name: string;
@@ -18,25 +18,7 @@ interface Unit {
     created_at: string;
 }
 
-// Filters for export
-const filters = ref({
-    search: '',
-    sort: 'name',
-    direction: 'asc',
-});
-
-const openDropdown = ref(false);
-
-const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
-    const url = route('reports.unit.pdf', { ...filters.value, orientation });
-    window.open(url, '_blank');
-};
-
-const exportExcel = () => {
-    const url = route('reports.unit.excel', { ...filters.value });
-    window.open(url, '_blank');
-};
-
+// Props
 const props = defineProps<{
     units: Unit[];
     filters: { search?: string; per_page?: number; page?: number };
@@ -44,9 +26,21 @@ const props = defineProps<{
 
 useNotifier();
 const { can } = usePermissions();
-
-// State
 const units = ref<Unit[]>([...props.units]);
+
+// Filters for export
+const filters = ref({ ...props.filters, sort: 'name', direction: 'asc' });
+
+// Export dropdown
+const openExportDropdown = ref(false);
+const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
+    const url = route('reports.unit.pdf', { ...filters.value, orientation });
+    window.open(url, '_blank');
+};
+const exportExcel = () => {
+    const url = route('reports.unit.excel', { ...filters.value });
+    window.open(url, '_blank');
+};
 
 // Modal state
 const showModal = ref(false);
@@ -61,17 +55,13 @@ const modalRef = ref<HTMLElement | null>(null);
 let offsetX = 0,
     offsetY = 0,
     isDragging = false;
-
 const startDrag = (event: MouseEvent) => {
     if (!modalRef.value) return;
     isDragging = true;
     const rect = modalRef.value.getBoundingClientRect();
     offsetX = event.clientX - rect.left;
     offsetY = event.clientY - rect.top;
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', stopDrag);
 };
-
 const onDrag = (event: MouseEvent) => {
     if (!isDragging || !modalRef.value) return;
     modalRef.value.style.left = `${event.clientX - offsetX}px`;
@@ -79,12 +69,34 @@ const onDrag = (event: MouseEvent) => {
     modalRef.value.style.position = 'absolute';
     modalRef.value.style.margin = '0';
 };
-
 const stopDrag = () => {
     isDragging = false;
+};
+
+// Dropdown state
+const openDropdownId = ref<number | null>(null);
+const toggleDropdown = (id: number) => {
+    openDropdownId.value = openDropdownId.value === id ? null : id;
+};
+
+// Close on outside click
+const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.dropdown-menu') && !target.closest('.actions-button') && !target.closest('.export-button')) {
+        openDropdownId.value = null;
+        openExportDropdown.value = false;
+    }
+};
+onMounted(() => {
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('click', handleClickOutside);
+});
+onBeforeUnmount(() => {
     document.removeEventListener('mousemove', onDrag);
     document.removeEventListener('mouseup', stopDrag);
-};
+    document.removeEventListener('click', handleClickOutside);
+});
 
 // Modal handlers
 const openModal = (unit: Unit | null = null) => {
@@ -99,7 +111,6 @@ const openModal = (unit: Unit | null = null) => {
     }
     showModal.value = true;
 };
-
 const resetForm = () => {
     form.reset();
     form.status = 'Active';
@@ -157,19 +168,12 @@ const toggleStatus = (unit: Unit) => {
                 if (i !== -1) units.value[i].status = newStatus;
             },
             onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
+            onFinish: () => {
+                openDropdownId.value = null;
+            },
         },
     );
 };
-
-// Close dropdowns on outside click
-const handleClickOutside = (event: MouseEvent) => {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.pdf-dropdown') && !target.closest('.pdf-button')) {
-        openDropdown.value = false;
-    }
-};
-onMounted(() => document.addEventListener('click', handleClickOutside));
-onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside));
 
 // Breadcrumbs
 const breadcrumbs = [
@@ -186,18 +190,19 @@ const breadcrumbs = [
             <div class="mb-4 flex items-center justify-between">
                 <HeadingSmall title="Unit List" />
                 <div class="relative flex items-center gap-2">
+                    <!-- Add New Button -->
                     <Button v-if="can('unit.create')" class="bg-chicken text-white hover:bg-yellow-600" @click="openModal()"> + Add New </Button>
 
                     <!-- Export Dropdown -->
-                    <div class="pdf-dropdown relative">
-                        <Button class="pdf-button bg-green-600 text-white hover:bg-green-700" @click="openDropdown = !openDropdown">
+                    <div class="relative">
+                        <Button class="export-button bg-green-600 text-white hover:bg-green-700" @click="openExportDropdown = !openExportDropdown">
                             Export Report ▼
                         </Button>
-                        <div v-if="openDropdown" class="absolute right-0 z-20 mt-2 w-40 rounded border bg-white shadow-lg">
+                        <div v-if="openExportDropdown" class="absolute right-0 z-20 mt-2 w-44 rounded border bg-white shadow-lg">
                             <button
                                 @click="
                                     exportPdf('portrait');
-                                    openDropdown = false;
+                                    openExportDropdown = false;
                                 "
                                 class="block w-full px-4 py-2 text-left hover:bg-gray-100"
                             >
@@ -206,7 +211,7 @@ const breadcrumbs = [
                             <button
                                 @click="
                                     exportExcel();
-                                    openDropdown = false;
+                                    openExportDropdown = false;
                                 "
                                 class="block w-full px-4 py-2 text-left hover:bg-gray-100"
                             >
@@ -218,9 +223,9 @@ const breadcrumbs = [
             </div>
 
             <!-- Unit Table -->
-            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
-                    <thead class="bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50 text-gray-600">
                         <tr>
                             <th class="px-6 py-3 text-left font-semibold">#</th>
                             <th class="px-6 py-3 text-left font-semibold">Name</th>
@@ -229,7 +234,7 @@ const breadcrumbs = [
                             <th class="px-6 py-3 text-left font-semibold">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                    <tbody class="divide-y divide-gray-200 bg-white">
                         <tr
                             v-for="(unit, index) in units"
                             :key="unit.id"
@@ -242,17 +247,30 @@ const breadcrumbs = [
                                     {{ unit.status }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ dayjs(unit.created_at).format('DD MMM YYYY,') }}</td>
-                            <td class="flex gap-4 px-6 py-4">
-                                <button class="font-medium text-indigo-600 hover:underline" @click="openModal(unit)">Edit</button>
-                                <button class="font-medium text-red-600 hover:underline" @click="toggleStatus(unit)">
-                                    {{ unit.status === 'Active' ? 'Inactive' : 'Activate' }}
-                                </button>
+                            <td class="px-6 py-4">{{ unit.created_at }}</td>
+                            <td class="relative px-6 py-4">
+                                <Button
+                                    size="sm"
+                                    class="actions-button bg-gray-500 text-white hover:bg-gray-600"
+                                    @click.stop="toggleDropdown(unit.id)"
+                                >
+                                    Actions ▼
+                                </Button>
+                                <div
+                                    v-if="openDropdownId === unit.id"
+                                    class="dropdown-menu absolute z-10 mt-1 w-40 rounded border bg-white shadow-md"
+                                    @click.stop
+                                >
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="openModal(unit)">✏ Edit</button>
+                                    <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="toggleStatus(unit)">
+                                        {{ unit.status === 'Active' ? 'Inactive' : 'Activate' }}
+                                    </button>
+                                </div>
                             </td>
                         </tr>
 
                         <tr v-if="units.length === 0">
-                            <td colspan="5" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No units found.</td>
+                            <td colspan="5" class="px-6 py-6 text-center text-gray-500">No units found.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -263,9 +281,7 @@ const breadcrumbs = [
         <div v-if="showModal" class="fixed inset-0 z-50 flex justify-center bg-black/30 pt-6" @click.self="resetForm">
             <div ref="modalRef" class="w-full max-w-2xl rounded-lg border border-gray-300 bg-white shadow-lg" style="top: 100px; position: absolute">
                 <div class="flex cursor-move items-center justify-between border-b border-gray-200 p-4" @mousedown="startDrag">
-                    <h3 class="text-xl font-semibold text-gray-900">
-                        {{ editingUnit ? 'Edit Unit' : 'Add New Unit' }}
-                    </h3>
+                    <h3 class="text-xl font-semibold text-gray-900">{{ editingUnit ? 'Edit Unit' : 'Add New Unit' }}</h3>
                     <button
                         type="button"
                         class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-900"
@@ -279,9 +295,7 @@ const breadcrumbs = [
                     <div>
                         <Label for="name" class="mb-2">Unit Name</Label>
                         <Input v-model="form.name" id="name" />
-                        <span v-if="form.errors.name" class="text-sm text-red-600">
-                            {{ form.errors.name }}
-                        </span>
+                        <span v-if="form.errors.name" class="text-sm text-red-600">{{ form.errors.name }}</span>
                     </div>
 
                     <div>
@@ -295,9 +309,7 @@ const breadcrumbs = [
 
                 <div class="flex justify-end border-t border-gray-200 p-4">
                     <Button class="mr-2 bg-gray-300 text-black" @click="resetForm">Cancel</Button>
-                    <Button class="bg-chicken text-white" @click="submit">
-                        {{ editingUnit ? 'Update' : 'Save' }}
-                    </Button>
+                    <Button class="bg-chicken text-white" @click="submit">{{ editingUnit ? 'Update' : 'Save' }}</Button>
                 </div>
             </div>
         </div>
