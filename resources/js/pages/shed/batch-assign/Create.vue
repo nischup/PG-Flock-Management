@@ -127,7 +127,7 @@ const isSubmitDisabled = () => {
               class="w-full mt-1 border rounded px-3 py-2">
         <option value="">Select Shed Receive</option>
         <option v-for="shed in props.shedReceives" :key="shed.id" :value="shed.id">
-          {{ shed.job_no }} - {{ shed.shed }}
+          {{ shed.job_no }}-{{ shed.shed }}
         </option>
       </select>
  

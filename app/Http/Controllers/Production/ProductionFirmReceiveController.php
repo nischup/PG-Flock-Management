@@ -7,6 +7,7 @@ use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use Illuminate\Http\Request;
 use App\Models\Ps\PsFirmReceive;
+use App\Models\Ps\PsReceive;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +18,6 @@ class ProductionFirmReceiveController extends Controller
      */
     public function index()
     {
-        
         
         $transfers = BirdTransfer::with([
             'flock',
@@ -57,14 +57,28 @@ class ProductionFirmReceiveController extends Controller
         
         $companyInfo = Company::findOrFail($request->receive_company_id);
         $flockInfo = Flock::findOrFail($request->flock_id);
+
+
+           
+        $transferBird = BirdTransfer::find($request->transfer_bird_id);
+
+            
+
+        $job_no = $transferBird->job_no;
+
+            // 2️⃣ Get ps_receive_id from ps_receives
+        $psReceive = PsFirmReceive::where('job_no', $job_no)->first();
+        
+        
+        
        
-        $jobNo = "{$request->transfer_bird_id}-{$companyInfo->short_name}-{$flockInfo->name}";
+       
+        // $jobNo = "{$request->transfer_bird_id}-{$companyInfo->short_name}-{$flockInfo->name}";
         
        
         
-        PsFirmReceive::create([
-            'ps_receive_id'        => $request->transfer_bird_id, // link to transfer
-            'job_no'               =>  $jobNo,
+        $firmReceive = PsFirmReceive::create([
+            'ps_receive_id'        => $psReceive->ps_receive_id ,
             'receive_type'         => 'chicks', // indicate it's a transfer
             'source_type'          => 'transfer',
             'source_id'            => $request->transfer_bird_id,
@@ -78,6 +92,15 @@ class ProductionFirmReceiveController extends Controller
             'created_by'           => Auth::id(),
             'status'               => 1,
         ]);
+
+
+      
+        $insertId = $firmReceive->id;
+
+        $jobNo = "{$psReceive->ps_receive_id}-{$companyInfo->short_name}-{$flockInfo->name}";
+
+        // Save the job_no back to the record
+        $firmReceive->update(['job_no' => $jobNo]);
         
         return redirect()->route('production-firm-receive.index')->with('success', 'Bird Receive successfully.');    
     }

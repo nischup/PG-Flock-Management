@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class DailyWater extends Model
 {
     protected $fillable = [
-        'daily_operation_id',  // FK to daily_operations
+        'daily_operation_id',
+        'water_type_id',  // FK to daily_operations
         'quantity',            // Water quantity
         'unit_id',             // FK to units table (nullable)
         'note',                // Additional note

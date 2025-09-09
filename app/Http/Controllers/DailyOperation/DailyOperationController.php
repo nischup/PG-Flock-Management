@@ -57,18 +57,33 @@ class DailyOperationController extends Controller
      */
     public function create($stage)
     {
-       
+         
         // Get all batch assignments with related flock info
-        $flocks = BatchAssign::with('flock')
-            ->orderBy('id', 'desc')
-            ->get()
-            ->map(function ($batch) {
-                return [
-                    'id' => $batch->id,
-                    'label' => $batch->job_no . ' - ' . $batch->shed_id,
-                    'batch_no' => $batch->batch_no,
-                ];
-            });
+        $st=0;
+        if($stage=='brooding'){
+            $st = 1;
+        }elseif($stage == 'growing'){
+           $st = 2;
+        }else{
+            $st = 3;
+        }
+          
+        $flocks = BatchAssign::with(['flock', 'shed', 'batch'])
+        ->where('stage', $st)
+        ->orderBy('id', 'desc')
+        ->get()
+        ->map(function ($batch) {
+            return [
+                'id'        => $batch->id,
+                'job_no'    => $batch->job_no,
+                'flock'     => $batch->flock?->name ?? 'N/A',
+                'batch_no'  => $batch->batch_no,
+                'batch'     => $batch->batch?->name ?? 'N/A',
+                'shed_id'   => $batch->shed_id,
+                'shed'      => $batch->shed?->name ?? 'N/A',
+                'label'     => "{$batch->job_no}-{$batch->shed?->name}-{$batch->batch?->name}",
+            ];
+        });
 
           
 
@@ -125,7 +140,7 @@ class DailyOperationController extends Controller
         
            
         
-        
+       
         
             $dailyOperation = DailyOperation::create([
                 'batchassign_id' => $request->batchassign_id,
@@ -154,7 +169,7 @@ class DailyOperationController extends Controller
                     'note' => $request->feed_note,
                 ]);
             }
-
+            
             // Water
             if ($request->water_quantity) {
                 $dailyOperation->waters()->create([
@@ -174,8 +189,8 @@ class DailyOperationController extends Controller
                 ]);
             }
 
-            // Destroy / Culling
-            if ($request->destroy_male_qty || $request->destroy_female_qty) {
+            // Destroy 
+            if ($request->destroy_male || $request->destroy_female) {
                 $dailyOperation->destroys()->create([
                     'male_qty' => $request->destroy_male,
                     'female_qty' => $request->destroy_female,
@@ -287,7 +302,9 @@ class DailyOperationController extends Controller
             }
     
 
-        return response()->json(['message' => 'Daily operation saved successfully']);
+       return redirect()
+            ->route('production-shed-receive.index')
+            ->with('success', 'Production Shed Receive created successfully!');
     }
 
     /**

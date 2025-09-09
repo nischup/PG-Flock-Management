@@ -20,7 +20,8 @@ class PsFirmReceiveController extends Controller
     public function index(Request $request)
     {
         $psFirmReceives = PsFirmReceive::with(['flock', 'company'])
-    ->when($request->search, function ($query, $search) {
+        // ->where('source_type', 'psreceive')
+        ->when($request->search, function ($query, $search) {
         $query->where(function ($q) use ($search) {
             $q->whereHas('psReceive', fn($q2) => 
                 $q2->where('pi_no', 'like', "%{$search}%")
@@ -124,7 +125,7 @@ class PsFirmReceiveController extends Controller
         $companyInfo = Company::findOrFail($request->receiving_company_id);
         $flockInfo = Flock::findOrFail($request->flock_id);
        
-        $jobNo = "{$request->ps_receive_id}-{$companyInfo->name}-{$flockInfo->name}";
+        $jobNo = "{$request->ps_receive_id}-{$companyInfo->short_name}-{$flockInfo->name}";
 
         $firmReceive = PsFirmReceive::create([
             'ps_receive_id' => $request->ps_receive_id,
