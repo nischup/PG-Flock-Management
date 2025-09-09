@@ -13,6 +13,7 @@ class ShedReceive extends Model
     protected $fillable = [
         'receive_id',
         'job_no',
+        'transaction_no',
         'flock_id',
         'flock_name',
         'shed_id',

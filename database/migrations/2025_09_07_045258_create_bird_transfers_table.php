@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('batch_assign_id')->constrained('batch_assigns')->onDelete('cascade');
 
             $table->string('job_no')->nullable();
+            $table->string('transaction_no')->nullable();
             $table->unsignedInteger('flock_no')->default(0);
             $table->foreignId('flock_id')->constrained('flocks');
             $table->foreignId('from_company_id')->constrained('companies');

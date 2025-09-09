@@ -53,7 +53,7 @@ class ShedReceiveController extends Controller
             ->map(function ($fr) {
                 return [
                     'id' => $fr->id,
-                    'job_no' => $fr->job_no,
+                    'transaction_no' => $fr->transaction_no,
                     'flock_id' => $fr->flock_id,
                     'flock_name' => $fr->flock?->name ?? 'N/A',
                     'receiving_company_id' => $fr->receiving_company_id,
@@ -86,12 +86,13 @@ class ShedReceiveController extends Controller
     public function store(Request $request)
     {
         
-        $firmReceive = PsFirmReceive::findOrFail($request->job_id);
+        $firmReceive = PsFirmReceive::findOrFail($request->transaction_id);
         
         $shedReceive = ShedReceive::create([
-            'receive_id'       => $request->job_id,   // firm receive reference
+            'receive_id'       => $request->transaction_id,   // firm receive reference
             'job_no'           => $firmReceive->job_no,
             'company_id'       => $firmReceive->receiving_company_id,
+            'transaction_no'   => $firmReceive->transaction_no,
             'flock_id'         => $request->flock_id,
             'flock_name'       => $request->flock_name,
             'shed_id'          => $request->shed_id,

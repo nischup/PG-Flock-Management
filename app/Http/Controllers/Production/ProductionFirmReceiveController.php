@@ -81,6 +81,7 @@ class ProductionFirmReceiveController extends Controller
             'ps_receive_id'        => $psReceive->ps_receive_id ,
             'receive_type'         => 'chicks', // indicate it's a transfer
             'source_type'          => 'transfer',
+            'job_no'               => $psReceive->job_no,
             'source_id'            => $request->transfer_bird_id,
             'flock_id'             => $request->flock_id,
             'flock_name'           =>  $flockInfo->name ?? '', // if you have flock relationship
@@ -97,10 +98,10 @@ class ProductionFirmReceiveController extends Controller
       
         $insertId = $firmReceive->id;
 
-        $jobNo = "{$psReceive->ps_receive_id}-{$companyInfo->short_name}-{$flockInfo->name}";
+        $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
 
         // Save the job_no back to the record
-        $firmReceive->update(['job_no' => $jobNo]);
+        $firmReceive->update(['transaction_no' => $transactionNo]);
         
         return redirect()->route('production-firm-receive.index')->with('success', 'Bird Receive successfully.');    
     }

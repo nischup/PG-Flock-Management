@@ -13,6 +13,7 @@ class BirdTransfer extends Model
     protected $fillable = [
         'batch_assign_id',
         'job_no',
+        'transaction_no',
         'flock_no',
         'flock_id',
         'from_company_id',

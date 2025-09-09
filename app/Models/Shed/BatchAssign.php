@@ -14,6 +14,7 @@ class BatchAssign extends Model
     protected $fillable = [
         'shed_receive_id',
         'job_no',
+        'transaction_no',
         'flock_no',
         'flock_id',
         'company_id',

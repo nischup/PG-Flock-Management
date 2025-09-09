@@ -23,6 +23,12 @@ return new class extends Migration
                 $table->string('job_no')->nullable();
             }
 
+            if (!Schema::hasColumn('shed_receives', 'transaction_no')) {
+                $table->string('transaction_no')->nullable();
+            }
+
+           
+
             if (!Schema::hasColumn('shed_receives', 'flock_id')) {
                 $table->unsignedBigInteger('flock_id')->nullable();
             }
