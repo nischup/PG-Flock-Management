@@ -57,7 +57,7 @@ const batchWithLabel = computed(() =>
     return {
       ...flock,
       batch_label: batch?.label || '', // safe access
-      display_label: `${flock.label} - ${batch?.label || ''}`, // fallback
+      display_label: `${flock.label}-${batch?.label || ''}`, // fallback
     }
   }) || []
 )
@@ -380,8 +380,8 @@ function submit() {
             <Label>Select Flock</Label>
             <select v-model="form.batchassign_id" class="w-full mt-1 border rounded px-3 py-2">
               <option value="">Select Batch</option>
-              <option v-for="batchassign in batchWithLabel" :key="batchassign.id" :value="batchassign.id">
-                {{ batchassign.display_label }}
+              <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">
+                {{ flock.label }}
               </option>
             </select>
           </div>

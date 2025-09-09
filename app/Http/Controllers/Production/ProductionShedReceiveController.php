@@ -1,28 +1,30 @@
 <?php
 
-namespace App\Http\Controllers\Shed;
+namespace App\Http\Controllers\Production;
 use App\Http\Controllers\Controller;
 use App\Models\Shed\ShedReceive;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
 use App\Models\Ps\PsFirmReceive;
+use App\Models\Ps\PsReceive;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
-class ShedReceiveController extends Controller
+
+class ProductionShedReceiveController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-       
-        $search = $request->search;
+       $search = $request->search;
 
         // Fetch shed receives with related flock, shed, and company
-        $shedReceives = ShedReceive::with(['flock', 'shed', 'company'])
-        ->where('receive_type', 'box')
+        $shedReceives = ShedReceive::with(['flock', 'shed', 'company']) 
+        
+        ->where('receive_type', 'chicks')
             ->when($search, function ($query, $search) {
                 $query->whereHas('flock', fn($q) => $q->where('name', 'like', "%{$search}%"))
                       ->orWhereHas('shed', fn($q) => $q->where('name', 'like', "%{$search}%"))
@@ -33,12 +35,10 @@ class ShedReceiveController extends Controller
             ->withQueryString();
 
         // Return to Inertia page
-        return inertia('shed/shed-receive/List', [
+        return inertia('production/shed-receive/List', [
             'psReceives' => $shedReceives,
             'filters' => $request->only(['search', 'per_page']),
         ]);
-
-        
     }
 
     /**
@@ -46,8 +46,8 @@ class ShedReceiveController extends Controller
      */
     public function create()
     {
-        
         $firmReceives = PsFirmReceive::with(['flock', 'company'])
+            
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($fr) {
@@ -72,7 +72,7 @@ class ShedReceiveController extends Controller
         $sheds = Shed::select('id', 'name')->get();
         // Render the Inertia page
 
-        return Inertia::render('shed/shed-receive/Create', [
+        return Inertia::render('production/shed-receive/Create', [
             'firmReceives' => $firmReceives,
             'flocks' => $flocks,
             'companies' => $companies,
@@ -85,7 +85,6 @@ class ShedReceiveController extends Controller
      */
     public function store(Request $request)
     {
-        
         $firmReceive = PsFirmReceive::findOrFail($request->job_id);
         
         $shedReceive = ShedReceive::create([
@@ -98,22 +97,21 @@ class ShedReceiveController extends Controller
             'shed_female_qty'  => $request->shed_female_qty,
             'shed_male_qty'    => $request->shed_male_qty,
             'shed_total_qty'   => $request->shed_total_qty,
-            'receive_type'     => "Box",
+            'receive_type'     => "chicks",
             'remarks'          => $request->remarks,
             'created_by'       => Auth::id(),
             'status'           => $request->status ?? 1,
         ]);
 
         return redirect()
-            ->route('shed-receive.index')
-            ->with('success', 'Shed Receive created successfully!');
-   
+            ->route('production-shed-receive.index')
+            ->with('success', 'Production Shed Receive created successfully!');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(ShedReceive $shedReceive)
+    public function show(string $id)
     {
         //
     }
@@ -121,7 +119,7 @@ class ShedReceiveController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ShedReceive $shedReceive)
+    public function edit(string $id)
     {
         //
     }
@@ -129,7 +127,7 @@ class ShedReceiveController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ShedReceive $shedReceive)
+    public function update(Request $request, string $id)
     {
         //
     }
@@ -137,7 +135,7 @@ class ShedReceiveController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ShedReceive $shedReceive)
+    public function destroy(string $id)
     {
         //
     }

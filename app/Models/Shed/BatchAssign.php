@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
+use App\Models\Master\Batch;
 use App\Models\Shed\ShedReceive;
 
 class BatchAssign extends Model
@@ -32,6 +33,13 @@ class BatchAssign extends Model
         'percentage',
         'created_by',
         'updated_by',
+        'stage',
+    ];
+
+    protected $casts = [
+        'created_at' => 'date',
+        'growing_start_date' => 'date',
+        'transfer_date' => 'date',
     ];
 
     // Relationship to shed receive
@@ -54,5 +62,9 @@ class BatchAssign extends Model
     public function shed()
     {
         return $this->belongsTo(Shed::class);
+    }
+    public function batch()
+    {
+         return $this->belongsTo(Batch::class, 'batch_no', 'id');
     }
 }

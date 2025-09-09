@@ -30,7 +30,7 @@ use App\Http\Controllers\DailyOperation\DailyOperationController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
 use App\Http\Controllers\Production\ProductionFirmReceiveController;
-
+use App\Http\Controllers\Production\ProductionShedReceiveController;
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
@@ -63,6 +63,7 @@ Route::resource('ps-lab-test', PsLabTestController::class);
 Route::resource('shed-receive', ShedReceiveController::class);
 Route::resource('batch-assign', BatchAssignController::class);
 Route::resource('production-firm-receive', ProductionFirmReceiveController::class);
+Route::resource('production-shed-receive', ProductionShedReceiveController::class);
 Route::resource('vaccine-schedule', VaccineScheduleController::class);
 Route::resource('bird-transfer', BirdTransferController::class);
 Route::resource('vaccine-routing', VaccineRoutingController::class);
