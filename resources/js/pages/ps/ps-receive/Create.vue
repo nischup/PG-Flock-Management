@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
+import axios from 'axios';
 
 import FileUploader from '@/components/FileUploader.vue';
 import InputError from '@/components/InputError.vue';
@@ -13,7 +14,6 @@ import { type BreadcrumbItem } from '@/types';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { ArrowLeft } from 'lucide-vue-next';
-import { watch } from 'vue';
 import Multiselect from 'vue-multiselect';
 import 'vue-multiselect/dist/vue-multiselect.css';
 
@@ -30,6 +30,22 @@ const props = defineProps<{
     companies: Array<{ id: number; name: string }>;
     countries: Array<{ id: number; name: string }>;
 }>();
+
+// Reactive suppliers list that will be filtered
+const filteredSuppliers = ref<Array<{ id: number; name: string }>>(props.suppliers);
+
+// Search functionality for suppliers
+const supplierSearchQuery = ref('');
+const showSupplierDropdown = ref(false);
+const selectedSupplier = ref<{ id: number; name: string } | null>(null);
+const highlightedIndex = ref(-1);
+
+// Search functionality for countries
+const countrySearchQuery = ref('');
+const showCountryDropdown = ref(false);
+const selectedCountry = ref<{ id: number; name: string } | null>(null);
+const highlightedCountryIndex = ref(-1);
+
 // Form data
 const form = useForm({
     shipment_type_id: 1,
@@ -81,6 +97,173 @@ const form = useForm({
     provita_lab_send_male_qty: 0,
     provita_lab_send_total_qty: 0,
 });
+
+// Function to fetch suppliers by shipment type
+const fetchSuppliersByShipmentType = async (shipmentTypeId: number) => {
+    try {
+        const response = await axios.get('/ps-receive/suppliers-by-shipment-type', {
+            params: { shipment_type_id: shipmentTypeId }
+        });
+        filteredSuppliers.value = response.data;
+        // Reset supplier selection when shipment type changes
+        form.supplier_id = '';
+    } catch (error) {
+        console.error('Error fetching suppliers:', error);
+        // Fallback to all suppliers on error
+        filteredSuppliers.value = props.suppliers;
+    }
+};
+
+// Computed property for searchable suppliers
+const searchableSuppliers = computed(() => {
+    if (!supplierSearchQuery.value) {
+        return filteredSuppliers.value;
+    }
+    return filteredSuppliers.value.filter(supplier =>
+        supplier.name.toLowerCase().includes(supplierSearchQuery.value.toLowerCase())
+    );
+});
+
+// Computed property for searchable countries
+const searchableCountries = computed(() => {
+    if (!countrySearchQuery.value) {
+        return props.countries;
+    }
+    return props.countries.filter(country =>
+        country.name.toLowerCase().includes(countrySearchQuery.value.toLowerCase())
+    );
+});
+
+// Methods for supplier search
+const selectSupplier = (supplier: { id: number; name: string }) => {
+    selectedSupplier.value = supplier;
+    form.supplier_id = supplier.id;
+    supplierSearchQuery.value = supplier.name;
+    showSupplierDropdown.value = false;
+};
+
+const clearSupplierSelection = () => {
+    selectedSupplier.value = null;
+    form.supplier_id = '';
+    supplierSearchQuery.value = '';
+    showSupplierDropdown.value = false;
+};
+
+const toggleSupplierDropdown = () => {
+    showSupplierDropdown.value = !showSupplierDropdown.value;
+    if (showSupplierDropdown.value) {
+        supplierSearchQuery.value = '';
+        highlightedIndex.value = -1;
+    }
+};
+
+// Methods for country search
+const selectCountry = (country: { id: number; name: string }) => {
+    selectedCountry.value = country;
+    form.country_of_origin = country.id;
+    countrySearchQuery.value = country.name;
+    showCountryDropdown.value = false;
+};
+
+const clearCountrySelection = () => {
+    selectedCountry.value = null;
+    form.country_of_origin = 1; // Default to first country
+    countrySearchQuery.value = '';
+    showCountryDropdown.value = false;
+};
+
+const toggleCountryDropdown = () => {
+    showCountryDropdown.value = !showCountryDropdown.value;
+    if (showCountryDropdown.value) {
+        countrySearchQuery.value = '';
+        highlightedCountryIndex.value = -1;
+    }
+};
+
+const handleKeydown = (event: KeyboardEvent) => {
+    if (!showSupplierDropdown.value) return;
+
+    switch (event.key) {
+        case 'ArrowDown':
+            event.preventDefault();
+            highlightedIndex.value = Math.min(highlightedIndex.value + 1, searchableSuppliers.value.length - 1);
+            break;
+        case 'ArrowUp':
+            event.preventDefault();
+            highlightedIndex.value = Math.max(highlightedIndex.value - 1, -1);
+            break;
+        case 'Enter':
+            event.preventDefault();
+            if (highlightedIndex.value >= 0 && searchableSuppliers.value[highlightedIndex.value]) {
+                selectSupplier(searchableSuppliers.value[highlightedIndex.value]);
+            }
+            break;
+        case 'Escape':
+            showSupplierDropdown.value = false;
+            highlightedIndex.value = -1;
+            break;
+    }
+};
+
+const handleCountryKeydown = (event: KeyboardEvent) => {
+    if (!showCountryDropdown.value) return;
+
+    switch (event.key) {
+        case 'ArrowDown':
+            event.preventDefault();
+            highlightedCountryIndex.value = Math.min(highlightedCountryIndex.value + 1, searchableCountries.value.length - 1);
+            break;
+        case 'ArrowUp':
+            event.preventDefault();
+            highlightedCountryIndex.value = Math.max(highlightedCountryIndex.value - 1, -1);
+            break;
+        case 'Enter':
+            event.preventDefault();
+            if (highlightedCountryIndex.value >= 0 && searchableCountries.value[highlightedCountryIndex.value]) {
+                selectCountry(searchableCountries.value[highlightedCountryIndex.value]);
+            }
+            break;
+        case 'Escape':
+            showCountryDropdown.value = false;
+            highlightedCountryIndex.value = -1;
+            break;
+    }
+};
+
+// Click outside handler
+const supplierDropdownRef = ref<HTMLElement | null>(null);
+const countryDropdownRef = ref<HTMLElement | null>(null);
+
+const handleClickOutside = (event: Event) => {
+    if (supplierDropdownRef.value && !supplierDropdownRef.value.contains(event.target as Node)) {
+        showSupplierDropdown.value = false;
+    }
+    if (countryDropdownRef.value && !countryDropdownRef.value.contains(event.target as Node)) {
+        showCountryDropdown.value = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+    // Initialize selected country on component mount
+    if (props.countries.length > 0) {
+        selectedCountry.value = props.countries[0];
+        form.country_of_origin = props.countries[0].id;
+    }
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
+
+// Watch for shipment type changes
+watch(() => form.shipment_type_id, (newShipmentTypeId) => {
+    if (newShipmentTypeId) {
+        fetchSuppliersByShipmentType(newShipmentTypeId);
+        // Reset supplier selection when shipment type changes
+        clearSupplierSelection();
+    }
+}, { immediate: true });
 
 function submit() {
     const formData = new FormData();
@@ -259,24 +442,6 @@ function validateTab(index: number) {
                             <InputError :message="form.errors.pi_date" class="mt-1" />
                         </div>
 
-                        <div class="flex flex-col">
-                            <Label>Order No</Label>
-                            <Input v-model="form.order_no" type="text" placeholder="Enter Order No" class="mt-2" />
-                            <InputError :message="form.errors.order_no" class="mt-1" />
-                        </div>
-
-                        <div class="flex flex-col">
-                            <Label>Order Date</Label>
-                            <Datepicker
-                                v-model="form.order_date"
-                                format="yyyy-MM-dd"
-                                :input-class="'mt-2 border rounded px-3 py-2 w-full'"
-                                placeholder="Select Order Date"
-                                :auto-apply="true"
-                            />
-                            <InputError :message="form.errors.order_date" class="mt-1" />
-                        </div>
-
                         <div v-if="form.shipment_type_id != 1" class="flex flex-col">
                             <Label>LC No</Label>
                             <Input v-model="form.lc_no" type="text" placeholder="Enter LC No" class="mt-2" />
@@ -296,13 +461,90 @@ function validateTab(index: number) {
                         </div>
 
                         <div class="flex flex-col">
+                            <Label>Order No</Label>
+                            <Input v-model="form.order_no" type="text" placeholder="Enter Order No" class="mt-2" />
+                            <InputError :message="form.errors.order_no" class="mt-1" />
+                        </div>
+
+                        <div class="flex flex-col">
+                            <Label>Order Date</Label>
+                            <Datepicker
+                                v-model="form.order_date"
+                                format="yyyy-MM-dd"
+                                :input-class="'mt-2 border rounded px-3 py-2 w-full'"
+                                placeholder="Select Order Date"
+                                :auto-apply="true"
+                            />
+                            <InputError :message="form.errors.order_date" class="mt-1" />
+                        </div>
+
+                        <div class="flex flex-col">
                             <Label>Supplier Name</Label>
-                            <select v-model="form.supplier_id" class="mt-2 rounded border px-3 py-2">
-                                <option value="">Select One</option>
-                                <option v-for="supplier in props.suppliers" :key="supplier.id" :value="supplier.id">
-                                    {{ supplier.name }}
-                                </option>
-                            </select>
+                            <div ref="supplierDropdownRef" class="relative mt-2">
+                                <!-- Search Input -->
+                                <div class="relative">
+                                    <input
+                                        v-model="supplierSearchQuery"
+                                        @focus="showSupplierDropdown = true"
+                                        @input="showSupplierDropdown = true; highlightedIndex = -1"
+                                        @keydown="handleKeydown"
+                                        type="text"
+                                        placeholder="Search suppliers..."
+                                        class="w-full rounded border px-3 py-2 pr-8 focus:border-blue-500 focus:outline-none"
+                                        :class="form.errors.supplier_id ? 'border-red-500' : 'border-gray-300'"
+                                    />
+                                    <button
+                                        type="button"
+                                        @click="toggleSupplierDropdown"
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    >
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Dropdown -->
+                                <div
+                                    v-if="showSupplierDropdown"
+                                    class="absolute z-10 mt-1 w-full rounded border bg-white shadow-lg"
+                                >
+                                    <div class="max-h-60 overflow-y-auto">
+                                        <div
+                                            v-if="searchableSuppliers.length === 0"
+                                            class="px-3 py-2 text-gray-500"
+                                        >
+                                            No suppliers found
+                                        </div>
+                                        <button
+                                            v-for="(supplier, index) in searchableSuppliers"
+                                            :key="supplier.id"
+                                            type="button"
+                                            @click="selectSupplier(supplier)"
+                                            :class="[
+                                                'w-full px-3 py-2 text-left focus:outline-none',
+                                                index === highlightedIndex 
+                                                    ? 'bg-blue-100 text-blue-900' 
+                                                    : 'hover:bg-gray-100'
+                                            ]"
+                                        >
+                                            {{ supplier.name }}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Clear button -->
+                                <button
+                                    v-if="selectedSupplier"
+                                    type="button"
+                                    @click="clearSupplierSelection"
+                                    class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                                >
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
                             <InputError :message="form.errors.supplier_id" class="mt-1" />
                         </div>
 
@@ -325,11 +567,71 @@ function validateTab(index: number) {
 
                         <div v-if="form.shipment_type_id == 2" class="flex flex-col">
                             <Label>Country of Origin</Label>
-                            <select v-model="form.country_of_origin" class="mt-2 rounded border px-3 py-2">
-                                <option v-for="country in countries" :key="country.id" :value="country.id">
-                                    {{ country.name }}
-                                </option>
-                            </select>
+                            <div ref="countryDropdownRef" class="relative mt-2">
+                                <!-- Search Input -->
+                                <div class="relative">
+                                    <input
+                                        v-model="countrySearchQuery"
+                                        @focus="showCountryDropdown = true"
+                                        @input="showCountryDropdown = true; highlightedCountryIndex = -1"
+                                        @keydown="handleCountryKeydown"
+                                        type="text"
+                                        placeholder="Search countries..."
+                                        class="w-full rounded border px-3 py-2 pr-8 focus:border-blue-500 focus:outline-none"
+                                        :class="form.errors.country_of_origin ? 'border-red-500' : 'border-gray-300'"
+                                    />
+                                    <button
+                                        type="button"
+                                        @click="toggleCountryDropdown"
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    >
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Dropdown -->
+                                <div
+                                    v-if="showCountryDropdown"
+                                    class="absolute z-10 mt-1 w-full rounded border bg-white shadow-lg"
+                                >
+                                    <div class="max-h-60 overflow-y-auto">
+                                        <div
+                                            v-if="searchableCountries.length === 0"
+                                            class="px-3 py-2 text-gray-500"
+                                        >
+                                            No countries found
+                                        </div>
+                                        <button
+                                            v-for="(country, index) in searchableCountries"
+                                            :key="country.id"
+                                            type="button"
+                                            @click="selectCountry(country)"
+                                            :class="[
+                                                'w-full px-3 py-2 text-left focus:outline-none',
+                                                index === highlightedCountryIndex 
+                                                    ? 'bg-blue-100 text-blue-900' 
+                                                    : 'hover:bg-gray-100'
+                                            ]"
+                                        >
+                                            {{ country.name }}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Clear button -->
+                                <button
+                                    v-if="selectedCountry"
+                                    type="button"
+                                    @click="clearCountrySelection"
+                                    class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                                >
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
                             <InputError :message="form.errors.country_of_origin" class="mt-1" />
                         </div>
 
@@ -345,7 +647,7 @@ function validateTab(index: number) {
                         </div>
 
                         <div class="flex flex-col">
-                            <Label>Vehicle Temperature</Label>
+                            <Label>Temperature</Label>
                             <Input v-model="form.vehicle_inside_temp" type="text" placeholder="Enter Inside Temperature" class="mt-2" />
                             <InputError :message="form.errors.vehicle_inside_temp" class="mt-1" />
                         </div>
