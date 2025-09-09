@@ -24,14 +24,14 @@ const props = defineProps<{
 }>()
 
 // Form state
-const selectedJobId = ref<number | string>('')
+const selectTransactionid = ref<number | string>('')
 const selectedFlockId = ref<number | string>('')
 const selectedShedid = ref<number | string>('')
 
 const showInfo = ref(false)
 
 const form = useForm({
-  job_id: 0,
+  transaction_id: 0,
   flock_id: 0,
   shed_id:1,
   receiving_company_id: 0,
@@ -74,18 +74,18 @@ watch(selectedShedid, (val) => {
   form.shed_id = val
 })
 
-watch(selectedJobId, (val) => {
-  form.job_id = val
+watch(selectTransactionid, (val) => {
+  form.transaction_id = val
 })
 
 // Toggle Batch Info
 function toggleInfo() {
-  const selected = props.firmReceives.find((job) => job.id === Number(selectedJobId.value))
+  const selected = props.firmReceives.find((job) => job.id === Number(selectTransactionid.value))
   if (!selected) {
     showInfo.value = false
     return
   }
-  form.job_id = selected.id
+  form.transaction_id = selected.id
   form.receiving_company_id = selected.receiving_company_id
   selectedFlockId.value = selected.flock_id
   showInfo.value = true
@@ -122,10 +122,10 @@ function submit() {
         <!-- Batch Dropdown -->
         <div>
           <Label>Firm Receive Code</Label>
-          <select v-model="selectedJobId" @change="toggleInfo" class="w-full mt-1 border rounded px-3 py-2">
+          <select v-model="selectTransactionid" @change="toggleInfo" class="w-full mt-1 border rounded px-3 py-2">
             <option value="">Select Firm Receive Code</option>
-            <option v-for="job in props.firmReceives" :key="job.id" :value="job.id">
-              {{ job.job_no }}
+            <option v-for="transaction in props.firmReceives" :key="transaction.id" :value="transaction.id">
+              {{ transaction.transaction_no }}
             </option>
           </select>
         </div>
@@ -154,11 +154,11 @@ function submit() {
         enter-from-class="max-h-0 opacity-0" enter-to-class="max-h-screen opacity-100"
         leave-from-class="max-h-screen opacity-100" leave-to-class="max-h-0 opacity-0">
         <div v-if="showInfo" class="grid grid-cols-3 gap-4 text-sm mt-5 overflow-hidden">
-          <div><span class="font-medium">Job No:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedJobId)?.job_no }}</span></div>
+          <div><span class="font-medium">Transaction No:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectTransactionid)?.job_no }}</span></div>
           <div><span class="font-medium">Receiving Company:</span> <span class="ml-1">{{ props.companies.find(c => c.id === form.receiving_company_id)?.name }}</span></div>
-          <div><span class="font-medium">Female Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedJobId)?.firm_female_qty }}</span></div>
-          <div><span class="font-medium">Male Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedJobId)?.firm_male_qty }}</span></div>
-          <div><span class="font-medium">Total Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectedJobId)?.firm_total_qty }}</span></div>
+          <div><span class="font-medium">Female Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectTransactionid)?.firm_female_qty }}</span></div>
+          <div><span class="font-medium">Male Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectTransactionid)?.firm_male_qty }}</span></div>
+          <div><span class="font-medium">Total Box Qty:</span> <span class="ml-1">{{ props.firmReceives.find(b => b.id === selectTransactionid)?.firm_total_qty }}</span></div>
         </div>
       </transition>
     </div>

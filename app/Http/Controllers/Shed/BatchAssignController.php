@@ -64,7 +64,7 @@ class BatchAssignController extends Controller
         ->map(function($shed) {
             return [
                 'id' => $shed->id,
-                'job_no' => $shed->job_no,
+                'transaction_no' => $shed->transaction_no,
                 'flock_id' => $shed->flock_id,
                 'flock' => $shed->flock?->name,
                 'shed_id' => $shed->shed_id,
@@ -100,8 +100,8 @@ class BatchAssignController extends Controller
         'levels' => $levels,
         'batches' => $batches,
     ]);
-        
-        //return Inertia::render('shed/batch-assign/Create');
+       
+       
     }
 
     /**
@@ -118,6 +118,7 @@ class BatchAssignController extends Controller
             BatchAssign::create([
                 'shed_receive_id'        => $shedReceive->id ?? null,
                 'job_no'                 => $shedReceive->job_no ?? null,
+                'transaction_no'         => $shedReceive->transaction_no ?? null,
                 'flock_no'               => $shedReceive->flock_name ?? 0,
                 'flock_id'               => $shedReceive->flock_id?? null,
                 'company_id'             => $shedReceive->company_id ?? null,
