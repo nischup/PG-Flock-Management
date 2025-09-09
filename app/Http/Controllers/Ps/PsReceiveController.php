@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Ps;
 
 use App\Exports\ArrayExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePsReceiveRequest;
 use App\Models\Country;
 use App\Models\Master\BreedType;
 use App\Models\Master\Company;
@@ -23,16 +24,23 @@ class PsReceiveController extends Controller
     public function index(Request $request)
     {
         $psReceives = PsReceive::query()
-            ->with(['supplier', 'chickCounts'])
+            ->with(['supplier', 'chickCounts', 'company', 'country', 'labTransfers'])
             ->when($request->search, fn ($q) => $q->where('pi_no', 'like', "%{$request->search}%")
                 ->orWhere('order_no', 'like', "%{$request->search}%")
+                ->orWhereHas('supplier', fn ($q) => $q->where('name', 'like', "%{$request->search}%"))
             )
+            ->when($request->company_id, fn ($q) => $q->where('company_id', $request->company_id))
+            ->when($request->shipment_type_id, fn ($q) => $q->where('shipment_type_id', $request->shipment_type_id))
+            ->when($request->date_from, fn ($q) => $q->whereDate('pi_date', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->whereDate('pi_date', '<=', $request->date_to))
+            ->orderBy('id', 'desc')
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
 
         return Inertia::render('ps/ps-receive/PsReceive', [
             'psReceives' => $psReceives,
-            'filters' => $request->only(['search', 'per_page']),
+            'filters' => $request->only(['search', 'per_page', 'company_id', 'shipment_type_id', 'date_from', 'date_to']),
+            'companies' => Company::select('id', 'name')->get(),
         ]);
     }
 
@@ -44,6 +52,27 @@ class PsReceiveController extends Controller
             'breedTypes' => BreedType::all(),
             'companies' => Company::all(),
             'countries' => Country::all(),
+        ]);
+    }
+
+    public function show($id)
+    {
+        $psReceive = PsReceive::with([
+            'supplier', 
+            'chickCounts', 
+            'company', 
+            'country', 
+            'labTransfers'
+        ])->findOrFail($id);
+
+        // Get breed type names
+        $breedTypeIds = is_array($psReceive->breed_type) ? $psReceive->breed_type : json_decode($psReceive->breed_type, true);
+        $breedTypes = BreedType::whereIn('id', $breedTypeIds)->get();
+        $breedTypeNames = $breedTypes->pluck('name')->toArray();
+
+        return inertia('ps/ps-receive/Show', [
+            'psReceive' => $psReceive,
+            'breedTypeNames' => $breedTypeNames,
         ]);
     }
 
@@ -62,40 +91,16 @@ class PsReceiveController extends Controller
         return response()->json($suppliers);
     }
 
-    public function store(Request $request)
+    public function store(StorePsReceiveRequest $request)
     {
-
-        // $request->validate([
-        //     // Main PS Receive
-        //     //'shipment_type_id'   => 'required|integer|exists:shipment_types,id',
-        //     'shipment_type_id'   => 'required|integer',
-        //     'pi_no'              => 'required|string|max:50',
-        //     'pi_date'            => 'required|date',
-        //     'order_no'           => 'nullable|string|max:50',
-        //     'order_date'         => 'nullable|date',
-        //     'lc_no'              => 'nullable|string|max:50',
-        //     'lc_date'            => 'nullable|date',
-        //     //'supplier_id'        => 'required|integer|exists:suppliers,id',
-        //     'supplier_id'        => 'required|integer',
-        //     'breed_type'         => 'required|integer',
-        //     'country_of_origin'  => 'required|integer',
-        //     'transport_type'     => 'required|integer',
-        //     'remarks'            => 'nullable|string|max:500',
-
-        //     // Chick Counts
-        //     'ps_male_rec_box'    => 'required|numeric|min:0',
-        //     'ps_male_qty'        => 'required|numeric|min:0',
-        //     'ps_female_rec_box'  => 'required|numeric|min:0',
-        //     'ps_female_qty'      => 'required|numeric|min:0',
-        //     'ps_total_qty'       => 'required|numeric|min:0',
-        //     'ps_total_re_box_qty'=> 'required|numeric|min:0',
-        //     'ps_challan_box_qty' => 'required|numeric|min:0',
-        //     'ps_gross_weight'    => 'required|numeric|min:0',
-        //     'ps_net_weight'      => 'required|numeric|min:0', // net ≤ gross
-        // ]);
-
         try {
-            // DB::beginTransaction();
+            // Log the incoming request data for debugging
+            Log::info('PS Receive Store Request', [
+                'request_data' => $request->all(),
+                'user_id' => Auth::id()
+            ]);
+
+            DB::beginTransaction();
 
             $psReceive = PsReceive::create([
                 'shipment_type_id' => (int) $request->shipment_type_id,
@@ -106,7 +111,8 @@ class PsReceiveController extends Controller
                 'lc_no' => $request->lc_no,
                 'lc_date' => $request->lc_date,
                 'supplier_id' => (int) ($request->supplier_id ?? 0),
-                'breed_type' => collect($request->breed_type)->pluck('id')->map(fn ($id) => (int) $id)->unique()->toArray(),
+                'breed_type' => $request->breed_type,
+                'country_of_origin' => (int) ($request->country_of_origin ?? 0),
                 'transport_type' => (int) ($request->transport_type ?? 0),
                 'company_id' => (int) ($request->company_id ?? 0),
                 'remarks' => $request->remarks,
@@ -115,7 +121,9 @@ class PsReceiveController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
-            $psReceive->chickCounts()->create([
+            Log::info('PS Receive created successfully', ['ps_receive_id' => $psReceive->id]);
+
+            $chickCount = $psReceive->chickCounts()->create([
                 'ps_male_rec_box' => (int) $request->ps_male_rec_box,
                 'ps_male_qty' => (float) $request->ps_male_qty,
                 'ps_female_rec_box' => (int) $request->ps_female_rec_box,
@@ -126,6 +134,8 @@ class PsReceiveController extends Controller
                 'ps_gross_weight' => (float) $request->ps_gross_weight,
                 'ps_net_weight' => (float) $request->ps_net_weight,
             ]);
+
+            Log::info('PS Chick Count created successfully', ['chick_count_id' => $chickCount->id]);
 
             $psReceive->labTransfers()->create([
                 'ps_receive_id' => $psReceive->id,
@@ -174,16 +184,15 @@ class PsReceiveController extends Controller
             //     }
             // }
 
-            // DB::commit();
+            DB::commit();
 
             return redirect()->route('ps-receive.index')
                 ->with('success', 'PS Receive created successfully.');
         } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('PS Receive create failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 
-            // DB::rollBack();
-            Log::error('PS Receive create failed', ['error' => $e->getMessage()]);
-
-            return back()->withErrors(['general' => 'Failed to create PS Receive. Please try again.']);
+            return back()->withErrors(['general' => 'Failed to create PS Receive: ' . $e->getMessage()]);
         }
     }
 
