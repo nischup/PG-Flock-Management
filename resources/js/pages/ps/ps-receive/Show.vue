@@ -1,6 +1,28 @@
 <template>
     <AppLayout title="PS Receive Details">
         <div class="space-y-6">
+            <!-- Breadcrumb -->
+            <nav class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <Link :href="route('dashboard')" class="hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
+                    </svg>
+                </Link>
+                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <Link :href="route('ps-receive.index')" class="hover:text-gray-900 dark:hover:text-white transition-colors">
+                    PS Receive
+                </Link>
+                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <span class="text-gray-900 dark:text-white font-medium">
+                    PI-{{ psReceive.pi_no }}
+                </span>
+            </nav>
+
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
