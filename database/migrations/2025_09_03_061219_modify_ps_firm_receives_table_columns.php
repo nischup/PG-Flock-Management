@@ -20,7 +20,7 @@ return new class extends Migration
             // Modify other existing columns if needed
             $table->string('job_no')->nullable()->change();
             $table->string('receive_type')->nullable()->default('box');
-
+            
             
             $table->string('source_type')->nullable();
             $table->unsignedTinyInteger('source_id');

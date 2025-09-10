@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('egg_classifications', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('batchassign_id')->constrained('batch_assigns')->cascadeOnDelete(); // batch being classified
+            $table->date('classification_date');
+            $table->unsignedInteger('total_eggs')->default(0);
+            $table->unsignedInteger('rejected_eggs')->default(0);
+            $table->unsignedInteger('technical_eggs')->default(0);
+            $table->unsignedInteger('hatching_eggs')->default(0);
+            $table->text('remarks')->nullable();
+            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });
     }

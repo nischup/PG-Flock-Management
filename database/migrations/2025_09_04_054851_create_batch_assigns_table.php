@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('shed_receive_id')->constrained('shed_receives')->onDelete('cascade');
             // Snapshot fields for reporting
             $table->string('job_no')->nullable();
+            $table->string('transaction_no')->nullable();
             $table->unsignedInteger('flock_no')->default(0);
             $table->foreignId('flock_id')->constrained('flocks');
             $table->foreignId('company_id')->constrained('companies');

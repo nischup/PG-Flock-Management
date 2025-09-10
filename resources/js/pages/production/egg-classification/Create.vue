@@ -11,7 +11,7 @@ import { type BreadcrumbItem } from '@/types';
 import { useNotifier } from "@/composables/useNotifier"
 
 // Props
-const props = defineProps<{ flocks: Array<any> }>()
+const props = defineProps<{ batchAssign: Array<any> }>()
 const { showInfo } = useNotifier()
 
 
@@ -128,7 +128,7 @@ const progressBarBackground = computed(() => {
     const mainHasValue = mainFields.some(f => form[f] > 0)
     const noteHasValue = noteField && (form[noteField] || '').toString().trim() !== ''
 
-    let color = '#facc15' // default yellow
+    let color = '#04A12B' // default yellow
 
     // Red if note is filled but main fields are all empty/0
     if (noteHasValue && !mainHasValue) {
@@ -234,11 +234,11 @@ const isLastTabCompleted = computed(() => {
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label>Select Flock</Label>
+            <Label>Select Batch</Label>
             <select v-model="form.flock_id" class="w-full mt-1 border rounded px-3 py-2">
               <option value="">Select Flock</option>
-              <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">
-                {{ flock.flock_code }}
+              <option v-for="batchassinid in props.batchAssign" :key="batchassinid.id" :value="batchassinid.id">
+                {{ batchassinid.label }}
               </option>
             </select>
           </div>
@@ -276,26 +276,26 @@ const isLastTabCompleted = computed(() => {
         <!-- Tabs -->
         <div class="grid grid-cols-2 md:grid-cols-6 gap-2 mb-4">
           <button
-    v-for="(tab, index) in rejectedTabs"
-    :key="tab.key"
-    type="button"
-    @click="() => {
-      // Validate before moving forward
-      if (index > activeRejectedTab.value) {
-        if (!canGoToNextRejectedTab(activeRejectedTab.value)) return;
-      }
-      activeRejectedTab.value = index;
-    }"
-    :class="[
-      'p-3 rounded border font-medium text-center',
-      tabCompleted(tab.key)
-        ? 'bg-gradient-to-r from-green-400 to-green-600 text-white'
-        : activeRejectedTab === index
-        ? 'bg-chicken text-white'
-        : 'bg-white text-gray-700'
-    ]"
-  >
-    {{ tab.label }} <br />
+            v-for="(tab, index) in rejectedTabs"
+            :key="tab.key"
+            type="button"
+            @click="() => {
+              // Validate before moving forward
+              if (index > activeRejectedTab.value) {
+                if (!canGoToNextRejectedTab(activeRejectedTab.value)) return;
+              }
+              activeRejectedTab.value = index;
+            }"
+            :class="[
+              'p-3 rounded border font-medium text-center',
+              tabCompleted(tab.key)
+                ? 'bg-gradient-to-r from-green-400 to-green-600 text-white'
+                : activeRejectedTab === index
+                ? 'bg-gradient-to-br from-gray-800 to-gray-900 text-white'
+                : 'bg-white text-gray-700'
+            ]"
+        >
+        {{ tab.label }} <br />
     <span class="text-xl font-bold">{{ form[tab.key] }}</span>
   </button>
         </div>
@@ -359,7 +359,7 @@ const isLastTabCompleted = computed(() => {
           <button v-for="(tab, index) in techTabs" :key="tab.key" type="button"
             @click="activeTechTab = index"
             class="p-3 rounded border font-medium text-center"
-            :class="activeTechTab === index ? 'bg-chicken text-white' : 'bg-white text-gray-700'">
+            :class="activeTechTab === index ? 'bg-gradient-to-br from-gray-800 to-gray-900 text-white' : 'bg-white text-gray-700'">
             {{ tab.label }} <br /> <span class="text-xl font-bold">{{ form[tab.key] }}</span>
           </button>
         </div>

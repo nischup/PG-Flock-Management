@@ -41,6 +41,7 @@ class PsFirmReceiveController extends Controller
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
 
+<<<<<<< HEAD
 
 
 
@@ -61,6 +62,25 @@ class PsFirmReceiveController extends Controller
             ]),
             'filters' => $request->only(['search', 'per_page']),
         ]);
+=======
+    return Inertia::render('ps/ps-firm-receive/List', [
+        'psFirmReceives' => $psFirmReceives->through(fn($item) => [
+            'id' => $item->id,
+            'job_no' => $item->job_no,
+            'flock_name' => $item->flock->name ?? '-',
+            'company_name' => $item->company->name ?? '-',
+            'pi_no' => $item->psReceive->pi_no ?? '-',
+            'firm_male_qty' => $item->firm_male_qty,
+            'firm_female_qty' => $item->firm_female_qty,
+            'firm_total_qty' => $item->firm_total_qty,
+            'remarks' => $item->remarks,
+            'receive_date' => $item->created_at,
+            'created_by' => $item->created_by,
+            'status' => $item->status,
+        ]),
+        'filters' => $request->only(['search', 'per_page']),
+    ]);
+>>>>>>> ecf25e8d0b4b40c2d9038d58f84e11cc4489bc0b
 
         return Inertia::render('ps/ps-firm-receive/List', [
             'psReceives' => $psReceives,
@@ -130,13 +150,16 @@ class PsFirmReceiveController extends Controller
 
 
         $companyInfo = Company::findOrFail($request->receiving_company_id);
+<<<<<<< HEAD
         $flockInfo = Flock::findOrFail($request->flock_id);
 
         $jobNo = "{$request->ps_receive_id}-{$companyInfo->short_name}-{$flockInfo->name}";
+=======
+        $flockInfo = Flock::findOrFail($request->flock_id);   
+>>>>>>> ecf25e8d0b4b40c2d9038d58f84e11cc4489bc0b
 
         $firmReceive = PsFirmReceive::create([
             'ps_receive_id' => $request->ps_receive_id,
-            'job_no' => $jobNo,
             'receive_type' => 'box',
             'source_type' => 'psreceive',
             'source_id' => $request->ps_receive_id,
@@ -152,7 +175,17 @@ class PsFirmReceiveController extends Controller
         ]);
 
 
+<<<<<<< HEAD
 
+=======
+        $insertId = $firmReceive->id;
+
+        $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
+
+        // Save the job_no back to the record
+        $firmReceive->update(['transaction_no' => $transactionNo,'job_no'=>$transactionNo]);
+        
+>>>>>>> ecf25e8d0b4b40c2d9038d58f84e11cc4489bc0b
         return redirect()
             ->route('ps-firm-receive.index')
             ->with('success', 'Firm Receive created successfully!');

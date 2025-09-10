@@ -95,7 +95,7 @@ const saveTransfer = () => {
           <thead class="bg-gray-100 dark:bg-gray-700">
             <tr>
               <th class="px-4 py-2 border-b">#</th>
-              <th class="px-4 py-2 border-b">Job No</th>
+              <th class="px-4 py-2 border-b">Transaction No</th>
               <th class="px-4 py-2 border-b">Flock No</th>
               <th class="px-4 py-2 border-b">Female Qty</th>
               <th class="px-4 py-2 border-b">Male Qty</th>
@@ -110,7 +110,7 @@ const saveTransfer = () => {
               class="hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-              <td class="px-4 py-2 border-b">{{ transfer.job_no }}</td>
+              <td class="px-4 py-2 border-b">{{ transfer.transaction_no }}</td>
               <td class="px-4 py-2 border-b">{{ transfer.flock_no }}</td>
               <td class="px-4 py-2 border-b">{{ transfer.transfer_female_qty }}</td>
               <td class="px-4 py-2 border-b">{{ transfer.transfer_male_qty }}</td>
