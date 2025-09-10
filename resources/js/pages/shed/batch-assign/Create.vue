@@ -1,17 +1,35 @@
 <script setup lang="ts">
 import { Link, Head, useForm } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import InputError from '@/components/InputError.vue'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { type BreadcrumbItem } from '@/types'
-import { ArrowLeft, Trash2 } from 'lucide-vue-next'
-// Removed useDropdownOptions import as we're now using database data
+import { 
+    ArrowLeft, 
+    Package, 
+    Building2, 
+    Users, 
+    Home,
+    Save, 
+    Info, 
+    ChevronDown,
+    Search,
+    X,
+    AlertCircle,
+    CheckCircle2,
+    Trash2,
+    Plus
+} from 'lucide-vue-next'
 
 
+// Breadcrumb
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Assign Batch', href: '/batch-assign' },
   { title: 'Create', href: '' },
 ]
-// Remove hardcoded dropdown options - now using database data from props
 
 const props = defineProps<{
   shedReceives: Array<any>,
@@ -21,8 +39,44 @@ const props = defineProps<{
   batches: Array<any>
 }>()
 
-const selectedShedReceiveId = ref<number | string>("")
+// Form state
+const selectedShedReceiveId = ref<number | string>('')
 const shedReceiveInfo = ref<any>(null)
+const showInfo = ref(false)
+
+// Modern dropdown states
+const showShedReceiveDropdown = ref(false)
+const shedReceiveSearchQuery = ref('')
+
+// Filtered options
+const filteredShedReceives = computed(() => {
+    if (!shedReceiveSearchQuery.value) return props.shedReceives
+    return props.shedReceives.filter(sr => 
+        sr.transaction_no?.toLowerCase().includes(shedReceiveSearchQuery.value.toLowerCase()) ||
+        sr.shed?.toLowerCase().includes(shedReceiveSearchQuery.value.toLowerCase()) ||
+        sr.flock?.toLowerCase().includes(shedReceiveSearchQuery.value.toLowerCase())
+    )
+})
+
+// Selected item display
+const selectedShedReceive = computed(() => {
+    return props.shedReceives.find(sr => sr.id === Number(selectedShedReceiveId.value))
+})
+
+// Close dropdowns on outside click
+const handleClickOutside = (e: MouseEvent) => {
+    if (!(e.target as HTMLElement).closest('.shed-receive-dropdown')) {
+        showShedReceiveDropdown.value = false
+    }
+}
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+    document.removeEventListener('click', handleClickOutside)
+})
 
 
 const form = useForm({
@@ -52,19 +106,45 @@ const form = useForm({
   ]
 })
 
+// Load Shed Receive Info and toggle display
 function loadShedReceiveInfo() {
-  shedReceiveInfo.value = props.shedReceives.find(
+  const selected = props.shedReceives.find(
     (s) => s.id === Number(selectedShedReceiveId.value)
-  ) || null
+  )
+  
+  if (!selected) {
+    shedReceiveInfo.value = null
+    showInfo.value = false
+    return
+  }
+  
+  shedReceiveInfo.value = selected
+  form.shed_receive_id = selectedShedReceiveId.value
+  form.flock_id = selected.flock_id || 0
+  form.company_id = selected.company_id || 0
+  form.shed_id = selected.shed_id || 0
+  showInfo.value = true
+}
 
-  form.shed_receive_id = selectedShedReceiveId.value // 👈 set in form
+// Watch for shed receive selection
+watch(selectedShedReceiveId, (val) => {
+  if (val) {
+    loadShedReceiveInfo()
+  } else {
+    shedReceiveInfo.value = null
+    showInfo.value = false
+  }
+})
+
+// Debug function to check data
+const debugDropdown = () => {
+    console.log('Shed Receives data:', props.shedReceives)
+    console.log('Levels data:', props.levels)
+    console.log('Batches data:', props.batches)
 }
 
 
-const flockOptions = ref([
-  { id: 1, name: 'Flock A' },
-  { id: 2, name: 'Flock B' }
-])
+// Remove hardcoded flock options - using props data
 
 
 
@@ -98,219 +178,475 @@ const submit = () => {
   })
 }
 
-// Computed: disable submit if any batch label is empty or only one batch
-const isSubmitDisabled = () => {
-  return form.batches.length <= 0 || form.batches.some(b => !b.level)
-}
+// Computed: disable submit if any batch level is empty or no shed receive selected
+const isSubmitDisabled = computed(() => {
+  return !selectedShedReceiveId.value || form.batches.length <= 0 || form.batches.some(b => !b.level)
+})
+
+// Auto-calculate total quantities for each batch
+watch(
+  () => form.batches,
+  () => {
+    form.batches.forEach(batch => {
+      // Auto-calculate totals
+      batch.batch_total_qty = (batch.batch_female_qty || 0) + (batch.batch_male_qty || 0)
+      batch.batch_total_mortality = (batch.batch_female_mortality || 0) + (batch.batch_male_mortality || 0)
+      batch.batch_total_excess = (batch.batch_excess_female || 0) + (batch.batch_excess_male || 0)
+      batch.batch_total_sortage = (batch.batch_sortage_female || 0) + (batch.batch_sortage_male || 0)
+    })
+  },
+  { deep: true, immediate: true }
+)
 </script>
 
 <template>
-  <AppLayout :breadcrumbs="breadcrumbs">
-    <Head title="Create Batch Assign" />
+<AppLayout :breadcrumbs="breadcrumbs">
+  <Head title="Create Batch Assign" />
 
-    <form @submit.prevent="submit" class="p-6 space-y-6">
-      <!-- Header -->
-      <div class="pb-3 mb-6 flex items-center justify-between">
-        <h2 class="text-xl font-semibold">Assign Batch Details</h2>
-        <Link 
-          href="/batch-assign" 
-          class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center gap-1"
-        >
-          <ArrowLeft class="w-4 h-4" /> List
-        </Link>
+  <!-- Header Section -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Create Batch Assign</h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Assign batches to shed receives with detailed quantities</p>
       </div>
-
-      <!-- Shed Receive Dropdown -->
-    <div class="bg-gray-50 p-5 rounded-lg">
-      <label class="block font-medium ">Shed Receive</label>
-      <select v-model="selectedShedReceiveId" @change="loadShedReceiveInfo"
-              class="w-full mt-1 border rounded px-3 py-2">
-        <option value="">Select Shed Receive</option>
-        <option v-for="shed in props.shedReceives" :key="shed.id" :value="shed.id">
-          {{ shed.transaction_no }}-{{ shed.shed }}
-        </option>
-      </select>
- 
-
-    <!-- Info Panel -->
-    <div v-if="shedReceiveInfo" class="border rounded-lg p-4 mt-4 bg-gray-50 text-sm grid grid-cols-3 gap-4">
-      <div><strong>Flock:</strong> {{ shedReceiveInfo.flock }}</div>
-      <div><strong>Shed:</strong> {{ shedReceiveInfo.shed }}</div>
-      <div><strong>Company:</strong> {{ shedReceiveInfo.company }}</div>
-      <div><strong>Receive Type:</strong> {{ shedReceiveInfo.receive_type }}</div>
-      <div><strong>Female Qty:</strong> {{ shedReceiveInfo.shed_female_qty }}</div>
-      <div><strong>Male Qty:</strong> {{ shedReceiveInfo.shed_male_qty }}</div>
-      <div><strong>Total Qty:</strong> {{ shedReceiveInfo.shed_total_qty }}</div>
+      <Link 
+        href="/batch-assign" 
+        class="group relative overflow-hidden rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+        style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);"
+      >
+        <span class="relative z-10 flex items-center gap-2">
+          <ArrowLeft class="h-4 w-4" />
+          Back to List
+        </span>
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-20 group-hover:translate-x-full"></div>
+      </Link>
     </div>
-</div>
-        <!-- Dynamic Batch Boxes -->
+  </div>
+
+  <form @submit.prevent="submit" class="space-y-8">
+
+    <!-- Shed Receive Selection Card -->
+    <div class="relative rounded-2xl border-0 bg-gradient-to-br from-white via-blue-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-blue-900/20 dark:to-gray-800 dark:ring-gray-700">
+      <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20"></div>
+      <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10"></div>
+      
+      <div class="relative">
+        <div class="mb-8 flex items-center gap-3">
+          <div class="rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 shadow-lg">
+            <Package class="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Shed Receive Selection</h2>
+            <p class="text-gray-600 dark:text-gray-400">Choose the shed receive to assign batches to</p>
+          </div>
+        </div>
+
+        <!-- Data Status Indicator -->
+        <div class="mb-6 flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
+          <div class="flex items-center gap-2 text-sm">
+            <div class="h-2 w-2 rounded-full bg-green-500"></div>
+            <span class="font-medium text-green-800 dark:text-green-200">
+              Data Status: {{ props.shedReceives?.length || 0 }} Shed Receives | {{ props.levels?.length || 0 }} Levels | {{ props.batches?.length || 0 }} Batches loaded
+            </span>
+          </div>
+          <button 
+            type="button"
+            @click="debugDropdown" 
+            class="rounded bg-green-600 px-3 py-1 text-xs text-white hover:bg-green-700"
+          >
+            Debug Console
+          </button>
+        </div>
+
+        <!-- Shed Receive Dropdown -->
+        <div class="space-y-2">
+          <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+            <Building2 class="h-4 w-4" />
+            Shed Receive
+          </Label>
+          <div class="shed-receive-dropdown relative">
+            <button
+              type="button"
+              @click.stop="showShedReceiveDropdown = !showShedReceiveDropdown"
+              class="flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            >
+              <span class="flex items-center gap-3">
+                <div class="h-2 w-2 rounded-full bg-blue-500"></div>
+                {{ selectedShedReceive ? `${selectedShedReceive.transaction_no} - ${selectedShedReceive.shed}` : 'Select Shed Receive' }}
+              </span>
+              <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showShedReceiveDropdown }" />
+            </button>
+            
+            <!-- Shed Receive Dropdown -->
+            <div 
+              v-if="showShedReceiveDropdown" 
+              class="fixed inset-0 z-[9999] flex items-start justify-center pt-20"
+              @click="showShedReceiveDropdown = false"
+            >
+              <div 
+                class="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-600 dark:bg-gray-800"
+                @click.stop
+              >
+                <!-- Header -->
+                <div class="border-b border-gray-200 p-4 dark:border-gray-600">
+                  <h3 class="font-semibold text-gray-900 dark:text-white">Select Shed Receive</h3>
+                  <div class="relative mt-3">
+                    <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      v-model="shedReceiveSearchQuery"
+                      type="text"
+                      placeholder="Search shed receives..."
+                      class="w-full rounded-lg border border-gray-300 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      @click.stop
+                    />
+                  </div>
+                </div>
+
+                <!-- Shed Receive List -->
+                <div class="max-h-96 overflow-y-auto">
+                  <div v-if="(props.shedReceives?.length || 0) === 0" class="px-6 py-8 text-center">
+                    <AlertCircle class="mx-auto h-8 w-8 text-red-500" />
+                    <div class="mt-2 font-medium text-red-600">No Shed Receives Available</div>
+                    <div class="text-sm text-gray-500">Please create shed receives first</div>
+                  </div>
+                  <button
+                    v-for="sr in filteredShedReceives"
+                    :key="sr.id"
+                    type="button"
+                    @click.stop="selectedShedReceiveId = sr.id; showShedReceiveDropdown = false"
+                    class="flex w-full items-center gap-4 px-6 py-4 text-left hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-200 border-b border-gray-100 dark:border-gray-600 last:border-b-0"
+                    :class="{ 'bg-blue-100 dark:bg-blue-900': selectedShedReceiveId == sr.id }"
+                  >
+                    <div class="h-3 w-3 rounded-full bg-blue-500 flex-shrink-0"></div>
+                    <div class="flex-1">
+                      <div class="font-semibold text-gray-900 dark:text-white">{{ sr.transaction_no }}</div>
+                      <div class="text-sm text-gray-500 dark:text-gray-400">Shed: {{ sr.shed }}</div>
+                      <div class="text-xs text-gray-400 dark:text-gray-500">Flock: {{ sr.flock }}</div>
+                    </div>
+                    <CheckCircle2 v-if="selectedShedReceiveId == sr.id" class="h-4 w-4 text-blue-500 flex-shrink-0" />
+                  </button>
+                  <div v-if="filteredShedReceives.length === 0 && (props.shedReceives?.length || 0) > 0" class="px-6 py-8 text-center text-gray-500">
+                    <Search class="mx-auto h-6 w-6 text-gray-400" />
+                    <div class="mt-2 text-sm">No results found for "{{ shedReceiveSearchQuery }}"</div>
+                  </div>
+                </div>
+
+                <!-- Close Button -->
+                <div class="border-t border-gray-200 p-4 dark:border-gray-600">
+                  <Button 
+                    type="button"
+                    @click="showShedReceiveDropdown = false"
+                    class="w-full rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shed Receive Info Display -->
+        <transition 
+          enter-active-class="transition-all duration-500 ease-out"
+          leave-active-class="transition-all duration-500 ease-in"
+          enter-from-class="opacity-0 scale-95 -translate-y-4"
+          enter-to-class="opacity-100 scale-100 translate-y-0"
+          leave-from-class="opacity-100 scale-100 translate-y-0"
+          leave-to-class="opacity-0 scale-95 -translate-y-4"
+        >
+          <div v-if="showInfo" class="mt-8 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 dark:border-blue-800 dark:from-blue-900/20 dark:to-indigo-900/20">
+            <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-100">
+              <CheckCircle2 class="h-5 w-5" />
+              Shed Receive Details
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Transaction No:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.transaction_no }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Flock:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.flock }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Shed:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Company:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.company }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed_female_qty }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed_male_qty }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Qty:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ shedReceiveInfo?.shed_total_qty }}</div></div>
+            </div>
+          </div>
+        </transition>
+      </div>
+    </div>
+    <!-- Batch Assignment Cards -->
+    <div class="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-white via-emerald-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-emerald-900/20 dark:to-gray-800 dark:ring-gray-700">
+      <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20"></div>
+      <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-teal-500/10 to-emerald-500/10"></div>
+      
+      <div class="relative">
+        <div class="mb-8 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-3 shadow-lg">
+              <Users class="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Batch Assignment</h2>
+              <p class="text-gray-600 dark:text-gray-400">Configure batch details and quantities</p>
+            </div>
+          </div>
+          <Button 
+            type="button"
+            @click="addBatch"
+            class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:from-emerald-700 hover:to-emerald-800 hover:shadow-xl"
+          >
+            <span class="relative z-10 flex items-center gap-2">
+              <Plus class="h-4 w-4" />
+              Add Batch
+            </span>
+          </Button>
+        </div>
+
+        <!-- Dynamic Batch Cards -->
         <div class="space-y-6">
-        <div
+          <div
             v-for="(batch, index) in form.batches"
             :key="index"
-            class="relative border rounded-lg p-6 shadow bg-white space-y-4"
-        >
-            <!-- Left Badge -->
-            <div
-            v-if="form.batches.length > 1"
-            class="absolute -top-3 -left-3 bg-gray-400 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold"
-            >
-            {{ index + 1 }}
-            </div>
-
-            <!-- Right Delete Icon -->
-            <button
-            v-if="form.batches.length > 1"
-            @click="removeBatch(index)"
-            class="absolute -top-3 -right-3 w-8 h-8 bg-red-500 text-white flex items-center justify-center rounded-full hover:bg-red-600"
-            title="Remove Batch"
-            >
-            <Trash2 class="w-4 h-4" />
-            </button>
-
-            <!-- Row 1: Label & Batch -->
-            <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm mb-1">Level</label>
-                <select v-model="batch.level" class="w-full border rounded px-3 py-2">
-                <option disabled value="">Select Level</option>
-                <option v-for="level in props.levels" :key="level.id" :value="level.id">
-                  {{ level.name }}
-                </option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm mb-1">Batch</label>
-                <select v-model="batch.batch_no" class="w-full border rounded px-3 py-2">
-                <option disabled value="">Select Batch</option>
-                <option v-for="batchItem in props.batches" :key="batchItem.id" :value="batchItem.id">
-                  {{ batchItem.name }}
-                </option>
-                </select>
-            </div>
-            </div>
-
-            <!-- Row 2: Female, Male, Total Qty -->
-<div class="grid grid-cols-3 gap-4">
-  <div>
-      <label class="block text-sm mb-1">Female Qty</label>
-      <input v-model.number="batch.batch_female_qty" type="number" class="w-full border rounded px-3 py-2" />
-  </div>
-  <div>
-      <label class="block text-sm mb-1">Male Qty</label>
-      <input v-model.number="batch.batch_male_qty" type="number" class="w-full border rounded px-3 py-2" />
-  </div>
-  <div>
-      <label class="block text-sm mb-1">Total Qty</label>
-      <input
-        :value="(batch.batch_female_qty || 0) + (batch.batch_male_qty || 0)"
-        type="number"
-        readonly
-        class="w-full border rounded px-3 py-2 bg-gray-100"
-      />
-  </div>
-</div>
-
-<!-- Row 3: Female Mortality, Male Mortality, Total Mortality -->
-<div class="grid grid-cols-3 gap-4">
-  <div>
-      <label class="block text-sm mb-1">Female Mortality</label>
-      <input v-model.number="batch.batch_female_mortality" type="number" class="w-full border rounded px-3 py-2" />
-  </div>
-  <div>
-      <label class="block text-sm mb-1">Male Mortality</label>
-      <input v-model.number="batch.batch_male_mortality" type="number" class="w-full border rounded px-3 py-2" />
-  </div>
-  <div>
-      <label class="block text-sm mb-1">Total Mortality</label>
-      <input
-        :value="(batch.batch_female_mortality || 0) + (batch.batch_male_mortality || 0)"
-        type="number"
-        readonly
-        class="w-full border rounded px-3 py-2 bg-gray-100"
-      />
-  </div>
-</div>
-
-<!-- Row 4: Excess -->
-<div class="grid grid-cols-3 gap-4 mt-2">
-  <div>
-    <label class="block text-sm mb-1">Female Excess Qty</label>
-    <input v-model.number="batch.batch_excess_female" type="number" class="w-full border rounded px-3 py-2" />
-  </div>
-
-  <div>
-    <label class="block text-sm mb-1">Male Excess Qty</label>
-    <input v-model.number="batch.batch_excess_male" type="number" class="w-full border rounded px-3 py-2" />
-  </div>
-
-  <div>
-    <label class="block text-sm mb-1">Total Excess Qty</label>
-    <input 
-      type="number" 
-      :value="(batch.batch_excess_female || 0) + (batch.batch_excess_male || 0)" 
-      readonly 
-      class="w-full border rounded px-3 py-2 bg-gray-100"
-    />
-  </div>
-</div>
-
-<!-- Row 5: Shortage -->
-<div class="grid grid-cols-3 gap-4 mt-2">
-  <div>
-    <label class="block text-sm mb-1">Female Shortage Qty</label>
-    <input v-model.number="batch.batch_sortage_female" type="number" class="w-full border rounded px-3 py-2" />
-  </div>
-
-  <div>
-    <label class="block text-sm mb-1">Male Shortage Qty</label>
-    <input v-model.number="batch.batch_sortage_male" type="number" class="w-full border rounded px-3 py-2" />
-  </div>
-
-  <div>
-    <label class="block text-sm mb-1">Total Shortage Qty</label>
-    <input 
-      type="number" 
-      :value="(batch.batch_sortage_female || 0) + (batch.batch_sortage_male || 0)" 
-      readonly 
-      class="w-full border rounded px-3 py-2 bg-gray-100"
-    />
-  </div>
-</div>
-
-<!-- Row 6: Percentage -->
-<div class="grid grid-cols-1 gap-4 mt-2">
-  <div>
-    <label class="block text-sm mb-1">Percentage</label>
-    <input v-model.number="batch.percentage" type="number" class="w-full border rounded px-3 py-2" />
-  </div>
-</div>
-
-            <!-- Add More Button -->
-            <div class="flex justify-end">
-            <button
-                v-if="index === form.batches.length - 1"
+            class="relative rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-6 shadow-lg dark:border-gray-600 dark:from-gray-800 dark:to-gray-900"
+          >
+            <!-- Batch Header -->
+            <div class="mb-6 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-blue-600 font-bold text-white shadow-lg">
+                  {{ index + 1 }}
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Batch {{ index + 1 }} Details</h3>
+              </div>
+              <button
+                v-if="form.batches.length > 1"
+                @click="removeBatch(index)"
                 type="button"
-                @click="addBatch"
-                class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-            >
-                + Add More
-            </button>
+                class="group flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg transition-all duration-200 hover:from-red-600 hover:to-red-700 hover:shadow-xl"
+                title="Remove Batch"
+              >
+                <Trash2 class="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+              </button>
             </div>
-        </div>
+
+            <!-- Level & Batch Selection -->
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Building2 class="h-4 w-4" />
+                  Level
+                </Label>
+                <select v-model="batch.level" class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-emerald-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                  <option disabled value="">Select Level</option>
+                  <option v-for="level in props.levels" :key="level.id" :value="level.id">
+                    {{ level.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Package class="h-4 w-4" />
+                  Batch
+                </Label>
+                <select v-model="batch.batch_no" class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-emerald-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                  <option disabled value="">Select Batch</option>
+                  <option v-for="batchItem in props.batches" :key="batchItem.id" :value="batchItem.id">
+                    {{ batchItem.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Main Quantities Section -->
+            <div class="mb-6">
+              <h4 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Main Quantities</h4>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Female Qty</Label>
+                  <Input 
+                    v-model.number="batch.batch_female_qty" 
+                    type="number" 
+                    min="0"
+                    class="rounded-xl border-pink-300 bg-pink-50 px-4 py-3 shadow-sm focus:border-pink-500 focus:ring-pink-500/20 dark:border-pink-600 dark:bg-pink-900/20" 
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Male Qty</Label>
+                  <Input 
+                    v-model.number="batch.batch_male_qty" 
+                    type="number" 
+                    min="0"
+                    class="rounded-xl border-blue-300 bg-blue-50 px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-blue-500/20 dark:border-blue-600 dark:bg-blue-900/20" 
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Qty</Label>
+                  <Input 
+                    type="number" 
+                    :value="batch.batch_total_qty" 
+                    readonly 
+                    class="rounded-xl border-gray-300 bg-gradient-to-r from-gray-100 to-gray-50 px-4 py-3 font-bold text-gray-700 shadow-sm cursor-not-allowed dark:border-gray-600 dark:from-gray-700 dark:to-gray-800 dark:text-gray-300" 
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Mortality Section -->
+            <div class="mb-6 rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-pink-50 p-6 dark:border-red-800 dark:from-red-900/20 dark:to-pink-900/20">
+              <h4 class="mb-4 flex items-center gap-2 text-lg font-semibold text-red-800 dark:text-red-200">
+                <AlertCircle class="h-5 w-5" />
+                Mortality
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Female Mortality</Label>
+                  <Input 
+                    type="number" 
+                    v-model.number="batch.batch_female_mortality" 
+                    min="0"
+                    class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Male Mortality</Label>
+                  <Input 
+                    type="number" 
+                    v-model.number="batch.batch_male_mortality" 
+                    min="0"
+                    class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Total Mortality</Label>
+                  <Input 
+                    type="number" 
+                    :value="batch.batch_total_mortality" 
+                    readonly 
+                    class="rounded-xl border-red-300 bg-gradient-to-r from-red-100 to-red-50 px-4 py-2 font-bold text-red-800 cursor-not-allowed dark:border-red-600 dark:from-red-800/50 dark:to-red-900/50 dark:text-red-200"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Excess Section -->
+            <div class="mb-6 rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 p-6 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-green-900/20">
+              <h4 class="mb-4 flex items-center gap-2 text-lg font-semibold text-emerald-800 dark:text-emerald-200">
+                <CheckCircle2 class="h-5 w-5" />
+                Excess
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Female Excess</Label>
+                  <Input 
+                    type="number" 
+                    v-model.number="batch.batch_excess_female" 
+                    min="0"
+                    class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Male Excess</Label>
+                  <Input 
+                    type="number" 
+                    v-model.number="batch.batch_excess_male" 
+                    min="0"
+                    class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Total Excess</Label>
+                  <Input 
+                    type="number" 
+                    :value="batch.batch_total_excess" 
+                    readonly 
+                    class="rounded-xl border-emerald-300 bg-gradient-to-r from-emerald-100 to-emerald-50 px-4 py-2 font-bold text-emerald-800 cursor-not-allowed dark:border-emerald-600 dark:from-emerald-800/50 dark:to-emerald-900/50 dark:text-emerald-200"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Shortage Section -->
+            <div class="mb-6 rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 p-6 dark:border-orange-800 dark:from-orange-900/20 dark:to-yellow-900/20">
+              <h4 class="mb-4 flex items-center gap-2 text-lg font-semibold text-orange-800 dark:text-orange-200">
+                <AlertCircle class="h-5 w-5" />
+                Shortage
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-orange-700 dark:text-orange-300">Female Shortage</Label>
+                  <Input 
+                    type="number" 
+                    v-model.number="batch.batch_sortage_female" 
+                    min="0"
+                    class="rounded-xl border-orange-300 bg-orange-50 px-4 py-2 text-orange-800 focus:border-orange-500 focus:ring-orange-500/20 dark:border-orange-600 dark:bg-orange-900/30 dark:text-orange-200" 
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-orange-700 dark:text-orange-300">Male Shortage</Label>
+                  <Input 
+                    type="number" 
+                    v-model.number="batch.batch_sortage_male" 
+                    min="0"
+                    class="rounded-xl border-orange-300 bg-orange-50 px-4 py-2 text-orange-800 focus:border-orange-500 focus:ring-orange-500/20 dark:border-orange-600 dark:bg-orange-900/30 dark:text-orange-200" 
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-orange-700 dark:text-orange-300">Total Shortage</Label>
+                  <Input 
+                    type="number" 
+                    :value="batch.batch_total_sortage" 
+                    readonly 
+                    class="rounded-xl border-orange-300 bg-gradient-to-r from-orange-100 to-orange-50 px-4 py-2 font-bold text-orange-800 cursor-not-allowed dark:border-orange-600 dark:from-orange-800/50 dark:to-orange-900/50 dark:text-orange-200"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Percentage Section -->
+            <div class="mb-4 rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-6 dark:border-amber-800 dark:from-amber-900/20 dark:to-yellow-900/20">
+              <h4 class="mb-4 flex items-center gap-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
+                <Info class="h-5 w-5" />
+                Percentage
+              </h4>
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-amber-700 dark:text-amber-300">Percentage Value</Label>
+                <Input 
+                  v-model.number="batch.percentage" 
+                  type="number" 
+                  min="0" 
+                  max="100" 
+                  step="0.01"
+                  class="rounded-xl border-amber-300 bg-amber-50 px-4 py-3 shadow-sm focus:border-amber-500 focus:ring-amber-500/20 dark:border-amber-600 dark:bg-amber-900/20" 
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-      <!-- Submit -->
-      <div class="flex justify-end">
-        <button
-          type="submit"
-          :disabled="isSubmitDisabled()"
-          :class="['px-6 py-2 rounded', isSubmitDisabled() ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white']"
-        >
-          Submit
-        </button>
       </div>
-    </form>
-  </AppLayout>
+    </div>
+
+    <!-- Submit Section -->
+    <div class="flex items-center justify-end gap-4 rounded-2xl bg-gradient-to-r from-gray-50 to-white p-6 dark:from-gray-800 dark:to-gray-900">
+      <Link 
+        href="/batch-assign"
+        class="rounded-xl border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+      >
+        Cancel
+      </Link>
+      <Button 
+        type="submit" 
+        :disabled="form.processing || isSubmitDisabled"
+        class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:from-emerald-700 hover:to-emerald-800 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
+      >
+        <span class="relative z-10 flex items-center gap-2">
+          <Save class="h-4 w-4" />
+          {{ form.processing ? 'Saving...' : 'Save & Submit' }}
+        </span>
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-20 group-hover:translate-x-full"></div>
+      </Button>
+    </div>
+
+  </form>
+</AppLayout>
 </template>

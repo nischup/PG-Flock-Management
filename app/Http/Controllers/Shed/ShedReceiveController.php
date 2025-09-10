@@ -1,15 +1,17 @@
 <?php
 
 namespace App\Http\Controllers\Shed;
+
 use App\Http\Controllers\Controller;
-use App\Models\Shed\ShedReceive;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
 use App\Models\Ps\PsFirmReceive;
+use App\Models\Shed\ShedReceive;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+
 class ShedReceiveController extends Controller
 {
     /**
@@ -17,28 +19,53 @@ class ShedReceiveController extends Controller
      */
     public function index(Request $request)
     {
-       
-        $search = $request->search;
-
-        // Fetch shed receives with related flock, shed, and company
+        // Fetch shed receives with comprehensive filtering
         $shedReceives = ShedReceive::with(['flock', 'shed', 'company'])
-        ->where('receive_type', 'box')
-            ->when($search, function ($query, $search) {
-                $query->whereHas('flock', fn($q) => $q->where('name', 'like', "%{$search}%"))
-                      ->orWhereHas('shed', fn($q) => $q->where('name', 'like', "%{$search}%"))
-                      ->orWhere('job_no', 'like', "%{$search}%");
+            ->where('receive_type', 'box')
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('job_no', 'like', "%{$search}%")
+                        ->orWhereHas('flock', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('shed', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('company', fn ($q2) => $q2->where('name', 'like', "%{$search}%"));
+                });
             })
+            ->when($request->company_id, fn ($q) => $q->where('company_id', $request->company_id))
+            ->when($request->flock_id, fn ($q) => $q->where('flock_id', $request->flock_id))
+            ->when($request->shed_id, fn ($q) => $q->where('shed_id', $request->shed_id))
+            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
 
-        // Return to Inertia page
+        // Return to Inertia page with comprehensive data
         return inertia('shed/shed-receive/List', [
-            'psReceives' => $shedReceives,
-            'filters' => $request->only(['search', 'per_page']),
+            'shedReceives' => $shedReceives->through(fn ($item) => [
+                'id' => $item->id,
+                'job_no' => $item->job_no,
+                'flock_id' => $item->flock_id,
+                'flock_name' => $item->flock->name ?? $item->flock_name,
+                'shed_id' => $item->shed_id,
+                'shed_name' => $item->shed->name ?? 'N/A',
+                'company_id' => $item->company_id,
+                'company_name' => $item->company->name ?? 'N/A',
+                'shed_female_qty' => $item->shed_female_qty,
+                'shed_male_qty' => $item->shed_male_qty,
+                'shed_total_qty' => $item->shed_total_qty,
+                'receive_date' => $item->created_at,
+                'remarks' => $item->remarks,
+                'created_at' => $item->created_at,
+                // Add relationship data for frontend dropdowns
+                'flock' => $item->flock ? ['id' => $item->flock->id, 'name' => $item->flock->name] : null,
+                'shed' => $item->shed ? ['id' => $item->shed->id, 'name' => $item->shed->name] : null,
+                'company' => $item->company ? ['id' => $item->company->id, 'name' => $item->company->name] : null,
+            ]),
+            'filters' => $request->only(['search', 'per_page', 'company_id', 'flock_id', 'shed_id', 'date_from', 'date_to']),
+            'companies' => Company::select('id', 'name')->orderBy('name')->get(),
+            'flocks' => Flock::select('id', 'name')->orderBy('name')->get(),
+            'sheds' => Shed::select('id', 'name')->orderBy('name')->get(),
         ]);
-
-        
     }
 
     /**
@@ -46,7 +73,7 @@ class ShedReceiveController extends Controller
      */
     public function create()
     {
-        
+
         $firmReceives = PsFirmReceive::with(['flock', 'company'])
             ->orderBy('created_at', 'desc')
             ->get()
@@ -76,7 +103,7 @@ class ShedReceiveController extends Controller
             'firmReceives' => $firmReceives,
             'flocks' => $flocks,
             'companies' => $companies,
-            'sheds'=>$sheds,
+            'sheds' => $sheds,
         ]);
     }
 
@@ -85,30 +112,30 @@ class ShedReceiveController extends Controller
      */
     public function store(Request $request)
     {
-        
+
         $firmReceive = PsFirmReceive::findOrFail($request->transaction_id);
-        
+
         $shedReceive = ShedReceive::create([
-            'receive_id'       => $request->transaction_id,   // firm receive reference
-            'job_no'           => $firmReceive->job_no,
-            'company_id'       => $firmReceive->receiving_company_id,
-            'transaction_no'   => $firmReceive->transaction_no,
-            'flock_id'         => $request->flock_id,
-            'flock_name'       => $request->flock_name,
-            'shed_id'          => $request->shed_id,
-            'shed_female_qty'  => $request->shed_female_qty,
-            'shed_male_qty'    => $request->shed_male_qty,
-            'shed_total_qty'   => $request->shed_total_qty,
-            'receive_type'     => "Box",
-            'remarks'          => $request->remarks,
-            'created_by'       => Auth::id(),
-            'status'           => $request->status ?? 1,
+            'receive_id' => $request->transaction_id,   // firm receive reference
+            'job_no' => $firmReceive->job_no,
+            'company_id' => $firmReceive->receiving_company_id,
+            'transaction_no' => $firmReceive->transaction_no,
+            'flock_id' => $request->flock_id,
+            'flock_name' => $request->flock_name,
+            'shed_id' => $request->shed_id,
+            'shed_female_qty' => $request->shed_female_qty,
+            'shed_male_qty' => $request->shed_male_qty,
+            'shed_total_qty' => $request->shed_total_qty,
+            'receive_type' => 'Box',
+            'remarks' => $request->remarks,
+            'created_by' => Auth::id(),
+            'status' => $request->status ?? 1,
         ]);
 
         return redirect()
             ->route('shed-receive.index')
             ->with('success', 'Shed Receive created successfully!');
-   
+
     }
 
     /**

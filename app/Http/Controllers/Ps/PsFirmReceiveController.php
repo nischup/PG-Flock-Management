@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers\Ps;
 
+use App\Exports\ArrayExport;
 use App\Http\Controllers\Controller;
-use App\Models\Ps\PsReceive;
-use App\Models\Ps\PsFirmReceive;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ArrayExport;
+use App\Models\Ps\PsFirmReceive;
+use App\Models\Ps\PsReceive;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PsFirmReceiveController extends Controller
 {
@@ -22,30 +21,26 @@ class PsFirmReceiveController extends Controller
      */
     public function index(Request $request)
     {
-        $psFirmReceives = PsFirmReceive::with(['flock', 'company'])
+        $psFirmReceives = PsFirmReceive::with(['flock', 'company', 'psReceive'])
             // ->where('source_type', 'psreceive')
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->whereHas(
-                        'psReceive',
-                        fn($q2) =>
-                        $q2->where('pi_no', 'like', "%{$search}%")
-                    )
-                        ->orWhereHas(
-                            'flock',
-                            fn($q3) =>
-                            $q3->where('name', 'like', "%{$search}%")
-                        );
+                    $q->where('job_no', 'like', "%{$search}%")
+                        ->orWhereHas('flock', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('company', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('psReceive', fn ($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
                 });
             })
+            ->when($request->company_id, fn ($q) => $q->where('receiving_company_id', $request->company_id))
+            ->when($request->flock_id, fn ($q) => $q->where('flock_id', $request->flock_id))
+            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->orderBy('id', 'desc')
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
 
-
-
-
         return Inertia::render('ps/ps-firm-receive/List', [
-            'psFirmReceives' => $psFirmReceives->through(fn($item) => [
+            'psFirmReceives' => $psFirmReceives->through(fn ($item) => [
                 'id' => $item->id,
                 'job_no' => $item->job_no,
                 'flock_name' => $item->flock->name ?? '-',
@@ -58,11 +53,16 @@ class PsFirmReceiveController extends Controller
                 'receive_date' => $item->created_at,
                 'created_by' => $item->created_by,
                 'status' => $item->status,
+                // Add relationship data for frontend dropdowns
+                'company' => $item->company ? ['id' => $item->company->id, 'name' => $item->company->name] : null,
+                'flock' => $item->flock ? ['id' => $item->flock->id, 'name' => $item->flock->name] : null,
+                'psReceive' => $item->psReceive ? ['id' => $item->psReceive->id, 'pi_no' => $item->psReceive->pi_no] : null,
             ]),
-            'filters' => $request->only(['search', 'per_page']),
+            'filters' => $request->only(['search', 'per_page', 'company_id', 'flock_id', 'date_from', 'date_to']),
+            'companies' => Company::select('id', 'name')->orderBy('name')->get(),
+            'flocks' => Flock::select('id', 'name')->orderBy('name')->get(),
         ]);
 
-       
     }
 
     /**
@@ -123,12 +123,8 @@ class PsFirmReceiveController extends Controller
     public function store(Request $request)
     {
 
-
-        
         $companyInfo = Company::findOrFail($request->receiving_company_id);
         $flockInfo = Flock::findOrFail($request->flock_id);
-
-        
 
         $firmReceive = PsFirmReceive::create([
             'ps_receive_id' => $request->ps_receive_id,
@@ -151,9 +147,8 @@ class PsFirmReceiveController extends Controller
         $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
 
         // Save the job_no back to the record
-        $firmReceive->update(['transaction_no' => $transactionNo,'job_no'=>$transactionNo]);
+        $firmReceive->update(['transaction_no' => $transactionNo, 'job_no' => $transactionNo]);
 
-        
         return redirect()
             ->route('ps-firm-receive.index')
             ->with('success', 'Firm Receive created successfully!');
@@ -190,16 +185,25 @@ class PsFirmReceiveController extends Controller
     {
         //
     }
+
     public function downloadPdf(Request $request)
     {
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
         $psFirmReceives = PsFirmReceive::with(['flock', 'company', 'psReceive'])
-            ->when($request->search, function ($q, $search) {
-                $q->whereHas('psReceive', fn($q2) => $q2->where('pi_no', 'like', "%{$search}%"))
-                    ->orWhereHas('flock', fn($q3) => $q3->where('name', 'like', "%{$search}%"));
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('job_no', 'like', "%{$search}%")
+                        ->orWhereHas('flock', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('company', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('psReceive', fn ($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
+                });
             })
+            ->when($request->company_id, fn ($q) => $q->where('receiving_company_id', $request->company_id))
+            ->when($request->flock_id, fn ($q) => $q->where('flock_id', $request->flock_id))
+            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->latest()
             ->get()
             ->map(function ($r) {
@@ -215,10 +219,9 @@ class PsFirmReceiveController extends Controller
                 ];
             })
             ->toArray();
-        dd();
 
         $columns = [
-            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
+            ['label' => '#', 'key' => 'index', 'callback' => fn ($r, $i) => $i + 1],
             ['label' => 'PI No', 'key' => 'pi_no'],
             ['label' => 'Flock Name', 'key' => 'flock_name'],
             ['label' => 'Company', 'key' => 'company_name'],
@@ -228,7 +231,6 @@ class PsFirmReceiveController extends Controller
             ['label' => 'Remarks', 'key' => 'remarks'],
             ['label' => 'Receive Date', 'key' => 'receive_date'],
         ];
-        dd($psFirmReceives);
 
         $data = [
             'title' => 'PS Firm Receive Report',
@@ -255,15 +257,21 @@ class PsFirmReceiveController extends Controller
         set_time_limit(120);
 
         $rows = PsFirmReceive::with(['flock', 'company', 'psReceive'])
-            ->when(
-                $request->search,
-                fn($q, $search) =>
-                $q->whereHas('psReceive', fn($q2) => $q2->where('pi_no', 'like', "%{$search}%"))
-                    ->orWhereHas('flock', fn($q3) => $q3->where('name', 'like', "%{$search}%"))
-            )
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('job_no', 'like', "%{$search}%")
+                        ->orWhereHas('flock', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('company', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('psReceive', fn ($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
+                });
+            })
+            ->when($request->company_id, fn ($q) => $q->where('receiving_company_id', $request->company_id))
+            ->when($request->flock_id, fn ($q) => $q->where('flock_id', $request->flock_id))
+            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->latest()
             ->get()
-            ->map(fn($r) => [
+            ->map(fn ($r) => [
                 'pi_no' => $r->psReceive->pi_no ?? '-',
                 'flock_name' => $r->flock->name ?? '-',
                 'company_name' => $r->company->name ?? '-',
@@ -276,7 +284,7 @@ class PsFirmReceiveController extends Controller
             ->toArray();
 
         $columns = [
-            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
+            ['label' => '#', 'key' => 'index', 'callback' => fn ($r, $i) => $i + 1],
             ['label' => 'PI No', 'key' => 'pi_no'],
             ['label' => 'Flock Name', 'key' => 'flock_name'],
             ['label' => 'Company', 'key' => 'company_name'],
@@ -287,7 +295,7 @@ class PsFirmReceiveController extends Controller
             ['label' => 'Receive Date', 'key' => 'receive_date'],
         ];
 
-        $headings = array_map(fn($c) => $c['label'], $columns);
+        $headings = array_map(fn ($c) => $c['label'], $columns);
         $body = [];
         foreach ($rows as $i => $row) {
             $line = [];
