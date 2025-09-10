@@ -21,16 +21,17 @@ use App\Http\Controllers\Master\MedicineController;
 use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Master\BreedTypeController;
 use App\Http\Controllers\Master\ChickTypeController;
+use App\Http\Controllers\Ps\PsFirmReceiveController;
 use App\Http\Controllers\Shed\BatchAssignController;
 use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Master\VaccineTypeController;
 use App\Http\Controllers\Transfer\BirdTransferController;
 use App\Http\Controllers\Production\EggClassificationController;
 use App\Http\Controllers\DailyOperation\DailyOperationController;
-use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
+use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\Production\ProductionFirmReceiveController;
-use App\Http\Controllers\Production\ProductionShedReceiveController;
+
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
@@ -63,7 +64,6 @@ Route::resource('ps-lab-test', PsLabTestController::class);
 Route::resource('shed-receive', ShedReceiveController::class);
 Route::resource('batch-assign', BatchAssignController::class);
 Route::resource('production-firm-receive', ProductionFirmReceiveController::class);
-Route::resource('production-shed-receive', ProductionShedReceiveController::class);
 Route::resource('vaccine-schedule', VaccineScheduleController::class);
 Route::resource('bird-transfer', BirdTransferController::class);
 Route::resource('vaccine-routing', VaccineRoutingController::class);
@@ -129,6 +129,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('chick-type/excel', [ChickTypeController::class, 'exportExcel'])->name('chick-type.excel');
     Route::get('breed-type/pdf', [BreedTypeController::class, 'exportPdf'])->name('breed-type.pdf');
     Route::get('breed-type/excel', [BreedTypeController::class, 'exportExcel'])->name('breed-type.excel');
+    Route::get('ps-firm-receive/pdf', [PsFirmReceiveController::class, 'downloadPdf'])->name('ps-firm-receive.pdf');
+    Route::get('ps-firm-receive/excel', [PsFirmReceiveController::class, 'downloadExcel'])->name('ps-firm-receive.excel');
 });
 
 
@@ -136,5 +138,9 @@ Route::prefix('reports')->name('reports.')->group(function () {
 
 Route::get('/ps-receive/{id}/pdf', [PsReceiveController::class, 'downloadRowPdf'])
     ->name('ps-receive.row-pdf');
+
+
+Route::get('/ps-firm-receive/{id}/pdf', [PsFirmReceiveController::class, 'downloadRowPdf'])
+    ->name('ps-firm-receive-row.row-pdf');
 
 Route::get('/bird-transfer/create/{batchAssignid}', [BirdTransferController::class, 'create']);

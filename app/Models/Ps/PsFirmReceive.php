@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Models\Ps;
+
 use App\Models\Master\Flock;
 use App\Models\Master\Company;
 use Illuminate\Database\Eloquent\Model;
 
 class PsFirmReceive extends Model
 {
-   protected $fillable = [
+    protected $fillable = [
         'ps_receive_id',
         'job_no',
         'receive_type',
@@ -28,7 +29,7 @@ class PsFirmReceive extends Model
         'created_at' => 'date',
     ];
 
-    
+
     // Flock relationship
     public function flock()
     {
@@ -39,5 +40,10 @@ class PsFirmReceive extends Model
     public function company()
     {
         return $this->belongsTo(Company::class, 'receiving_company_id');
+    }
+    public function psReceive()
+    {
+        return $this->belongsTo(PsReceive::class, 'ps_receive_id');
+        // adjust 'ps_receive_id' with your foreign key column name
     }
 }
