@@ -17,6 +17,7 @@ return new class extends Migration
             $table->date('classification_date');
             $table->unsignedInteger('total_eggs')->default(0);
             $table->unsignedInteger('rejected_eggs')->default(0);
+             $table->unsignedInteger('commercial_eggs')->default(0);
             $table->unsignedInteger('technical_eggs')->default(0);
             $table->unsignedInteger('hatching_eggs')->default(0);
             $table->text('remarks')->nullable();

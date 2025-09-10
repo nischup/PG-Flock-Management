@@ -22,7 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 // Form
 const form = useForm({
-  flock_id: '',
+  batchassign_id: '',
   operation_date: new Date().toISOString().substr(0, 10),
   total_egg: 0,
 
@@ -84,13 +84,13 @@ const hatching_egg = computed(() => form.total_egg - rejected_total.value)
 
 // Example flock data
 const flockEggData = { 1: 12000, 2: 11500, 3: 11000 }
-watch(() => form.flock_id, (id) => {
+watch(() => form.batchassign_id, (id) => {
   form.total_egg = id ? flockEggData[id] || 0 : 0
 })
 
 function submit() {
-  if (!form.flock_id) return showInfo("Please select a flock")
-  form.post(route('egg-classification.store'), {
+  if (!form.batchassign_id) return showInfo("Please select a Batch")
+  form.post(route('production/egg-classification.store'), {
     onSuccess: () => showInfo("Egg classification saved successfully")
   })
 }
@@ -145,7 +145,7 @@ const progressBarBackground = computed(() => {
 
 
 
-
+const commercial_total = computed(() => form.commercial);
 
 // Total number of tabs
 const totalTabs = rejectedTabs.length
@@ -235,8 +235,8 @@ const isLastTabCompleted = computed(() => {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Select Batch</Label>
-            <select v-model="form.flock_id" class="w-full mt-1 border rounded px-3 py-2">
-              <option value="">Select Flock</option>
+            <select v-model="form.batchassign_id" class="w-full mt-1 border rounded px-3 py-2">
+              <option value="">Select Batch</option>
               <option v-for="batchassinid in props.batchAssign" :key="batchassinid.id" :value="batchassinid.id">
                 {{ batchassinid.label }}
               </option>
@@ -258,6 +258,11 @@ const isLastTabCompleted = computed(() => {
           <div class="bg-red-100 p-4 rounded shadow text-center">
             <p class="text-gray-700 font-medium">Rejected Eggs</p>
             <p class="text-2xl font-bold">{{ rejected_total }}</p>
+          </div>
+          <!-- Commercial Egg Card -->
+          <div class="bg-purple-100 p-4 rounded shadow text-center">
+            <p class="text-gray-700 font-medium">Commercial Eggs</p>
+            <p class="text-2xl font-bold">{{ commercial_total }}</p>
           </div>
           <div class="bg-blue-100 p-4 rounded shadow text-center">
             <p class="text-gray-700 font-medium">Technical Info</p>
