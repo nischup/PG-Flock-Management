@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('egg_grades', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->tinyInteger('type')->comment('1 = Commercial, 2 = Hatching');
+            $table->decimal('min_weight', 8, 2)->nullable();
+            $table->decimal('max_weight', 8, 2)->nullable();
+            $table->tinyInteger('status')->default(1);
             $table->timestamps();
         });
     }

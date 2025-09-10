@@ -31,6 +31,7 @@ use App\Http\Controllers\DailyOperation\DailyOperationController;
 use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\Production\ProductionFirmReceiveController;
+use App\Http\Controllers\Production\EggClassificationGradeController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -143,4 +144,5 @@ Route::get('/ps-receive/{id}/pdf', [PsReceiveController::class, 'downloadRowPdf'
 Route::get('/ps-firm-receive/{id}/pdf', [PsFirmReceiveController::class, 'downloadRowPdf'])
     ->name('ps-firm-receive-row.row-pdf');
 
+Route::resource('egg-classification-grades', EggClassificationGradeController::class);
 Route::get('/bird-transfer/create/{batchAssignid}', [BirdTransferController::class, 'create']);

@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             VaccineTypeSeeder::class,
             VaccineSeeder::class,
             EggTypesSeeder::class,
+            EggGradeSeeder::class
         ]);
 
         User::factory()->create([
