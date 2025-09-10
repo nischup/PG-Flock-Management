@@ -245,6 +245,65 @@
         </div>
     @endif
 
+    {{-- Signature Matrix --}}
+    <div class="section" style="margin-top: 40px; page-break-inside: avoid;">
+        <strong>Approval & Verification:</strong>
+        <table style="margin-top: 10px;">
+            <tr>
+                <th style="width: 25%; text-align: center; background-color: #f8f9fa; font-weight: bold;">Created By</th>
+                <th style="width: 25%; text-align: center; background-color: #f8f9fa; font-weight: bold;">Checked By</th>
+                <th style="width: 25%; text-align: center; background-color: #f8f9fa; font-weight: bold;">Audited By</th>
+                <th style="width: 25%; text-align: center; background-color: #f8f9fa; font-weight: bold;">GM</th>
+            </tr>
+            <tr>
+                <td style="height: 80px; vertical-align: top; padding: 10px;">
+                    <div style="height: 50px; border-bottom: 1px solid #000; margin-bottom: 5px;"></div>
+                    <div style="text-align: center; font-size: 10px; color: #666;">
+                        Name & Signature
+                    </div>
+                </td>
+                <td style="height: 80px; vertical-align: top; padding: 10px;">
+                    <div style="height: 50px; border-bottom: 1px solid #000; margin-bottom: 5px;"></div>
+                    <div style="text-align: center; font-size: 10px; color: #666;">
+                        Name & Signature
+                    </div>
+                </td>
+                <td style="height: 80px; vertical-align: top; padding: 10px;">
+                    <div style="height: 50px; border-bottom: 1px solid #000; margin-bottom: 5px;"></div>
+                    <div style="text-align: center; font-size: 10px; color: #666;">
+                        Name & Signature
+                    </div>
+                </td>
+                <td style="height: 80px; vertical-align: top; padding: 10px;">
+                    <div style="height: 50px; border-bottom: 1px solid #000; margin-bottom: 5px;"></div>
+                    <div style="text-align: center; font-size: 10px; color: #666;">
+                        Name & Signature
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center; padding: 8px; background-color: #f8f9fa; font-size: 10px; color: #555;">
+                    Date: _______________
+                </td>
+                <td style="text-align: center; padding: 8px; background-color: #f8f9fa; font-size: 10px; color: #555;">
+                    Date: _______________
+                </td>
+                <td style="text-align: center; padding: 8px; background-color: #f8f9fa; font-size: 10px; color: #555;">
+                    Date: _______________
+                </td>
+                <td style="text-align: center; padding: 8px; background-color: #f8f9fa; font-size: 10px; color: #555;">
+                    Date: _______________
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {{-- Report Footer --}}
+    <div style="margin-top: 20px; text-align: center; font-size: 10px; color: #666;">
+        <p>This is a system-generated report from Provita Flock Management System</p>
+        <p style="margin-top: 5px;">Confidential Document - For Internal Use Only</p>
+    </div>
+
 </body>
 
 </html>
