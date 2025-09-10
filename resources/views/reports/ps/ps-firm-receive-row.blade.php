@@ -70,31 +70,85 @@
             font-weight: bold;
         }
 
-        .signatures {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            margin-top: 40px;
-            text-align: center;
-            font-size: 10px;
-        }
-
-        .signature {
-            margin-top: 40px;
-            /* extra space for handwritten signature */
-        }
-
+        /* ✅ Signature section fix */
         .signatures {
             display: flex;
-            justify-content: space-between;
-            /* spread evenly */
-            margin-top: 60px;
-            /* space above signatures */
-            text-align: center;
+            justify-content: space-evenly;
+            /* evenly distribute space between items */
+            margin-top: 150px;
             font-size: 10px;
         }
 
         .signature {
-            flex: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            /* stack line above name */
+            align-items: center;
+            min-width: 80px;
+            /* optional: ensures minimum line width */
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-bottom: 4px;
+            width: 100%;
+            /* full width of signature block */
+        }
+
+        .sin {
+            display: inline-flex;
+            /* Additional flexbox properties for alignment and distribution */
+            justify-content: space-between;
+            /* Example: distributes items evenly with space between them */
+            align-items: center;
+            /* Example: vertically centers items along the cross-axis */
+            padding-right: 51px;
+            padding-left: 51px;
+        }
+
+        .meta-container {
+            display: flex;
+            /* makes children horizontal */
+            justify-content: space-between;
+            /* spread left, center, right */
+            align-items: flex-start;
+            /* align to top */
+            width: 100%;
+            font-size: 11px;
+            margin-bottom: 10x;
+            margin-top: 35px;
+        }
+
+        .meta-left,
+        .meta-center,
+        .meta-right {
+            display: inline-flex;
+            flex-direction: column;
+            /* stack label/value vertically */
+            gap: 2px;
+            padding-left: 50px;
+            margin-right: 150px;
+
+
+
+            /* space between rows */
+        }
+
+        .meta-left div span,
+        .meta-center div span,
+        .meta-right div span {
+            font-weight: bold;
+            min-width: 80px;
+            /* makes labels align neatly */
+        }
+
+        .meta-center {
+            text-align: left;
+        }
+
+        .meta-right {
+            text-align: right;
         }
     </style>
 </head>
@@ -108,17 +162,22 @@
         <p>Flock No.{{ $flock_name ?? '37' }} Batch-{{ $batchNo ?? 'C' }}</p>
     </div>
 
-    <div class="meta">
-        <span>From :</span> {{ $from ?? 'PHL-02' }} &nbsp;&nbsp;
-        <span>TO :</span> {{ $to ?? 'PCL-01' }} &nbsp;&nbsp;
-        <span>Age :</span> {{ $age ?? '9+4' }} &nbsp;&nbsp;
-        <span>Date :</span> {{ $date ?? '13.05.25' }} &nbsp;&nbsp;
-        <span>LC No :</span> {{ $lc_no ?? '0000296525010082' }} &nbsp;&nbsp;
-        <span>Origin :</span> {{ $origin ?? 'France' }}
-    </div>
+    <div class="meta-container">
+        <div class="meta-left">
+            <div><span>From:</span> {{ $from ?? 'PHL-02' }}</div>
+            <div><span>To:</span> {{ $to ?? 'PCL-01' }}</div>
+            <div><span>Breed Name:</span> {{ $breed_name ?? 'Hubbard Colour' }}</div>
+        </div>
 
-    <div class="breed">
-        Breed Name {{ $breed_name ?? 'Hubbard Colour' }}
+        <div class="meta-center">
+            <div><span>Age:</span> {{ $age ?? '9+4' }}</div>
+            <div><span>LC No:</span> {{ $lc_no ?? '0000296525010082' }}</div>
+        </div>
+
+        <div class="meta-right">
+            <div><span>Date:</span> {{ $date ?? '13.05.25' }}</div>
+            <div><span>Origin:</span> {{ $origin ?? 'France' }}</div>
+        </div>
     </div>
 
     <table>
@@ -201,14 +260,28 @@
         </tbody>
     </table>
 
-    <div class="signatures">
-        <div class="signature">Store Incharge</div>
-        <div class="signature">Accounts</div>
-        <div class="signature">Audit</div>
-        <div class="signature">Project Incharge</div>
-        <div class="signature">GM</div>
+    <div class="signatures sin">
+        <div class="signature sin pr">
+            <div class="signature-line"></div>
+            Store Incharge
+        </div>
+        <div class="signature sin">
+            <div class="signature-line"></div>
+            Accounts
+        </div>
+        <div class="signature sin">
+            <div class="signature-line"></div>
+            Audit
+        </div>
+        <div class="signature sin">
+            <div class="signature-line"></div>
+            Project Incharge
+        </div>
+        <div class="signature sin">
+            <div class="signature-line"></div>
+            GM
+        </div>
     </div>
-
 </body>
 
 </html>
