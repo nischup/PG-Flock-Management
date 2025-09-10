@@ -1,16 +1,17 @@
 <?php
 
 namespace App\Http\Controllers\Transfer;
+
+use App\Http\Controllers\Controller;
 use App\Models\BirdTransfer\BirdTransfer;
+use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
-use App\Models\Master\Company;
-use App\Models\Shed\BatchAssign;
 use App\Models\Ps\PsFirmReceive;
-use App\Http\Controllers\Controller;
+use App\Models\Shed\BatchAssign;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class BirdTransferController extends Controller
 {
@@ -25,11 +26,10 @@ class BirdTransferController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(BatchAssign $batchAssign,$batchId)
+    public function create(BatchAssign $batchAssign, $batchId)
     {
-       
-       
-    // Get batch info
+
+        // Get batch info
         $batchAssign = BatchAssign::with(['flock', 'company'])->findOrFail($batchId);
 
         // Calculate actual birds after mortality and errors
@@ -58,8 +58,6 @@ class BirdTransferController extends Controller
             ],
         ]);
 
-    
-        
     }
 
     /**
@@ -67,48 +65,46 @@ class BirdTransferController extends Controller
      */
     public function store(Request $request)
     {
-        
-       
+
         $batch = BatchAssign::findOrFail($request->batch_assign_id);
 
         // Auto calculations
         $transferTotal = ($request->transfer_female_qty ?? 0) + ($request->transfer_male_qty ?? 0);
-        $medicalTotal  = ($request->medical_female_qty ?? 0) + ($request->medical_male_qty ?? 0);
+        $medicalTotal = ($request->medical_female_qty ?? 0) + ($request->medical_male_qty ?? 0);
 
         $currentFemale = $batch->batch_female_qty - $batch->batch_female_mortality;
-        $currentMale   = $batch->batch_male_qty - $batch->batch_male_mortality;
+        $currentMale = $batch->batch_male_qty - $batch->batch_male_mortality;
 
         $deviationFemale = $currentFemale - ($request->transfer_female_qty ?? 0) - ($request->medical_female_qty ?? 0);
-        $deviationMale   = $currentMale - ($request->transfer_male_qty ?? 0) - ($request->medical_male_qty ?? 0);
-        $deviationTotal  = $deviationFemale + $deviationMale;
+        $deviationMale = $currentMale - ($request->transfer_male_qty ?? 0) - ($request->medical_male_qty ?? 0);
+        $deviationTotal = $deviationFemale + $deviationMale;
 
         // Save transfer
         $transfer = BirdTransfer::create([
-            'batch_assign_id'       => $batch->id,
-            'job_no'                => $batch->job_no,
-            'transaction_no'        => $batch->transaction_no,
-            'flock_no'              => $batch->flock_no,
-            'flock_id'              => $batch->flock_id,
-            'from_company_id'       => $request->from_company_id,
-            'to_company_id'         => $request->to_company_id,
-            'from_shed_id'          => $request->from_shed_id,
-            'to_shed_id'            => $request->to_shed_id,
-            'transfer_date'         => $request->transfer_date,
+            'batch_assign_id' => $batch->id,
+            'job_no' => $batch->job_no,
+            'flock_no' => $batch->flock_no,
+            'flock_id' => $batch->flock_id,
+            'from_company_id' => $request->from_company_id,
+            'to_company_id' => $request->to_company_id,
+            'from_shed_id' => $request->from_shed_id,
+            'to_shed_id' => $request->to_shed_id,
+            'transfer_date' => $request->transfer_date,
 
-            'transfer_female_qty'   => $request->transfer_female_qty ?? 0,
-            'transfer_male_qty'     => $request->transfer_male_qty ?? 0,
-            'transfer_total_qty'    => $transferTotal,
+            'transfer_female_qty' => $request->transfer_female_qty ?? 0,
+            'transfer_male_qty' => $request->transfer_male_qty ?? 0,
+            'transfer_total_qty' => $transferTotal,
 
-            'medical_female_qty'    => $request->medical_female_qty ?? 0,
-            'medical_male_qty'      => $request->medical_male_qty ?? 0,
-            'medical_total_qty'     => $medicalTotal,
+            'medical_female_qty' => $request->medical_female_qty ?? 0,
+            'medical_male_qty' => $request->medical_male_qty ?? 0,
+            'medical_total_qty' => $medicalTotal,
 
-            'deviation_female_qty'  => $deviationFemale,
-            'deviation_male_qty'    => $deviationMale,
-            'deviation_total_qty'   => $deviationTotal,
+            'deviation_female_qty' => $deviationFemale,
+            'deviation_male_qty' => $deviationMale,
+            'deviation_total_qty' => $deviationTotal,
 
-            'created_by'            => Auth::id(),
-            'status'                => 1,
+            'created_by' => Auth::id(),
+            'status' => 1,
         ]);
 
         // PsFirmReceive::create([
@@ -129,7 +125,7 @@ class BirdTransferController extends Controller
         // ]);
 
         return redirect()->route('batch-assign.index')->with('success', 'Bird transfer recorded successfully.');
-        
+
         //
     }
 
