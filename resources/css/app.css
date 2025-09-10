@@ -125,7 +125,7 @@
  
     --dcolor-boxshadaw: inset 0 4px 6px rgba(0,0,0,0.2), 0 8px 15px rgb(187, 102, 5);
 
-    --scolor-bg: linear-gradient(145deg, rgb(32 34 36), rgb(29 31 38)); 
+    --scolor-bg: linear-gradient(135deg, rgb(31, 41, 55) 0%, rgb(17, 24, 39) 100%);
 
     --dcolor-bg: linear-gradient(145deg, rgba(255, 255, 0, 0.13), #d77709); 
     --dcolor-boxshadaw: inset 0 4px 6px rgba(0,0,0,0.2), 0 8px 15px rgba(255, 221, 2, 0.2);
@@ -176,7 +176,7 @@
     --dcolor-color: #111827;
     --dcolor-boxshadaw: inset 0 4px 6px rgba(0,0,0,0.2), 0 8px 15px rgba(215, 119, 9);
 
-    --scolor-bg: linear-gradient(145deg, rgb(32 34 36), rgb(29 31 38));
+    --scolor-bg: linear-gradient(135deg, rgb(31, 41, 55) 0%, rgb(17, 24, 39) 100%);
     --scolor-color: #ffffff;
     --scolor-bradius: 0.6rem;
 

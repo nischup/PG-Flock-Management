@@ -75,13 +75,12 @@ class DailyOperationController extends Controller
         ->map(function ($batch) {
             return [
                 'id'        => $batch->id,
-                'job_no'    => $batch->job_no,
                 'flock'     => $batch->flock?->name ?? 'N/A',
                 'batch_no'  => $batch->batch_no,
                 'batch'     => $batch->batch?->name ?? 'N/A',
                 'shed_id'   => $batch->shed_id,
                 'shed'      => $batch->shed?->name ?? 'N/A',
-                'label'     => "{$batch->job_no}-{$batch->shed?->name}-{$batch->batch?->name}",
+                'label'     => "{$batch->transaction_no}-{$batch->shed?->name}-{$batch->batch?->name}",
             ];
         });
 

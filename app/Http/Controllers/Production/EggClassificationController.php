@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Production;
 
 use App\Http\Controllers\Controller;
-
+use App\Models\Shed\BatchAssign;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -73,15 +73,19 @@ class EggClassificationController extends Controller
      */
     public function create()
     {
-       $flocks = [
-            ['id' => 1, 'flock_code' => '1-22A'],
-            ['id' => 2, 'flock_code' => '1-22B'],
-            ['id' => 3, 'flock_code' => '2-22A'],
-        ];
+        $batchAssign = BatchAssign::with(['flock', 'shed', 'batch'])
+        ->orderBy('id', 'desc')
+        ->get()
+        ->map(function ($batch) {
+            return [
+                'id'        => $batch->id,
+                'label'     => "{$batch->transaction_no}-{$batch->shed?->name}-{$batch->batch?->name}",
+            ];
+        });
 
-
+       
         return Inertia::render('production/egg-classification/Create', [
-            'flocks' => $flocks
+            'batchAssign' => $batchAssign
         ]);
     }
 
