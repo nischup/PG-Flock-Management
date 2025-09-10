@@ -90,7 +90,7 @@ watch(() => form.batchassign_id, (id) => {
 
 function submit() {
   if (!form.batchassign_id) return showInfo("Please select a Batch")
-  form.post(route('production/egg-classification.store'), {
+  form.post(route('egg-classification.store'), {
     onSuccess: () => showInfo("Egg classification saved successfully")
   })
 }

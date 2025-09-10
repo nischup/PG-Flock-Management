@@ -12,16 +12,19 @@ const props = defineProps<{
   classifications: {
     data: Array<{
       id: number;
-      date: string;
-      flock: string;
-      batch: string;
-      hatching_qty: number;
-      commercial_qty: number;
+      classification_date: string;
+      batchAssign: { name?: string } | null;
+      technicalEggs: Array<{ id: number; quantity: number; eggType: { name?: string } | null }>;
+      rejectedEggs: Array<{ id: number; quantity: number; eggType: { name?: string } | null }>;
+      commercial_eggs: number;
+      hatching_eggs: number;
     }>;
     meta: { current_page: number; last_page: number; per_page: number; total: number };
   };
   filters: { search?: string; per_page?: number; page?: number };
 }>();
+
+
 
 // Setup reactive filters with Inertia
 useListFilters({
@@ -40,12 +43,20 @@ function deleteClassification(id: number) {
   });
 }
 
-// Extract page safely
 const page = props.filters.page ?? 1;
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Egg Classification', href: '/egg-classification' },
 ];
+
+// Totals helper functions
+function totalRejected(rejecteds: Array<{ quantity: number }>) {
+  return rejecteds?.reduce((sum, r) => sum + r.quantity, 0) || 0;
+}
+
+function totalTechnical(technicals: Array<{ quantity: number }>) {
+  return technicals?.reduce((sum, t) => sum + t.quantity, 0) || 0;
+}
 </script>
 
 <template>
@@ -73,24 +84,40 @@ const breadcrumbs: BreadcrumbItem[] = [
           <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
             <tr>
               <th class="px-6 py-3 text-left font-bold">Date</th>
-              <th class="px-6 py-3 text-left font-bold">Flock</th>
               <th class="px-6 py-3 text-left font-bold">Batch</th>
               <th class="px-6 py-3 text-left font-bold">Hatching Qty</th>
               <th class="px-6 py-3 text-left font-bold">Commercial Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Rejected Qty</th>
+              <th class="px-6 py-3 text-left font-bold">Technical Qty</th>
               <th class="px-6 py-3 text-left font-bold">Actions</th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             <tr
-              v-for="item in classifications.data"
+              v-for="item in props.classifications.data"
               :key="item.id"
               class="hover:bg-gray-50 dark:hover:bg-gray-800"
             >
-              <td class="px-6 py-4">{{ item.date }}</td>
-              <td class="px-6 py-4">{{ item.flock }}</td>
-              <td class="px-6 py-4">{{ item.batch }}</td>
-              <td class="px-6 py-4">{{ item.hatching_qty }}</td>
-              <td class="px-6 py-4">{{ item.commercial_qty }}</td>
+              <td class="px-6 py-4">{{ item.classification_date }}</td>
+              <td class="px-6 py-4">{{ item.batchAssign?.name || '-' }}</td>
+              <td class="px-6 py-4">{{ item.hatching_eggs }}</td>
+              <td class="px-6 py-4">{{ item.commercial_eggs }}</td>
+              <td class="px-6 py-4">{{ totalRejected(item.rejectedEggs) }}</td>
+              <td class="px-6 py-4">{{ totalTechnical(item.technicalEggs) }}</td>
+              <td class="px-6 py-4">
+                <ul>
+                  <li v-for="r in item.rejectedEggs || []" :key="r.id">
+                    {{ r.eggType?.name || 'Unknown' }}: {{ r.quantity }}
+                  </li>
+                </ul>
+              </td>
+              <td class="px-6 py-4">
+                <ul>
+                  <li v-for="t in item.technicalEggs || []" :key="t.id">
+                    {{ t.eggType?.name || 'Unknown' }}: {{ t.quantity }}
+                  </li>
+                </ul>
+              </td>
               <td class="px-6 py-4 flex gap-4 items-center">
                 <Link
                   v-if="can('eggclassification.edit')"
@@ -109,8 +136,8 @@ const breadcrumbs: BreadcrumbItem[] = [
               </td>
             </tr>
 
-            <tr v-if="classifications.data.length === 0">
-              <td colspan="6" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
+            <tr v-if="props.classifications.data.length === 0">
+              <td colspan="9" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
                 No classification records found.
               </td>
             </tr>
@@ -119,7 +146,7 @@ const breadcrumbs: BreadcrumbItem[] = [
       </div>
 
       <!-- Pagination -->
-      <Pagination :meta="classifications.meta" :page="page" class="mt-6" />
+      <Pagination :meta="props.classifications.meta" :page="page" class="mt-6" />
     </div>
   </AppLayout>
 </template>

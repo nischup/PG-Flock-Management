@@ -5,7 +5,12 @@ namespace App\Http\Controllers\Production;
 use App\Http\Controllers\Controller;
 use App\Models\Shed\BatchAssign;
 use Illuminate\Http\Request;
+use App\Models\Production\EggClassification;
+use App\Models\Master\EggType;
+use App\Models\Production\EggClassificationRejected;
+use App\Models\Production\EggClassificationTechnical;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class EggClassificationController extends Controller
 {
@@ -14,51 +19,26 @@ class EggClassificationController extends Controller
      */
     public function index(Request $request)
         {
-                $dummyData = [
-            [
-                'id' => 1,
-                'date' => '2025-08-31',
-                'flock' => 'Flock 22',
-                'batch' => 'Batch A',
-                'hatching_qty' => 1200,
-                'commercial_qty' => 50, // renamed
-            ],
-            [
-                'id' => 2,
-                'date' => '2025-08-31',
-                'flock' => 'Flock 22',
-                'batch' => 'Batch B',
-                'hatching_qty' => 950,
-                'commercial_qty' => 30,
-            ],
-            [
-                'id' => 3,
-                'date' => '2025-08-31',
-                'flock' => 'Flock 22',
-                'batch' => 'Batch C',
-                'hatching_qty' => 1100,
-                'commercial_qty' => 60,
-            ],
-        ];
+        $query = EggClassification::with([
+            'batchAssign', // batch_assign relation
+            'technicalEggs.eggType', // rejected eggs and their types
+            'rejectedEggs.eggType', // technical eggs and their types
+        ]);
 
-        // Fake pagination meta (Laravel paginator style)
-        $meta = [
-            'current_page' => 1,
-            'from' => 1,
-            'last_page' => 1,
-            'path' => url()->current(),
-            'per_page' => 10,
-            'to' => count($dummyData),
-            'total' => count($dummyData),
-        ];
+        // Optional search/filter
+        if ($request->has('search') && $request->search) {
+            $query->whereHas('batchAssign', function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%");
+            });
+        }
 
-
+        $classifications = $query->orderBy('classification_date', 'desc')
+            ->paginate($request->per_page ?? 10)
+            ->withQueryString();
+        
     return Inertia::render('production/egg-classification/List', [
-        'classifications' => [
-            'data' => $dummyData,
-            'meta' => $meta,
-        ],
-        'filters' => request()->only(['search', 'per_page', 'page']),
+        'classifications' => $classifications,
+        'filters' => $request->only(['search', 'per_page', 'page']),
     ]);
 
 
@@ -94,7 +74,110 @@ class EggClassificationController extends Controller
      */
     public function store(Request $request)
     {
-       dd($request->all());
+       
+       
+     
+        $rejected_total = ($request->double_yolk) +
+                          ($request->double_yolk_broken) +
+                          ($request->commercial) +
+                          ($request->commercial_broken) +
+                          ($request->liquid) +
+                          ($request->damage);
+
+        $technical_total = ($request->floor_egg) +
+                           ($request->thin_egg) +
+                           ($request->misshape_egg) +
+                           ($request->white_egg) +
+                           ($request->dirty_egg);
+
+        $commercial_total = ($request->commercial);
+        $hatching_egg = ($request->total_egg) - $rejected_total;
+        
+        // 1️⃣ Create main classification record
+        $classification = EggClassification::create([
+            'batchassign_id' => $request->batchassign_id,
+            'classification_date' => $request->operation_date,
+            'total_eggs' => $request->total_egg,
+            'hatching_eggs' => $hatching_egg,
+            'commercial_eggs' => $commercial_total,
+            'rejected_eggs' => $rejected_total,
+            'technical_eggs' => $technical_total,
+            'created_by'           => Auth::id(),
+        ]);
+
+        // 2️⃣ Save rejected eggs
+        $rejectedEggs = [
+            'double_yolk' => $request->double_yolk,
+            'double_yolk_broken' => $request->double_yolk_broken,
+            'commercial' => $request->commercial,
+            'commercial_broken' => $request->commercial_broken,
+            'liquid' => $request->liquid,
+            'damage' => $request->damage,
+        ];
+
+        foreach ($rejectedEggs as $key => $qty) {
+            if ($qty > 0 || $request->input($key . '_note')) {
+                $eggType = EggType::where('name', $key)->where('category', 1)->first();
+                if ($eggType) {
+                    EggClassificationRejected::create([
+                        'classification_id' => $classification->id,
+                        'egg_type_id' => $eggType->id,
+                        'quantity' => $qty ?? 0,
+                        'note' => $request->input($key . '_note'),
+                    ]);
+                }
+            }
+        }
+
+        // 3️⃣ Save technical eggs
+        $technicalEggs = [
+            'floor_egg' => $request->floor_egg,
+            'thin_egg' => $request->thin_egg,
+            'misshape_egg' => $request->misshape_egg,
+            'white_egg' => $request->white_egg,
+            'dirty_egg' => $request->dirty_egg,
+        ];
+
+        foreach ($technicalEggs as $key => $qty) {
+            if ($qty > 0 || $request->input($key . '_note')) {
+                $eggType = EggType::where('name', $key)->where('category', 2)->first();
+                if ($eggType) {
+                    EggClassificationTechnical::create([
+                        'classification_id' => $classification->id,
+                        'egg_type_id' => $eggType->id,
+                        'quantity' => $qty ?? 0,
+                        'note' => $request->input($key . '_note'),
+                    ]);
+                }
+            }
+        }
+       
+       
+      return redirect()->route('egg-classification.index')->with('success', 'Egg Classification.');    
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+        dd($request->all());
     }
 
     /**

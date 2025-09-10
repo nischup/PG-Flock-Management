@@ -62,11 +62,7 @@ class PsFirmReceiveController extends Controller
             'filters' => $request->only(['search', 'per_page']),
         ]);
 
-        return Inertia::render('ps/ps-firm-receive/List', [
-            'psReceives' => $psReceives,
-            'companies' => $companies,
-            'flocks' => $flocks,
-        ]);
+       
     }
 
     /**
@@ -128,7 +124,7 @@ class PsFirmReceiveController extends Controller
     {
 
 
-
+        
         $companyInfo = Company::findOrFail($request->receiving_company_id);
         $flockInfo = Flock::findOrFail($request->flock_id);
 
@@ -157,7 +153,7 @@ class PsFirmReceiveController extends Controller
         // Save the job_no back to the record
         $firmReceive->update(['transaction_no' => $transactionNo,'job_no'=>$transactionNo]);
 
-
+        
         return redirect()
             ->route('ps-firm-receive.index')
             ->with('success', 'Firm Receive created successfully!');

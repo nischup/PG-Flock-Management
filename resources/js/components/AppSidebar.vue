@@ -124,6 +124,12 @@ const mainNavItems: NavItem[] = [
                 icon: EggOff,
                 iconClass: 'text-yellow-500',
             },
+            {
+                title: 'Egg Grade',
+                href: '/production/egg-grade',
+                icon: EggOff,
+                iconClass: 'text-yellow-500',
+            },
         ],
     },
     {
