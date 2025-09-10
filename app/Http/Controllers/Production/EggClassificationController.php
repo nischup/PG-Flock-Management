@@ -92,14 +92,14 @@ class EggClassificationController extends Controller
 
         $commercial_total = ($request->commercial);
         $hatching_egg = ($request->total_egg) - $rejected_total;
-        
+       
         // 1️⃣ Create main classification record
         $classification = EggClassification::create([
             'batchassign_id' => $request->batchassign_id,
             'classification_date' => $request->operation_date,
             'total_eggs' => $request->total_egg,
             'hatching_eggs' => $hatching_egg,
-            'commercial_eggs' => $commercial_total,
+            'commercial_eggs' => $rejected_total,
             'rejected_eggs' => $rejected_total,
             'technical_eggs' => $technical_total,
             'created_by'           => Auth::id(),

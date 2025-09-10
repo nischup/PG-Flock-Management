@@ -14,6 +14,7 @@ class EggClassification extends Model
         'rejected_eggs',
         'technical_eggs',
         'hatching_eggs',
+        'commercial_eggs',
         'remarks',
         'created_by',        // foreign key to users
     ];

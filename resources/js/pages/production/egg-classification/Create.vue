@@ -57,7 +57,7 @@ const form = useForm({
 const rejectedTabs = [
   { key: 'double_yolk', label: 'Double Yolk' },
   { key: 'double_yolk_broken', label: 'Double Yolk Broken' },
-  { key: 'commercial', label: 'Commercial' },
+  { key: 'commercial', label: 'Single Yolk Broken' },
   { key: 'commercial_broken', label: 'Commercial Broken' },
   { key: 'liquid', label: 'Liquid' },
   { key: 'damage', label: 'Damage' },
@@ -256,14 +256,14 @@ const isLastTabCompleted = computed(() => {
             <p class="text-2xl font-bold">{{ form.total_egg }}</p>
           </div>
           <div class="bg-red-100 p-4 rounded shadow text-center">
-            <p class="text-gray-700 font-medium">Rejected Eggs</p>
+            <p class="text-gray-700 font-medium">Commercial Eggs</p>
             <p class="text-2xl font-bold">{{ rejected_total }}</p>
           </div>
-          <!-- Commercial Egg Card -->
+          <!-- Commercial Egg Card 
           <div class="bg-purple-100 p-4 rounded shadow text-center">
             <p class="text-gray-700 font-medium">Commercial Eggs</p>
             <p class="text-2xl font-bold">{{ commercial_total }}</p>
-          </div>
+          </div>-->
           <div class="bg-blue-100 p-4 rounded shadow text-center">
             <p class="text-gray-700 font-medium">Technical Info</p>
             <p class="text-2xl font-bold">{{ tech_total }}</p>
