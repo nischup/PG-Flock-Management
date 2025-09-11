@@ -46,6 +46,7 @@ const props = defineProps<{
   medicines?:Array<any>
   waters?:Array<any>
   units?:Array<any>
+  stage?: string
 }>()
 
 const { showInfo } = useNotifier(); // auto-shows flash messages
@@ -235,28 +236,28 @@ const selectedFlock = computed(() => {
 
 // Filtered feed types
 const filteredFeedTypes = computed(() => {
-  if (!feedTypeSearchQuery.value) return feeds.value
-  return feeds.value.filter(feed => 
+  if (!feedTypeSearchQuery.value) return props.feeds || []
+  return (props.feeds || []).filter(feed => 
     feed.feed_name.toLowerCase().includes(feedTypeSearchQuery.value.toLowerCase())
   )
 })
 
 // Filtered units
 const filteredUnits = computed(() => {
-  if (!unitSearchQuery.value) return units.value
-  return units.value.filter(unit => 
+  if (!unitSearchQuery.value) return props.units || []
+  return (props.units || []).filter(unit => 
     unit.name.toLowerCase().includes(unitSearchQuery.value.toLowerCase())
   )
 })
 
 // Selected feed type display
 const selectedFeedType = computed(() => {
-  return feeds.value.find(feed => feed.id === form.feed_type_id) || null
+  return (props.feeds || []).find(feed => feed.id === form.feed_type_id) || null
 })
 
 // Selected unit display
 const selectedUnit = computed(() => {
-  return units.value.find(unit => unit.id === form.feed_unit) || null
+  return (props.units || []).find(unit => unit.id === form.feed_unit) || null
 })
 
 // Close dropdown on outside click
@@ -467,11 +468,23 @@ function submit() {
   <AppLayout :breadcrumbs="breadcrumbs">
     <Head title="Daily Operation" />
 
+    <!-- Back to List Button -->
+    <div class="flex justify-end mt-2 px-6">
+      <a 
+        :href="props.stage ? `/daily-operation/stage/${props.stage}` : '/overview'" 
+        class="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-sm font-medium"
+        @click="console.log('Stage:', props.stage, 'Navigating to:', props.stage ? `/daily-operation/stage/${props.stage}` : '/overview')"
+      >
+        <ChevronLeft class="w-4 h-4" />
+        <span>Back to List</span>
+      </a>
+    </div>
+
     <form @submit.prevent="submit" class="p-6 space-y-4">
       <!-- Flock Info -->
       <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 shadow-sm overflow-hidden">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2">
+        <div class="bg-gradient-to-r from-gray-900 to-black px-3 py-2">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
               <div class="w-6 h-6 bg-white/20 rounded flex items-center justify-center">
@@ -491,7 +504,7 @@ function submit() {
 
         <!-- Content -->
         <div class="p-4 space-y-4">
-          <!-- Progress Bar -->
+        <!-- Progress Bar -->
           <div class="space-y-1">
             <div class="flex justify-between text-xs text-gray-600">
               <span>Overall Progress</span>
@@ -593,7 +606,7 @@ function submit() {
                   </div>
                 </div>
               </div>
-            </div>
+          </div>
 
           <!-- Date Picker -->
             <div class="space-y-1">
@@ -640,16 +653,16 @@ function submit() {
 
                     <!-- Date Picker -->
                     <div class="p-4">
-                      <Datepicker
-                        v-model="form.operation_date"
-                        format="yyyy-MM-dd"
+            <Datepicker
+              v-model="form.operation_date"
+              format="yyyy-MM-dd"
                         :input-class="'hidden'"
-                        placeholder="Select Date"
-                        :auto-apply="true"
+              placeholder="Select Date"
+              :auto-apply="true"
                         @update:model-value="showDateOverlay = false"
                         inline
-                      />
-                    </div>
+            />
+          </div>
 
                     <!-- Close Button -->
                     <div class="border-t border-gray-200 p-3">
@@ -660,8 +673,8 @@ function submit() {
                       >
                         Close
                       </Button>
-                    </div>
-                  </div>
+              </div>
+              </div>
                 </div>
               </div>
             </div>
@@ -915,7 +928,7 @@ function submit() {
                         >
                           <X class="h-4 w-4 text-gray-400" />
                         </button>
-                      </div>
+            </div>
                       
                       <!-- Search -->
                       <div class="p-4 border-b border-gray-200">
@@ -1025,7 +1038,7 @@ function submit() {
                         >
                           <X class="h-4 w-4 text-gray-400" />
                         </button>
-                      </div>
+            </div>
                       
                       <!-- Search -->
                       <div class="p-4 border-b border-gray-200">
@@ -1911,7 +1924,7 @@ function submit() {
                   v-if="activeTabIndex < tabs.length - 1" 
                   type="button" 
                   @click="nextTab"
-                  class="flex items-center space-x-2 px-6 py-3 h-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                  class="flex items-center space-x-2 px-6 py-3 h-10 bg-gradient-to-r from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <span>Next</span>
                   <ChevronRight class="w-4 h-4" />
