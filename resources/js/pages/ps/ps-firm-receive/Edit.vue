@@ -175,76 +175,133 @@ const submit = () => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <Head title="Edit PS Firm Receive" />
     
-    <div class="space-y-6">
-      <!-- Header -->
+    <!-- Header Section -->
+    <div class="mb-8">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Edit PS Firm Receive</h1>
-          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Job No: {{ psFirmReceive.job_no }}
-          </p>
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Edit Farm Receive</h1>
+          <p class="mt-2 text-gray-600 dark:text-gray-400">Update parent stock farm receive record</p>
+          <div class="mt-2 flex items-center gap-2">
+            <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+              Job No: {{ psFirmReceive.job_no }}
+            </span>
+          </div>
         </div>
-        <Link
-          :href="route('ps-firm-receive.index')"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+        <Link 
+          :href="route('ps-firm-receive.index')" 
+          class="group relative overflow-hidden rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+          style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);"
         >
-          <ArrowLeft class="h-4 w-4 mr-2" />
-          Back to List
+          <span class="relative z-10 flex items-center gap-2">
+            <ArrowLeft class="h-4 w-4" />
+            Back to List
+          </span>
+          <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-20 group-hover:translate-x-full"></div>
         </Link>
       </div>
+    </div>
 
-      <form @submit.prevent="submit" class="space-y-6">
-        <!-- PS Receive Selection -->
-        <div class="bg-white dark:bg-gray-900 shadow rounded-lg p-6">
-          <div class="flex items-center mb-4">
-            <Package class="h-5 w-5 text-blue-600 mr-2" />
-            <h2 class="text-lg font-medium text-gray-900 dark:text-white">PS Receive Selection</h2>
+    <form @submit.prevent="submit" class="space-y-8">
+      <!-- Parent Stock Selection Card -->
+      <div class="relative rounded-2xl border-0 bg-gradient-to-br from-white via-gray-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 dark:ring-gray-700">
+        <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20"></div>
+        <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10"></div>
+        
+        <div class="relative">
+          <div class="mb-8 flex items-center gap-3">
+            <div class="rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 shadow-lg">
+              <Package class="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Parent Stock Information</h2>
+              <p class="text-gray-600 dark:text-gray-400">Select PS receive and flock details</p>
+            </div>
           </div>
           
-          <div class="space-y-4">
-            <div class="relative">
-              <Label for="ps_receive" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Select PS Receive *
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- PS Receive Dropdown -->
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <Info class="h-4 w-4" />
+                PS Receive Number
               </Label>
-              <div class="relative ps-dropdown">
+              <div class="ps-dropdown relative">
                 <button
                   type="button"
-                  @click="showPsDropdown = !showPsDropdown"
-                  class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  @click.stop="showPsDropdown = !showPsDropdown"
+                  class="flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
-                  <span class="block truncate">
-                    {{ selectedPs ? `PI-${selectedPs.pi_no}` : 'Select PS Receive' }}
+                  <span class="flex items-center gap-3">
+                    <div class="h-2 w-2 rounded-full bg-blue-500"></div>
+                    {{ selectedPs ? `PI-${selectedPs.pi_no}` : 'Select PS Receive Number' }}
                   </span>
-                  <ChevronDown class="h-4 w-4 text-gray-400" />
+                  <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showPsDropdown }" />
                 </button>
                 
-                <div v-if="showPsDropdown" class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none dark:bg-gray-800">
-                  <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-                    <div class="relative">
-                      <Search class="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-                      <Input
-                        v-model="psSearchQuery"
-                        placeholder="Search PS Receive..."
-                        class="pl-10"
-                        @click.stop
-                      />
-                    </div>
-                  </div>
-                  <div
-                    v-for="ps in filteredPsReceives"
-                    :key="ps.id"
-                    @click="selectedPsId = ps.id; showPsDropdown = false"
-                    class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50 dark:hover:bg-gray-700"
-                    :class="{ 'bg-blue-100 dark:bg-gray-700': selectedPsId === ps.id }"
+                <!-- PS Receive Dropdown Overlay -->
+                <div 
+                  v-if="showPsDropdown" 
+                  class="fixed inset-0 z-[9999] flex items-start justify-center pt-20"
+                  @click="showPsDropdown = false"
+                >
+                  <div 
+                    class="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-600 dark:bg-gray-800"
+                    @click.stop
                   >
-                    <div class="flex items-center">
-                      <span class="font-medium">PI-{{ ps.pi_no }}</span>
-                      <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                        {{ ps.pi_date ? new Date(ps.pi_date).toLocaleDateString() : '' }}
-                      </span>
+                    <!-- Header -->
+                    <div class="border-b border-gray-200 p-4 dark:border-gray-600">
+                      <h3 class="font-semibold text-gray-900 dark:text-white">Select PS Receive</h3>
+                      <div class="relative mt-3">
+                        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <input
+                          v-model="psSearchQuery"
+                          type="text"
+                          placeholder="Search PS numbers..."
+                          class="w-full rounded-lg border border-gray-300 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          @click.stop
+                        />
+                      </div>
                     </div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">
-                      Order: {{ ps.order_no || 'N/A' }} | LC: {{ ps.lc_no || 'N/A' }}
+
+                    <!-- PS Receive List -->
+                    <div class="max-h-96 overflow-y-auto">
+                      <div v-if="(props.psReceives?.length || 0) === 0" class="px-6 py-8 text-center">
+                        <AlertCircle class="mx-auto h-8 w-8 text-red-500" />
+                        <div class="mt-2 font-medium text-red-600">No PS Receives Available</div>
+                        <div class="text-sm text-gray-500">Please add PS receives first</div>
+                      </div>
+                      <button
+                        v-for="ps in filteredPsReceives"
+                        :key="ps.id"
+                        type="button"
+                        @click.stop="selectedPsId = ps.id; showPsDropdown = false"
+                        class="flex w-full items-center gap-4 px-6 py-4 text-left hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-200 border-b border-gray-100 dark:border-gray-600 last:border-b-0"
+                        :class="{ 'bg-blue-100 dark:bg-blue-900': selectedPsId == ps.id }"
+                      >
+                        <div class="h-3 w-3 rounded-full bg-blue-500 flex-shrink-0"></div>
+                        <div class="flex-1">
+                          <div class="font-semibold text-gray-900 dark:text-white">PI-{{ ps.pi_no }}</div>
+                          <div class="text-sm text-gray-500 dark:text-gray-400">Date: {{ ps.pi_date || 'N/A' }}</div>
+                          <div class="text-xs text-gray-400 dark:text-gray-500">Order: {{ ps.order_no || 'N/A' }}</div>
+                        </div>
+                        <CheckCircle2 v-if="selectedPsId == ps.id" class="h-4 w-4 text-blue-500 flex-shrink-0" />
+                      </button>
+                      <div v-if="filteredPsReceives.length === 0 && (props.psReceives?.length || 0) > 0" class="px-6 py-8 text-center text-gray-500">
+                        <Search class="mx-auto h-6 w-6 text-gray-400" />
+                        <div class="mt-2 text-sm">No results found for "{{ psSearchQuery }}"</div>
+                      </div>
+                    </div>
+
+                    <!-- Close Button -->
+                    <div class="border-t border-gray-200 p-4 dark:border-gray-600">
+                      <Button 
+                        type="button"
+                        @click="showPsDropdown = false"
+                        class="w-full rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      >
+                        Close
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -252,226 +309,305 @@ const submit = () => {
               <InputError :message="form.errors.ps_receive_id" class="mt-1" />
             </div>
 
-            <!-- PS Receive Info -->
-            <div v-if="selectedPs && showInfo" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <div class="flex items-start">
-                <Info class="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                <div class="flex-1">
-                  <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">PS Receive Information</h3>
-                  <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span class="font-medium text-blue-700 dark:text-blue-300">PI No:</span>
-                      <span class="ml-2 text-blue-600 dark:text-blue-400">PI-{{ selectedPs.pi_no }}</span>
-                    </div>
-                    <div>
-                      <span class="font-medium text-blue-700 dark:text-blue-300">Order No:</span>
-                      <span class="ml-2 text-blue-600 dark:text-blue-400">{{ selectedPs.order_no || 'N/A' }}</span>
-                    </div>
-                    <div>
-                      <span class="font-medium text-blue-700 dark:text-blue-300">LC No:</span>
-                      <span class="ml-2 text-blue-600 dark:text-blue-400">{{ selectedPs.lc_no || 'N/A' }}</span>
-                    </div>
-                    <div>
-                      <span class="font-medium text-blue-700 dark:text-blue-300">Total Chicks:</span>
-                      <span class="ml-2 text-blue-600 dark:text-blue-400">{{ selectedPs.total_chicks_qty || 0 }}</span>
-                    </div>
-                  </div>
-                  
-                  <!-- Lab Test Status -->
-                  <div v-if="isLabData" class="mt-3 flex items-center">
-                    <CheckCircle2 class="h-4 w-4 text-green-600 mr-2" />
-                    <span class="text-sm text-green-700 dark:text-green-300">{{ labMessage }}</span>
-                  </div>
-                  <div v-else class="mt-3 flex items-center">
-                    <AlertCircle class="h-4 w-4 text-yellow-600 mr-2" />
-                    <span class="text-sm text-yellow-700 dark:text-yellow-300">{{ labMessage }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Flock & Company Selection -->
-        <div class="bg-white dark:bg-gray-900 shadow rounded-lg p-6">
-          <div class="flex items-center mb-4">
-            <Users class="h-5 w-5 text-green-600 mr-2" />
-            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Flock & Company Selection</h2>
-          </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Flock Selection -->
-            <div class="relative">
-              <Label for="flock" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Select Flock *
+            <!-- Flock Dropdown -->
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <Users class="h-4 w-4" />
+                Flock Selection
               </Label>
-              <div class="relative flock-dropdown">
+              <div class="flock-dropdown relative">
                 <button
                   type="button"
-                  @click="showFlockDropdownList = !showFlockDropdownList"
-                  class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  @click.stop="showFlockDropdownList = !showFlockDropdownList"
+                  class="flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-emerald-500 hover:shadow-md focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
-                  <span class="block truncate">
+                  <span class="flex items-center gap-3">
+                    <div class="h-2 w-2 rounded-full bg-emerald-500"></div>
                     {{ selectedFlock ? selectedFlock.name : 'Select Flock' }}
                   </span>
-                  <ChevronDown class="h-4 w-4 text-gray-400" />
+                  <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFlockDropdownList }" />
                 </button>
                 
-                <div v-if="showFlockDropdownList" class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none dark:bg-gray-800">
-                  <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-                    <div class="relative">
-                      <Search class="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-                      <Input
-                        v-model="flockSearchQuery"
-                        placeholder="Search flock..."
-                        class="pl-10"
-                        @click.stop
-                      />
-                    </div>
-                  </div>
-                  <div
-                    v-for="flock in filteredFlocks"
-                    :key="flock.id"
-                    @click="selectedFlockId = flock.id; showFlockDropdownList = false"
-                    class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50 dark:hover:bg-gray-700"
-                    :class="{ 'bg-blue-100 dark:bg-gray-700': selectedFlockId === flock.id }"
+                <!-- Flock Dropdown Overlay -->
+                <div 
+                  v-if="showFlockDropdownList" 
+                  class="fixed inset-0 z-[9998] flex items-start justify-center pt-20"
+                  @click="showFlockDropdownList = false"
+                >
+                  <div 
+                    class="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-600 dark:bg-gray-800"
+                    @click.stop
                   >
-                    <span class="block truncate">{{ flock.name }}</span>
+                    <!-- Header -->
+                    <div class="border-b border-gray-200 p-4 dark:border-gray-600">
+                      <h3 class="font-semibold text-gray-900 dark:text-white">Select Flock</h3>
+                      <div class="relative mt-3">
+                        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <input
+                          v-model="flockSearchQuery"
+                          type="text"
+                          placeholder="Search flocks..."
+                          class="w-full rounded-lg border border-gray-300 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          @click.stop
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Flock List -->
+                    <div class="max-h-96 overflow-y-auto">
+                      <div v-if="(props.flocks?.length || 0) === 0" class="px-6 py-8 text-center">
+                        <AlertCircle class="mx-auto h-8 w-8 text-red-500" />
+                        <div class="mt-2 font-medium text-red-600">No Flocks Available</div>
+                        <div class="text-sm text-gray-500">Please add flocks first</div>
+                      </div>
+                      <button
+                        v-for="flock in filteredFlocks"
+                        :key="flock.id"
+                        type="button"
+                        @click.stop="selectedFlockId = flock.id; showFlockDropdownList = false"
+                        class="flex w-full items-center gap-4 px-6 py-4 text-left hover:bg-emerald-50 dark:hover:bg-gray-700 transition-colors duration-200 border-b border-gray-100 dark:border-gray-600 last:border-b-0"
+                        :class="{ 'bg-emerald-100 dark:bg-emerald-900': selectedFlockId == flock.id }"
+                      >
+                        <div class="h-3 w-3 rounded-full bg-emerald-500 flex-shrink-0"></div>
+                        <div class="flex-1">
+                          <div class="font-semibold text-gray-900 dark:text-white">{{ flock.name }}</div>
+                          <div class="text-sm text-gray-500 dark:text-gray-400">ID: {{ flock.id }}</div>
+                        </div>
+                        <CheckCircle2 v-if="selectedFlockId == flock.id" class="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                      </button>
+                      <div v-if="filteredFlocks.length === 0 && (props.flocks?.length || 0) > 0" class="px-6 py-8 text-center text-gray-500">
+                        <Search class="mx-auto h-6 w-6 text-gray-400" />
+                        <div class="mt-2 text-sm">No results found for "{{ flockSearchQuery }}"</div>
+                      </div>
+                    </div>
+
+                    <!-- Close Button -->
+                    <div class="border-t border-gray-200 p-4 dark:border-gray-600">
+                      <Button 
+                        type="button"
+                        @click="showFlockDropdownList = false"
+                        class="w-full rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      >
+                        Close
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
               <InputError :message="form.errors.flock_id" class="mt-1" />
             </div>
+          </div>
 
-            <!-- Company Selection -->
-            <div class="relative">
-              <Label for="company" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Select Company *
-              </Label>
-              <div class="relative company-dropdown">
-                <button
-                  type="button"
-                  @click="showCompanyDropdown = !showCompanyDropdown"
-                  class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          <!-- PS Receive Info -->
+          <transition 
+            enter-active-class="transition-all duration-500 ease-out"
+            leave-active-class="transition-all duration-500 ease-in"
+            enter-from-class="opacity-0 scale-95 -translate-y-4"
+            enter-to-class="opacity-100 scale-100 translate-y-0"
+            leave-from-class="opacity-100 scale-100 translate-y-0"
+            leave-to-class="opacity-0 scale-95 -translate-y-4"
+          >
+            <div v-if="selectedPs && showInfo" class="mt-8 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 dark:border-blue-800 dark:from-blue-900/20 dark:to-indigo-900/20">
+              <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-100">
+                <CheckCircle2 class="h-5 w-5" />
+                Parent Stock Details
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">PI No:</span><div class="text-gray-900 dark:text-gray-100">PI-{{ selectedPs.pi_no }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Order No:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.order_no || 'N/A' }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">LC No:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.lc_no || 'N/A' }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Chicks:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ selectedPs.total_chicks_qty || 0 }}</div></div>
+              </div>
+              
+              <!-- Lab Test Status -->
+              <div v-if="isLabData" class="mt-4 flex items-center gap-2 rounded-lg bg-green-100 p-3 dark:bg-green-900/20">
+                <CheckCircle2 class="h-5 w-5 text-green-600" />
+                <span class="text-sm font-medium text-green-800 dark:text-green-200">{{ labMessage }}</span>
+              </div>
+              <div v-else class="mt-4 flex items-center gap-2 rounded-lg bg-yellow-100 p-3 dark:bg-yellow-900/20">
+                <AlertCircle class="h-5 w-5 text-yellow-600" />
+                <span class="text-sm font-medium text-yellow-800 dark:text-yellow-200">{{ labMessage }}</span>
+              </div>
+            </div>
+          </transition>
+        </div>
+      </div>
+
+      <!-- Company & Boxes Card -->
+      <div class="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-white via-orange-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-orange-900/20 dark:to-gray-800 dark:ring-gray-700">
+        <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-orange-500/20 to-red-500/20"></div>
+        <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-500/10 to-orange-500/10"></div>
+        
+        <div class="relative">
+          <div class="mb-8 flex items-center gap-3">
+            <div class="rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 p-3 shadow-lg">
+              <Building2 class="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Receiving Company & Boxes</h2>
+              <p class="text-gray-600 dark:text-gray-400">Enter box quantities and receiving details</p>
+            </div>
+          </div>
+
+          <!-- Company Selection -->
+          <div class="mb-8 space-y-2">
+            <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <Building2 class="h-4 w-4" />
+              Receiving Company
+            </Label>
+            <div class="company-dropdown relative">
+              <button
+                type="button"
+                @click.stop="showCompanyDropdown = !showCompanyDropdown"
+                class="flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-orange-500 hover:shadow-md focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              >
+                <span class="flex items-center gap-3">
+                  <div class="h-2 w-2 rounded-full bg-orange-500"></div>
+                  {{ selectedCompany ? selectedCompany.name : 'Select Company' }}
+                </span>
+                <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showCompanyDropdown }" />
+              </button>
+              
+              <!-- Company Dropdown Overlay -->
+              <div 
+                v-if="showCompanyDropdown" 
+                class="fixed inset-0 z-[9997] flex items-start justify-center pt-20"
+                @click="showCompanyDropdown = false"
+              >
+                <div 
+                  class="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-600 dark:bg-gray-800"
+                  @click.stop
                 >
-                  <span class="block truncate">
-                    {{ selectedCompany ? selectedCompany.name : 'Select Company' }}
-                  </span>
-                  <ChevronDown class="h-4 w-4 text-gray-400" />
-                </button>
-                
-                <div v-if="showCompanyDropdown" class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none dark:bg-gray-800">
-                  <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-                    <div class="relative">
-                      <Search class="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-                      <Input
+                  <!-- Header -->
+                  <div class="border-b border-gray-200 p-4 dark:border-gray-600">
+                    <h3 class="font-semibold text-gray-900 dark:text-white">Select Company</h3>
+                    <div class="relative mt-3">
+                      <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <input
                         v-model="companySearchQuery"
-                        placeholder="Search company..."
-                        class="pl-10"
+                        type="text"
+                        placeholder="Search companies..."
+                        class="w-full rounded-lg border border-gray-300 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                         @click.stop
                       />
                     </div>
                   </div>
-                  <div
-                    v-for="company in filteredCompanies"
-                    :key="company.id"
-                    @click="selectedCompanyId = company.id; showCompanyDropdown = false"
-                    class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50 dark:hover:bg-gray-700"
-                    :class="{ 'bg-blue-100 dark:bg-gray-700': selectedCompanyId === company.id }"
-                  >
-                    <span class="block truncate">{{ company.name }}</span>
+
+                  <!-- Company List -->
+                  <div class="max-h-96 overflow-y-auto">
+                    <div v-if="(props.companies?.length || 0) === 0" class="px-6 py-8 text-center">
+                      <AlertCircle class="mx-auto h-8 w-8 text-red-500" />
+                      <div class="mt-2 font-medium text-red-600">No Companies Available</div>
+                      <div class="text-sm text-gray-500">Please add companies first</div>
+                    </div>
+                    <button
+                      v-for="company in filteredCompanies"
+                      :key="company.id"
+                      type="button"
+                      @click.stop="selectedCompanyId = company.id; showCompanyDropdown = false"
+                      class="flex w-full items-center gap-4 px-6 py-4 text-left hover:bg-orange-50 dark:hover:bg-gray-700 transition-colors duration-200 border-b border-gray-100 dark:border-gray-600 last:border-b-0"
+                      :class="{ 'bg-orange-100 dark:bg-orange-900': selectedCompanyId == company.id }"
+                    >
+                      <div class="h-3 w-3 rounded-full bg-orange-500 flex-shrink-0"></div>
+                      <div class="flex-1">
+                        <div class="font-semibold text-gray-900 dark:text-white">{{ company.name }}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">ID: {{ company.id }}</div>
+                      </div>
+                      <CheckCircle2 v-if="selectedCompanyId == company.id" class="h-4 w-4 text-orange-500 flex-shrink-0" />
+                    </button>
+                    <div v-if="filteredCompanies.length === 0 && (props.companies?.length || 0) > 0" class="px-6 py-8 text-center text-gray-500">
+                      <Search class="mx-auto h-6 w-6 text-gray-400" />
+                      <div class="mt-2 text-sm">No results found for "{{ companySearchQuery }}"</div>
+                    </div>
+                  </div>
+
+                  <!-- Close Button -->
+                  <div class="border-t border-gray-200 p-4 dark:border-gray-600">
+                    <Button 
+                      type="button"
+                      @click="showCompanyDropdown = false"
+                      class="w-full rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    >
+                      Close
+                    </Button>
                   </div>
                 </div>
               </div>
-              <InputError :message="form.errors.receiving_company_id" class="mt-1" />
+            </div>
+            <InputError :message="form.errors.receiving_company_id" class="mt-1" />
+          </div>
+
+          <!-- Main Box Quantities -->
+          <div class="mb-8">
+            <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Main Box Quantities</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Female Box Qty</Label>
+                <Input 
+                  v-model.number="form.firm_female_box_qty" 
+                  type="number" 
+                  min="0"
+                  class="rounded-xl border-pink-300 bg-pink-50 px-4 py-3 shadow-sm focus:border-pink-500 focus:ring-pink-500/20 dark:border-pink-600 dark:bg-pink-900/20" 
+                />
+                <InputError :message="form.errors.firm_female_box_qty" class="mt-1" />
+              </div>
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Male Box Qty</Label>
+                <Input 
+                  v-model.number="form.firm_male_box_qty" 
+                  type="number" 
+                  min="0"
+                  class="rounded-xl border-blue-300 bg-blue-50 px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-blue-500/20 dark:border-blue-600 dark:bg-blue-900/20" 
+                />
+                <InputError :message="form.errors.firm_male_box_qty" class="mt-1" />
+              </div>
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Box Qty</Label>
+                <Input 
+                  v-model.number="form.firm_total_box_qty" 
+                  type="number" 
+                  readonly 
+                  class="rounded-xl border-gray-300 bg-gradient-to-r from-gray-100 to-gray-50 px-4 py-3 font-bold text-gray-700 shadow-sm cursor-not-allowed dark:border-gray-600 dark:from-gray-700 dark:to-gray-800 dark:text-gray-300" 
+                />
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Quantity Information -->
-        <div class="bg-white dark:bg-gray-900 shadow rounded-lg p-6">
-          <div class="flex items-center mb-4">
-            <Package class="h-5 w-5 text-purple-600 mr-2" />
-            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Quantity Information</h2>
-          </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <Label for="firm_female_box_qty" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Female Box Quantity *
-              </Label>
-              <Input
-                id="firm_female_box_qty"
-                v-model="form.firm_female_box_qty"
-                type="number"
-                min="0"
-                class="w-full"
-                :class="{ 'border-red-500': form.errors.firm_female_box_qty }"
-              />
-              <InputError :message="form.errors.firm_female_box_qty" class="mt-1" />
+      <!-- Notes Section -->
+      <div class="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-white via-amber-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-amber-900/20 dark:to-gray-800 dark:ring-gray-700">
+        <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20"></div>
+        <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-500/10 to-amber-500/10"></div>
+        
+        <div class="relative">
+          <div class="mb-6 flex items-center gap-3">
+            <div class="rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 p-3 shadow-lg">
+              <Info class="h-6 w-6 text-white" />
             </div>
-            
             <div>
-              <Label for="firm_male_box_qty" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Male Box Quantity *
-              </Label>
-              <Input
-                id="firm_male_box_qty"
-                v-model="form.firm_male_box_qty"
-                type="number"
-                min="0"
-                class="w-full"
-                :class="{ 'border-red-500': form.errors.firm_male_box_qty }"
-              />
-              <InputError :message="form.errors.firm_male_box_qty" class="mt-1" />
-            </div>
-            
-            <div>
-              <Label for="firm_total_box_qty" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Total Box Quantity
-              </Label>
-              <Input
-                id="firm_total_box_qty"
-                v-model="form.firm_total_box_qty"
-                type="number"
-                min="0"
-                readonly
-                class="w-full bg-gray-50 dark:bg-gray-800"
-              />
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Additional Notes</h2>
+              <p class="text-gray-600 dark:text-gray-400">Add any relevant remarks or observations</p>
             </div>
           </div>
-        </div>
 
-        <!-- Additional Information -->
-        <div class="bg-white dark:bg-gray-900 shadow rounded-lg p-6">
-          <div class="flex items-center mb-4">
-            <Info class="h-5 w-5 text-orange-600 mr-2" />
-            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Additional Information</h2>
-          </div>
-          
-          <div class="space-y-4">
-            <div>
-              <Label for="remarks" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Remarks
-              </Label>
-              <textarea
-                id="remarks"
-                v-model="form.remarks"
-                rows="3"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                :class="{ 'border-red-500': form.errors.remarks }"
+          <div class="space-y-6">
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Remarks</Label>
+              <textarea 
+                v-model="form.remarks" 
+                class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none transition-all duration-200" 
+                rows="4" 
+                placeholder="Write your notes here..."
               ></textarea>
               <InputError :message="form.errors.remarks" class="mt-1" />
             </div>
             
-            <div>
-              <Label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Status
-              </Label>
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Status</Label>
               <select
-                id="status"
                 v-model="form.status"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               >
                 <option :value="1">Active</option>
                 <option :value="0">Inactive</option>
@@ -480,25 +616,28 @@ const submit = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Submit Button -->
-        <div class="flex justify-end space-x-3">
-          <Link
-            :href="route('ps-firm-receive.index')"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            Cancel
-          </Link>
-          <Button
-            type="submit"
-            :disabled="form.processing"
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <Save class="h-4 w-4 mr-2" />
-            {{ form.processing ? 'Updating...' : 'Update Firm Receive' }}
-          </Button>
-        </div>
-      </form>
-    </div>
+      <!-- Submit Section -->
+      <div class="flex items-center justify-end gap-4 rounded-2xl bg-gradient-to-r from-gray-50 to-white p-6 dark:from-gray-800 dark:to-gray-900">
+        <Link 
+          :href="route('ps-firm-receive.index')"
+          class="rounded-xl border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+        >
+          Cancel
+        </Link>
+        <Button 
+          type="submit" 
+          :disabled="form.processing"
+          class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50"
+        >
+          <span class="relative z-10 flex items-center gap-2">
+            <Save class="h-4 w-4" />
+            {{ form.processing ? 'Updating...' : 'Update & Submit' }}
+          </span>
+          <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-20 group-hover:translate-x-full"></div>
+        </Button>
+      </div>
+    </form>
   </AppLayout>
 </template>

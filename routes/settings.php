@@ -26,11 +26,11 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('settings/Appearance');
     })->name('appearance');
 
-    Route::resource('ps-receive', PsReceiveController::class);
-    Route::resource('ps-firm-receive', PsFirmReceiveController::class);
+    Route::get('/ps-receive/suppliers-by-shipment-type', [PsReceiveController::class, 'getSuppliersByShipmentType']);
     Route::get('/ps-receive/{id}/data', [PsReceiveController::class, 'getData']);
     Route::post('ps-receive/storelab', [PsReceiveController::class, 'storelab']);
-    Route::get('/ps-receive/suppliers-by-shipment-type', [PsReceiveController::class, 'getSuppliersByShipmentType']);
+    Route::resource('ps-receive', PsReceiveController::class);
+    Route::resource('ps-firm-receive', PsFirmReceiveController::class);
     Route::resource('user-role', UserRoleController::class)->except(['show']);
 
     Route::get('/user-register', [UserRegisterController::class, 'index'])->middleware('permission:user.view')->name('users.index');
