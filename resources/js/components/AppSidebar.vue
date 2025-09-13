@@ -8,7 +8,7 @@ import { BabyChick } from '@/icons/BabyChick';
 import { BabyChickMultiple } from '@/icons/BabyChickMultiple';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { Building, Building2, Egg, EggOff, LayoutGrid, Package, PencilRuler, Pill, Skull, Syringe, User, Users } from 'lucide-vue-next';
+import { Building, Building2, Egg, EggOff, LayoutGrid, Package, PencilRuler, Pill, Skull, Syringe, User, Users, FileText } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage();
@@ -141,6 +141,19 @@ const mainNavItems: NavItem[] = [
                 title: 'Vaccine Schedule',
                 href: '/vaccine-schedule',
                 icon: Syringe,
+                iconClass: 'text-yellow-500',
+            },
+        ],
+    },
+    {
+        title: 'Report',
+        icon: FileText,
+        iconClass: 'text-yellow-500',
+        children: [
+            {
+                title: 'Daily-Flock-Report',
+                href: '/daily-flock-report',
+                icon: FileText,
                 iconClass: 'text-yellow-500',
             },
         ],
