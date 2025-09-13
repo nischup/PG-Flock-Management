@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Production;
 
 use App\Http\Controllers\Controller;
-use App\Models\Shed\BatchAssign;
-use Illuminate\Http\Request;
-use App\Models\Production\EggClassification;
 use App\Models\Master\EggType;
+use App\Models\Production\EggClassification;
 use App\Models\Production\EggClassificationRejected;
 use App\Models\Production\EggClassificationTechnical;
-use Inertia\Inertia;
+use App\Models\Shed\BatchAssign;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class EggClassificationController extends Controller
 {
@@ -18,34 +18,67 @@ class EggClassificationController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-        {
+    {
         $query = EggClassification::with([
-            'batchAssign', // batch_assign relation
-            'technicalEggs.eggType', // rejected eggs and their types
-            'rejectedEggs.eggType', // technical eggs and their types
+            'batchAssign.shed',
+            'batchAssign.batch',
+            'technicalEggs.eggType',
+            'rejectedEggs.eggType',
         ]);
 
-        // Optional search/filter
-        if ($request->has('search') && $request->search) {
-            $query->whereHas('batchAssign', function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%");
+        // Search filter
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->whereHas('batchAssign', function ($subQuery) use ($request) {
+                    $subQuery->where('transaction_no', 'like', "%{$request->search}%")
+                        ->orWhere('name', 'like', "%{$request->search}%");
+                });
             });
         }
 
-        $classifications = $query->orderBy('classification_date', 'desc')
-            ->paginate($request->per_page ?? 10)
+        // Date range filters
+        if ($request->filled('date_from')) {
+            $query->whereDate('classification_date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('classification_date', '<=', $request->date_to);
+        }
+
+        // Batch filter
+        if ($request->filled('batch')) {
+            $query->whereHas('batchAssign', function ($q) use ($request) {
+                $q->where('id', $request->batch);
+            });
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'classification_date');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        // Validate sort_by to prevent SQL injection
+        $allowedSortFields = [
+            'classification_date', 'total_eggs', 'hatching_eggs',
+            'commercial_eggs', 'rejected_eggs', 'technical_eggs',
+        ];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('classification_date', 'desc');
+        }
+
+        $classifications = $query->paginate($request->get('per_page', 10))
             ->withQueryString();
-        
-    return Inertia::render('production/egg-classification/List', [
-        'classifications' => $classifications,
-        'filters' => $request->only(['search', 'per_page', 'page']),
-    ]);
 
+        return Inertia::render('production/egg-classification/List', [
+            'classifications' => $classifications,
+            'filters' => $request->only([
+                'search', 'per_page', 'page', 'date_from',
+                'date_to', 'batch', 'sort_by', 'sort_order',
+            ]),
+        ]);
 
-    
-
-
-        
     }
 
     /**
@@ -54,18 +87,17 @@ class EggClassificationController extends Controller
     public function create()
     {
         $batchAssign = BatchAssign::with(['flock', 'shed', 'batch'])
-        ->orderBy('id', 'desc')
-        ->get()
-        ->map(function ($batch) {
-            return [
-                'id'        => $batch->id,
-                'label'     => "{$batch->transaction_no}-{$batch->shed?->name}-{$batch->batch?->name}",
-            ];
-        });
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($batch) {
+                return [
+                    'id' => $batch->id,
+                    'label' => "{$batch->transaction_no}-{$batch->shed?->name}-{$batch->batch?->name}",
+                ];
+            });
 
-       
         return Inertia::render('production/egg-classification/Create', [
-            'batchAssign' => $batchAssign
+            'batchAssign' => $batchAssign,
         ]);
     }
 
@@ -74,9 +106,7 @@ class EggClassificationController extends Controller
      */
     public function store(Request $request)
     {
-       
-       
-     
+
         $rejected_total = ($request->double_yolk) +
                           ($request->double_yolk_broken) +
                           ($request->commercial) +
@@ -92,7 +122,7 @@ class EggClassificationController extends Controller
 
         $commercial_total = ($request->commercial);
         $hatching_egg = ($request->total_egg) - $rejected_total;
-       
+
         // 1️⃣ Create main classification record
         $classification = EggClassification::create([
             'batchassign_id' => $request->batchassign_id,
@@ -102,7 +132,7 @@ class EggClassificationController extends Controller
             'commercial_eggs' => $rejected_total,
             'rejected_eggs' => $rejected_total,
             'technical_eggs' => $technical_total,
-            'created_by'           => Auth::id(),
+            'created_by' => Auth::id(),
         ]);
 
         // 2️⃣ Save rejected eggs
@@ -116,14 +146,14 @@ class EggClassificationController extends Controller
         ];
 
         foreach ($rejectedEggs as $key => $qty) {
-            if ($qty > 0 || $request->input($key . '_note')) {
+            if ($qty > 0 || $request->input($key.'_note')) {
                 $eggType = EggType::where('name', $key)->where('category', 1)->first();
                 if ($eggType) {
                     EggClassificationRejected::create([
                         'classification_id' => $classification->id,
                         'egg_type_id' => $eggType->id,
                         'quantity' => $qty ?? 0,
-                        'note' => $request->input($key . '_note'),
+                        'note' => $request->input($key.'_note'),
                     ]);
                 }
             }
@@ -139,44 +169,21 @@ class EggClassificationController extends Controller
         ];
 
         foreach ($technicalEggs as $key => $qty) {
-            if ($qty > 0 || $request->input($key . '_note')) {
+            if ($qty > 0 || $request->input($key.'_note')) {
                 $eggType = EggType::where('name', $key)->where('category', 2)->first();
                 if ($eggType) {
                     EggClassificationTechnical::create([
                         'classification_id' => $classification->id,
                         'egg_type_id' => $eggType->id,
                         'quantity' => $qty ?? 0,
-                        'note' => $request->input($key . '_note'),
+                        'note' => $request->input($key.'_note'),
                     ]);
                 }
             }
         }
-       
-       
-      return redirect()->route('egg-classification.index')->with('success', 'Egg Classification.');    
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
+
+        return redirect()->route('egg-classification.index')->with('success', 'Egg Classification.');
+
         dd($request->all());
     }
 
