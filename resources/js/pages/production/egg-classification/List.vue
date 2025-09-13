@@ -87,8 +87,6 @@ function totalTechnical(technicals: Array<{ quantity: number }>) {
               <th class="px-6 py-3 text-left font-bold">Batch</th>
               <th class="px-6 py-3 text-left font-bold">Hatching Qty</th>
               <th class="px-6 py-3 text-left font-bold">Commercial Qty</th>
-              <th class="px-6 py-3 text-left font-bold">Rejected Qty</th>
-              <th class="px-6 py-3 text-left font-bold">Technical Qty</th>
               <th class="px-6 py-3 text-left font-bold">Actions</th>
             </tr>
           </thead>
@@ -102,8 +100,6 @@ function totalTechnical(technicals: Array<{ quantity: number }>) {
               <td class="px-6 py-4">{{ item.batchAssign?.name || '-' }}</td>
               <td class="px-6 py-4">{{ item.hatching_eggs }}</td>
               <td class="px-6 py-4">{{ item.commercial_eggs }}</td>
-              <td class="px-6 py-4">{{ totalRejected(item.rejectedEggs) }}</td>
-              <td class="px-6 py-4">{{ totalTechnical(item.technicalEggs) }}</td>
               <td class="px-6 py-4">
                 <ul>
                   <li v-for="r in item.rejectedEggs || []" :key="r.id">
