@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import AppLayout from '@/layouts/AppLayout.vue';import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { useNotifier } from '@/composables/useNotifier';
 import type { BreadcrumbItem } from '@/types';
@@ -366,13 +365,6 @@ function getStatusColor(item: any) {
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
             <tr>
-<<<<<<< HEAD
-              <th class="px-6 py-3 text-left font-bold">Date</th>
-              <th class="px-6 py-3 text-left font-bold">Batch</th>
-              <th class="px-6 py-3 text-left font-bold">Hatching Qty</th>
-              <th class="px-6 py-3 text-left font-bold">Commercial Qty</th>
-              <th class="px-6 py-3 text-left font-bold">Actions</th>
-=======
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Date & Batch
               </th>
@@ -397,8 +389,7 @@ function getStatusColor(item: any) {
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Actions
               </th>
->>>>>>> 64dcab8c6ac0c8fac290f8a95fc59d0acb9bd4ea
-            </tr>
+           </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr
@@ -406,15 +397,8 @@ function getStatusColor(item: any) {
               :key="item.id"
               class="hover:bg-gray-50 transition-colors duration-200"
             >
-<<<<<<< HEAD
-              <td class="px-6 py-4">{{ item.classification_date }}</td>
-              <td class="px-6 py-4">{{ item.batchAssign?.name || '-' }}</td>
-              <td class="px-6 py-4">{{ item.hatching_eggs }}</td>
-              <td class="px-6 py-4">{{ item.commercial_eggs }}</td>
-=======
               <!-- Date & Batch -->
->>>>>>> 64dcab8c6ac0c8fac290f8a95fc59d0acb9bd4ea
-              <td class="px-6 py-4">
+             <td class="px-6 py-4">
                 <div class="flex flex-col">
                   <div class="text-sm font-medium text-gray-900">{{ formatDate(item.classification_date) }}</div>
                   <div class="text-xs text-gray-500">{{ item.batchAssign?.transaction_no || 'N/A' }}</div>
@@ -556,6 +540,16 @@ function getStatusColor(item: any) {
           </div>
         </div>
       </div>
-    </div>
+       
+      </div>
+
+      <!-- Pagination -->
+      <Pagination :meta="props.classifications.meta" :page="page" class="mt-6" />
+        
+
+
+      <!-- Pagination -->
+      <Pagination :meta="props.classifications.meta" :page="page" class="mt-6" />
+  
   </AppLayout>
 </template>

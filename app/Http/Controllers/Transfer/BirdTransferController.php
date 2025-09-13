@@ -83,6 +83,7 @@ class BirdTransferController extends Controller
         $transfer = BirdTransfer::create([
             'batch_assign_id' => $batch->id,
             'job_no' => $batch->job_no,
+            'transaction_no' => $batch->transaction_no,
             'flock_no' => $batch->flock_no,
             'flock_id' => $batch->flock_id,
             'from_company_id' => $request->from_company_id,

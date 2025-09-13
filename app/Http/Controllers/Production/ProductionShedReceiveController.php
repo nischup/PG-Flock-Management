@@ -90,6 +90,7 @@ class ProductionShedReceiveController extends Controller
         $shedReceive = ShedReceive::create([
             'receive_id'       => $request->job_id,   // firm receive reference
             'job_no'           => $firmReceive->job_no,
+            'transaction_no'   => $firmReceive->transaction_no,
             'company_id'       => $firmReceive->receiving_company_id,
             'flock_id'         => $request->flock_id,
             'flock_name'       => $request->flock_name,

@@ -174,7 +174,7 @@ function toggleInfo() {
 
 // Submit Shed Receive
 function submit() {
-  form.post(route('shed-receive.store'), {
+  form.post(route('production-shed-receive.store'), {
     onSuccess: () => form.reset(),
     onError: () => {},
   })

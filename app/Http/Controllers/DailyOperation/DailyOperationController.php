@@ -232,6 +232,12 @@ class DailyOperationController extends Controller
     public function store(Request $request)
     {
 
+        
+        
+        
+        
+        
+        
         $dailyOperation = DailyOperation::create([
             'batchassign_id' => $request->batchassign_id,
             'operation_date' => $request->operation_date,
@@ -391,9 +397,24 @@ class DailyOperationController extends Controller
             $dailyOperation->vaccines()->create($vaccineData);
         }
 
+        $stage = BatchAssign::findOrFail($dailyOperation->batch_assign_id);
+
+        
+        if ($stage == 1) {
+            $stageName = 'brooding';
+        } elseif ($stage == 2) {
+            $stageName = 'growing';
+        } elseif ($stage == 3) {
+            $stageName = 'laying';
+        } elseif ($stage == 4) {
+            $stageName = 'closing';
+        } else {
+            $stageName = 'brooding'; // fallback
+        }
+
         return redirect()
-            ->route('production-shed-receive.index')
-            ->with('success', 'Production Shed Receive created successfully!');
+        ->route('daily-operation.stage', ['stage' => $stage])
+        ->with('success', ucfirst($stage) . ' data saved successfully.');
     }
 
     /**
