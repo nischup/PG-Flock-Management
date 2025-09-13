@@ -159,7 +159,32 @@ class PsFirmReceiveController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $psFirmReceive = PsFirmReceive::with(['flock', 'company', 'psReceive'])
+            ->findOrFail($id);
+
+        return Inertia::render('ps/ps-firm-receive/Show', [
+            'psFirmReceive' => [
+                'id' => $psFirmReceive->id,
+                'job_no' => $psFirmReceive->job_no,
+                'transaction_no' => $psFirmReceive->transaction_no,
+                'flock_name' => $psFirmReceive->flock->name ?? '-',
+                'company_name' => $psFirmReceive->company->name ?? '-',
+                'pi_no' => $psFirmReceive->psReceive->pi_no ?? '-',
+                'firm_male_qty' => $psFirmReceive->firm_male_qty,
+                'firm_female_qty' => $psFirmReceive->firm_female_qty,
+                'firm_total_qty' => $psFirmReceive->firm_total_qty,
+                'remarks' => $psFirmReceive->remarks,
+                'receive_date' => $psFirmReceive->created_at,
+                'created_by' => $psFirmReceive->created_by,
+                'status' => $psFirmReceive->status,
+                'receive_type' => $psFirmReceive->receive_type,
+                'source_type' => $psFirmReceive->source_type,
+                'source_id' => $psFirmReceive->source_id,
+                'receiving_company_id' => $psFirmReceive->receiving_company_id,
+                'flock_id' => $psFirmReceive->flock_id,
+                'ps_receive_id' => $psFirmReceive->ps_receive_id,
+            ],
+        ]);
     }
 
     /**
@@ -167,7 +192,72 @@ class PsFirmReceiveController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $psFirmReceive = PsFirmReceive::with(['flock', 'company', 'psReceive'])
+            ->findOrFail($id);
+
+        // Fetch all PS Receives for dropdown
+        $psReceives = PsReceive::with('chickCounts', 'labTransfers')
+            ->get()
+            ->map(function ($ps) {
+                return [
+                    'id' => $ps->id,
+                    'pi_no' => $ps->pi_no,
+                    'pi_date' => optional($ps->pi_date)->format('Y-m-d'),
+                    'order_no' => $ps->order_no,
+                    'order_date' => optional($ps->order_date)->format('Y-m-d'),
+                    'lc_no' => $ps->lc_no,
+                    'lc_date' => optional($ps->lc_date)->format('Y-m-d'),
+                    'shipment_type_id' => $ps->shipment_type_id,
+                    'supplier_id' => $ps->supplier_id,
+                    'breed_type' => $ps->breed_type,
+                    'country_of_origin' => $ps->country_of_origin,
+                    'transport_type' => $ps->transport_type,
+                    'company_id' => $ps->company_id,
+                    'remarks' => $ps->remarks,
+                    'created_at' => $ps->created_at->format('Y-m-d'),
+
+                    // Chick counts
+                    'total_chicks_qty' => $ps->chickCounts->ps_total_qty ?? 0,
+                    'total_box_qty' => $ps->chickCounts->ps_total_re_box_qty ?? 0,
+                    'ps_challan_box_qty' => $ps->chickCounts->ps_challan_box_qty ?? 0,
+                    'male_box_qty' => $ps->chickCounts->ps_male_rec_box ?? 0,
+                    'female_box_qty' => $ps->chickCounts->ps_female_rec_box ?? 0,
+                    'male_chicks' => $ps->chickCounts->ps_male_qty ?? 0,
+                    'female_chicks' => $ps->chickCounts->ps_female_qty ?? 0,
+                    'gross_weight' => $ps->chickCounts->ps_female_qty ?? 0,
+                    'net_weight' => $ps->chickCounts->ps_net_weight ?? 0,
+                    'Note' => $ps->chickCounts->ps_gross_weight ?? 0,
+                    'labTest' => $ps->labTransfers,
+                ];
+            });
+
+        $flocks = Flock::select('id', 'name')->get();
+        $companies = Company::select('id', 'name')->get();
+
+        return Inertia::render('ps/ps-firm-receive/Edit', [
+            'psFirmReceive' => [
+                'id' => $psFirmReceive->id,
+                'job_no' => $psFirmReceive->job_no,
+                'transaction_no' => $psFirmReceive->transaction_no,
+                'flock_id' => $psFirmReceive->flock_id,
+                'flock_name' => $psFirmReceive->flock->name ?? '-',
+                'receiving_company_id' => $psFirmReceive->receiving_company_id,
+                'company_name' => $psFirmReceive->company->name ?? '-',
+                'ps_receive_id' => $psFirmReceive->ps_receive_id,
+                'pi_no' => $psFirmReceive->psReceive->pi_no ?? '-',
+                'firm_male_qty' => $psFirmReceive->firm_male_qty,
+                'firm_female_qty' => $psFirmReceive->firm_female_qty,
+                'firm_total_qty' => $psFirmReceive->firm_total_qty,
+                'remarks' => $psFirmReceive->remarks,
+                'status' => $psFirmReceive->status,
+                'receive_type' => $psFirmReceive->receive_type,
+                'source_type' => $psFirmReceive->source_type,
+                'source_id' => $psFirmReceive->source_id,
+            ],
+            'psReceives' => $psReceives,
+            'companies' => $companies,
+            'flocks' => $flocks,
+        ]);
     }
 
     /**
@@ -175,7 +265,29 @@ class PsFirmReceiveController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $psFirmReceive = PsFirmReceive::findOrFail($id);
+
+        $companyInfo = Company::findOrFail($request->receiving_company_id);
+        $flockInfo = Flock::findOrFail($request->flock_id);
+
+        $psFirmReceive->update([
+            'ps_receive_id' => $request->ps_receive_id,
+            'flock_id' => $request->flock_id,
+            'flock_name' => $flockInfo->_name,
+            'receiving_company_id' => $request->receiving_company_id,
+            'firm_female_qty' => $request->firm_female_box_qty,
+            'firm_male_qty' => $request->firm_male_box_qty,
+            'firm_total_qty' => $request->firm_total_box_qty,
+            'remarks' => $request->remarks,
+            'status' => $request->status ?? 1,
+        ]);
+
+        $transactionNo = "{$psFirmReceive->id}-{$companyInfo->short_name}-{$flockInfo->name}";
+        $psFirmReceive->update(['transaction_no' => $transactionNo, 'job_no' => $transactionNo]);
+
+        return redirect()
+            ->route('ps-firm-receive.index')
+            ->with('success', 'PS Firm Receive updated successfully!');
     }
 
     /**
@@ -183,7 +295,12 @@ class PsFirmReceiveController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $psFirmReceive = PsFirmReceive::findOrFail($id);
+        $psFirmReceive->delete();
+
+        return redirect()
+            ->route('ps-firm-receive.index')
+            ->with('success', 'PS Firm Receive deleted successfully!');
     }
 
     public function downloadPdf(Request $request)

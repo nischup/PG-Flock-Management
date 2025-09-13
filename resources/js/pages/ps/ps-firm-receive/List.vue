@@ -761,32 +761,32 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     class="action-dropdown absolute top-full left-0 z-20 mt-1 flex w-40 flex-col rounded border bg-white shadow-md"
                                     @click.stop
                                 >
-                                        <!-- View -->
-                                        <Link
-                                            v-if="can('ps-receive.view')"
-                                            :href="route('ps-firm-receive.show', item.id)"
-                                            class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-50"
-                                        >
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
-                                            <span>View</span>
-                                        </Link>
+                                    <!-- View -->
+                                    <Link
+                                        v-if="can('ps-receive.view')"
+                                        :href="route('ps-firm-receive.show', item.id)"
+                                        class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-50"
+                                    >
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        <span>View</span>
+                                    </Link>
 
-                                        <!-- Edit -->
+                                    <!-- Edit -->
                                     <Link
                                         v-if="can('ps-receive.edit')"
-                                        :href="`/ps-firm-receive/${item.id}/edit`"
+                                        :href="route('ps-firm-receive.edit', item.id)"
                                         class="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50"
                                     >
                                         <Pencil class="h-4 w-4" />
                                         <span>Edit</span>
                                     </Link>
 
-                                        <!-- Report -->
+                                    <!-- Report -->
                                     <button
-                                            v-if="can('ps-receive.view')"
+                                        v-if="can('ps-receive.view')"
                                         @click="exportRowPdf(item.id)"
                                         class="flex w-full items-center gap-2 px-4 py-2 text-green-600 hover:bg-green-50"
                                     >
@@ -794,16 +794,16 @@ const breadcrumbs: BreadcrumbItem[] = [
                                         <span>Report</span>
                                     </button>
 
-                                        <!-- Delete -->
-                                        <button
-                                            v-if="can('ps-receive.delete')"
-                                            @click="deleteReceive(item.id)"
-                                            class="flex w-full items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50"
-                                        >
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                            <span>Delete</span>
+                                    <!-- Delete -->
+                                    <button
+                                        v-if="can('ps-receive.delete')"
+                                        @click="deleteReceive(item.id)"
+                                        class="flex w-full items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50"
+                                    >
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        <span>Delete</span>
                                     </button>
                                 </div>
                             </td>

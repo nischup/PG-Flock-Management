@@ -27,7 +27,7 @@ Route::middleware('auth')->group(function () {
     })->name('appearance');
 
     Route::resource('ps-receive', PsReceiveController::class);
-    Route::resource('ps-firm-receive', PsFirmReceiveController::class)->except(['show']);
+    Route::resource('ps-firm-receive', PsFirmReceiveController::class);
     Route::get('/ps-receive/{id}/data', [PsReceiveController::class, 'getData']);
     Route::post('ps-receive/storelab', [PsReceiveController::class, 'storelab']);
     Route::get('/ps-receive/suppliers-by-shipment-type', [PsReceiveController::class, 'getSuppliersByShipmentType']);
