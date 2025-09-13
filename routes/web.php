@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DailyOperation\DailyOperationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Master\BreedTypeController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Master\UnitController;
 use App\Http\Controllers\Master\VaccineController;
 use App\Http\Controllers\Master\VaccineTypeController;
 use App\Http\Controllers\Production\EggClassificationController;
+use App\Http\Controllers\Production\EggClassificationGradeController;
 use App\Http\Controllers\Production\ProductionFirmReceiveController;
 use App\Http\Controllers\Production\ProductionShedReceiveController;
 use App\Http\Controllers\Ps\PsFirmReceiveController;
@@ -27,7 +29,6 @@ use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Transfer\BirdTransferController;
 use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
-use App\Http\Controllers\Production\EggClassificationGradeController;
 use App\Http\Controllers\WeatherController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -142,3 +143,6 @@ Route::get('/batch-assign/{id}/pdf', [BatchAssignController::class, 'downloadRow
     ->name('batch-assign.row-pdf');
 
 Route::get('/bird-transfer/create/{batchAssignid}', [BirdTransferController::class, 'create']);
+
+// Audit Log
+Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');

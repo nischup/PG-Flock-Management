@@ -203,7 +203,54 @@ class BatchAssignController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $batchAssign = BatchAssign::with(['shedReceive.flock', 'shedReceive.shed', 'shedReceive.company'])
+            ->findOrFail($id);
+
+        // Format the batch assign data for display
+        $formattedBatchAssign = [
+            'id' => $batchAssign->id,
+            'shed_receive_id' => $batchAssign->shed_receive_id,
+            'job_no' => $batchAssign->job_no,
+            'transaction_no' => $batchAssign->transaction_no,
+            'flock_no' => $batchAssign->flock_no,
+            'flock_id' => $batchAssign->flock_id,
+            'company_id' => $batchAssign->company_id,
+            'shed_id' => $batchAssign->shed_id,
+            'level' => $batchAssign->level,
+            'batch_no' => $batchAssign->batch_no,
+            'batch_female_qty' => $batchAssign->batch_female_qty,
+            'batch_male_qty' => $batchAssign->batch_male_qty,
+            'batch_total_qty' => $batchAssign->batch_total_qty,
+            'batch_female_mortality' => $batchAssign->batch_female_mortality,
+            'batch_male_mortality' => $batchAssign->batch_male_mortality,
+            'batch_total_mortality' => $batchAssign->batch_total_mortality,
+            'batch_excess_female' => $batchAssign->batch_excess_female,
+            'batch_excess_male' => $batchAssign->batch_excess_male,
+            'batch_total_excess' => $batchAssign->batch_total_excess,
+            'batch_sortage_female' => $batchAssign->batch_sortage_female,
+            'batch_sortage_male' => $batchAssign->batch_sortage_male,
+            'batch_total_sortage' => $batchAssign->batch_total_sortage,
+            'percentage' => $batchAssign->percentage,
+            'created_at' => $batchAssign->created_at,
+            'updated_at' => $batchAssign->updated_at,
+            'shedReceive' => $batchAssign->shedReceive ? [
+                'id' => $batchAssign->shedReceive->id,
+                'transaction_no' => $batchAssign->shedReceive->transaction_no,
+                'flock_id' => $batchAssign->shedReceive->flock_id,
+                'flock' => $batchAssign->shedReceive->flock?->name,
+                'shed_id' => $batchAssign->shedReceive->shed_id,
+                'shed' => $batchAssign->shedReceive->shed?->name,
+                'company_id' => $batchAssign->shedReceive->company_id,
+                'company' => $batchAssign->shedReceive->company?->name,
+                'shed_female_qty' => $batchAssign->shedReceive->shed_female_qty ?? 0,
+                'shed_male_qty' => $batchAssign->shedReceive->shed_male_qty ?? 0,
+                'shed_total_qty' => $batchAssign->shedReceive->shed_total_qty ?? 0,
+            ] : null,
+        ];
+
+        return Inertia::render('shed/batch-assign/View', [
+            'batchAssign' => $formattedBatchAssign,
+        ]);
     }
 
     /**
@@ -211,7 +258,92 @@ class BatchAssignController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $batchAssign = BatchAssign::with(['shedReceive.flock', 'shedReceive.shed', 'shedReceive.company'])
+            ->findOrFail($id);
+
+        // Get all Shed Receives with relations
+        $shedReceives = ShedReceive::with(['flock:id,name', 'shed:id,name', 'company:id,name'])
+            ->get()
+            ->map(function ($shed) {
+                return [
+                    'id' => $shed->id,
+                    'transaction_no' => $shed->transaction_no,
+                    'flock_id' => $shed->flock_id,
+                    'flock' => $shed->flock?->name,
+                    'shed_id' => $shed->shed_id,
+                    'shed' => $shed->shed?->name,
+                    'company_id' => $shed->company_id,
+                    'company' => $shed->company?->name,
+                    'shed_female_qty' => $shed->shed_female_qty ?? 0,
+                    'shed_male_qty' => $shed->shed_male_qty ?? 0,
+                    'shed_total_qty' => $shed->shed_total_qty ?? 0,
+                    'receive_type' => $shed->receive_type ?? '',
+                    'created_by' => Auth::id(),
+                ];
+            });
+
+        // Flocks (for batch assign form)
+        $flocks = Flock::select('id', 'name')->get();
+
+        // Companies (if needed in assign)
+        $companies = Company::select('id', 'name')->get();
+
+        // Levels from database
+        $levels = Level::where('status', true)->select('id', 'name')->get();
+
+        // Batches from database
+        $batches = Batch::where('status', true)->select('id', 'name')->get();
+
+        // Format the batch assign data for the form
+        $formattedBatchAssign = [
+            'id' => $batchAssign->id,
+            'shed_receive_id' => $batchAssign->shed_receive_id,
+            'job_no' => $batchAssign->job_no,
+            'transaction_no' => $batchAssign->transaction_no,
+            'flock_no' => $batchAssign->flock_no,
+            'flock_id' => $batchAssign->flock_id,
+            'company_id' => $batchAssign->company_id,
+            'shed_id' => $batchAssign->shed_id,
+            'level' => $batchAssign->level,
+            'batch_no' => $batchAssign->batch_no,
+            'batch_female_qty' => $batchAssign->batch_female_qty,
+            'batch_male_qty' => $batchAssign->batch_male_qty,
+            'batch_total_qty' => $batchAssign->batch_total_qty,
+            'batch_female_mortality' => $batchAssign->batch_female_mortality,
+            'batch_male_mortality' => $batchAssign->batch_male_mortality,
+            'batch_total_mortality' => $batchAssign->batch_total_mortality,
+            'batch_excess_female' => $batchAssign->batch_excess_female,
+            'batch_excess_male' => $batchAssign->batch_excess_male,
+            'batch_total_excess' => $batchAssign->batch_total_excess,
+            'batch_sortage_female' => $batchAssign->batch_sortage_female,
+            'batch_sortage_male' => $batchAssign->batch_sortage_male,
+            'batch_total_sortage' => $batchAssign->batch_total_sortage,
+            'percentage' => $batchAssign->percentage,
+            'created_at' => $batchAssign->created_at,
+            'updated_at' => $batchAssign->updated_at,
+            'shedReceive' => $batchAssign->shedReceive ? [
+                'id' => $batchAssign->shedReceive->id,
+                'transaction_no' => $batchAssign->shedReceive->transaction_no,
+                'flock_id' => $batchAssign->shedReceive->flock_id,
+                'flock' => $batchAssign->shedReceive->flock?->name,
+                'shed_id' => $batchAssign->shedReceive->shed_id,
+                'shed' => $batchAssign->shedReceive->shed?->name,
+                'company_id' => $batchAssign->shedReceive->company_id,
+                'company' => $batchAssign->shedReceive->company?->name,
+                'shed_female_qty' => $batchAssign->shedReceive->shed_female_qty ?? 0,
+                'shed_male_qty' => $batchAssign->shedReceive->shed_male_qty ?? 0,
+                'shed_total_qty' => $batchAssign->shedReceive->shed_total_qty ?? 0,
+            ] : null,
+        ];
+
+        return Inertia::render('shed/batch-assign/Edit', [
+            'batchAssign' => $formattedBatchAssign,
+            'shedReceives' => $shedReceives,
+            'flocks' => $flocks,
+            'companies' => $companies,
+            'levels' => $levels,
+            'batches' => $batches,
+        ]);
     }
 
     /**
@@ -219,7 +351,36 @@ class BatchAssignController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $batchAssign = BatchAssign::findOrFail($id);
+
+        $shedReceive = ShedReceive::findOrFail($request->shed_receive_id);
+
+        $batchAssign->update([
+            'shed_receive_id' => $shedReceive->id ?? null,
+            'job_no' => $shedReceive->job_no ?? null,
+            'transaction_no' => $shedReceive->transaction_no ?? null,
+            'flock_no' => $shedReceive->flock_name ?? 0,
+            'flock_id' => $shedReceive->flock_id ?? null,
+            'company_id' => $shedReceive->company_id ?? null,
+            'shed_id' => $shedReceive->shed_id ?? null,
+            'level' => $request->level ?? null,
+            'batch_no' => $request->batch_no ?? 1,
+            'batch_female_qty' => $request->batch_female_qty ?? 0,
+            'batch_male_qty' => $request->batch_male_qty ?? 0,
+            'batch_total_qty' => ($request->batch_female_qty ?? 0) + ($request->batch_male_qty ?? 0),
+            'batch_female_mortality' => $request->batch_female_mortality ?? 0,
+            'batch_male_mortality' => $request->batch_male_mortality ?? 0,
+            'batch_total_mortality' => ($request->batch_female_mortality ?? 0) + ($request->batch_male_mortality ?? 0),
+            'batch_excess_male' => $request->batch_excess_male ?? null,
+            'batch_excess_female' => $request->batch_excess_female ?? 0,
+            'batch_sortage_male' => $request->batch_sortage_male ?? null,
+            'batch_sortage_female' => $request->batch_sortage_female ?? 0,
+            'percentage' => $request->percentage ?? 0,
+        ]);
+
+        return redirect()
+            ->route('batch-assign.index')
+            ->with('success', 'Batch assignment updated successfully!');
     }
 
     /**

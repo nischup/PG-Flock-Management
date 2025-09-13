@@ -11,24 +11,26 @@ interface Option {
 
 const props = defineProps<{
   modelValue?: string | number
-  options: Option[]
+  options?: Option[]
   placeholder?: string
   disabled?: boolean
   class?: string
 }>()
 
-const emits = defineEmits<{
+const emit = defineEmits<{
   (e: 'update:modelValue', value: string | number): void
 }>()
 
 const isOpen = ref(false)
-const selectedOption = computed(() => 
-  props.options.find(option => option.value === props.modelValue)
-)
+
+const selectedOption = computed(() => {
+  if (!props.options) return null
+  return props.options.find(option => option.value === props.modelValue)
+})
 
 function selectOption(option: Option) {
   if (option.disabled) return
-  emits('update:modelValue', option.value)
+  emit('update:modelValue', option.value)
   isOpen.value = false
 }
 

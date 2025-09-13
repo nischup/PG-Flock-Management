@@ -230,6 +230,21 @@ const filteredMainNavItems = mainNavItems
         return item.permission ? null : item;
     })
     .filter(Boolean) as NavItem[];
+
+const footerNavItems: NavItem[] = [
+    {
+        title: 'Documentation',
+        href: 'https://laravel.com/docs',
+        icon: FileText,
+        iconClass: 'text-blue-500',
+    },
+    {
+        title: 'GitHub',
+        href: 'https://github.com/laravel/laravel',
+        icon: FileText,
+        iconClass: 'text-gray-500',
+    },
+];
 </script>
 
 <template>

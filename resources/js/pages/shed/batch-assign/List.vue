@@ -940,63 +940,81 @@ const breadcrumbs: BreadcrumbItem[] = [
                   Actions ▼
                 </Button>
 
+                                    <!-- Action Popup Overlay -->
                                     <div
                                         v-if="openDropdownId === item.id"
-                                        class="action-dropdown absolute top-full left-0 z-20 mt-1 flex w-40 flex-col rounded border bg-white shadow-md"
-                                        @click.stop
+                                        class="fixed inset-0 z-50 flex items-center justify-center"
+                                        @click.stop="closeDropdown"
                                     >
-                                        <!-- View -->
-                                        <Link
-                                            :href="route('batch-assign.show', item.id)"
-                                            class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-50"
+                                        <!-- Backdrop -->
+                                        <div class="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+                                        
+                                        <!-- Popup Content -->
+                                        <div
+                                            class="relative z-10 w-48 rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                                            @click.stop
                                         >
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
-                                            <span>View</span>
-                                        </Link>
+                                            <!-- Header -->
+                                            <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+                                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Actions</h3>
+                                            </div>
+                                            
+                                            <!-- Actions List -->
+                                            <div class="py-2">
+                                                <!-- View -->
+                                                <Link
+                                                    :href="route('batch-assign.show', item.id)"
+                                                    class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                    </svg>
+                                                    <span>View</span>
+                                                </Link>
 
-                  <!-- Edit -->
-                  <Link
-                    :href="`/batch-assign/${item.id}/edit`"
-                                            class="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50"
-                  >
-                                            <Pencil class="h-4 w-4" />
-                    <span>Edit</span>
-                  </Link>
+                                                <!-- Edit -->
+                                                <Link
+                                                    :href="`/batch-assign/${item.id}/edit`"
+                                                    class="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                >
+                                                    <Pencil class="h-4 w-4" />
+                                                    <span>Edit</span>
+                                                </Link>
 
-                                        <!-- Report -->
-                                        <button
-                                            @click="exportRowPdf(item.id)"
-                                            class="flex w-full items-center gap-2 px-4 py-2 text-green-600 hover:bg-green-50"
-                                        >
-                                            <FileText class="h-4 w-4" />
-                                            <span>Report</span>
-                                        </button>
+                                                <!-- Report -->
+                                                <button
+                                                    @click="exportRowPdf(item.id)"
+                                                    class="flex w-full items-center gap-2 px-4 py-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                                >
+                                                    <FileText class="h-4 w-4" />
+                                                    <span>Report</span>
+                                                </button>
 
-                                        <!-- Transfer -->
-                                        <Link
-                                            :href="`/bird-transfer/create/${item.id}`"
-                                            class="flex items-center gap-2 px-4 py-2 text-yellow-600 hover:bg-yellow-50"
-                                        >
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                                            </svg>
-                                            <span>Transfer</span>
-                                        </Link>
+                                                <!-- Transfer -->
+                                                <Link
+                                                    :href="`/bird-transfer/create/${item.id}`"
+                                                    class="flex items-center gap-2 px-4 py-2 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                                    </svg>
+                                                    <span>Transfer</span>
+                                                </Link>
 
-                  <!-- Delete -->
-                  <button
-                    @click="deleteBatchAssign(item.id)"
-                                            class="flex w-full items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50"
-                  >
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                    <span>Delete</span>
-                  </button>
-                </div>
+                                                <!-- Delete -->
+                                                <button
+                                                    @click="deleteBatchAssign(item.id)"
+                                                    class="flex w-full items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                    <span>Delete</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
               </td>
             </tr>
 
