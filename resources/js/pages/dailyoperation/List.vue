@@ -2,6 +2,7 @@
 import listInfocard from '@/components/ListinfoCard.vue';
 import Pagination from '@/components/Pagination.vue';
 import { Button } from '@/components/ui/button';
+import SearchableSelect from '@/components/ui/select/SearchableSelect.vue';
 import { useListFilters } from '@/composables/useListFilters';
 import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
@@ -64,6 +65,22 @@ const stageTitles: Record<string, string> = {
 
 const currentTitle = stageTitles[props.stage] ?? props.stage;
 
+// Transform data for searchable selects
+const flockOptions = computed(() => [
+    { value: '', label: 'All Flocks' },
+    ...(props.flocks?.map(flock => ({ value: flock.id, label: flock.name })) || [])
+]);
+
+const shedOptions = computed(() => [
+    { value: '', label: 'All Sheds' },
+    ...(props.sheds?.map(shed => ({ value: shed.id, label: shed.name })) || [])
+]);
+
+const companyOptions = computed(() => [
+    { value: '', label: 'All Companies' },
+    ...(props.companies?.map(company => ({ value: company.id, label: company.name })) || [])
+]);
+
 useListFilters({ routeName: `/daily-operation/stage/${props.stage}`, filters: props.filters });
 const { confirmDelete } = useNotifier();
 const { can } = usePermissions();
@@ -75,6 +92,19 @@ const deleteOperation = (id: number) => {
         text: 'This will permanently delete the daily operation.',
         successMessage: 'Daily operation deleted.',
     });
+};
+
+// Filter handlers
+const handleFlockChange = (value: string | number) => {
+    $inertia.get(`/daily-operation/stage/${props.stage}`, { ...props.filters, flock_id: value }, { preserveState: true });
+};
+
+const handleShedChange = (value: string | number) => {
+    $inertia.get(`/daily-operation/stage/${props.stage}`, { ...props.filters, shed_id: value }, { preserveState: true });
+};
+
+const handleCompanyChange = (value: string | number) => {
+    $inertia.get(`/daily-operation/stage/${props.stage}`, { ...props.filters, company_id: value }, { preserveState: true });
 };
 
 // Breadcrumbs
@@ -170,46 +200,37 @@ onBeforeUnmount(() => {
                     <!-- Flock Filter -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Flock</label>
-                        <select
-                            :value="props.filters?.flock_id || ''"
-                            @change="(e) => $inertia.get(`/daily-operation/stage/${props.stage}`, { ...props.filters, flock_id: e.target.value }, { preserveState: true })"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-chicken focus:border-chicken dark:bg-gray-700 dark:text-white"
-                        >
-                            <option value="">All Flocks</option>
-                            <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">
-                                {{ flock.name }}
-                            </option>
-                        </select>
+                        <SearchableSelect
+                            :model-value="props.filters?.flock_id || ''"
+                            :options="flockOptions"
+                            placeholder="All Flocks"
+                            search-placeholder="Search flocks..."
+                            @update:model-value="handleFlockChange"
+                        />
                     </div>
 
                     <!-- Shed Filter -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Shed</label>
-                        <select
-                            :value="props.filters?.shed_id || ''"
-                            @change="(e) => $inertia.get(`/daily-operation/stage/${props.stage}`, { ...props.filters, shed_id: e.target.value }, { preserveState: true })"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-chicken focus:border-chicken dark:bg-gray-700 dark:text-white"
-                        >
-                            <option value="">All Sheds</option>
-                            <option v-for="shed in props.sheds" :key="shed.id" :value="shed.id">
-                                {{ shed.name }}
-                            </option>
-                        </select>
+                        <SearchableSelect
+                            :model-value="props.filters?.shed_id || ''"
+                            :options="shedOptions"
+                            placeholder="All Sheds"
+                            search-placeholder="Search sheds..."
+                            @update:model-value="handleShedChange"
+                        />
                     </div>
 
                     <!-- Company Filter -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company</label>
-                        <select
-                            :value="props.filters?.company_id || ''"
-                            @change="(e) => $inertia.get(`/daily-operation/stage/${props.stage}`, { ...props.filters, company_id: e.target.value }, { preserveState: true })"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-chicken focus:border-chicken dark:bg-gray-700 dark:text-white"
-                        >
-                            <option value="">All Companies</option>
-                            <option v-for="company in props.companies" :key="company.id" :value="company.id">
-                                {{ company.name }}
-                            </option>
-                        </select>
+                        <SearchableSelect
+                            :model-value="props.filters?.company_id || ''"
+                            :options="companyOptions"
+                            placeholder="All Companies"
+                            search-placeholder="Search companies..."
+                            @update:model-value="handleCompanyChange"
+                        />
                     </div>
 
                     <!-- Date From -->
