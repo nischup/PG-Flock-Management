@@ -20,13 +20,37 @@ class UserRegisterController extends Controller
         $users = User::query()
             ->with(['roles', 'permissions', 'company', 'shed'])
             ->visibleFor()
-            ->when($request->search, fn($q) => $q->where('name', 'like', "%{$request->search}%"))
+            ->when($request->search, function($q) use ($request) {
+                $q->where(function($query) use ($request) {
+                    $query->where('name', 'like', "%{$request->search}%")
+                          ->orWhere('email', 'like', "%{$request->search}%")
+                          ->orWhereHas('company', function($companyQuery) use ($request) {
+                              $companyQuery->where('name', 'like', "%{$request->search}%");
+                          })
+                          ->orWhereHas('shed', function($shedQuery) use ($request) {
+                              $shedQuery->where('name', 'like', "%{$request->search}%");
+                          });
+                });
+            })
+            ->when($request->company_id, fn($q) => $q->where('company_id', $request->company_id))
+            ->when($request->shed_id, fn($q) => $q->where('shed_id', $request->shed_id))
+            ->when($request->role_id, function($q) use ($request) {
+                $q->whereHas('roles', function($roleQuery) use ($request) {
+                    $roleQuery->where('id', $request->role_id);
+                });
+            })
+            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
 
         return Inertia::render('user/register/Register', [
             'users' => $users,
-            'filters' => $request->only(['search', 'per_page']),
+            'filters' => $request->only(['search', 'per_page', 'company_id', 'shed_id', 'role_id', 'date_from', 'date_to']),
+            'companies' => Company::all(['id', 'name']),
+            'sheds' => Shed::all(['id', 'name']),
+            'roles' => Role::all(['id', 'name']),
         ]);
     }
 

@@ -158,6 +158,19 @@ const mainNavItems: NavItem[] = [
             },
         ],
     },
+    {
+        title: 'Audit Log',
+        icon: FileText,
+        iconClass: 'text-yellow-500',
+        children: [
+            {
+                title: 'Audit Log',
+                href: '/audit-log',
+                icon: FileText,
+                iconClass: 'text-yellow-500',
+            },
+        ],
+    },
 
     {
         title: 'User Management',

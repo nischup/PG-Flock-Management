@@ -114,7 +114,21 @@ class ProductionShedReceiveController extends Controller
      */
     public function show(string $id)
     {
-        //
+        // Load the shed receive with all relationships
+        $shedReceive = ShedReceive::with(['flock', 'company', 'shed'])
+            ->findOrFail($id);
+
+        // Get related firm receive data if available
+        $firmReceive = null;
+        if ($shedReceive->receive_id) {
+            $firmReceive = PsFirmReceive::with(['flock', 'company'])
+                ->find($shedReceive->receive_id);
+        }
+
+        return Inertia::render('production/shed-receive/Show', [
+            'shedReceive' => $shedReceive,
+            'firmReceive' => $firmReceive,
+        ]);
     }
 
     /**
@@ -122,7 +136,42 @@ class ProductionShedReceiveController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        // Load the shed receive with relationships
+        $shedReceive = ShedReceive::with(['flock', 'company', 'shed'])->findOrFail($id);
+
+        // Fetch firm receives for dropdown
+        $firmReceives = PsFirmReceive::with(['flock', 'company'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($fr) {
+                return [
+                    'id' => $fr->id,
+                    'job_no' => $fr->job_no,
+                    'transaction_no' => $fr->transaction_no,
+                    'flock_id' => $fr->flock_id,
+                    'flock_name' => $fr->flock?->name ?? 'N/A',
+                    'receiving_company_id' => $fr->receiving_company_id,
+                    'firm_female_qty' => $fr->firm_female_qty,
+                    'firm_male_qty' => $fr->firm_male_qty,
+                    'firm_total_qty' => $fr->firm_total_qty,
+                    'remarks' => $fr->remarks,
+                ];
+            });
+
+        // Fetch all flocks
+        $flocks = Flock::select('id', 'name')->get();
+
+        // Fetch all companies
+        $companies = Company::select('id', 'name')->get();
+        $sheds = Shed::select('id', 'name')->get();
+
+        return Inertia::render('production/shed-receive/Edit', [
+            'shedReceive' => $shedReceive,
+            'firmReceives' => $firmReceives,
+            'flocks' => $flocks,
+            'companies' => $companies,
+            'sheds' => $sheds,
+        ]);
     }
 
     /**

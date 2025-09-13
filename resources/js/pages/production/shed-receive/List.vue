@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref,computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import FilterControls from '@/components/FilterControls.vue'
@@ -67,6 +67,16 @@ const openDropdownId = ref<number | null>(null)
 const toggleDropdown = (id: number) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
 }
+const closeDropdown = () => (openDropdownId.value = null)
+
+// ✅ Close on outside click
+const handleClick = (e: MouseEvent) => {
+    if (!(e.target as HTMLElement).closest('.action-btn')) {
+        closeDropdown();
+    }
+};
+onMounted(() => document.addEventListener('click', handleClick));
+onBeforeUnmount(() => document.removeEventListener('click', handleClick));
 
 
 
@@ -169,31 +179,61 @@ const cardData = computed(() => piCardData[selectedPI.value] || [])
               <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ item.company?.name ?? '-' }}</td>
               <td class="px-6 py-4 text-gray-600 dark:text-gray-300">{{ item.created_at ? dayjs(item.created_at).format('YYYY-MM-DD') : '-' }}</td>
               <td class="px-6 py-4 relative">
-                <Button size="sm" class="bg-gray-500 hover:bg-gray-600 text-white" @click="toggleDropdown(item.id)">
+                <Button size="sm" class="action-btn bg-gray-500 hover:bg-gray-600 text-white" @click.stop="toggleDropdown(item.id)">
                   Actions ▼
                 </Button>
-                <div v-if="openDropdownId === item.id"
-                    class="absolute right-0 mt-1 w-40 bg-white border rounded shadow-md z-10 flex flex-col"
-                    @click.stop>
-                  <!-- Edit -->
-                  <Link
-                    v-if="can('shed.receive.edit')"
-                    :href="`/shed-receive/${item.id}/edit`"
-                    class="px-4 py-2 text-left hover:bg-blue-50 text-blue-600 flex items-center gap-2"
-                  >
-                    <Pencil class="w-4 h-4" />
-                    <span>Edit</span>
-                  </Link>
 
-                  <!-- Delete -->
-                  <button
-                    v-if="can('shed.receive.delete')"
-                    @click="deleteReceive(item.id)"
-                    class="px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2 w-full"
-                  >
-                    <Trash2 class="w-4 h-4" />
-                    <span>Delete</span>
-                  </button>
+                <!-- Action Popup Overlay -->
+                <div
+                    v-if="openDropdownId === item.id"
+                    class="fixed inset-0 z-50 flex items-center justify-center"
+                    @click.stop="closeDropdown"
+                >
+                    <!-- Backdrop -->
+                    <div class="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+                    
+                    <!-- Popup Content -->
+                    <div
+                        class="relative z-10 w-48 rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                        @click.stop
+                    >
+                        <!-- Header -->
+                        <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Actions</h3>
+                        </div>
+                        
+                        <!-- Actions List -->
+                        <div class="py-2">
+                            <!-- Edit -->
+                            <Link
+                                :href="`/shed-receive/${item.id}/edit`"
+                                class="flex items-center gap-3 px-4 py-3 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors duration-200"
+                                @click="closeDropdown"
+                            >
+                                <Pencil class="h-5 w-5" />
+                                <span class="text-sm font-medium">Edit Record</span>
+                            </Link>
+
+                            <!-- Delete -->
+                            <button
+                                @click="deleteReceive(item.id); closeDropdown()"
+                                class="flex w-full items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors duration-200"
+                            >
+                                <Trash2 class="h-5 w-5" />
+                                <span class="text-sm font-medium">Delete Record</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div class="border-t border-gray-200 px-4 py-2 dark:border-gray-700">
+                            <button
+                                @click="closeDropdown"
+                                class="w-full rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
                 </div>
               </td>
             </tr>

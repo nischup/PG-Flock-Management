@@ -24,7 +24,7 @@ import {
 
 // Breadcrumb
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Production Shed Receive', href: '/production-shed-receive' },
+  { title: 'Shed Receive', href: '/shed-receive' },
   { title: 'Edit', href: '' },
 ]
 
@@ -38,7 +38,7 @@ const props = defineProps<{
 }>()
 
 // Form state
-const selectedJobId = ref<number | string>(props.shedReceive?.job_id || '')
+const selectTransactionid = ref<number | string>(props.shedReceive?.transaction_id || '')
 const selectedFlockId = ref<number | string>(props.shedReceive?.flock_id || '')
 const selectedShedid = ref<number | string>(props.shedReceive?.shed_id || '')
 
@@ -77,7 +77,7 @@ const filteredSheds = computed(() => {
 
 // Selected items display
 const selectedFirmReceive = computed(() => {
-    return props.firmReceives.find(fr => fr.id === Number(selectedJobId.value))
+    return props.firmReceives.find(fr => fr.id === Number(selectTransactionid.value))
 })
 
 const selectedFlock = computed(() => {
@@ -114,7 +114,7 @@ const debugDropdown = () => {
 }
 
 const form = useForm({
-  job_id: props.shedReceive?.job_id || 0,
+  transaction_id: props.shedReceive?.transaction_id || 0,
   flock_id: props.shedReceive?.flock_id || 0,
   shed_id: props.shedReceive?.shed_id || 1,
   receiving_company_id: props.shedReceive?.receiving_company_id || 0,
@@ -160,9 +160,9 @@ watch(selectedFlockId, (val) => {
 })
 
 // Watch for firm receive selection
-watch(selectedJobId, (val) => {
+watch(selectTransactionid, (val) => {
   if (val) {
-    form.job_id = Number(val)
+    form.transaction_id = Number(val)
     showInfo.value = true
   }
 })
@@ -175,13 +175,13 @@ watch(selectedShedid, (val) => {
 })
 
 const submit = () => {
-  form.put(route('production-shed-receive.update', props.shedReceive.id))
+  form.put(route('shed-receive.update', props.shedReceive.id))
 }
 </script>
 
 <template>
 <AppLayout :breadcrumbs="breadcrumbs">
-  <Head title="Edit Production Shed Receive" />
+  <Head title="Edit Shed Receive" />
 
   <!-- Header Section -->
   <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 p-8 text-white shadow-2xl">
@@ -191,11 +191,11 @@ const submit = () => {
     <div class="relative z-10">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-4xl font-bold">Edit Production Shed Receive</h1>
-          <p class="mt-2 text-purple-100">Update the production shed receive entry</p>
+          <h1 class="text-4xl font-bold">Edit Shed Receive</h1>
+          <p class="mt-2 text-purple-100">Update the shed receive entry</p>
         </div>
         <Link 
-          href="/production-shed-receive" 
+          href="/shed-receive" 
           class="group relative overflow-hidden rounded-xl bg-white/20 px-6 py-3 font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/30 hover:shadow-lg"
         >
           <span class="relative z-10 flex items-center gap-2">
@@ -300,16 +300,16 @@ const submit = () => {
                       v-for="fr in filteredFirmReceives"
                       :key="fr.id"
                       type="button"
-                      @click.stop="selectedJobId = fr.id; showFirmReceiveDropdown = false"
+                      @click.stop="selectTransactionid = fr.id; showFirmReceiveDropdown = false"
                       class="flex w-full items-center gap-4 px-6 py-4 text-left hover:bg-purple-50 dark:hover:bg-gray-700 transition-colors duration-200 border-b border-gray-100 dark:border-gray-600 last:border-b-0"
-                      :class="{ 'bg-purple-100 dark:bg-purple-900': selectedJobId == fr.id }"
+                      :class="{ 'bg-purple-100 dark:bg-purple-900': selectTransactionid == fr.id }"
                     >
                       <div class="h-3 w-3 rounded-full bg-purple-500 flex-shrink-0"></div>
                       <div class="flex-1">
                         <div class="font-semibold text-gray-900 dark:text-white">{{ fr.job_no }}</div>
                         <div class="text-sm text-gray-500 dark:text-gray-400">{{ fr.flock_name }}</div>
                       </div>
-                      <CheckCircle2 v-if="selectedJobId == fr.id" class="h-4 w-4 text-purple-500 flex-shrink-0" />
+                      <CheckCircle2 v-if="selectTransactionid == fr.id" class="h-4 w-4 text-purple-500 flex-shrink-0" />
                     </button>
                     <div v-if="filteredFirmReceives.length === 0 && (props.firmReceives?.length || 0) > 0" class="px-6 py-8 text-center text-gray-500">
                       <Search class="mx-auto h-6 w-6 text-gray-400" />
@@ -688,7 +688,7 @@ const submit = () => {
     <!-- Submit Section -->
     <div class="flex items-center justify-end gap-4 rounded-2xl bg-gradient-to-r from-gray-50 to-white p-6 dark:from-gray-800 dark:to-gray-900">
       <Link 
-        href="/production-shed-receive"
+        href="/shed-receive"
         class="rounded-xl border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
       >
         Cancel
