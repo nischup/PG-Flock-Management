@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 
 // Props
 interface Props {
@@ -16,6 +16,7 @@ interface Props {
   }>;
   projects: Array<{
     id: number;
+    company_id: number;
     name: string;
     code: string;
   }>;
@@ -35,17 +36,30 @@ interface Props {
     id: number;
     name: string;
   }>;
+  flocks: Array<{
+    id: number;
+    name: string;
+    code: string;
+  }>;
+  batches: Array<{
+    id: number;
+    name: string;
+  }>;
   vaccineSchedules: Array<{
     id: number;
     company_id: number;
     company_name: string;
-    job_no: string;
     project_id: number;
     project_name: string;
     project_code: string;
+    flock_id: number;
+    flock_name: string;
+    flock_code: string;
     flock_no: string;
     shed_id: number;
     shed_name: string;
+    batch_id: number;
+    batch_name: string;
     batch_no: string;
     breed_type_id: number;
     breed_type_name: string;
@@ -111,11 +125,10 @@ const editSchedule = (schedule: any) => {
   // Populate edit form with schedule data
   editScheduleForm.id = schedule.id;
   editScheduleForm.company_id = schedule.company_id.toString();
-  editScheduleForm.job_no = schedule.job_no;
   editScheduleForm.project_id = schedule.project_id.toString();
-  editScheduleForm.flock_no = schedule.flock_no;
+  editScheduleForm.flock_id = schedule.flock_id ? schedule.flock_id.toString() : "";
   editScheduleForm.shed_id = schedule.shed_id.toString();
-  editScheduleForm.batch_no = schedule.batch_no;
+  editScheduleForm.batch_id = schedule.batch_id ? schedule.batch_id.toString() : "";
   editScheduleForm.breed_type_id = schedule.breed_type_id.toString();
   
   // Populate stages data
@@ -198,11 +211,10 @@ const validateEditScheduleForm = () => {
   
   // Basic information validation
   if (!editScheduleForm.company_id) { errors.company_id = 'Please select a company.'; }
-  if (!editScheduleForm.job_no || editScheduleForm.job_no.trim() === '') { errors.job_no = 'Job number is required.'; }
   if (!editScheduleForm.project_id) { errors.project_id = 'Please select a project.'; }
-  if (!editScheduleForm.flock_no || editScheduleForm.flock_no.trim() === '') { errors.flock_no = 'Flock number is required.'; }
+  if (!editScheduleForm.flock_id) { errors.flock_id = 'Please select a flock.'; }
   if (!editScheduleForm.shed_id) { errors.shed_id = 'Please select a shed.'; }
-  if (!editScheduleForm.batch_no || editScheduleForm.batch_no.trim() === '') { errors.batch_no = 'Batch number is required.'; }
+  if (!editScheduleForm.batch_id) { errors.batch_id = 'Please select a batch.'; }
   if (!editScheduleForm.breed_type_id) { errors.breed_type_id = 'Please select a breed type.'; }
   
   // Stages validation
@@ -288,11 +300,10 @@ const openVaccineModal = () => {
 // Form data (schedule) using Inertia useForm
 const scheduleForm = useForm({
   company_id: "",
-  job_no: "",
   project_id: "",
-  flock_no: "",
+  flock_id: "",
   shed_id: "",
-  batch_no: "",
+  batch_id: "",
   breed_type_id: "",
   stages: [
     { 
@@ -311,11 +322,10 @@ const scheduleForm = useForm({
 const editScheduleForm = useForm({
   id: null,
   company_id: "",
-  job_no: "",
   project_id: "",
-  flock_no: "",
+  flock_id: "",
   shed_id: "",
-  batch_no: "",
+  batch_id: "",
   breed_type_id: "",
   stages: [
     { 
@@ -348,65 +358,6 @@ const routingForm = useForm({
   status: "active",
 });
 
-// Sample vaccination history data (in real app, this would come from backend)
-const vaccinationHistory = ref([
-  {
-    id: 1,
-    project: "PBL",
-    flock: "000001",
-    batch: "Batch A",
-    breed: "EP",
-    disease: "New Castle",
-    vaccine: "Lasota",
-    age: "7",
-    vaccinationDate: "2024-01-15",
-    status: "Completed",
-    administeredBy: "Dr. Smith",
-    notes: "All birds vaccinated successfully"
-  },
-  {
-    id: 2,
-    project: "PCL",
-    flock: "000002",
-    batch: "Batch B",
-    breed: "IR",
-    disease: "IBD",
-    vaccine: "Gumboro",
-    age: "14",
-    vaccinationDate: "2024-01-20",
-    status: "Completed",
-    administeredBy: "Dr. Johnson",
-    notes: "No adverse reactions observed"
-  },
-  {
-    id: 3,
-    project: "PBL",
-    flock: "000003",
-    batch: "Batch C",
-    breed: "EP",
-    disease: "Marek",
-    vaccine: "HVT",
-    age: "1",
-    vaccinationDate: "2024-01-25",
-    status: "Completed",
-    administeredBy: "Dr. Brown",
-    notes: "Day-old vaccination completed"
-  },
-  {
-    id: 4,
-    project: "PCL",
-    flock: "000001",
-    batch: "Batch A",
-    breed: "IR",
-    disease: "New Castle",
-    vaccine: "Lasota",
-    age: "21",
-    vaccinationDate: "2024-02-01",
-    status: "Completed",
-    administeredBy: "Dr. Smith",
-    notes: "Booster vaccination given"
-  }
-]);
 
 // Add stage
 const addStage = () => {
@@ -487,8 +438,34 @@ const validateForm = () => {
   return errors;
 };
 
+// Computed properties for filtered data
+const filteredProjects = computed(() => {
+  if (!scheduleForm.company_id) return [];
+  return props.projects.filter(project => project.company_id === parseInt(scheduleForm.company_id));
+});
+
+const filteredEditProjects = computed(() => {
+  if (!editScheduleForm.company_id) return [];
+  return props.projects.filter(project => project.company_id === parseInt(editScheduleForm.company_id));
+});
+
+// Watchers to reset dependent fields when company changes
+watch(() => scheduleForm.company_id, (newCompanyId) => {
+  if (newCompanyId) {
+    scheduleForm.project_id = "";
+    scheduleForm.clearErrors('project_id');
+  }
+});
+
+watch(() => editScheduleForm.company_id, (newCompanyId) => {
+  if (newCompanyId) {
+    editScheduleForm.project_id = "";
+    editScheduleForm.clearErrors('project_id');
+  }
+});
+
 // Error categorization for vaccine schedule form
-const basicInfoFields = ['company_id', 'job_no', 'project_id', 'flock_no', 'shed_id', 'batch_no', 'breed_type_id'];
+const basicInfoFields = ['company_id', 'project_id', 'flock_id', 'shed_id', 'batch_id', 'breed_type_id'];
 
 const basicInfoErrors = computed(() => {
   const errors: Record<string, any> = {};
@@ -535,24 +512,21 @@ const validateScheduleForm = () => {
     errors.company_id = 'Please select a company.';
   }
   
-  if (!scheduleForm.job_no || scheduleForm.job_no.trim() === '') {
-    errors.job_no = 'Job number is required.';
-  }
   
   if (!scheduleForm.project_id) {
     errors.project_id = 'Please select a project.';
   }
   
-  if (!scheduleForm.flock_no || scheduleForm.flock_no.trim() === '') {
-    errors.flock_no = 'Flock number is required.';
+  if (!scheduleForm.flock_id) {
+    errors.flock_id = 'Please select a flock.';
   }
   
   if (!scheduleForm.shed_id) {
     errors.shed_id = 'Please select a shed.';
   }
   
-  if (!scheduleForm.batch_no || scheduleForm.batch_no.trim() === '') {
-    errors.batch_no = 'Batch number is required.';
+  if (!scheduleForm.batch_id) {
+    errors.batch_id = 'Please select a batch.';
   }
   
   if (!scheduleForm.breed_type_id) {
@@ -602,13 +576,10 @@ const saveVaccine = () => {
   
   vaccineForm.post('/vaccine', {
     onSuccess: () => {
-  // Add vaccine to options dynamically
-      vaccineOptions.push(vaccineForm.name);
-
       // Reset form
       vaccineForm.reset();
       vaccineForm.status = 1; // Reset status to active
-  showVaccineModal.value = false;
+      showVaccineModal.value = false;
     },
     onError: (errors) => {
       // Keep modal open and show validation errors
@@ -689,7 +660,7 @@ const saveVaccine = () => {
             <thead class="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  S/L No
+                  S/N
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Company
@@ -715,7 +686,7 @@ const saveVaccine = () => {
             </tr>
           </thead>
             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              <template v-for="schedule in props.vaccineSchedules" :key="schedule.id">
+              <template v-for="(schedule, index) in props.vaccineSchedules" :key="schedule.id">
                 <!-- Main Schedule Row -->
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" @click="toggleRow(schedule.id)">
                   <td class="px-6 py-4 whitespace-nowrap">
@@ -733,7 +704,7 @@ const saveVaccine = () => {
                         </svg>
                 </button>
                       <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {{ schedule.id }}
+                        {{ index + 1 }}
                       </div>
                     </div>
                   </td>
@@ -746,8 +717,8 @@ const saveVaccine = () => {
                     <div class="text-sm text-gray-500 dark:text-gray-400">{{ schedule.project_code }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900 dark:text-gray-100">Flock: {{ schedule.flock_no }}</div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">Batch: {{ schedule.batch_no }}</div>
+                    <div class="text-sm text-gray-900 dark:text-gray-100">{{ schedule.flock_name }}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ schedule.flock_code }} | Batch: {{ schedule.batch_name }}</div>
                     <div class="text-sm text-gray-500 dark:text-gray-400">Shed: {{ schedule.shed_name }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
@@ -1008,35 +979,6 @@ const saveVaccine = () => {
                   </div>
             </div>
 
-                <!-- Job Number -->
-                <div class="space-y-2">
-                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    <span class="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                      </svg>
-                      Job Number
-                      <span class="text-red-500 font-bold">*</span>
-                    </span>
-                  </label>
-                  <input 
-                    v-model="scheduleForm.job_no" 
-                    type="text" 
-                    class="w-full px-4 py-3 border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    :class="{ 
-                      'border-red-500 bg-red-50 dark:bg-red-900/20 focus:ring-red-500': scheduleForm.errors.job_no, 
-                      'border-gray-300 dark:border-gray-600': !scheduleForm.errors.job_no 
-                    }"
-                    placeholder="e.g., JOB001"
-                    required
-                  />
-                  <div v-if="scheduleForm.errors.job_no" class="text-red-500 text-sm flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {{ scheduleForm.errors.job_no }}
-                  </div>
-                </div>
 
             <!-- Project -->
                 <div class="space-y-2">
@@ -1059,7 +1001,7 @@ const saveVaccine = () => {
                     required
                   >
                 <option value="">Select Project</option>
-                    <option v-for="project in props.projects" :key="project.id" :value="project.id">
+                    <option v-for="project in filteredProjects" :key="project.id" :value="project.id">
                       {{ project.name }} ({{ project.code }})
                     </option>
               </select>
@@ -1071,33 +1013,36 @@ const saveVaccine = () => {
                   </div>
             </div>
 
-                <!-- Flock Number -->
+                <!-- Flock -->
                 <div class="space-y-2">
                   <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     <span class="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      Flock Number
+                      Flock
                       <span class="text-red-500 font-bold">*</span>
                     </span>
                   </label>
-                  <input 
-                    v-model="scheduleForm.flock_no" 
-                    type="text" 
-                    class="w-full px-4 py-3 border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  <select 
+                    v-model="scheduleForm.flock_id" 
+                    class="w-full px-4 py-3 border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white appearance-none cursor-pointer"
                     :class="{ 
-                      'border-red-500 bg-red-50 dark:bg-red-900/20 focus:ring-red-500': scheduleForm.errors.flock_no, 
-                      'border-gray-300 dark:border-gray-600': !scheduleForm.errors.flock_no 
+                      'border-red-500 bg-red-50 dark:bg-red-900/20 focus:ring-red-500': scheduleForm.errors.flock_id, 
+                      'border-gray-300 dark:border-gray-600': !scheduleForm.errors.flock_id 
                     }"
-                    placeholder="e.g., FL001"
                     required
-                  />
-                  <div v-if="scheduleForm.errors.flock_no" class="text-red-500 text-sm flex items-center gap-1">
+                  >
+                    <option value="">Select Flock</option>
+                    <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">
+                      {{ flock.name }} ({{ flock.code }})
+                    </option>
+                  </select>
+                  <div v-if="scheduleForm.errors.flock_id" class="text-red-500 text-sm flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    {{ scheduleForm.errors.flock_no }}
+                    {{ scheduleForm.errors.flock_id }}
                   </div>
             </div>
 
@@ -1134,33 +1079,36 @@ const saveVaccine = () => {
                   </div>
             </div>
 
-                <!-- Batch Number -->
+                <!-- Batch -->
                 <div class="space-y-2">
                   <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     <span class="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>
-                      Batch Number
+                      Batch
                       <span class="text-red-500 font-bold">*</span>
                     </span>
                   </label>
-                  <input 
-                    v-model="scheduleForm.batch_no" 
-                    type="text" 
-                    class="w-full px-4 py-3 border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  <select 
+                    v-model="scheduleForm.batch_id" 
+                    class="w-full px-4 py-3 border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white appearance-none cursor-pointer"
                     :class="{ 
-                      'border-red-500 bg-red-50 dark:bg-red-900/20 focus:ring-red-500': scheduleForm.errors.batch_no, 
-                      'border-gray-300 dark:border-gray-600': !scheduleForm.errors.batch_no 
+                      'border-red-500 bg-red-50 dark:bg-red-900/20 focus:ring-red-500': scheduleForm.errors.batch_id, 
+                      'border-gray-300 dark:border-gray-600': !scheduleForm.errors.batch_id 
                     }"
-                    placeholder="e.g., BATCH001"
                     required
-                  />
-                  <div v-if="scheduleForm.errors.batch_no" class="text-red-500 text-sm flex items-center gap-1">
+                  >
+                    <option value="">Select Batch</option>
+                    <option v-for="batch in props.batches" :key="batch.id" :value="batch.id">
+                      {{ batch.name }}
+                    </option>
+                  </select>
+                  <div v-if="scheduleForm.errors.batch_id" class="text-red-500 text-sm flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    {{ scheduleForm.errors.batch_no }}
+                    {{ scheduleForm.errors.batch_id }}
                   </div>
             </div>
 
@@ -1803,36 +1751,6 @@ const saveVaccine = () => {
                   </div>
                 </div>
 
-                <!-- Job Number -->
-                <div class="space-y-2">
-                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    <span class="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                      </svg>
-                      Job Number
-                      <span class="text-red-500 font-bold">*</span>
-                    </span>
-                    <span class="text-xs text-gray-500 font-normal">Enter job number</span>
-                  </label>
-                  <input 
-                    v-model="editScheduleForm.job_no" 
-                    type="text" 
-                    class="w-full px-4 py-3 border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    :class="{ 
-                      'border-red-500 bg-red-50 dark:bg-red-900/20 focus:ring-red-500': editScheduleForm.errors.job_no, 
-                      'border-gray-300 dark:border-gray-600': !editScheduleForm.errors.job_no 
-                    }"
-                    placeholder="Enter job number"
-                    required
-                  />
-                  <div v-if="editScheduleForm.errors.job_no" class="text-red-500 text-sm flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {{ editScheduleForm.errors.job_no }}
-                  </div>
-                </div>
 
                 <!-- Project -->
                 <div class="space-y-2">
@@ -1856,7 +1774,7 @@ const saveVaccine = () => {
                     required
                   >
                     <option value="">Select Project</option>
-                    <option v-for="project in props.projects" :key="project.id" :value="project.id">
+                    <option v-for="project in filteredEditProjects" :key="project.id" :value="project.id">
                       {{ project.name }} ({{ project.code }})
                     </option>
                   </select>
@@ -1868,34 +1786,37 @@ const saveVaccine = () => {
                   </div>
                 </div>
 
-                <!-- Flock Number -->
+                <!-- Flock -->
                 <div class="space-y-2">
                   <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     <span class="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      Flock Number
+                      Flock
                       <span class="text-red-500 font-bold">*</span>
                     </span>
-                    <span class="text-xs text-gray-500 font-normal">Enter flock number</span>
+                    <span class="text-xs text-gray-500 font-normal">Select flock</span>
                   </label>
-                  <input 
-                    v-model="editScheduleForm.flock_no" 
-                    type="text" 
-                    class="w-full px-4 py-3 border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  <select 
+                    v-model="editScheduleForm.flock_id" 
+                    class="w-full px-4 py-3 border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white appearance-none cursor-pointer"
                     :class="{ 
-                      'border-red-500 bg-red-50 dark:bg-red-900/20 focus:ring-red-500': editScheduleForm.errors.flock_no, 
-                      'border-gray-300 dark:border-gray-600': !editScheduleForm.errors.flock_no 
+                      'border-red-500 bg-red-50 dark:bg-red-900/20 focus:ring-red-500': editScheduleForm.errors.flock_id, 
+                      'border-gray-300 dark:border-gray-600': !editScheduleForm.errors.flock_id 
                     }"
-                    placeholder="Enter flock number"
                     required
-                  />
-                  <div v-if="editScheduleForm.errors.flock_no" class="text-red-500 text-sm flex items-center gap-1">
+                  >
+                    <option value="">Select Flock</option>
+                    <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">
+                      {{ flock.name }} ({{ flock.code }})
+                    </option>
+                  </select>
+                  <div v-if="editScheduleForm.errors.flock_id" class="text-red-500 text-sm flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    {{ editScheduleForm.errors.flock_no }}
+                    {{ editScheduleForm.errors.flock_id }}
                   </div>
                 </div>
 
@@ -1933,34 +1854,37 @@ const saveVaccine = () => {
                   </div>
                 </div>
 
-                <!-- Batch Number -->
+                <!-- Batch -->
                 <div class="space-y-2">
                   <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     <span class="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>
-                      Batch Number
+                      Batch
                       <span class="text-red-500 font-bold">*</span>
                     </span>
-                    <span class="text-xs text-gray-500 font-normal">Enter batch number</span>
+                    <span class="text-xs text-gray-500 font-normal">Select batch</span>
                   </label>
-                  <input 
-                    v-model="editScheduleForm.batch_no" 
-                    type="text" 
-                    class="w-full px-4 py-3 border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  <select 
+                    v-model="editScheduleForm.batch_id" 
+                    class="w-full px-4 py-3 border rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white appearance-none cursor-pointer"
                     :class="{ 
-                      'border-red-500 bg-red-50 dark:bg-red-900/20 focus:ring-red-500': editScheduleForm.errors.batch_no, 
-                      'border-gray-300 dark:border-gray-600': !editScheduleForm.errors.batch_no 
+                      'border-red-500 bg-red-50 dark:bg-red-900/20 focus:ring-red-500': editScheduleForm.errors.batch_id, 
+                      'border-gray-300 dark:border-gray-600': !editScheduleForm.errors.batch_id 
                     }"
-                    placeholder="Enter batch number"
                     required
-                  />
-                  <div v-if="editScheduleForm.errors.batch_no" class="text-red-500 text-sm flex items-center gap-1">
+                  >
+                    <option value="">Select Batch</option>
+                    <option v-for="batch in props.batches" :key="batch.id" :value="batch.id">
+                      {{ batch.name }}
+                    </option>
+                  </select>
+                  <div v-if="editScheduleForm.errors.batch_id" class="text-red-500 text-sm flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    {{ editScheduleForm.errors.batch_no }}
+                    {{ editScheduleForm.errors.batch_id }}
                   </div>
                 </div>
 

@@ -47,6 +47,7 @@ const props = defineProps<{
   waters?:Array<any>
   units?:Array<any>
   stage?: string
+  todayVaccineSchedules?: Array<any>
 }>()
 
 const { showInfo } = useNotifier(); // auto-shows flash messages
@@ -184,6 +185,7 @@ const form = useForm({
   medicine_unit:0,
   medicine_dose:0,
   medicine_note:'',
+  vaccine_schedule_detail_id:'',
   vaccine_id:'',
   vaccine_dose:'',
   vaccine_unit:0,
@@ -218,6 +220,12 @@ const showFeedTypeDropdown = ref(false)
 const feedTypeSearchQuery = ref('')
 const showUnitDropdown = ref(false)
 const unitSearchQuery = ref('')
+
+// Selected vaccine schedule
+const selectedVaccineSchedule = computed(() => {
+  if (!form.vaccine_schedule_detail_id) return null
+  return props.todayVaccineSchedules?.find(schedule => schedule.id == form.vaccine_schedule_detail_id)
+})
 
 // Filtered flock options
 const filteredFlocks = computed(() => {
@@ -449,6 +457,28 @@ function goToTab(index: number) {
   const key = activeTab.value
   if (!validateTab(key)) return
   activeTabIndex.value = index
+}
+
+// Handle vaccine schedule selection
+function onVaccineScheduleChange() {
+  const selectedScheduleId = form.vaccine_schedule_detail_id
+  if (!selectedScheduleId) {
+    // Clear vaccine fields if no schedule selected
+    form.vaccine_id = ''
+    form.vaccine_dose = ''
+    form.vaccine_unit = ''
+    return
+  }
+
+  // Find the selected schedule
+  const selectedSchedule = props.todayVaccineSchedules?.find(schedule => schedule.id == selectedScheduleId)
+  if (selectedSchedule) {
+    // Auto-populate vaccine fields
+    form.vaccine_id = selectedSchedule.vaccine_id
+    form.vaccine_dose = '' // Let user enter dose
+    form.vaccine_unit = '' // Let user select unit
+    form.vaccine_note = selectedSchedule.notes || ''
+  }
 }
 // Submit
 function submit() {
@@ -1823,18 +1853,35 @@ function submit() {
                 <div class="space-y-1">
                 <Label class="text-xs font-semibold text-gray-700 flex items-center">
                   <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full mr-2"></div>
-                  Vaccine
+                  Today's Vaccine Schedule
                 </Label>
                   <select 
-                    v-model="form.vaccine_id" 
+                    v-model="form.vaccine_schedule_detail_id" 
+                    @change="onVaccineScheduleChange"
                     class="w-full h-10 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white"
                   >
-                    <option value="">Select vaccine...</option>
-                    <option v-for="vaccine in props.vaccines" :key="vaccine.id" :value="vaccine.id">
-                      {{ vaccine.name }}
+                    <option value="">Select today's vaccine schedule...</option>
+                    <option v-for="schedule in props.todayVaccineSchedules" :key="schedule.id" :value="schedule.id">
+                      {{ schedule.display_name }} - {{ schedule.flock_name }} ({{ schedule.shed_name }})
                     </option>
                   </select>
                 </div>
+                
+                <!-- Selected Schedule Info -->
+                <div v-if="form.vaccine_schedule_detail_id" class="col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div class="text-sm text-blue-800">
+                    <div class="font-semibold mb-1">Selected Schedule Details:</div>
+                    <div v-if="selectedVaccineSchedule" class="space-y-1">
+                      <div><span class="font-medium">Vaccine:</span> {{ selectedVaccineSchedule.vaccine_name }}</div>
+                      <div><span class="font-medium">Disease:</span> {{ selectedVaccineSchedule.disease_name }}</div>
+                      <div><span class="font-medium">Age:</span> {{ selectedVaccineSchedule.age }}</div>
+                      <div><span class="font-medium">Flock:</span> {{ selectedVaccineSchedule.flock_name }}</div>
+                      <div><span class="font-medium">Shed:</span> {{ selectedVaccineSchedule.shed_name }}</div>
+                      <div v-if="selectedVaccineSchedule.notes"><span class="font-medium">Notes:</span> {{ selectedVaccineSchedule.notes }}</div>
+                    </div>
+                  </div>
+                </div>
+                
                 <div class="space-y-1">
                 <Label class="text-xs font-semibold text-gray-700 flex items-center">
                   <div class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></div>

@@ -12,8 +12,10 @@ class VaccineSchedule extends Model
         'company_id',
         'job_no',
         'project_id',
+        'flock_id',
         'flock_no',
         'shed_id',
+        'batch_id',
         'batch_no',
         'breed_type_id',
         'status',
@@ -40,11 +42,27 @@ class VaccineSchedule extends Model
     }
 
     /**
+     * Get the flock that owns the vaccine schedule.
+     */
+    public function flock(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Master\Flock::class);
+    }
+
+    /**
      * Get the shed that owns the vaccine schedule.
      */
     public function shed(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Master\Shed::class);
+    }
+
+    /**
+     * Get the batch that owns the vaccine schedule.
+     */
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Master\Batch::class);
     }
 
     /**

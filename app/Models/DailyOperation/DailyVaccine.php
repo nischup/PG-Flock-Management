@@ -4,6 +4,7 @@ namespace App\Models\DailyOperation;
 use  App\Models\Master\unit;
 use  App\Models\Master\vaccine;
 use  App\Models\vaccineSchedule;
+use  App\Models\VaccineScheduleDetail;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,6 +14,7 @@ class DailyVaccine extends Model
         'daily_operation_id',     // FK to daily_operations
         'vaccine_id',             // FK to vaccines table
         'vaccine_schedule_id',    // Optional FK to vaccine_schedules
+        'vaccine_schedule_detail_id', // FK to vaccine_schedules_details
         'dose',                   // Vaccine dose
         'unit_id',                // FK to units table (nullable)
         'file_path',              // Uploaded file path
@@ -38,5 +40,10 @@ class DailyVaccine extends Model
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unit_id');
+    }
+
+    public function vaccineScheduleDetail()
+    {
+        return $this->belongsTo(VaccineScheduleDetail::class);
     }
 }

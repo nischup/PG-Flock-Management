@@ -9,6 +9,8 @@ use App\Models\Master\Medicine;
 use App\Models\Master\Unit;
 use App\Models\Master\Vaccine;
 use App\Models\Shed\BatchAssign;
+use App\Models\VaccineSchedule;
+use App\Models\VaccineScheduleDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -214,6 +216,38 @@ class DailyOperationController extends Controller
             ['id' => 3, 'name' => 'Vitamin Mixed Water'],
         ];
 
+        // Get today's vaccine schedules
+        $today = now()->format('Y-m-d');
+        $todayVaccineSchedules = VaccineScheduleDetail::with([
+            'vaccineSchedule.flock',
+            'vaccineSchedule.shed',
+            'vaccineSchedule.batch',
+            'vaccineSchedule.company',
+            'vaccine',
+            'disease'
+        ])
+        ->where('vaccination_date', $today)
+        ->where('status', 'pending')
+        ->get()
+        ->map(function ($detail) {
+            return [
+                'id' => $detail->id,
+                'vaccine_schedule_id' => $detail->vaccine_schedule_id,
+                'vaccine_id' => $detail->vaccine_id,
+                'vaccine_name' => $detail->vaccine->name ?? 'N/A',
+                'disease_name' => $detail->disease->name ?? 'N/A',
+                'age' => $detail->age,
+                'vaccination_date' => $detail->vaccination_date,
+                'next_vaccination_date' => $detail->next_vaccination_date,
+                'notes' => $detail->notes,
+                'flock_name' => $detail->vaccineSchedule->flock->name ?? 'N/A',
+                'shed_name' => $detail->vaccineSchedule->shed->name ?? 'N/A',
+                'batch_name' => $detail->vaccineSchedule->batch->name ?? 'N/A',
+                'company_name' => $detail->vaccineSchedule->company->name ?? 'N/A',
+                'display_name' => $detail->vaccine->name . ' - ' . ($detail->disease->name ?? 'General') . ' (' . $detail->age . ')',
+            ];
+        });
+
         return Inertia::render('dailyoperation/Create', [
             'stage' => $stage,   // ✅ Pass stage here
             'flocks' => $flocks,
@@ -223,6 +257,7 @@ class DailyOperationController extends Controller
             'medicines' => Medicine::all(),
             'vaccines' => Vaccine::all(),
             'waters' => $waters,
+            'todayVaccineSchedules' => $todayVaccineSchedules,
         ]);
     }
 
@@ -389,6 +424,11 @@ class DailyOperationController extends Controller
                 'unit' => $request->vaccine_unit,
                 'note' => $request->vaccine_note,
             ];
+
+            // Add vaccine schedule detail ID if provided
+            if ($request->vaccine_schedule_detail_id) {
+                $vaccineData['vaccine_schedule_detail_id'] = $request->vaccine_schedule_detail_id;
+            }
 
             if ($request->hasFile('vaccine_file')) {
                 $vaccineData['file'] = $request->file('vaccine_file')->store('vaccines');

@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\VaccineSchedule;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\Batch;
 use App\Models\Master\BreedType;
 use App\Models\Master\Company;
 use App\Models\Master\Disease;
+use App\Models\Master\Flock;
+use App\Models\Master\Project;
 use App\Models\Master\Shed;
 use App\Models\Master\Vaccine;
 use App\Models\Master\VaccineType;
-use App\Models\Master\Project;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -48,11 +50,21 @@ class VaccineScheduleController extends Controller
             ->orderBy('name')
             ->get();
 
+        $flocks = Flock::where('status', 1)
+            ->orderBy('name')
+            ->get();
+
+        $batches = Batch::where('status', 1)
+            ->orderBy('name')
+            ->get();
+
         // Fetch vaccine schedules with their details and relationships
         $vaccineSchedules = \App\Models\VaccineSchedule::with([
             'company',
             'project',
+            'flock',
             'shed',
+            'batch',
             'breedType',
             'vaccineScheduleDetails.disease',
             'vaccineScheduleDetails.vaccine',
@@ -74,6 +86,7 @@ class VaccineScheduleController extends Controller
             'projects' => $projects->map(function ($p) {
                 return [
                     'id' => $p->id,
+                    'company_id' => $p->company_id,
                     'name' => $p->name,
                     'code' => $p->code,
                 ];
@@ -102,18 +115,35 @@ class VaccineScheduleController extends Controller
                     'name' => $v->name,
                 ];
             })->toArray(),
+            'flocks' => $flocks->map(function ($f) {
+                return [
+                    'id' => $f->id,
+                    'name' => $f->name,
+                    'code' => $f->code,
+                ];
+            })->toArray(),
+            'batches' => $batches->map(function ($b) {
+                return [
+                    'id' => $b->id,
+                    'name' => $b->name,
+                ];
+            })->toArray(),
             'vaccineSchedules' => $vaccineSchedules->map(function ($schedule) {
                 return [
                     'id' => $schedule->id,
                     'company_id' => $schedule->company_id,
                     'company_name' => $schedule->company->name ?? 'N/A',
-                    'job_no' => $schedule->job_no,
                     'project_id' => $schedule->project_id,
                     'project_name' => $schedule->project->name ?? 'N/A',
                     'project_code' => $schedule->project->code ?? 'N/A',
+                    'flock_id' => $schedule->flock_id,
+                    'flock_name' => $schedule->flock->name ?? 'N/A',
+                    'flock_code' => $schedule->flock->code ?? 'N/A',
                     'flock_no' => $schedule->flock_no,
                     'shed_id' => $schedule->shed_id,
                     'shed_name' => $schedule->shed->name ?? 'N/A',
+                    'batch_id' => $schedule->batch_id,
+                    'batch_name' => $schedule->batch->name ?? 'N/A',
                     'batch_no' => $schedule->batch_no,
                     'breed_type_id' => $schedule->breed_type_id,
                     'breed_type_name' => $schedule->breedType->name ?? 'N/A',
@@ -157,11 +187,10 @@ class VaccineScheduleController extends Controller
         try {
             $validated = $request->validate([
                 'company_id' => 'required|exists:companies,id',
-                'job_no' => 'required|string|max:50',
                 'project_id' => 'required|exists:projects,id',
-                'flock_no' => 'required|string|max:50',
+                'flock_id' => 'required|exists:flocks,id',
                 'shed_id' => 'required|exists:sheds,id',
-                'batch_no' => 'required|string|max:50',
+                'batch_id' => 'required|exists:batches,id',
                 'breed_type_id' => 'required|exists:breed_types,id',
                 'stages' => 'required|array|min:1',
                 'stages.*.disease_id' => 'required|exists:diseases,id',
@@ -175,19 +204,14 @@ class VaccineScheduleController extends Controller
                 // Basic Information Validation Messages
                 'company_id.required' => 'Please select a company.',
                 'company_id.exists' => 'The selected company is invalid.',
-                'job_no.required' => 'Job number is required.',
-                'job_no.string' => 'Job number must be a valid text.',
-                'job_no.max' => 'Job number cannot exceed 50 characters.',
                 'project_id.required' => 'Please select a project.',
                 'project_id.exists' => 'The selected project is invalid.',
-                'flock_no.required' => 'Flock number is required.',
-                'flock_no.string' => 'Flock number must be a valid text.',
-                'flock_no.max' => 'Flock number cannot exceed 50 characters.',
+                'flock_id.required' => 'Please select a flock.',
+                'flock_id.exists' => 'The selected flock is invalid.',
                 'shed_id.required' => 'Please select a shed.',
                 'shed_id.exists' => 'The selected shed is invalid.',
-                'batch_no.required' => 'Batch number is required.',
-                'batch_no.string' => 'Batch number must be a valid text.',
-                'batch_no.max' => 'Batch number cannot exceed 50 characters.',
+                'batch_id.required' => 'Please select a batch.',
+                'batch_id.exists' => 'The selected batch is invalid.',
                 'breed_type_id.required' => 'Please select a breed type.',
                 'breed_type_id.exists' => 'The selected breed type is invalid.',
 
@@ -216,11 +240,10 @@ class VaccineScheduleController extends Controller
             // Create the vaccine schedule
             $vaccineSchedule = \App\Models\VaccineSchedule::create([
                 'company_id' => $validated['company_id'],
-                'job_no' => $validated['job_no'],
                 'project_id' => $validated['project_id'],
-                'flock_no' => $validated['flock_no'],
+                'flock_id' => $validated['flock_id'],
                 'shed_id' => $validated['shed_id'],
-                'batch_no' => $validated['batch_no'],
+                'batch_id' => $validated['batch_id'],
                 'breed_type_id' => $validated['breed_type_id'],
                 'status' => 1,
             ]);
@@ -274,11 +297,10 @@ class VaccineScheduleController extends Controller
             // Validate the request
             $request->validate([
                 'company_id' => 'required|exists:companies,id',
-                'job_no' => 'required|string|max:255',
                 'project_id' => 'required|exists:projects,id',
-                'flock_no' => 'required|string|max:255',
+                'flock_id' => 'required|exists:flocks,id',
                 'shed_id' => 'required|exists:sheds,id',
-                'batch_no' => 'required|string|max:255',
+                'batch_id' => 'required|exists:batches,id',
                 'breed_type_id' => 'required|exists:breed_types,id',
                 'stages' => 'required|array|min:1',
                 'stages.*.disease_id' => 'required|exists:diseases,id',
@@ -291,19 +313,14 @@ class VaccineScheduleController extends Controller
             ], [
                 'company_id.required' => 'Please select a company.',
                 'company_id.exists' => 'The selected company is invalid.',
-                'job_no.required' => 'Job number is required.',
-                'job_no.string' => 'Job number must be a valid text.',
-                'job_no.max' => 'Job number cannot exceed 255 characters.',
                 'project_id.required' => 'Please select a project.',
                 'project_id.exists' => 'The selected project is invalid.',
-                'flock_no.required' => 'Flock number is required.',
-                'flock_no.string' => 'Flock number must be a valid text.',
-                'flock_no.max' => 'Flock number cannot exceed 255 characters.',
+                'flock_id.required' => 'Please select a flock.',
+                'flock_id.exists' => 'The selected flock is invalid.',
                 'shed_id.required' => 'Please select a shed.',
                 'shed_id.exists' => 'The selected shed is invalid.',
-                'batch_no.required' => 'Batch number is required.',
-                'batch_no.string' => 'Batch number must be a valid text.',
-                'batch_no.max' => 'Batch number cannot exceed 255 characters.',
+                'batch_id.required' => 'Please select a batch.',
+                'batch_id.exists' => 'The selected batch is invalid.',
                 'breed_type_id.required' => 'Please select a breed type.',
                 'breed_type_id.exists' => 'The selected breed type is invalid.',
                 'stages.required' => 'At least one vaccination stage is required.',
@@ -332,11 +349,10 @@ class VaccineScheduleController extends Controller
             // Update the main schedule
             $vaccineSchedule->update([
                 'company_id' => $request->company_id,
-                'job_no' => $request->job_no,
                 'project_id' => $request->project_id,
-                'flock_no' => $request->flock_no,
+                'flock_id' => $request->flock_id,
                 'shed_id' => $request->shed_id,
-                'batch_no' => $request->batch_no,
+                'batch_id' => $request->batch_id,
                 'breed_type_id' => $request->breed_type_id,
             ]);
 

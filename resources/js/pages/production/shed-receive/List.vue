@@ -442,8 +442,8 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <h1 class="text-xl font-semibold text-gray-800 dark:text-white">Shed Receive Information</h1>
                 <div class="flex items-center gap-2">
                     <!-- Shed Receive Button -->
-                    <Link
-                        href="/production-shed-receive/create"
+        <Link
+          href="/production-shed-receive/create"
                         class="group relative overflow-hidden rounded-md px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500"
                         style="background: linear-gradient(135deg, #1f2937 0%, #000000 50%, #374151 100%); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);"
                     >
@@ -454,7 +454,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             Shed Receive
                         </span>
                         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-20 group-hover:translate-x-full"></div>
-                    </Link>
+        </Link>
 
                     <!-- Export Dropdown -->
                     <div class="pdf-dropdown relative">
@@ -751,18 +751,22 @@ const breadcrumbs: BreadcrumbItem[] = [
 
       <!-- List Table -->
       <div class="overflow-x-auto rounded-xl shadow bg-white dark:bg-gray-800 mt-4">
-        <table class="w-full text-left border-collapse">
+        <table class="min-w-full text-left border-collapse">
           <thead class="bg-gray-100 dark:bg-gray-700">
             <tr>
-              <th class="px-4 py-2 border-b">#SL</th>
-              <th class="px-4 py-2 border-b">Flock No</th>
-              <th class="px-4 py-2 border-b">Shed</th>  
-              <th class="px-4 py-2 border-b">Batch No</th>    
-              <th class="px-4 py-2 border-b">Company</th>
-              <th class="px-4 py-2 border-b">Female Qty</th>
-              <th class="px-4 py-2 border-b">Male Qty</th>
-              <th class="px-4 py-2 border-b">Total Qty</th>
-              <th class="px-4 py-2 border-b">Action</th>
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[60px]">#SL</th>
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[150px]">Company</th>
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[120px]">Project</th>
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[120px]">Flock No</th>
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[100px]">Shed</th>  
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[120px]">Batch No</th>    
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[100px]">Female Qty</th>
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[100px]">Male Qty</th>
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[120px]">Total Mortality</th>
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[120px]">Total Excess</th>
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[120px]">Total Shortage</th>
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[140px]">Grand Total Qty</th>
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[120px]">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -771,16 +775,20 @@ const breadcrumbs: BreadcrumbItem[] = [
               :key="receive.id"
               class="hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              <td class="px-4 py-2 border-b">{{ (props.shedReceives?.meta?.current_page - 1) * (props.shedReceives?.meta?.per_page || 10) + index + 1 }}</td>
-              <td class="px-4 py-2 border-b">{{ receive.flock?.name || 'Flock-' + receive.flock_no }}</td>
-              <td class="px-4 py-2 border-b">{{ receive.shed?.name || 'Shed-' + receive.shed_no }}</td> 
-              <td class="px-4 py-2 border-b">{{ receive.batch?.name || 'Batch-' + receive.batch_no }}</td>
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ (props.shedReceives?.meta?.current_page - 1) * (props.shedReceives?.meta?.per_page || 10) + index + 1 }}</td>
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.company?.short_name || 'N/A' }}</td>
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.project?.name || 'N/A' }}</td>
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.flock?.name || 'Flock-' + receive.flock_no }}</td>
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.shed?.name || 'Shed-' + receive.shed_no }}</td> 
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.batch?.name || 'Batch-' + receive.batch_no }}</td>
               <!-- Using optional chaining and default values --> 
-              <td class="px-4 py-2 border-b">{{ receive.company?.short_name || 'N/A' }}</td>
-              <td class="px-4 py-2 border-b">{{ receive.shed_female_qty || 0 }}</td>
-              <td class="px-4 py-2 border-b">{{ receive.shed_male_qty || 0 }}</td>
-              <td class="px-4 py-2 border-b">{{ receive.shed_total_qty || 0 }}</td>
-              <td class="relative px-4 py-2 border-b">
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.shed_female_qty || 0 }}</td>
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.shed_male_qty || 0 }}</td>
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.shed_total_qty || 0 }}</td>
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.shed_total_qty || 0 }}</td>
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.shed_total_qty || 0 }}</td>
+              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.shed_total_qty || 0 }}</td>
+              <td class="relative px-4 py-2 border-b whitespace-nowrap">
                 <Button 
                   size="sm" 
                   class="action-btn bg-black text-white hover:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-300 hover:border-gray-400" 
@@ -793,24 +801,24 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <!-- Action Popup Overlay -->
                 <div
                   v-if="openDropdownId === receive.id"
-                  class="fixed inset-0 z-50 flex items-center justify-center"
-                  @click.stop="closeDropdown"
+                    class="fixed inset-0 z-50 flex items-center justify-center"
+                    @click.stop="closeDropdown"
                 >
-                  <!-- Backdrop -->
-                  <div class="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
-                  
-                  <!-- Popup Content -->
-                  <div
-                    class="relative z-10 w-52 rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800"
-                    @click.stop
-                  >
-                    <!-- Header -->
-                    <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-                      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Actions</h3>
-                    </div>
+                    <!-- Backdrop -->
+                    <div class="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
                     
-                    <!-- Actions List -->
-                    <div class="py-2">
+                    <!-- Popup Content -->
+                    <div
+                    class="relative z-10 w-52 rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800"
+                        @click.stop
+                    >
+                        <!-- Header -->
+                        <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Actions</h3>
+                        </div>
+                        
+                        <!-- Actions List -->
+                        <div class="py-2">
 
                       <!-- View -->
                       <button
@@ -833,8 +841,8 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <span>Generate Report</span>
                       </button>
 
-                      <!-- Delete -->
-                      <button
+                            <!-- Delete -->
+                            <button
                         @click="handleDeleteReceive(receive.id); closeDropdown()"
                         class="flex w-full items-center gap-3 px-4 py-3 text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
@@ -842,9 +850,9 @@ const breadcrumbs: BreadcrumbItem[] = [
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
                         <span>Delete Record</span>
-                </button>
+                            </button>
+                        </div>
                     </div>
-                  </div>
                 </div>
               </td>
             </tr>
