@@ -95,8 +95,8 @@ const mainNavItems: NavItem[] = [
         iconClass: 'text-yellow-500',
         children: [
             {
-                title: 'Firm Receive',
-                href: '/production-firm-receive',
+                title: 'Farm Receive',
+                href: '/production-farm-receive',
                 icon: BabyChick,
                 iconClass: 'text-yellow-500',
             },

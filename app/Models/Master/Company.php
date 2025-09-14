@@ -2,11 +2,16 @@
 
 namespace App\Models\Master;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Company extends Model
 {
+    use HasFactory;
+
+    protected static $factory = \Database\Factories\CompanyFactory::class;
+
     protected $fillable = [
         'name',
         'short_name',
@@ -16,7 +21,7 @@ class Company extends Model
         'contact_person_phone',
         'contact_person_email',
         'contact_person_designation',
-        'status'
+        'status',
     ];
 
     public function users()

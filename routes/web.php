@@ -62,7 +62,7 @@ Route::post('/labtest/getdata', [PsLabTestController::class, 'getData'])->name('
 Route::resource('ps-lab-test', PsLabTestController::class);
 Route::resource('shed-receive', ShedReceiveController::class);
 Route::resource('batch-assign', BatchAssignController::class);
-Route::resource('production-firm-receive', ProductionFirmReceiveController::class);
+Route::resource('production-farm-receive', ProductionFirmReceiveController::class);
 Route::resource('production-shed-receive', ProductionShedReceiveController::class);
 Route::resource('vaccine-schedule', VaccineScheduleController::class);
 Route::resource('bird-transfer', BirdTransferController::class);

@@ -2,14 +2,18 @@
 
 namespace App\Models\BirdTransfer;
 
-
-use App\Models\Master\Flock;
 use App\Models\Master\Company;
+use App\Models\Master\Flock;
 use App\Models\Master\Shed;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class BirdTransfer extends Model
 {
+    use HasFactory;
+
+    protected static $factory = \Database\Factories\BirdTransferFactory::class;
+
     protected $fillable = [
         'batch_assign_id',
         'job_no',

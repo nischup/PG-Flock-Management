@@ -5,6 +5,7 @@ use App\Models\BirdTransfer\BirdTransfer;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
+use App\Models\Master\Shed;
 use Illuminate\Http\Request;
 use App\Models\Ps\PsFirmReceive;
 use App\Models\Ps\PsReceive;
@@ -16,26 +17,73 @@ class ProductionFirmReceiveController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        
-        $transfers = BirdTransfer::with([
+        // Get filter parameters
+        $search = $request->get('search');
+        $perPage = $request->get('per_page', 10);
+        $fromCompanyId = $request->get('from_company_id');
+        $flockId = $request->get('flock_id');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        // Build query for bird transfers with status 1
+        $query = BirdTransfer::with([
             'flock',
             'fromCompany',
             'toCompany',
             'fromShed',
             'toShed',
         ])
-        ->latest()
-        ->get();
+        ->where('status', 1) // Only fetch transfers with status 1
+        ->latest();
+
+        // Apply filters
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('job_no', 'like', "%{$search}%")
+                  ->orWhere('transaction_no', 'like', "%{$search}%")
+                  ->orWhereHas('flock', function ($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('fromCompany', function ($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('toCompany', function ($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($fromCompanyId) {
+            $query->where('from_company_id', $fromCompanyId);
+        }
+
+        if ($flockId) {
+            $query->where('flock_id', $flockId);
+        }
+
+        if ($dateFrom) {
+            $query->whereDate('transfer_date', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate('transfer_date', '<=', $dateTo);
+        }
+
+        // Get paginated results
+        $transfers = $query->paginate($perPage)->withQueryString();
 
         $companies = Company::all();
         $flocks = Flock::all();
+        $sheds = Shed::all();
         
         return inertia('production/firm-receive/List', [
             'transferBirds' => $transfers,
             'companies' => $companies,
             'flocks' => $flocks,
+            'sheds' => $sheds,
+            'filters' => $request->only(['search', 'per_page', 'from_company_id', 'flock_id', 'date_from', 'date_to']),
         ]);
         
     }

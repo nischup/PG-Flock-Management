@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transfer;
 
 use App\Http\Controllers\Controller;
 use App\Models\BirdTransfer\BirdTransfer;
+use App\Models\Master\Batch;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
@@ -20,7 +21,22 @@ class BirdTransferController extends Controller
      */
     public function index()
     {
-        return Inertia::render('transfer/bird-transfer/List');
+        $birdTransfers = BirdTransfer::with([
+            'flock',
+            'fromCompany',
+            'toCompany',
+            'fromShed',
+            'toShed',
+        ])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return Inertia::render('transfer/bird-transfer/List', [
+            'birdTransfers' => $birdTransfers,
+            'companies' => Company::all(),
+            'flocks' => Flock::all(),
+            'sheds' => Shed::all(),
+        ]);
     }
 
     /**
@@ -45,12 +61,13 @@ class BirdTransferController extends Controller
 
         $totalQty = $femaleQty + $maleQty;
 
-        // Pass flocks, companies, and batch info
+        // Pass flocks, companies, batches, and batch info
         return Inertia::render('transfer/bird-transfer/Create', [
             'batchAssign' => $batchAssign,
             'flocks' => Flock::all(),
             'companies' => Company::all(),
             'sheds' => Shed::all(),
+            'batches' => Batch::where('status', true)->get(),
             'actualQty' => [
                 'female' => $femaleQty,
                 'male' => $maleQty,

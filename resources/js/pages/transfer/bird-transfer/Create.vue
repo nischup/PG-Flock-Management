@@ -22,16 +22,44 @@ import {
 
 const { showInfo } = useNotifier()
 
+// Overlay states
+const showBatchOverlay = ref(false)
+const showCompanyOverlay = ref(false)
+const showFlockOverlay = ref(false)
+const showShedOverlay = ref(false)
+
 // Props from backend
 const props = defineProps<{
   batchAssign: any,
   flocks: any[],
   companies: any[],
   sheds: any[],
+  batches: any[],
 }>()
 
 // Get batch dropdown from composable
 const { batchOptions } = useDropdownOptions()
+
+// Batch options from database
+const batchOptionsFromDB = computed(() => 
+  props.batches.map(batch => ({
+    value: batch.id,
+    label: batch.name
+  }))
+)
+
+// Selected batch display name
+const selectedBatchName = computed(() => {
+  const selectedBatch = props.batches.find(batch => batch.id === form.batch_assign_id)
+  return selectedBatch ? selectedBatch.name : 'Select batch'
+})
+
+// Selected company display name
+const selectedCompanyName = computed(() => {
+  const selectedCompany = props.companies.find(company => company.id === form.to_company_id)
+  return selectedCompany ? selectedCompany.name : 'Select company'
+})
+
 
 // Form pre-filled with backend data
 const form = useForm({
@@ -85,6 +113,12 @@ const flockOptions = computed(() =>
   }))
 )
 
+// Selected flock name for display
+const selectedFlockName = computed(() => {
+  const flock = props.flocks.find(f => f.id === form.flock_id)
+  return flock ? flock.name : 'Select flock'
+})
+
 const companyOptions = computed(() => 
   props.companies.map(company => ({
     value: company.id,
@@ -94,10 +128,16 @@ const companyOptions = computed(() =>
 
 const shedOptions = computed(() => 
   props.sheds.map(shed => ({
-    value: shed.shed_id,
+    value: shed.id,
     label: shed.name
   }))
 )
+
+// Selected shed name for display
+const selectedShedName = computed(() => {
+  const shed = props.sheds.find(s => s.id === form.to_shed_id)
+  return shed ? shed.name : 'Select shed'
+})
 
 // Submit
 function submit() {
@@ -123,10 +163,14 @@ function submit() {
               </h1>
               <p class="text-slate-600 text-lg">Seamlessly transfer birds between locations</p>
             </div>
-            <div class="flex items-center space-x-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg border border-white/20">
-              <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span class="text-sm font-medium text-slate-700">Batch #{{ batchAssign.id }}</span>
-            </div>
+            <Button
+              @click="$inertia.visit(route('bird-transfer.index'))"
+              variant="outline"
+              class="px-4 py-2 bg-white/80 backdrop-blur-sm border border-white/20 hover:bg-white/90 transition-all duration-200"
+            >
+              <ArrowRightIcon class="mr-2 h-4 w-4 rotate-180" />
+              Back to List
+            </Button>
           </div>
         </div>
 
@@ -134,14 +178,14 @@ function submit() {
           <!-- Current Status Section -->
           <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-white/20">
             <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <UserGroupIcon class="h-6 w-6 text-blue-600" />
-              Current Status
+              <BuildingOfficeIcon class="h-6 w-6 text-blue-600" />
+              Current Status of - ( {{ batchAssign.flock?.name || 'Flock-' + batchAssign.flock_id }}-{{ batchAssign.shed?.name || 'Shed-' + batchAssign.shed_id }}-Batch {{ batchAssign.batch_name || batchAssign.id }} )
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div class="flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200">
                 <div>
-                  <p class="text-sm font-medium text-amber-700">Total Birds</p>
-                  <p class="text-2xl font-bold text-amber-800">{{ form.total_bird }}</p>
+                  <p class="text-sm font-medium text-amber-700">Batch Total</p>
+                  <p class="text-2xl font-bold text-amber-800">{{ batchAssign.batch_total_qty }}</p>
                 </div>
                 <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
                   <UserGroupIcon class="h-6 w-6 text-amber-600" />
@@ -150,8 +194,8 @@ function submit() {
 
               <div class="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-2xl border border-red-200">
                 <div>
-                  <p class="text-sm font-medium text-red-700">Mortality</p>
-                  <p class="text-2xl font-bold text-red-800">{{ form.total_bird - current_total_chicks }}</p>
+                  <p class="text-sm font-medium text-red-700">Total Mortality</p>
+                  <p class="text-2xl font-bold text-red-800">{{ (batchAssign.batch_female_mortality || 0) + (batchAssign.batch_male_mortality || 0) }}</p>
                 </div>
                 <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
                   <ExclamationTriangleIcon class="h-6 w-6 text-red-600" />
@@ -159,13 +203,13 @@ function submit() {
               </div>
 
               <div class="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-200 text-center">
-                <p class="text-sm font-medium text-emerald-700">Female</p>
-                <p class="text-xl font-bold text-emerald-800">{{ current_female_chicks }}</p>
+                <p class="text-sm font-medium text-emerald-700">Batch Female</p>
+                <p class="text-xl font-bold text-emerald-800">{{ batchAssign.batch_female_qty }}</p>
               </div>
 
               <div class="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl border border-blue-200 text-center">
-                <p class="text-sm font-medium text-blue-700">Male</p>
-                <p class="text-xl font-bold text-blue-800">{{ current_male_chicks }}</p>
+                <p class="text-sm font-medium text-blue-700">Batch Male</p>
+                <p class="text-xl font-bold text-blue-800">{{ batchAssign.batch_male_qty }}</p>
               </div>
 
               <div class="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl border border-purple-200 text-center">
@@ -191,31 +235,35 @@ function submit() {
             <!-- Main Form Card -->
             <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
               <div class="mb-8">
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">Transfer Configuration</h2>
-                <p class="text-slate-600">Configure your bird transfer details</p>
+                <!-- <h2 class="text-2xl font-bold text-slate-800 mb-2">Transfer Details</h2> -->
+                <p class="text-slate-600">Bird Transfer Details</p>
               </div>
 
               <div class="space-y-8">
                 <!-- Basic Info Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div class="space-y-1">
-                    <Label class="text-xs font-medium text-slate-600">Flock</Label>
-                    <Select
-                      v-model="form.flock_id"
-                      :options="flockOptions"
-                      placeholder="Select flock"
-                      class="w-full h-9 text-sm"
-                    />
+                    <Label class="text-xs font-medium text-slate-600">Flock No</Label>
+                    <Button
+                      type="button"
+                      @click="showFlockOverlay = true"
+                      class="w-full h-9 text-sm bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 justify-start"
+                    >
+                      <UserGroupIcon class="mr-2 h-4 w-4" />
+                      {{ selectedFlockName }}
+                    </Button>
                   </div>
 
                   <div class="space-y-1">
                     <Label class="text-xs font-medium text-slate-600">Batch</Label>
-                    <Select
-                      v-model="form.batch_assign_id"
-                      :options="batchOptions"
-                      placeholder="Select batch"
-                      class="w-full h-9 text-sm"
-                    />
+                    <Button
+                      type="button"
+                      @click="showBatchOverlay = true"
+                      class="w-full h-9 text-sm bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 justify-start"
+                    >
+                      <BuildingOfficeIcon class="mr-2 h-4 w-4" />
+                      {{ selectedBatchName }}
+                    </Button>
                   </div>
 
                   <div class="space-y-1">
@@ -232,29 +280,33 @@ function submit() {
 
                   <div class="space-y-1">
                     <Label class="text-xs font-medium text-slate-600">Destination Company</Label>
-                    <Select
-                      v-model="form.to_company_id"
-                      :options="companyOptions"
-                      placeholder="Select company"
-                      class="w-full h-9 text-sm"
-                    />
+                    <Button
+                      type="button"
+                      @click="showCompanyOverlay = true"
+                      class="w-full h-9 text-sm bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 justify-start"
+                    >
+                      <BuildingOfficeIcon class="mr-2 h-4 w-4" />
+                      {{ selectedCompanyName }}
+                    </Button>
                   </div>
                 </div>
 
                 <!-- Shed Selection -->
                 <div v-if="showShed" class="space-y-1 max-w-xs">
                   <Label class="text-xs font-medium text-slate-600">Destination Shed</Label>
-                  <Select
-                    v-model="form.to_shed_id"
-                    :options="shedOptions"
-                    placeholder="Select shed"
-                    class="w-full h-9 text-sm"
-                  />
+                  <Button
+                    type="button"
+                    @click="showShedOverlay = true"
+                    class="w-full h-9 text-sm bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 justify-start"
+                  >
+                    <BuildingOfficeIcon class="mr-2 h-4 w-4" />
+                    {{ selectedShedName }}
+                  </Button>
                 </div>
 
                 <!-- Transfer Quantities -->
                 <div class="space-y-4">
-                  <h3 class="text-base font-semibold text-slate-800 border-b border-slate-200 pb-2">Transfer Quantities</h3>
+                  <!-- <h3 class="text-base font-semibold text-slate-800 border-b border-slate-200 pb-2">Transfer Quantities</h3> -->
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="space-y-1">
                       <Label class="text-xs font-medium text-slate-600">Female Birds</Label>
@@ -292,7 +344,7 @@ function submit() {
 
                 <!-- Medical Birds -->
                 <div class="space-y-4">
-                  <h3 class="text-base font-semibold text-slate-800 border-b border-slate-200 pb-2">Medical Birds</h3>
+                  <!-- <h3 class="text-base font-semibold text-slate-800 border-b border-slate-200 pb-2">Medical Birds</h3> -->
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="space-y-1">
                       <Label class="text-xs font-medium text-slate-600">Medical Female</Label>
@@ -353,10 +405,12 @@ function submit() {
                 <Button 
                   type="submit" 
                   :disabled="form.processing || deviation_total < 0"
-                  class="px-8 py-3 h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="px-8 py-3 h-12 text-base font-semibold rounded-xl bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+                  style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); box-shadow: 0 4px 15px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);"
                 >
-                  <PlusIcon class="mr-2 h-5 w-5" />
-                  {{ form.processing ? 'Processing...' : 'Create Transfer' }}
+                  <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full hover:translate-x-full transition-transform duration-1000"></div>
+                  <PlusIcon class="mr-2 h-5 w-5 relative z-10" />
+                  <span class="relative z-10">{{ form.processing ? 'Processing...' : 'Create Transfer' }}</span>
                 </Button>
               </div>
             </div>
@@ -364,5 +418,262 @@ function submit() {
         </div>
       </div>
     </div>
+
+    <!-- Shed Selection Overlay -->
+    <div v-if="showShedOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl p-6 shadow-2xl border border-white/20 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-slate-800">Select Destination Shed</h3>
+          <Button
+            type="button"
+            @click="showShedOverlay = false"
+            variant="outline"
+            class="h-8 w-8 p-0 rounded-full"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </Button>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <Label class="text-sm font-semibold text-slate-700">Available Sheds</Label>
+            <div class="max-h-60 overflow-y-auto space-y-2">
+              <button
+                v-for="shed in props.sheds"
+                :key="shed.id"
+                @click="form.to_shed_id = shed.id; showShedOverlay = false"
+                class="w-full text-left p-3 rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                :class="{ 'bg-blue-100 border-blue-300': form.to_shed_id === shed.id }"
+              >
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-medium text-slate-800">{{ shed.name }}</div>
+                    <div class="text-xs text-slate-500">ID: {{ shed.id }}</div>
+                  </div>
+                  <div v-if="form.to_shed_id === shed.id" class="text-blue-600">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <Button 
+              type="button" 
+              variant="outline" 
+              @click="showShedOverlay = false"
+              class="px-4 py-2"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              @click="showShedOverlay = false"
+              class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flock Selection Overlay -->
+    <div v-if="showFlockOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl p-6 shadow-2xl border border-white/20 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-slate-800">Select Flock No</h3>
+          <Button
+            type="button"
+            @click="showFlockOverlay = false"
+            variant="outline"
+            class="h-8 w-8 p-0 rounded-full"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </Button>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <Label class="text-sm font-semibold text-slate-700">Available Flocks</Label>
+            <div class="max-h-60 overflow-y-auto space-y-2">
+              <button
+                v-for="flock in props.flocks"
+                :key="flock.id"
+                @click="form.flock_id = flock.id; showFlockOverlay = false"
+                class="w-full text-left p-3 rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                :class="{ 'bg-blue-100 border-blue-300': form.flock_id === flock.id }"
+              >
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-medium text-slate-800">{{ flock.name }}</div>
+                    <div class="text-xs text-slate-500">ID: {{ flock.id }}</div>
+                  </div>
+                  <div v-if="form.flock_id === flock.id" class="text-blue-600">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <Button 
+              type="button" 
+              variant="outline" 
+              @click="showFlockOverlay = false"
+              class="px-4 py-2"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              @click="showFlockOverlay = false"
+              class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Batch Selection Overlay -->
+    <div v-if="showBatchOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl p-6 shadow-2xl border border-white/20 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-slate-800">Select Batch</h3>
+          <Button
+            type="button"
+            @click="showBatchOverlay = false"
+            variant="outline"
+            class="h-8 w-8 p-0 rounded-full"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </Button>
+        </div>
+
+        <div class="space-y-3">
+          <div class="space-y-2">
+            <Label class="text-sm font-semibold text-slate-700">Available Batches</Label>
+            <div class="max-h-60 overflow-y-auto space-y-2">
+              <button
+                v-for="batch in props.batches"
+                :key="batch.id"
+                @click="form.batch_assign_id = batch.id; showBatchOverlay = false"
+                class="w-full text-left p-3 rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                :class="{ 'bg-blue-100 border-blue-300': form.batch_assign_id === batch.id }"
+              >
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-medium text-slate-800">{{ batch.name }}</div>
+                    <div class="text-xs text-slate-500">ID: {{ batch.id }}</div>
+                  </div>
+                  <div v-if="form.batch_assign_id === batch.id" class="text-blue-600">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <Button 
+              type="button" 
+              variant="outline" 
+              @click="showBatchOverlay = false"
+              class="px-4 py-2"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              @click="showBatchOverlay = false"
+              class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Company Selection Overlay -->
+    <div v-if="showCompanyOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl p-6 shadow-2xl border border-white/20 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-slate-800">Select Destination Company</h3>
+          <Button
+            type="button"
+            @click="showCompanyOverlay = false"
+            variant="outline"
+            class="h-8 w-8 p-0 rounded-full"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </Button>
+        </div>
+
+        <div class="space-y-3">
+          <div class="space-y-2">
+            <Label class="text-sm font-semibold text-slate-700">Available Companies</Label>
+            <div class="max-h-60 overflow-y-auto space-y-2">
+              <button
+                v-for="company in props.companies"
+                :key="company.id"
+                @click="form.to_company_id = company.id; showCompanyOverlay = false"
+                class="w-full text-left p-3 rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                :class="{ 'bg-blue-100 border-blue-300': form.to_company_id === company.id }"
+              >
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-medium text-slate-800">{{ company.name }}</div>
+                    <div class="text-xs text-slate-500">{{ company.code }} • {{ company.location }}</div>
+                  </div>
+                  <div v-if="form.to_company_id === company.id" class="text-blue-600">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <Button 
+              type="button" 
+              variant="outline" 
+              @click="showCompanyOverlay = false"
+              class="px-4 py-2"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              @click="showCompanyOverlay = false"
+              class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </AppLayout>
 </template>
