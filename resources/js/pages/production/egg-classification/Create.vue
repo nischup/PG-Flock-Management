@@ -455,7 +455,7 @@ function goToTab(index: number) {
             <div class="space-y-1">
               <Label class="text-xs font-semibold text-gray-700 flex items-center">
                 <div class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5"></div>
-                Select Flock
+                Select Batch
               </Label>
               <div class="flock-dropdown relative">
                 <button
@@ -465,7 +465,7 @@ function goToTab(index: number) {
                 >
                   <span class="flex items-center gap-2">
                     <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                    {{ selectedFlock ? selectedFlock.display_label : 'Select Flock' }}
+                    {{ selectedFlock ? selectedFlock.display_label : 'Select Batch' }}
                   </span>
                   <ChevronDown class="h-3 w-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFlockDropdown }" />
                 </button>
@@ -482,13 +482,13 @@ function goToTab(index: number) {
                   >
                     <!-- Header -->
                     <div class="border-b border-gray-200 p-3">
-                      <h3 class="font-semibold text-gray-900 text-sm">Select Flock</h3>
+                      <h3 class="font-semibold text-gray-900 text-sm">Select Batch</h3>
                       <div class="relative mt-2">
                         <Search class="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
                         <input
                           v-model="flockSearchQuery"
                           type="text"
-                          placeholder="Search flocks..."
+                          placeholder="Search Batch..."
                           class="w-full rounded border border-gray-300 bg-gray-50 pl-7 pr-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                           @click.stop
                         />

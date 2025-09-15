@@ -125,6 +125,16 @@ class BirdTransferController extends Controller
             'status' => 1,
         ]);
 
+        if ($batch->stage == 1) {
+            $batch->stage = 2; // Growing
+        } elseif ($batch->stage == 2) {
+            $batch->stage = 3; // Laying
+        }
+        // Add your own logic for transition
+
+        // 3. Save updated stage
+        $batch->save();
+
         // PsFirmReceive::create([
         //     'ps_receive_id'        => $transfer->id, // link to transfer
         //     'job_no'               =>  null,

@@ -8,6 +8,8 @@ use App\Models\Production\EggClassification;
 use App\Models\Production\EggClassificationRejected;
 use App\Models\Production\EggClassificationTechnical;
 use App\Models\Shed\BatchAssign;
+use App\Models\DailyOperation\DailyOperation;
+use App\Models\DailyOperation\DailyEggCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -217,5 +219,23 @@ class EggClassificationController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function getTotalEggs(Request $request)
+    {
+        $request->validate([
+            'batchassign_id' => 'required|integer',
+            'operation_date' => 'required|date',
+        ]);
+
+        $dailyOperationIds = DailyOperation::where('batchassign_id', $request->batchassign_id)
+            ->where('operation_date', $request->operation_date)
+            ->pluck('id');
+
+        $totalEggs = DailyEggCollection::whereIn('daily_operation_id', $dailyOperationIds)
+            ->sum('total_egg'); // adjust if your column name is different
+
+        return response()->json(['total_egg' => $totalEggs]);
+    
     }
 }
