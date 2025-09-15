@@ -82,6 +82,50 @@ export function useNotifier() {
     });
   };
 
+
+  const confirmUpdate = ({
+    url,
+    title = 'Are you sure?',
+    text = 'This will update the item.',
+    confirmButtonText = 'Yes, update it!',
+    successMessage = 'Updated successfully.',
+    errorMessage = 'Something went wrong.',
+    onSuccess,
+    onError,
+  }: {
+    url: string;
+    title?: string;
+    text?: string;
+    confirmButtonText?: string;
+    successMessage?: string;
+    errorMessage?: string;
+    onSuccess?: () => void;
+    onError?: () => void;
+  }) => {
+    Swal.fire({
+      title,
+      text,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        router.put(url, {}, {
+          onSuccess: () => {
+            showSuccess(successMessage, 'Updated!');
+            onSuccess?.();
+          },
+          onError: () => {
+            showError(errorMessage, 'Error');
+            onError?.();
+          },
+        });
+      }
+    });
+  };
+
   // 🔹 Auto show flash messages from Laravel
   watch(
     () => page.props.flash,
@@ -102,5 +146,6 @@ export function useNotifier() {
     showInfo,
     showError,
     confirmDelete,
+    confirmUpdate,
   };
 }

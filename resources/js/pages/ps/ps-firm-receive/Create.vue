@@ -66,10 +66,10 @@ const form = useForm({
 })
 
 // Company options
-const shipmentTypes = ['Air', 'Sea', 'Road']
+const shipmentTypes = ['Local', 'Foreign']
 const suppliers = {1: 'PBL', 2: 'PCL'} 
 const breeds = {1: 'Broiler', 2: 'Layer'}
-const transports = {1: 'Freezing Microbus', 2: 'Freezing Van'}
+const transports = {1: 'Freezing Microbus', 2: 'Freezing Van',3:'Open Truck'}
 
 // Modern dropdown states
 const showPsDropdown = ref(false)

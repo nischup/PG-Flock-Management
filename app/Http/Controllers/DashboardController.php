@@ -3,6 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+
+use App\Models\Master\Flock;
+
+use App\Models\DailyOperation\DailyMortality;
+use App\Models\DailyOperation\DailyEggCollection;
+use App\Models\Shed\BatchAssign;
+use Illuminate\Support\Facades\DB;
+
+
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -43,18 +52,60 @@ class DashboardController extends Controller
 
         // --- Dummy cards (scaled by multiplier)
         $cards = [
-            ['title' => 'Total Flock', 'value' => rand(50, 200) * $multiplier, 'icon' => 'User'],
-            ['title' => 'Total Chicks', 'value' => rand(200, 600) * $multiplier, 'icon' => 'Drumstick'],
-            ['title' => 'Total Mortality', 'value' => rand(10, 100) * $multiplier, 'icon' => 'ShieldX'],
-            ['title' => 'Total Egg Collection', 'value' => rand(1000, 5000) * $multiplier, 'icon' => 'Egg'],
-            ['title' => 'Total Sent for Lab', 'value' => rand(10, 50) * $multiplier, 'icon' => 'FlaskConical'],
+            [
+                'title' => 'Total Flock',
+                'value' => Flock::where('status', '1')->count(),
+                'icon'  => 'User',
+            ],
+            [
+                'title' => 'Total Chicks',
+                'value' => BatchAssign::where('status','1')->sum('batch_total_qty'),
+                'icon'  => 'Drumstick',
+            ],
+            [
+                'title' => 'Female Chicks Qty',
+                'value' => BatchAssign::where('status','1')->sum('batch_female_qty'),
+                'icon'  => 'Drumstick',
+            ],
+            [
+                'title' => 'Male Chicks Qty',
+                'value' => BatchAssign::where('status','1')->sum('batch_male_qty'),
+                'icon'  => 'Drumstick',
+            ],
+            [
+                'title' => 'Total Mortality',
+                'value' => DailyMortality::query()
+                ->join('daily_operations', 'daily_operations.id', '=', 'daily_mortalities.daily_operation_id')
+                ->join('batch_assigns', 'batch_assigns.id', '=', 'daily_operations.batchassign_id')
+                ->where('batch_assigns.status', 1) // only active batches
+                ->sum(DB::raw('daily_mortalities.female_qty + daily_mortalities.male_qty')),
+                'icon'  => 'ShieldX',
+            ],
+            [
+                'title' => 'Total Egg Collection', 
+                'value' => DailyEggCollection::query()
+                ->join('daily_operations', 'daily_operations.id', '=', 'daily_egg_collections.daily_operation_id')
+                ->join('batch_assigns', 'batch_assigns.id', '=', 'daily_operations.batchassign_id')
+                ->where('batch_assigns.status', 1) // only active batches
+                ->sum('daily_egg_collections.quantity'),
+                'icon' => 'Egg'
+            ],
+            [
+                'title' => 'Sent for Lab From PS', 
+                'value' => rand(10, 50) * $multiplier, 
+                'icon' => 'FlaskConical'
+            ],
+            ['title' => 'Sent for Lab From Batch', 'value' => rand(10, 50) * $multiplier, 'icon' => 'FlaskConical'],
             ['title' => 'Total Male Chicks', 'value' => rand(100, 300) * $multiplier, 'icon' => 'BabyChick'],
             ['title' => 'Total Female Chicks', 'value' => rand(100, 300) * $multiplier, 'icon' => 'FlaskConical'],
             ['title' => 'Total Hatching Egg', 'value' => rand(500, 2000) * $multiplier, 'icon' => 'PackageSearch'],
             ['title' => 'Total Commercial Egg', 'value' => rand(500, 2000) * $multiplier, 'icon' => 'PackageSearch'],
             ['title' => 'Total Feed Consumption', 'value' => rand(500, 1500) * $multiplier, 'icon' => 'Factory'],
             ['title' => 'Total Vaccination', 'value' => rand(20, 100) * $multiplier, 'icon' => 'Syringe'],
-            ['title' => 'Total Active Sheds', 'value' => rand(5, 15) * $multiplier, 'icon' => 'Archive'],
+            [
+                'title' => 'Total Active Batchs', 
+                'value' => BatchAssign::where('status','1')->count(), 
+                'icon' => 'Archive'],
         ];
 
         // --- Dummy progress bars

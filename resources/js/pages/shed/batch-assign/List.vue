@@ -9,7 +9,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
-import { FileText, Pencil, Calendar } from 'lucide-vue-next';
+import { FileText, Pencil, Calendar,ArrowsUpFromLine } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 // ✅ Props
@@ -26,6 +26,7 @@ const props = defineProps<{
             company_name: string;
             batch_female_qty: number;
             batch_male_qty: number;
+            stage: number;
             batch_total_qty: number;
             level: number;
             batch_no: string;
@@ -55,7 +56,7 @@ const props = defineProps<{
 }>();
 
 useListFilters({ routeName: '/batch-assign', filters: props.filters });
-const { confirmDelete } = useNotifier();
+const { confirmDelete,confirmUpdate } = useNotifier();
 const { can } = usePermissions();
 
 const openDropdownId = ref<number | null>(null);
@@ -97,6 +98,24 @@ const deleteBatchAssign = (id: number) => {
     text: 'This will permanently delete the batch assignment.',
         successMessage: 'Batch assignment deleted.',
     });
+};
+
+
+const transferStage = (item) => {
+  const stageNames = { 1: 'Growing', 2: 'Production' };
+  const nextStage = stageNames[item.stage] || null;
+
+  if (!nextStage) {
+    return;
+  }
+
+  confirmUpdate({
+    url: `/batch-assign/${item.id}/next-stage`,
+    title: 'Are you sure?',
+    text: `Do you want to transfer it to ${nextStage}?`,
+    confirmButtonText: `Yes, transfer to ${nextStage}`,
+    successMessage: `Stage updated to ${nextStage}!`,
+  });
 };
 
 // ✅ Export filters
@@ -905,6 +924,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Male Qty</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Female Qty</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Total Qty</th>
+                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Period</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Created Date</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Actions</th>
             </tr>
@@ -934,11 +954,14 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <td class="px-4 py-3 text-center whitespace-nowrap">{{ item.batch_male_qty }}</td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap">{{ item.batch_female_qty }}</td>
                                 <td class="px-4 py-3 text-center font-medium whitespace-nowrap">{{ item.batch_total_qty }}</td>
+                                <td class="px-4 py-3 text-center font-medium whitespace-nowrap">
+                                   {{ item.stage == 1 ? 'Brooding' : (item.stage == 2 ? 'Growing' : (item.stage == 3 ? 'Production' : '')) }}
+                                </td>
                                 <td class="px-4 py-3 whitespace-nowrap">{{ dayjs(item.created_at).format('MMM DD, YYYY') }}</td>
                                 <td class="relative px-4 py-3">
                                     <Button size="sm" class="action-btn bg-gray-500 text-white hover:bg-gray-600" @click.stop="toggleDropdown(item.id)">
-                  Actions ▼
-                </Button>
+                                    Actions ▼
+                                    </Button>
 
                                     <!-- Action Popup Overlay -->
                                     <div
@@ -982,6 +1005,15 @@ const breadcrumbs: BreadcrumbItem[] = [
                                                     <span>Edit</span>
                                                 </Link>
 
+                                                <!-- Edit -->
+                                                 <button
+                                                    v-if="item.stage == 1"
+                                                    @click="transferStage(item)"
+                                                    class="flex w-full items-center gap-2 px-4 py-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                                                    >
+                                                    <ArrowsUpFromLine class="h-4 w-4" />
+                                                   <span>Brooding</span>
+                                                  </button>
                                                 <!-- Report -->
                                                 <button
                                                     @click="exportRowPdf(item.id)"

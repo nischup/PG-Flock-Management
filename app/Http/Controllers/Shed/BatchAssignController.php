@@ -84,6 +84,7 @@ class BatchAssignController extends Controller
                     'shed_id' => $batch->shed_id,
                     'shed_name' => $batch->shed->name ?? '',
                     'level' => $batch->level,
+                    'stage' => $batch->stage,
                     'batch_no' => $batch->batch_no,
                     'batch_female_qty' => $batch->batch_female_qty,
                     'batch_male_qty' => $batch->batch_male_qty,
@@ -638,5 +639,17 @@ class BatchAssignController extends Controller
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream("batch-assignment-{$id}.pdf");
+    }
+
+
+    public function nextStage(BatchAssign $batchAssign)
+    {
+        // Increment stage safely (1 → 2 → 3)
+        if ($batchAssign->stage < 3) {
+            $batchAssign->stage++;
+            $batchAssign->save();
+        }
+
+        return redirect()->back()->with('success', 'Stage updated successfully.');
     }
 }

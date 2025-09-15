@@ -440,21 +440,21 @@ class DailyOperationController extends Controller
         $stage = BatchAssign::findOrFail($dailyOperation->batch_assign_id);
 
         
-        if ($stage == 1) {
+        if ($stage->stage == 1) {
             $stageName = 'brooding';
-        } elseif ($stage == 2) {
+        } elseif ($$stage->stage == 2) {
             $stageName = 'growing';
-        } elseif ($stage == 3) {
+        } elseif ($stage->stage == 3) {
             $stageName = 'laying';
-        } elseif ($stage == 4) {
+        } elseif ($stage->stage == 4) {
             $stageName = 'closing';
         } else {
             $stageName = 'brooding'; // fallback
         }
 
         return redirect()
-        ->route('daily-operation.stage', ['stage' => $stage])
-        ->with('success', ucfirst($stage) . ' data saved successfully.');
+        ->route('daily-operation.stage', ['stage' => $stageName])
+        ->with('success', ucfirst($stageName) . 'data saved successfully.');
     }
 
     /**
