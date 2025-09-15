@@ -41,8 +41,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
 
 Route::resource('chick-type', ChickTypeController::class);
 Route::resource('feed', FeedController::class);
@@ -136,6 +136,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('batch-assign/pdf', [BatchAssignController::class, 'exportPdf'])->name('batch-assign.pdf');
     Route::get('batch-assign/excel', [BatchAssignController::class, 'exportExcel'])->name('batch-assign.excel');
 });
+Route::get('/bird-transfer-row/{id}/pdf', [BirdTransferController::class, 'downloadRowPdf'])
+    ->name('bird-transfer-row.pdf');
 
 Route::get('/ps-receive/{id}/pdf', [PsReceiveController::class, 'downloadRowPdf'])
     ->name('ps-receive.row-pdf');

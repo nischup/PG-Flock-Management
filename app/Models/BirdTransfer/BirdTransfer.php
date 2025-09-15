@@ -2,11 +2,14 @@
 
 namespace App\Models\BirdTransfer;
 
-use App\Models\Master\Company;
-use App\Models\Master\Flock;
 use App\Models\Master\Shed;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Master\Batch;
+use App\Models\Master\Flock;
+use App\Models\Master\Company;
+use App\Models\Master\BreedType;
+use App\Models\Shed\BatchAssign;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class BirdTransfer extends Model
 {
@@ -70,5 +73,13 @@ class BirdTransfer extends Model
     public function toShed()
     {
         return $this->belongsTo(Shed::class, 'to_shed_id');
+    }
+    public function batchAssign()
+    {
+        return $this->hasOne(BatchAssign::class, 'flock_id', 'flock_id');
+    }
+    public function breed()
+    {
+        return $this->belongsTo(BreedType::class, 'breed_type');
     }
 }
