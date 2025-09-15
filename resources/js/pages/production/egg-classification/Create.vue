@@ -193,6 +193,34 @@ watch(() => form.batchassign_id, (id) => {
   }
 })
 
+// Watch batch and date changes to fetch total eggs
+watch(
+  () => [form.batchassign_id, form.operation_date],
+  ([batchassign_id, operation_date]) => {
+    if (!batchassign_id || !operation_date) {
+      form.total_egg = 0;
+      return;
+    }
+    if(batchassign_id && operation_date){
+      form.get(
+        route('egg-classification.total-eggs'),
+        {
+          preserveState: true,
+          onSuccess: (page) => {
+
+            console.log(page);
+            // Since controller returns JSON, use page.props directly
+            form.total_egg = page.props.total_egg ?? 0;
+          },
+          onError: () => {
+            form.total_egg = 0;
+          },
+        }
+      );
+    }
+  }
+);
+
 // Totals
 const rejected_total = computed(() => {
   const rejectedTabs = ['double_yolk', 'double_yolk_broken', 'commercial', 'commercial_broken', 'liquid', 'damage']

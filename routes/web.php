@@ -89,6 +89,9 @@ Route::get('/details/{flockId}/{tabKey}', [DailyOperationController::class, 'sho
 
 Route::resource('production/egg-classification', EggClassificationController::class);
 
+Route::get('production/egg-classification/total-eggs', [EggClassificationController::class, 'getTotalEggs'])
+    ->name('egg-classification.total-eggs');
+
 Route::get('/weather', [WeatherController::class, 'get']);
 
 Route::resource('flocks', FlockController::class)->only(['store']);
