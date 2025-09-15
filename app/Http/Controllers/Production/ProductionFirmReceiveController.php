@@ -151,7 +151,7 @@ class ProductionFirmReceiveController extends Controller
         // Save the job_no back to the record
         $firmReceive->update(['transaction_no' => $transactionNo]);
         
-        return redirect()->route('production-firm-receive.index')->with('success', 'Bird Receive successfully.');    
+        return redirect()->route('production-farm-receive.index')->with('success', 'Bird Receive successfully.');    
     }
 
     /**

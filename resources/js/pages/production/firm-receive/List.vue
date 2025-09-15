@@ -63,7 +63,7 @@ const props = defineProps<{
   sheds?: Array<{ id: number; name: string }>;
 }>();
 
-useListFilters({ routeName: '/production-firm-receive', filters: props.filters });
+useListFilters({ routeName: '/production-farm-receive', filters: props.filters });
 const { confirmDelete } = useNotifier();
 const { can } = usePermissions();
 
@@ -133,7 +133,7 @@ const saveTransfer = () => {
   form.deviation_male_qty = form.challan_male_qty - form.receive_male_qty
   form.deviation_total_qty = form.challan_total_qty - form.receive_total_qty
   
-  form.post(route('production-firm-receive.store'), {
+  form.post(route('production-farm-receive.store'), {
     onSuccess: () => {
       showTransferModal.value = false
     },
@@ -157,7 +157,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
 // ✅ Delete action
 const deleteTransfer = (id: number) => {
   confirmDelete({
-        url: `/production-firm-receive/${id}`,
+        url: `/production-farm-receive/${id}`,
     text: 'This will permanently delete the receive record.',
         successMessage: 'Receive record deleted.',
     });
@@ -184,7 +184,7 @@ const applyFilters = () => {
     if (filters.value.date_from) params.set('date_from', filters.value.date_from);
     if (filters.value.date_to) params.set('date_to', filters.value.date_to);
     
-    window.location.href = `/production-firm-receive?${params.toString()}`;
+    window.location.href = `/production-farm-receive?${params.toString()}`;
 };
 
 const clearFilters = () => {
@@ -320,18 +320,18 @@ const handleDeleteTransfer = (transferId: number) => {
 const openExportDropdown = ref(false);
 
 const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
-    const url = route('reports.production-firm-receive.pdf', { ...filters.value, orientation });
-    window.open(url, '_blank');
+    // Report functionality not available for production farm receive
+    console.log('Report functionality not implemented for production farm receive');
 };
 
 const exportExcel = () => {
-    const url = route('reports.production-firm-receive.excel', { ...filters.value });
-    window.open(url, '_blank');
+    // Report functionality not available for production farm receive
+    console.log('Report functionality not implemented for production farm receive');
 };
 
 const exportRowPdf = (id: number) => {
-    const url = `/production-firm-receive/${id}/pdf`;
-    window.open(url, '_blank');
+    // Report functionality not available for production farm receive
+    console.log('Report functionality not implemented for production farm receive');
 };
 
 // ✅ Dynamic data for cards based on selected Transfer
@@ -404,8 +404,8 @@ const cardData = computed(() => {
 
 // ✅ Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Production', href: '/production-firm-receive' },
-  { title: 'Bird Receive', href: '/production-firm-receive' },
+  { title: 'Production', href: '/production-farm-receive' },
+  { title: 'Bird Receive', href: '/production-farm-receive' },
 ];
 </script>
 
