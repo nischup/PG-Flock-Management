@@ -13,6 +13,9 @@ use App\Models\Shed\BatchAssign;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
+use App\Exports\ArrayExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BirdTransferController extends Controller
 {
@@ -50,14 +53,14 @@ class BirdTransferController extends Controller
 
         // Calculate actual birds after mortality and errors
         $femaleQty = $batchAssign->batch_female_qty
-                     - ($batchAssign->batch_female_mortality ?? 0)
-                     - ($batchAssign->batch_excess_female ?? 0)
-                     - ($batchAssign->batch_sortage_female ?? 0);
+            - ($batchAssign->batch_female_mortality ?? 0)
+            - ($batchAssign->batch_excess_female ?? 0)
+            - ($batchAssign->batch_sortage_female ?? 0);
 
         $maleQty = $batchAssign->batch_male_qty
-                   - ($batchAssign->batch_male_mortality ?? 0)
-                   - ($batchAssign->batch_excess_male ?? 0)
-                   - ($batchAssign->batch_sortage_male ?? 0);
+            - ($batchAssign->batch_male_mortality ?? 0)
+            - ($batchAssign->batch_excess_male ?? 0)
+            - ($batchAssign->batch_sortage_male ?? 0);
 
         $totalQty = $femaleQty + $maleQty;
 
@@ -74,7 +77,6 @@ class BirdTransferController extends Controller
                 'total' => $totalQty,
             ],
         ]);
-
     }
 
     /**
@@ -187,5 +189,77 @@ class BirdTransferController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+    public function downloadRowPdf($id)
+    {
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
+
+        $item = BirdTransfer::with([
+            'flock',
+            'fromCompany',
+            'toCompany',
+            'fromShed',
+            'toShed',
+            'batchAssign.batch',
+        ])->findOrFail($id);
+
+        $batchAssign = $item->batchAssign;
+
+        $challanFemale = $batchAssign->batch_female_qty ?? 0;
+        $challanMale   = $batchAssign->batch_male_qty ?? 0;
+        $challanTotal  = $batchAssign->batch_total_qty ?? 0;
+
+        $batches = [
+            [
+                'batch_no'         => $batchAssign?->batch?->name ?? 'N/A',
+                'challan_female'   => $challanFemale,
+                'challan_male'     => $challanMale,
+                'challan_total'    => $challanTotal,
+                'physical_female'  => $item->transfer_female_qty,
+                'physical_male'    => $item->transfer_male_qty,
+                'total'            => $item->transfer_total_qty,
+                'breed_name'       => $item->breed_type ?? 'N/A', // corrected line
+                'lc_no'            => $item->lc_no ?? 'N/A', // corrected line
+                'medical_female'   => $item->medical_female_qty ?? 0,
+                'medical_male'     => $item->medical_male_qty ?? 0,
+                'medical_total'    => ($item->medical_female_qty ?? 0) + ($item->medical_male_qty ?? 0),
+                'deviation_female' => $item->transfer_female_qty - $challanFemale,
+                'deviation_male'   => $item->transfer_male_qty - $challanMale,
+                'deviation_total'  => $item->transfer_total_qty - $challanTotal,
+                'remarks'          => $item->remarks ?? 'N/A',
+            ],
+        ];
+        //dd($batches);
+
+        $data = [
+            'job_no'           => $item->job_no,
+            'transaction_no'   => $item->transaction_no,
+            'flock_name'       => $item->flock->name ?? '-',
+            'from_company_name' => $item->fromCompany->name ?? '-',
+            'to_company_name'  => $item->toCompany->name ?? '-',
+            'firm_male_qty'    => $item->transfer_male_qty,
+            'firm_female_qty'  => $item->transfer_female_qty,
+            'firm_total_qty'   => $item->transfer_total_qty,
+            'remarks'          => $item->remarks ?? '-',
+            'receive_date'     => optional($item->transfer_date)->format('Y-m-d'),
+            'source_type'      => 'transfer',
+            'source_id'        => $item->id,
+            'batches'          => $batches,
+            'generatedAt'      => now(),
+        ];
+
+        Pdf::setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled'      => true,
+            'defaultFont'          => 'DejaVu Sans',
+        ]);
+
+        $pdf = Pdf::loadView('reports.bird-transfer.bird-transfer-row', $data)
+            ->setPaper('a4', 'landscape');
+
+        return request()->query('download')
+            ? $pdf->download("bird-transfer-row-{$item->id}.pdf")
+            : $pdf->stream("bird-transfer-row-{$item->id}.pdf");
     }
 }

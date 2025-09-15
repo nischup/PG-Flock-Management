@@ -234,8 +234,10 @@ class EggClassificationController extends Controller
 
         $totalEggs = DailyEggCollection::whereIn('daily_operation_id', $dailyOperationIds)
             ->sum('total_egg'); // adjust if your column name is different
-
-        return response()->json(['total_egg' => $totalEggs]);
+       
+         return response()->json([
+            'total_egg' => $totalEggs,
+        ]);
     
     }
 }
