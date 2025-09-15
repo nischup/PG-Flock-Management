@@ -130,7 +130,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
           :tooltip="pb.progress + '%'"
         />
         <BirdStage
-          title="Birds Distribution"
+          title="Birds Stage"
           :bordingTotal="props.birdStage.bordingTotal"
           :growingTotal="props.birdStage.growingTotal"
           :productionTotal="props.birdStage.productionTotal"

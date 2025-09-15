@@ -6,9 +6,9 @@
 
     <!-- Stage Names (outside the bar) -->
     <div class="flex justify-between mb-1 text-xs font-semibold text-black">
-      <span>Bording</span>
+      <span>Brooding</span>
       <span>Growing</span>
-      <span>Production</span>
+      <span>Laying</span>
     </div>
 
     <!-- Stacked Bar -->

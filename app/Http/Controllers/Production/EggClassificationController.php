@@ -231,7 +231,7 @@ class EggClassificationController extends Controller
         $dailyOperationIds = DailyOperation::where('batchassign_id', $request->batchassign_id)
             ->where('operation_date', $request->operation_date)
             ->pluck('id');
-
+        
         $totalEggs = DailyEggCollection::whereIn('daily_operation_id', $dailyOperationIds)
             ->sum('total_egg'); // adjust if your column name is different
        
