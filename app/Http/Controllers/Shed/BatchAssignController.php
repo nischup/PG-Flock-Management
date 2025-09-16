@@ -10,6 +10,7 @@ use App\Models\Master\Flock;
 use App\Models\Master\Level;
 use App\Models\Shed\BatchAssign;
 use App\Models\Shed\ShedReceive;
+use App\Models\BirdTransfer\BirdTransfer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -166,6 +167,10 @@ class BatchAssignController extends Controller
         $batches = $request->batches ?? [];
 
         $shedReceive = ShedReceive::findOrFail($request->shed_receive_id);
+        
+        
+        // check once using the Transaction model
+        $exists = BirdTransfer::where('job_no', $shedReceive->job_no)->exists();
 
         foreach ($batches as $batch) {
             BatchAssign::create([
@@ -189,6 +194,7 @@ class BatchAssignController extends Controller
                 'batch_sortage_male' => $batch['batch_sortage_male'] ?? null,
                 'batch_sortage_female' => $batch['batch_sortage_female'] ?? 0,
                 'percentage' => $batch['percentage'] ?? 0,
+                'stage' => $exists ? 3 : 1, 
                 'created_by' => Auth::id(),
             ]);
         }

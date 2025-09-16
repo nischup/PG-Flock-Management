@@ -55,7 +55,7 @@ const shedSearchQuery = ref('')
 const filteredFirmReceives = computed(() => {
     if (!firmReceiveSearchQuery.value) return props.firmReceives
     return props.firmReceives.filter(fr => 
-        fr.job_no?.toLowerCase().includes(firmReceiveSearchQuery.value.toLowerCase()) ||
+        fr.transaction_no?.toLowerCase().includes(firmReceiveSearchQuery.value.toLowerCase()) ||
         fr.flock_name?.toLowerCase().includes(firmReceiveSearchQuery.value.toLowerCase())
     )
 })
@@ -247,7 +247,7 @@ function submit() {
           <div class="space-y-2">
             <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
               <Package class="h-4 w-4" />
-              Firm Receive Job No
+              Firm Receive Transaction No
             </Label>
             <div class="firm-receive-dropdown relative">
               <button
@@ -257,7 +257,7 @@ function submit() {
               >
                 <span class="flex items-center gap-3">
                   <div class="h-2 w-2 rounded-full bg-purple-500"></div>
-                  {{ selectedFirmReceive ? selectedFirmReceive.job_no : 'Select Firm Receive Job No' }}
+                  {{ selectedFirmReceive ? selectedFirmReceive.transaction_no : 'Select Firm Receive Transaction No' }}
                 </span>
                 <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFirmReceiveDropdown }" />
               </button>
@@ -304,7 +304,7 @@ function submit() {
                     >
                       <div class="h-3 w-3 rounded-full bg-purple-500 flex-shrink-0"></div>
                       <div class="flex-1">
-                        <div class="font-semibold text-gray-900 dark:text-white">{{ fr.job_no }}</div>
+                        <div class="font-semibold text-gray-900 dark:text-white">{{ fr.transaction_no }}</div>
                         <div class="text-sm text-gray-500 dark:text-gray-400">Flock: {{ fr.flock_name }}</div>
                         <div class="text-xs text-gray-400 dark:text-gray-500">Total: {{ fr.firm_total_qty }}</div>
                       </div>
@@ -448,7 +448,7 @@ function submit() {
               Firm Receive Details
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Job No:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.job_no }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Transaction No:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.transaction_no }}</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Flock Name:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.flock_name }}</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Company:</span><div class="text-gray-900 dark:text-gray-100">{{ props.companies.find(c => c.id === form.receiving_company_id)?.name }}</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.firm_female_qty }}</div></div>

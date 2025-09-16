@@ -53,7 +53,7 @@ class ProductionShedReceiveController extends Controller
             ->map(function ($fr) {
                 return [
                     'id' => $fr->id,
-                    'job_no' => $fr->job_no,
+                    'transaction_no' => $fr->transaction_no,
                     'flock_id' => $fr->flock_id,
                     'flock_name' => $fr->flock?->name ?? 'N/A',
                     'receiving_company_id' => $fr->receiving_company_id,
