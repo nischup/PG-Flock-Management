@@ -12,9 +12,13 @@ class VaccineSeeder extends Seeder
      */
     public function run(): void
     {
+        // Get vaccine type IDs
+        $liveVaccineId = DB::table('vaccine_types')->where('name', 'Live Vaccine')->value('id');
+        $inactivatedVaccineId = DB::table('vaccine_types')->where('name', 'Inactivated Vaccine')->value('id');
+
         DB::table('vaccines')->insert([
             [
-                'vaccine_type_id' => 1,
+                'vaccine_type_id' => $liveVaccineId,
                 'name' => 'Newcastle Disease Vaccine',
                 'applicator' => 'Injection',
                 'dose' => '0.5 ml per bird',
@@ -25,7 +29,7 @@ class VaccineSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'vaccine_type_id' => 2,
+                'vaccine_type_id' => $inactivatedVaccineId,
                 'name' => 'Fowl Pox Vaccine',
                 'applicator' => 'Wing Web',
                 'dose' => '0.2 ml per bird',
@@ -36,12 +40,12 @@ class VaccineSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'vaccine_type_id' => 2,
+                'vaccine_type_id' => $inactivatedVaccineId,
                 'name' => 'Marek\'s Disease Vaccine',
                 'applicator' => 'Injection',
                 'dose' => '0.2 ml per bird',
                 'note' => 'Administer to day-old chicks',
-                'description' => 'Protects against Marek’s disease, a viral disease causing tumors and paralysis.',
+                'description' => 'Protects against Marek\'s disease, a viral disease causing tumors and paralysis.',
                 'status' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),

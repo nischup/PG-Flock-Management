@@ -12,9 +12,14 @@ class ProjectSeeder extends Seeder
      */
     public function run(): void
     {
+        // Get the company IDs that were created by CompanySeeder
+        $provitaChicksId = DB::table('companies')->where('short_name', 'PCL')->value('id');
+        $provitaBreedId = DB::table('companies')->where('short_name', 'PBL')->value('id');
+        $provitaHatchId = DB::table('companies')->where('short_name', 'PHL')->value('id');
+
         DB::table('projects')->insert([
             [
-                'company_id' => 1,
+                'company_id' => $provitaHatchId,
                 'name' => 'PHL-1',
                 'location' => 'Dhaka, Bangladesh',
                 'contact_person_name' => 'Abdul Karim',
@@ -26,7 +31,7 @@ class ProjectSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'company_id' => 1,
+                'company_id' => $provitaHatchId,
                 'name' => 'PHL-2',
                 'location' => 'Gazipur, Bangladesh',
                 'contact_person_name' => 'Sadia Akter',
@@ -38,7 +43,7 @@ class ProjectSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'company_id' => 2,
+                'company_id' => $provitaBreedId,
                 'name' => 'PBL-1',
                 'location' => 'Chattogram, Bangladesh',
                 'contact_person_name' => 'Rafiqul Islam',
@@ -50,7 +55,7 @@ class ProjectSeeder extends Seeder
                 'updated_at' => now(),          
             ],
             [
-                'company_id' => 2,
+                'company_id' => $provitaBreedId,
                 'name' => 'PBL-2',
                 'location' => 'Khulna, Bangladesh',
                 'contact_person_name' => 'Mahbub Alam',

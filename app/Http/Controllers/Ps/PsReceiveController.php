@@ -11,6 +11,7 @@ use App\Models\Master\Company;
 use App\Models\Master\Supplier;
 use App\Models\Ps\PsLabTest;
 use App\Models\Ps\PsReceive;
+use App\Services\AuditLogService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -121,6 +122,9 @@ class PsReceiveController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
+            // Log audit for PsReceive creation
+            AuditLogService::logCreated($psReceive, $request);
+
             Log::info('PS Receive created successfully', ['ps_receive_id' => $psReceive->id]);
 
             $chickCount = $psReceive->chickCounts()->create([
@@ -135,9 +139,12 @@ class PsReceiveController extends Controller
                 'ps_net_weight' => (float) $request->ps_net_weight,
             ]);
 
+            // Log audit for PsChickCount creation
+            AuditLogService::logCreated($chickCount, $request);
+
             Log::info('PS Chick Count created successfully', ['chick_count_id' => $chickCount->id]);
 
-            $psReceive->labTransfers()->create([
+            $govLabTransfer = $psReceive->labTransfers()->create([
                 'ps_receive_id' => $psReceive->id,
                 'lab_type' => 1, // Gov Lab
                 'lab_send_female_qty' => (int) $request->gov_lab_send_female_qty ?? 0,
@@ -150,8 +157,11 @@ class PsReceiveController extends Controller
                 'status' => 1,
             ]);
 
+            // Log audit for Gov Lab Transfer creation
+            AuditLogService::logCreated($govLabTransfer, $request);
+
             // insert for lab_type = 2 (Provita Lab)
-            $psReceive->labTransfers()->create([
+            $provitaLabTransfer = $psReceive->labTransfers()->create([
                 'ps_receive_id' => $psReceive->id,
                 'lab_type' => 2, // Provita Lab
                 'lab_send_female_qty' => (int) $request->provita_lab_send_female_qty ?? 0,
@@ -164,13 +174,19 @@ class PsReceiveController extends Controller
                 'status' => 1,
             ]);
 
+            // Log audit for Provita Lab Transfer creation
+            AuditLogService::logCreated($provitaLabTransfer, $request);
+
             if ($request->hasFile('file')) {
                 foreach ($request->file('file') as $uploadedFile) {
                     $path = $uploadedFile->store('ps_receive_files'); // storage/app/ps_receive_files
-                    $psReceive->attachments()->create([
+                    $attachment = $psReceive->attachments()->create([
                         'file_path' => $path,
                         'file_type' => $uploadedFile->getClientOriginalExtension(),
                     ]);
+
+                    // Log audit for file attachment creation
+                    AuditLogService::logCreated($attachment, $request);
                 }
             }
 

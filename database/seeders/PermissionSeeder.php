@@ -1,6 +1,7 @@
 <?php
 namespace Database\Seeders;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\User;
@@ -114,16 +115,23 @@ class PermissionSeeder extends Seeder
         $userExists = User::role('superadmin')->exists();
 
         if (!$userExists) {
-            // Create default SuperAdmin user if none exists
-            $user = User::create([
-                'name'       => 'PG Admin',
-                'email'      => 'provita@mail.com',
-                'password'   => Hash::make('12345678'), // ⚠️ change to secure password
-                'company_id' => 1,
-                'shed_id'    => 1,
-            ]);
+            // Get the first company and shed IDs
+            $firstCompanyId = DB::table('companies')->orderBy('id')->value('id');
+            $firstShedId = DB::table('sheds')->orderBy('id')->value('id');
 
-            $user->assignRole($superAdminRole);
+            // Only create user if we have valid company and shed IDs
+            if ($firstCompanyId && $firstShedId) {
+                // Create default SuperAdmin user if none exists
+                $user = User::create([
+                    'name'       => 'PG Admin',
+                    'email'      => 'provita@mail.com',
+                    'password'   => Hash::make('12345678'), // ⚠️ change to secure password
+                    'company_id' => $firstCompanyId,
+                    'shed_id'    => $firstShedId,
+                ]);
+
+                $user->assignRole($superAdminRole);
+            }
         }
 
 

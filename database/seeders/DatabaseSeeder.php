@@ -18,19 +18,22 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $this->call([
+            // Create companies and sheds first
+            CompanySeeder::class,
+            ShedSeeder::class,
+            // Then create permissions and users
             PermissionSeeder::class,
+            // Then create other data
             BatchSeeder::class,
             BreedTypeSeeder::class,
             ChickTypeSeeder::class,
-            CompanySeeder::class,
             CountrySeeder::class,
             DiseaseSeeder::class,
-            FeedSeeder::class,
             FeedTypeSeeder::class,
+            FeedSeeder::class,
             LevelSeeder::class,
             MedicineSeeder::class,
             ProjectSeeder::class,
-            ShedSeeder::class,
             SupplierSeeder::class,
             TransportTypeSeeder::class,
             UnitSeeder::class,
@@ -40,9 +43,12 @@ class DatabaseSeeder extends Seeder
             EggGradeSeeder::class
         ]);
 
-        User::factory()->create([
-            'name' => 'Provita',
-            'email' => 'provita@mail.com',
-        ]);
+        // Create user only if it doesn't exist
+        if (!User::where('email', 'provita@mail.com')->exists()) {
+            User::factory()->create([
+                'name' => 'Provita',
+                'email' => 'provita@mail.com',
+            ]);
+        }
     }
 }
