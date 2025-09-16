@@ -113,18 +113,24 @@ const debugDropdown = () => {
 }
 
 const form = useForm({
-  transaction_id: 0,
-  flock_id: 0,
-  shed_id:1,
-  receiving_company_id: 0,
-  shed_female_qty: 0,
-  shed_male_qty: 0,
+  transaction_id: null,
+  flock_id: null,
+  shed_id: null,
+  receiving_company_id: null,
+  shed_female_qty: null,
+  shed_male_qty: null,
   shed_total_qty: 0,
   shed_sortage_male_box: 0,
   shed_sortage_female_box: 0,
+  shed_sortage_male_mortality: 0,
+  shed_sortage_female_mortality: 0,
+  shed_sortage_mortality: 0,
   shed_sortage_box_qty: 0,
   shed_excess_male_box: 0,
   shed_excess_female_box: 0,
+  shed_excess_male_mortality: 0,
+  shed_excess_female_mortality: 0,
+  shed_excess_mortality: 0,
   shed_excess_box_qty: 0,
   remarks: '',
   status: 1,
@@ -132,16 +138,24 @@ const form = useForm({
 
 // Watch for total boxes and auto-calc shortages/excess
 watch(
-  () => [form.shed_male_qty, form.shed_female_qty],
+  () => [form.shed_male_qty, form.shed_female_qty, form.shed_sortage_male_box, form.shed_sortage_female_box, form.shed_sortage_male_mortality, form.shed_sortage_female_mortality, form.shed_excess_male_box, form.shed_excess_female_box, form.shed_excess_male_mortality, form.shed_excess_female_mortality],
   () => {
     form.shed_total_qty =
       Number(form.shed_male_qty || 0) + Number(form.shed_female_qty || 0)
 
+    // Calculate total mortality for shortage
+    form.shed_sortage_mortality =
+      Number(form.shed_sortage_male_mortality || 0) + Number(form.shed_sortage_female_mortality || 0)
+    
+    // Calculate total mortality for excess
+    form.shed_excess_mortality =
+      Number(form.shed_excess_male_mortality || 0) + Number(form.shed_excess_female_mortality || 0)
+
     // Total shortage
     form.shed_sortage_box_qty =
-      Number(form.shed_sortage_male_box || 0) + Number(form.shed_sortage_female_box || 0)
+      Number(form.shed_sortage_male_box || 0) + Number(form.shed_sortage_female_box || 0) + Number(form.shed_sortage_mortality || 0)
     form.shed_excess_box_qty =
-      Number(form.shed_excess_male_box || 0) + Number(form.shed_excess_female_box || 0)
+      Number(form.shed_excess_male_box || 0) + Number(form.shed_excess_female_box || 0) + Number(form.shed_excess_mortality || 0)
   },
   { deep: true, immediate: true }
 )
@@ -175,9 +189,29 @@ function toggleInfo() {
 
 // Submit Shed Receive
 function submit() {
+  // Basic client-side validation
+  if (!form.shed_female_qty || form.shed_female_qty <= 0) {
+    form.setError('shed_female_qty', 'Female box quantity is required and must be greater than 0.')
+    return
+  }
+  
+  if (!form.shed_male_qty || form.shed_male_qty <= 0) {
+    form.setError('shed_male_qty', 'Male box quantity is required and must be greater than 0.')
+    return
+  }
+
   form.post(route('shed-receive.store'), {
-    onSuccess: () => form.reset(),
-    onError: () => {},
+    onSuccess: () => {
+      form.reset()
+      // Reset dropdown selections
+      selectTransactionid.value = ''
+      selectedFlockId.value = ''
+      selectedShedid.value = ''
+      showInfo.value = false
+    },
+    onError: (errors) => {
+      console.log('Validation errors:', errors)
+    },
   })
 }
 </script>
@@ -187,19 +221,19 @@ function submit() {
   <Head title="Create Shed Receive" />
 
   <!-- Header Section -->
-  <div class="mb-8">
+  <div class="mb-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Create Shed Receive</h1>
-        <p class="mt-2 text-gray-600 dark:text-gray-400">Transfer chicks from farm to shed facility</p>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create Shed Receive</h1>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Transfer chicks from farm to shed facility</p>
       </div>
       <Link 
         href="/shed-receive" 
-        class="group relative overflow-hidden rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
-        style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);"
+        class="group relative overflow-hidden rounded-lg px-4 py-2 text-xs font-semibold text-white shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg"
+        style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);"
       >
-        <span class="relative z-10 flex items-center gap-2">
-          <ArrowLeft class="h-4 w-4" />
+        <span class="relative z-10 flex items-center gap-1">
+          <ArrowLeft class="h-3 w-3" />
           Back to List
         </span>
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-20 group-hover:translate-x-full"></div>
@@ -207,60 +241,44 @@ function submit() {
     </div>
   </div>
 
-  <form @submit.prevent="submit" class="space-y-8">
+  <form @submit.prevent="submit" class="space-y-6">
 
     <!-- Firm Receive Selection Card -->
-    <div class="relative rounded-2xl border-0 bg-gradient-to-br from-white via-blue-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-blue-900/20 dark:to-gray-800 dark:ring-gray-700">
-      <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20"></div>
-      <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10"></div>
+    <div class="relative rounded-xl border-0 bg-gradient-to-br from-white via-blue-50 to-white p-6 shadow-lg ring-1 ring-gray-200 dark:from-gray-800 dark:via-blue-900/20 dark:to-gray-800 dark:ring-gray-700">
+      <div class="absolute -right-3 -top-3 h-16 w-16 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20"></div>
+      <div class="absolute -bottom-3 -left-3 h-20 w-20 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10"></div>
       
       <div class="relative">
-        <div class="mb-8 flex items-center gap-3">
-          <div class="rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 shadow-lg">
-            <Package class="h-6 w-6 text-white" />
+        <div class="mb-6 flex items-center gap-2">
+          <div class="rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 p-2 shadow-md">
+            <Package class="h-4 w-4 text-white" />
           </div>
           <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Farm Receive & Shed Information</h2>
-            <p class="text-gray-600 dark:text-gray-400">Select firm receive code and destination shed</p>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Farm Receive & Shed Information</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Select firm receive code and destination shed</p>
           </div>
         </div>
 
-        <!-- Data Status Indicator -->
-        <div class="mb-6 flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
-          <div class="flex items-center gap-2 text-sm">
-            <div class="h-2 w-2 rounded-full bg-green-500"></div>
-            <span class="font-medium text-green-800 dark:text-green-200">
-              Data Status: {{ props.firmReceives?.length || 0 }} Firm Receives | {{ props.flocks?.length || 0 }} Flocks | {{ props.sheds?.length || 0 }} Sheds loaded
-            </span>
-          </div>
-          <button 
-            type="button"
-            @click="debugDropdown" 
-            class="rounded bg-green-600 px-3 py-1 text-xs text-white hover:bg-green-700"
-          >
-            Debug Console
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           <!-- Firm Receive Code Dropdown -->
           <div class="space-y-2">
-            <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <Package class="h-4 w-4" />
+            <Label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+              <Package class="h-3 w-3" />
               Firm Receive Code
+              <span class="text-red-500 ml-1">*</span>
             </Label>
             <div class="firm-receive-dropdown relative">
               <button
                 type="button"
                 @click.stop="showFirmReceiveDropdown = !showFirmReceiveDropdown"
-                class="flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               >
-                <span class="flex items-center gap-3">
-                  <div class="h-2 w-2 rounded-full bg-blue-500"></div>
+                <span class="flex items-center gap-2">
+                  <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
                   {{ selectedFirmReceive ? selectedFirmReceive.transaction_no || selectedFirmReceive.job_no : 'Select Firm Receive Code' }}
                 </span>
-                <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFirmReceiveDropdown }" />
+                <ChevronDown class="h-3 w-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFirmReceiveDropdown }" />
               </button>
               
               <!-- Firm Receive Dropdown -->
@@ -330,47 +348,51 @@ function submit() {
                 </div>
               </div>
             </div>
+            <InputError :message="form.errors.transaction_id" class="mt-1" />
           </div>
 
           <!-- Flock Dropdown -->
           <div class="space-y-2">
-            <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <Users class="h-4 w-4" />
+            <Label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+              <Users class="h-3 w-3" />
               Flock Selection
+              <span class="text-red-500 ml-1">*</span>
             </Label>
             <div class="flock-dropdown relative">
               <button
                 type="button"
                 @click.stop="showFlockDropdown = !showFlockDropdown"
-                class="flex w-full items-center justify-between rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 shadow-sm transition-all duration-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white cursor-not-allowed"
+                class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm shadow-sm transition-all duration-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white cursor-not-allowed"
                 :disabled="!selectedFirmReceive"
               >
-                <span class="flex items-center gap-3">
-                  <div class="h-2 w-2 rounded-full bg-emerald-500"></div>
+                <span class="flex items-center gap-2">
+                  <div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
                   {{ selectedFlock ? selectedFlock.name : (selectedFirmReceive ? selectedFirmReceive.flock_name : 'Select Firm Receive First') }}
                 </span>
-                <ChevronDown class="h-4 w-4 text-gray-400" />
+                <ChevronDown class="h-3 w-3 text-gray-400" />
               </button>
             </div>
+            <InputError :message="form.errors.flock_id" class="mt-1" />
           </div>
 
           <!-- Shed Dropdown -->
           <div class="space-y-2">
-            <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <Home class="h-4 w-4" />
+            <Label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+              <Home class="h-3 w-3" />
               Shed Selection
+              <span class="text-red-500 ml-1">*</span>
             </Label>
             <div class="shed-dropdown relative">
               <button
                 type="button"
                 @click.stop="showShedDropdown = !showShedDropdown"
-                class="flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-orange-500 hover:shadow-md focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 hover:border-orange-500 hover:shadow-md focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               >
-                <span class="flex items-center gap-3">
-                  <div class="h-2 w-2 rounded-full bg-orange-500"></div>
+                <span class="flex items-center gap-2">
+                  <div class="h-1.5 w-1.5 rounded-full bg-orange-500"></div>
                   {{ selectedShed ? selectedShed.name : 'Select Destination Shed' }}
                 </span>
-                <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showShedDropdown }" />
+                <ChevronDown class="h-3 w-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showShedDropdown }" />
               </button>
               
               <!-- Shed Dropdown -->
@@ -439,6 +461,7 @@ function submit() {
                 </div>
               </div>
             </div>
+            <InputError :message="form.errors.shed_id" class="mt-1" />
           </div>
         </div>
 
@@ -457,12 +480,12 @@ function submit() {
               Firm Receive Details
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Job No:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.job_no }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Flock Name:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.flock_name }}</div></div>
+
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Flock No:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.flock_name }}</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Company:</span><div class="text-gray-900 dark:text-gray-100">{{ props.companies.find(c => c.id === form.receiving_company_id)?.name }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.firm_female_qty }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.firm_male_qty }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Qty:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ selectedFirmReceive?.firm_total_qty }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Box Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.firm_female_qty }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Box Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.firm_male_qty }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Box Qty:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ selectedFirmReceive?.firm_total_qty }}</div></div>
             </div>
           </div>
         </transition>
@@ -470,184 +493,204 @@ function submit() {
     </div>
 
     <!-- Shed Receive Quantities Card -->
-    <div class="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-white via-emerald-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-emerald-900/20 dark:to-gray-800 dark:ring-gray-700">
-      <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20"></div>
-      <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-teal-500/10 to-emerald-500/10"></div>
+    <div class="relative overflow-hidden rounded-xl border-0 bg-gradient-to-br from-white via-emerald-50 to-white p-6 shadow-lg ring-1 ring-gray-200 dark:from-gray-800 dark:via-emerald-900/20 dark:to-gray-800 dark:ring-gray-700">
+      <div class="absolute -right-3 -top-3 h-16 w-16 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20"></div>
+      <div class="absolute -bottom-3 -left-3 h-20 w-20 rounded-full bg-gradient-to-br from-teal-500/10 to-emerald-500/10"></div>
       
       <div class="relative">
-        <div class="mb-8 flex items-center gap-3">
-          <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-3 shadow-lg">
-            <Users class="h-6 w-6 text-white" />
+        <div class="mb-6 flex items-center gap-2">
+          <div class="rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 p-2 shadow-md">
+            <Users class="h-4 w-4 text-white" />
           </div>
           <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Shed Chick Quantities</h2>
-            <p class="text-gray-600 dark:text-gray-400">Enter chick quantities received by shed</p>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Shed Chick Quantities</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Enter chick quantities received by shed</p>
           </div>
         </div>
 
         <!-- Main Chick Quantities -->
-        <div class="mb-8">
-          <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Main Chick Quantities</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Female Chick Qty</Label>
+        <div class="mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="space-y-1">
+              <Label class="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                Female Box Qty
+                <span class="text-red-500 ml-1">*</span>
+              </Label>
               <Input 
                 v-model.number="form.shed_female_qty" 
                 type="number" 
                 min="0"
-                class="rounded-xl border-pink-300 bg-pink-50 px-4 py-3 shadow-sm focus:border-pink-500 focus:ring-pink-500/20 dark:border-pink-600 dark:bg-pink-900/20" 
+                required
+                class="rounded-lg border-pink-300 bg-pink-50 px-3 py-2 text-sm shadow-sm focus:border-pink-500 focus:ring-pink-500/20 dark:border-pink-600 dark:bg-pink-900/20" 
               />
+              <InputError :message="form.errors.shed_female_qty" class="mt-1" />
             </div>
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Male Chick Qty</Label>
+            <div class="space-y-1">
+              <Label class="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                Male Box Qty
+                <span class="text-red-500 ml-1">*</span>
+              </Label>
               <Input 
                 v-model.number="form.shed_male_qty" 
                 type="number" 
                 min="0"
-                class="rounded-xl border-blue-300 bg-blue-50 px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-blue-500/20 dark:border-blue-600 dark:bg-blue-900/20" 
+                required
+                class="rounded-lg border-blue-300 bg-blue-50 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500/20 dark:border-blue-600 dark:bg-blue-900/20" 
               />
+              <InputError :message="form.errors.shed_male_qty" class="mt-1" />
             </div>
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Chick Qty</Label>
+            <div class="space-y-1">
+              <Label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Total Box Qty</Label>
               <Input 
                 type="number" 
                 :value="form.shed_total_qty" 
                 readonly 
-                class="rounded-xl border-gray-300 bg-gradient-to-r from-gray-100 to-gray-50 px-4 py-3 font-bold text-gray-700 shadow-sm cursor-not-allowed dark:border-gray-600 dark:from-gray-700 dark:to-gray-800 dark:text-gray-300" 
+                class="rounded-lg border-gray-300 bg-gradient-to-r from-gray-100 to-gray-50 px-3 py-2 text-sm font-bold text-gray-700 shadow-sm cursor-not-allowed dark:border-gray-600 dark:from-gray-700 dark:to-gray-800 dark:text-gray-300" 
               />
             </div>
           </div>
         </div>
 
         <!-- Shortage & Excess Quantities -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="space-y-6">
           <!-- Shortage Section -->
-          <div class="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-pink-50 p-6 dark:border-red-800 dark:from-red-900/20 dark:to-pink-900/20">
-            <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-red-800 dark:text-red-200">
-              <AlertCircle class="h-5 w-5" />
-              Shortage Chicks
-            </h3>
-            <div class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Male Shortage</Label>
+          <div class="rounded-lg border border-red-200 bg-gradient-to-br from-red-50 to-pink-50 p-4 dark:border-red-800 dark:from-red-900/20 dark:to-pink-900/20">
+            <div class="space-y-3">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="space-y-1">
+                  <Label class="text-xs font-semibold text-red-700 dark:text-red-300">Male Shortage</Label>
                   <Input 
                     type="number" 
                     v-model.number="form.shed_sortage_male_box" 
                     min="0"
-                    class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
+                    class="rounded-lg border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
                   />
                 </div>
-                <div class="space-y-2">
-                  <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Female Shortage</Label>
+                <div class="space-y-1">
+                  <Label class="text-xs font-semibold text-red-700 dark:text-red-300">Female Shortage</Label>
                   <Input 
                     type="number" 
                     v-model.number="form.shed_sortage_female_box" 
                     min="0"
-                    class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
+                    class="rounded-lg border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
+                  />
+                </div>
+                <div class="space-y-1">
+                  <Label class="text-xs font-semibold text-red-700 dark:text-red-300">Total Shortage</Label>
+                  <Input 
+                    type="number" 
+                    :value="form.shed_sortage_box_qty" 
+                    readonly 
+                    class="rounded-lg border-red-300 bg-gradient-to-r from-red-100 to-red-50 px-3 py-2 text-sm font-bold text-red-800 cursor-not-allowed dark:border-red-600 dark:from-red-800/50 dark:to-red-900/50 dark:text-red-200"
                   />
                 </div>
               </div>
-              <div class="space-y-2">
-                <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Total Shortage</Label>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="space-y-1">
+                  <Label class="text-xs font-semibold text-red-700 dark:text-red-300">Male Mortality</Label>
+                  <Input 
+                    type="number" 
+                    v-model.number="form.shed_sortage_male_mortality" 
+                    min="0"
+                    class="rounded-lg border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
+                  />
+                </div>
+                <div class="space-y-1">
+                  <Label class="text-xs font-semibold text-red-700 dark:text-red-300">Female Mortality</Label>
+                  <Input 
+                    type="number" 
+                    v-model.number="form.shed_sortage_female_mortality" 
+                    min="0"
+                    class="rounded-lg border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
+                  />
+                </div>
+                <div class="space-y-1">
+                  <Label class="text-xs font-semibold text-red-700 dark:text-red-300">Total Mortality</Label>
                 <Input 
                   type="number" 
-                  :value="form.shed_sortage_box_qty" 
+                    :value="form.shed_sortage_mortality" 
                   readonly 
-                  class="rounded-xl border-red-300 bg-gradient-to-r from-red-100 to-red-50 px-4 py-2 font-bold text-red-800 cursor-not-allowed dark:border-red-600 dark:from-red-800/50 dark:to-red-900/50 dark:text-red-200"
+                    class="rounded-lg border-red-300 bg-gradient-to-r from-red-100 to-red-50 px-3 py-2 text-sm font-bold text-red-800 cursor-not-allowed dark:border-red-600 dark:from-red-800/50 dark:to-red-900/50 dark:text-red-200"
                 />
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Excess Section -->
-          <div class="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 p-6 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-green-900/20">
-            <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-emerald-800 dark:text-emerald-200">
-              <CheckCircle2 class="h-5 w-5" />
-              Excess Chicks
-            </h3>
-            <div class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Male Excess</Label>
+          <div class="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 p-4 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-green-900/20">
+            <div class="space-y-3">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="space-y-1">
+                  <Label class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Male Excess</Label>
                   <Input 
                     type="number" 
                     v-model.number="form.shed_excess_male_box" 
                     min="0"
-                    class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
+                    class="rounded-lg border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
                   />
                 </div>
-                <div class="space-y-2">
-                  <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Female Excess</Label>
+                <div class="space-y-1">
+                  <Label class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Female Excess</Label>
                   <Input 
                     type="number" 
                     v-model.number="form.shed_excess_female_box" 
                     min="0"
-                    class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
+                    class="rounded-lg border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
                   />
                 </div>
-              </div>
-              <div class="space-y-2">
-                <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Total Excess</Label>
+                <div class="space-y-1">
+                  <Label class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Total Excess</Label>
                 <Input 
                   type="number" 
                   :value="form.shed_excess_box_qty" 
                   readonly 
-                  class="rounded-xl border-emerald-300 bg-gradient-to-r from-emerald-100 to-emerald-50 px-4 py-2 font-bold text-emerald-800 cursor-not-allowed dark:border-emerald-600 dark:from-emerald-800/50 dark:to-emerald-900/50 dark:text-emerald-200"
+                    class="rounded-lg border-emerald-300 bg-gradient-to-r from-emerald-100 to-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800 cursor-not-allowed dark:border-emerald-600 dark:from-emerald-800/50 dark:to-emerald-900/50 dark:text-emerald-200"
                 />
+                </div>
               </div>
+            
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Notes Section -->
-    <div class="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-white via-amber-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-amber-900/20 dark:to-gray-800 dark:ring-gray-700">
-      <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20"></div>
-      <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-500/10 to-amber-500/10"></div>
-      
-      <div class="relative">
-        <div class="mb-6 flex items-center gap-3">
-          <div class="rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 p-3 shadow-lg">
-            <Info class="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Additional Notes</h2>
-            <p class="text-gray-600 dark:text-gray-400">Add any relevant remarks or observations</p>
-          </div>
-        </div>
-
-        <div class="space-y-2">
-          <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Remarks</Label>
+        <!-- Remarks Section -->
+        <div class="mt-6">
+          <div class="space-y-1">
+            <Label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+              <Info class="h-3 w-3" />
+              Remarks
+            </Label>
           <textarea 
             v-model="form.remarks" 
-            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none transition-all duration-200" 
-            rows="4" 
+              class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none transition-all duration-200" 
+              rows="2" 
             placeholder="Write your notes here..."
           ></textarea>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Submit Section -->
-    <div class="flex items-center justify-end gap-4 rounded-2xl bg-gradient-to-r from-gray-50 to-white p-6 dark:from-gray-800 dark:to-gray-900">
+    <div class="flex items-center justify-end gap-3 rounded-lg bg-gradient-to-r from-gray-50 to-white p-4 dark:from-gray-800 dark:to-gray-900">
       <Link 
         href="/shed-receive"
-        class="rounded-xl border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+        class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
       >
         Cancel
       </Link>
       <Button 
         type="submit" 
         :disabled="form.processing"
-        class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:from-emerald-700 hover:to-emerald-800 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
+        class="group relative overflow-hidden rounded-lg bg-gradient-to-r from-gray-800 to-black px-6 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:from-gray-900 hover:to-gray-800 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500/50 disabled:opacity-50"
+        style="background: linear-gradient(135deg, #1f2937 0%, #000000 100%); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);"
       >
-        <span class="relative z-10 flex items-center gap-2">
-          <Save class="h-4 w-4" />
-          {{ form.processing ? 'Saving...' : 'Save & Submit' }}
+        <span class="relative z-10 flex items-center gap-1">
+          <Save class="h-3 w-3" />
+          {{ form.processing ? 'Submitting...' : 'Submit' }}
         </span>
-        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-20 group-hover:translate-x-full"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-10 group-hover:translate-x-full"></div>
       </Button>
     </div>
 

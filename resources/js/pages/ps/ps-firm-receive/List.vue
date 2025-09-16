@@ -35,7 +35,7 @@ const props = defineProps<{
             receive_date: string;
             psReceive?: { id: number; pi_no: string; supplier?: { name: string } } | null;
             company?: { id: number; name: string } | null;
-            flock?: { id: number; name: string } | null;
+            flock?: { id: number; name: string; code: string } | null;
         }>;
         meta: {
             current_page: number;
@@ -53,7 +53,7 @@ const props = defineProps<{
         date_to?: string; 
     };
     companies?: Array<{ id: number; name: string }>;
-    flocks?: Array<{ id: number; name: string }>;
+    flocks?: Array<{ id: number; name: string; code: string }>;
 }>();
 
 useListFilters({ routeName: '/ps-firm-receive', filters: props.filters });
@@ -148,7 +148,7 @@ const getCompanyName = (companyId: string | number) => {
 
 const getFlockName = (flockId: string | number) => {
     const flock = props.flocks?.find(f => f.id === Number(flockId));
-    return flock?.name || 'Unknown';
+    return flock?.code || 'Unknown';
 };
 
 // Date picker helper functions
@@ -275,7 +275,7 @@ const cardData = computed(() => {
         },
         { 
             title: 'Flock', 
-            value: selectedItem.flock?.name || selectedItem.flock_name || 'N/A',
+            value: selectedItem.flock?.code || selectedItem.flock_name || 'N/A',
             title1: '',
             value1: '',
             title2: '',
@@ -330,7 +330,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     :key="item.id" 
                     :value="item.id"
                 >
-                    {{ item.flock_name }} - {{ item.company_name }} : {{ dayjs(item.receive_date).format('YYYY-MM-DD') }}
+                    {{ item.flock?.code || item.flock_name }} - {{ item.company_name }} : {{ dayjs(item.receive_date).format('YYYY-MM-DD') }}
                 </option>
             </select>
         </div>
@@ -547,7 +547,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                             class="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-600"
                                             :class="{ 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': filters.flock_id == flock.id }"
                                         >
-                                            <span>{{ flock.name }}</span>
+                                            <span>{{ flock.code }} - {{ flock.name }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -715,15 +715,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <thead class="bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left text-gray-600 dark:text-gray-300">
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 60px;">S/N</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Job No</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Flock Name</th>
+                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Flock No</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Company</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">PI No</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Male Qty</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Female Qty</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Total Qty</th>
+                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Male Box Qty</th>
+                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Female Box Qty</th>
+                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Total Box Qty</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Receive Date</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Remarks</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Actions</th>
                         </tr>
                     </thead>
@@ -736,8 +734,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <td class="px-4 py-3 text-center text-gray-500 dark:text-gray-400 whitespace-nowrap font-medium">
                                     {{ ((props.psFirmReceives?.meta?.current_page || 1) - 1) * (props.psFirmReceives?.meta?.per_page || 10) + index + 1 }}
                                 </td>
-                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">{{ item.job_no }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap">{{ item.flock?.name || item.flock_name }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap">{{ item.flock?.code || item.flock_name }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap">{{ item.company?.name || item.company_name }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
@@ -748,9 +745,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <td class="px-4 py-3 text-center whitespace-nowrap">{{ item.firm_female_qty }}</td>
                                 <td class="px-4 py-3 text-center font-medium whitespace-nowrap">{{ item.firm_total_qty }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap">{{ dayjs(item.receive_date).format('MMM DD, YYYY') }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <span class="text-sm text-gray-600 dark:text-gray-400">{{ item.remarks ?? '-' }}</span>
-                                </td>
                                 <td class="relative px-4 py-3">
                                 <Button size="sm" class="action-btn bg-gray-500 text-white hover:bg-gray-600" @click.stop="toggleDropdown(item.id)">
                                     Actions ▼

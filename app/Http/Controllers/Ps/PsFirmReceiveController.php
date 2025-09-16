@@ -22,7 +22,7 @@ class PsFirmReceiveController extends Controller
      */
     public function index(Request $request)
     {
-        $psFirmReceives = PsFirmReceive::with(['flock', 'company', 'psReceive'])
+        $psFirmReceives = PsFirmReceive::with(['flock:id,name,code', 'company:id,name', 'psReceive:id,pi_no'])
             // ->where('source_type', 'psreceive')
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -43,25 +43,29 @@ class PsFirmReceiveController extends Controller
         return Inertia::render('ps/ps-firm-receive/List', [
             'psFirmReceives' => $psFirmReceives->through(fn ($item) => [
                 'id' => $item->id,
+                'ps_receive_id' => $item->ps_receive_id,
                 'job_no' => $item->job_no,
+                'receipt_type' => $item->receipt_type,
+                'source_type' => $item->source_type,
+                'source_id' => $item->source_id,
+                'flock_id' => $item->flock_id,
                 'flock_name' => $item->flock->name ?? '-',
+                'receiving_company_id' => $item->receiving_company_id,
                 'company_name' => $item->company->name ?? '-',
-                'pi_no' => $item->psReceive->pi_no ?? '-',
-                'firm_male_qty' => $item->firm_male_qty,
                 'firm_female_qty' => $item->firm_female_qty,
+                'firm_male_qty' => $item->firm_male_qty,
                 'firm_total_qty' => $item->firm_total_qty,
                 'remarks' => $item->remarks,
-                'receive_date' => $item->created_at,
                 'created_by' => $item->created_by,
                 'status' => $item->status,
-                // Add relationship data for frontend dropdowns
+                'receive_date' => $item->created_at,
+                'psReceive' => $item->psReceive ? ['id' => $item->psReceive->id, 'pi_no' => $item->psReceive->pi_no, 'supplier' => $item->psReceive->supplier] : null,
                 'company' => $item->company ? ['id' => $item->company->id, 'name' => $item->company->name] : null,
-                'flock' => $item->flock ? ['id' => $item->flock->id, 'name' => $item->flock->name] : null,
-                'psReceive' => $item->psReceive ? ['id' => $item->psReceive->id, 'pi_no' => $item->psReceive->pi_no] : null,
+                'flock' => $item->flock ? ['id' => $item->flock->id, 'name' => $item->flock->name, 'code' => $item->flock->code] : null,
             ]),
             'filters' => $request->only(['search', 'per_page', 'company_id', 'flock_id', 'date_from', 'date_to']),
             'companies' => Company::select('id', 'name')->orderBy('name')->get(),
-            'flocks' => Flock::select('id', 'name')->orderBy('name')->get(),
+            'flocks' => Flock::select('id', 'name', 'code')->orderBy('name')->get(),
         ]);
     }
 
@@ -315,7 +319,7 @@ class PsFirmReceiveController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $psFirmReceives = PsFirmReceive::with(['flock', 'company', 'psReceive'])
+        $psFirmReceives = PsFirmReceive::with(['flock:id,name,code', 'company:id,name', 'psReceive:id,pi_no'])
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('job_no', 'like', "%{$search}%")
@@ -380,7 +384,7 @@ class PsFirmReceiveController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $rows = PsFirmReceive::with(['flock', 'company', 'psReceive'])
+        $rows = PsFirmReceive::with(['flock:id,name,code', 'company:id,name', 'psReceive:id,pi_no'])
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('job_no', 'like', "%{$search}%")

@@ -88,91 +88,91 @@ class BirdTransferController extends Controller
 
         $batch = BatchAssign::with('shedReceive.firmReceive.psReceive')->find($request->batch_assign_id);
 
-    if ($batch && $batch->shedReceive && $batch->shedReceive->firmReceive && $batch->shedReceive->firmReceive->psReceive) {
-        $ps = $batch->shedReceive->firmReceive->psReceive;
+        if ($batch && $batch->shedReceive && $batch->shedReceive->firmReceive && $batch->shedReceive->firmReceive->psReceive) {
+            $ps = $batch->shedReceive->firmReceive->psReceive;
 
-        // Auto calculations
-        $transferTotal = ($request->transfer_female_qty ?? 0) + ($request->transfer_male_qty ?? 0);
-        $medicalTotal = ($request->medical_female_qty ?? 0) + ($request->medical_male_qty ?? 0);
+            // Auto calculations
+            $transferTotal = ($request->transfer_female_qty ?? 0) + ($request->transfer_male_qty ?? 0);
+            $medicalTotal = ($request->medical_female_qty ?? 0) + ($request->medical_male_qty ?? 0);
 
-        $currentFemale = $batch->batch_female_qty - $batch->batch_female_mortality;
-        $currentMale = $batch->batch_male_qty - $batch->batch_male_mortality;
+            $currentFemale = $batch->batch_female_qty - $batch->batch_female_mortality;
+            $currentMale = $batch->batch_male_qty - $batch->batch_male_mortality;
 
-        $deviationFemale = $currentFemale - ($request->transfer_female_qty ?? 0) - ($request->medical_female_qty ?? 0);
-        $deviationMale = $currentMale - ($request->transfer_male_qty ?? 0) - ($request->medical_male_qty ?? 0);
-        $deviationTotal = $deviationFemale + $deviationMale;
+            $deviationFemale = $currentFemale - ($request->transfer_female_qty ?? 0) - ($request->medical_female_qty ?? 0);
+            $deviationMale = $currentMale - ($request->transfer_male_qty ?? 0) - ($request->medical_male_qty ?? 0);
+            $deviationTotal = $deviationFemale + $deviationMale;
 
-        // Save transfer
-        $transfer = BirdTransfer::create([
-            'batch_assign_id' => $batch->id,
-            'job_no' => $batch->job_no,
-            'transaction_no' => $batch->transaction_no,
-            'flock_no' => $batch->flock_no,
-            'flock_id' => $batch->flock_id,
-            'from_company_id' => $request->from_company_id,
-            'to_company_id' => $request->to_company_id,
-            'from_shed_id' => $request->from_shed_id,
-            'to_shed_id' => $request->to_shed_id,
-            'transfer_date' => $request->transfer_date,
+            // Save transfer
+            $transfer = BirdTransfer::create([
+                'batch_assign_id' => $batch->id,
+                'job_no' => $batch->job_no,
+                'transaction_no' => $batch->transaction_no,
+                'flock_no' => $batch->flock_no,
+                'flock_id' => $batch->flock_id,
+                'from_company_id' => $request->from_company_id,
+                'to_company_id' => $request->to_company_id,
+                'from_shed_id' => $request->from_shed_id,
+                'to_shed_id' => $request->to_shed_id,
+                'transfer_date' => $request->transfer_date,
 
-            'transfer_female_qty' => $request->transfer_female_qty ?? 0,
-            'transfer_male_qty' => $request->transfer_male_qty ?? 0,
-            'transfer_total_qty' => $transferTotal,
+                'transfer_female_qty' => $request->transfer_female_qty ?? 0,
+                'transfer_male_qty' => $request->transfer_male_qty ?? 0,
+                'transfer_total_qty' => $transferTotal,
 
-            'medical_female_qty' => $request->medical_female_qty ?? 0,
-            'medical_male_qty' => $request->medical_male_qty ?? 0,
-            'medical_total_qty' => $medicalTotal,
+                'medical_female_qty' => $request->medical_female_qty ?? 0,
+                'medical_male_qty' => $request->medical_male_qty ?? 0,
+                'medical_total_qty' => $medicalTotal,
 
-            'deviation_female_qty' => $deviationFemale,
-            'deviation_male_qty' => $deviationMale,
-            'deviation_total_qty' => $deviationTotal,
-
-
-            'shipment_type_id'=>$ps->shipment_type_id,
-            'lc_no'=>$ps->lc_no,
-            'breed_type'=>$ps->breed_type,
-            'country_of_origin'=>$ps->country_of_origin,
-            'transport_type'=>$ps->transport_type,
+                'deviation_female_qty' => $deviationFemale,
+                'deviation_male_qty' => $deviationMale,
+                'deviation_total_qty' => $deviationTotal,
 
 
-            'created_by' => Auth::id(),
-            'status' => 1,
-        ]);
+                'shipment_type_id' => $ps->shipment_type_id,
+                'lc_no' => $ps->lc_no,
+                'breed_type' => $ps->breed_type,
+                'country_of_origin' => $ps->country_of_origin,
+                'transport_type' => $ps->transport_type,
 
 
-
-        if ($deviationTotal>0) {
-            MovementAdjustment::create([
-                'flock_id'   =>  $batch->flock_id, 
-                'flock_no' =>    $batch->flock_no, // fetch from batch or pass from request
-                'stage'      => 5,                  // 5 = Bird Transfer stage
-                'stage_id'   =>  $transfer->id,
-                'type'       =>  4,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                'male_qty'   =>  $deviationMale ?? 0,
-                'female_qty' =>  $deviationFemale ?? 0,
-                'total_qty'  =>  $deviationTotal ?? 0,
-                'date'       => $request->transfer_date,
-                'remarks'    => "Deviation When Transfer",
+                'created_by' => Auth::id(),
+                'status' => 1,
             ]);
+
+
+
+            if ($deviationTotal > 0) {
+                MovementAdjustment::create([
+                    'flock_id'   =>  $batch->flock_id,
+                    'flock_no' =>    $batch->flock_no, // fetch from batch or pass from request
+                    'stage'      => 5,                  // 5 = Bird Transfer stage
+                    'stage_id'   =>  $transfer->id,
+                    'type'       =>  4,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                    'male_qty'   =>  $deviationMale ?? 0,
+                    'female_qty' =>  $deviationFemale ?? 0,
+                    'total_qty'  =>  $deviationTotal ?? 0,
+                    'date'       => $request->transfer_date,
+                    'remarks'    => "Deviation When Transfer",
+                ]);
+            }
+
+
+
+
+
+
+            if ($batch->stage == 1) {
+                $batch->stage = 2; // Growing
+
+            } elseif ($batch->stage == 2) {
+                $batch->status = 0; // Laying
+                $batch->transfer_date = date("Y-m-d");
+            }
+            // Add your own logic for transition
+
+            // 3. Save updated stage
+            $batch->save();
         }
-
-
-
-
-
-
-        if ($batch->stage == 1) {
-            $batch->stage = 2; // Growing
-            
-        } elseif ($batch->stage == 2) {
-            $batch->status = 0; // Laying
-             $batch->transfer_date = date("Y-m-d");
-        }
-        // Add your own logic for transition
-
-        // 3. Save updated stage
-        $batch->save();
-    }
         // PsFirmReceive::create([
         //     'ps_receive_id'        => $transfer->id, // link to transfer
         //     'job_no'               =>  null,
@@ -231,6 +231,7 @@ class BirdTransferController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
+        // Load transfer with relations
         $item = BirdTransfer::with([
             'flock',
             'fromCompany',
@@ -242,32 +243,41 @@ class BirdTransferController extends Controller
 
         $batchAssign = $item->batchAssign;
 
+        // Get batch challan quantities
         $challanFemale = $batchAssign->batch_female_qty ?? 0;
         $challanMale   = $batchAssign->batch_male_qty ?? 0;
-        $challanTotal  = $batchAssign->batch_total_qty ?? 0;
+        $challanTotal  = $batchAssign->batch_total_qty ?? ($challanFemale + $challanMale);
 
+        // Handle breed_type as string
+        if (is_array($item->breed_type)) {
+            $breedName = implode(', ', $item->breed_type);
+        } else {
+            $breedName = $item->breed_type ?? 'N/A';
+        }
+
+        // Prepare batch data
         $batches = [
             [
-                'batch_no'         => $batchAssign?->batch?->name ?? 'N/A',
-                'challan_female'   => $challanFemale,
-                'challan_male'     => $challanMale,
-                'challan_total'    => $challanTotal,
-                'physical_female'  => $item->transfer_female_qty,
-                'physical_male'    => $item->transfer_male_qty,
-                'total'            => $item->transfer_total_qty,
-                'breed_name'       => $item->breed_type ?? 'N/A', // corrected line
-                'lc_no'            => $item->lc_no ?? 'N/A', // corrected line
-                'medical_female'   => $item->medical_female_qty ?? 0,
-                'medical_male'     => $item->medical_male_qty ?? 0,
-                'medical_total'    => ($item->medical_female_qty ?? 0) + ($item->medical_male_qty ?? 0),
+                'batch_no'        => $batchAssign?->batch?->name ?? 'N/A',
+                'challan_female'  => $challanFemale,
+                'challan_male'    => $challanMale,
+                'challan_total'   => $challanTotal,
+                'physical_female' => $item->transfer_female_qty,
+                'physical_male'   => $item->transfer_male_qty,
+                'total'           => $item->transfer_total_qty,
+                'breed_name'      => $breedName,
+                'lc_no'           => $item->lc_no ?? 'N/A',
+                'medical_female'  => $item->medical_female_qty ?? 0,
+                'medical_male'    => $item->medical_male_qty ?? 0,
+                'medical_total'   => ($item->medical_female_qty ?? 0) + ($item->medical_male_qty ?? 0),
                 'deviation_female' => $item->transfer_female_qty - $challanFemale,
-                'deviation_male'   => $item->transfer_male_qty - $challanMale,
-                'deviation_total'  => $item->transfer_total_qty - $challanTotal,
-                'remarks'          => $item->remarks ?? 'N/A',
+                'deviation_male'  => $item->transfer_male_qty - $challanMale,
+                'deviation_total' => $item->transfer_total_qty - $challanTotal,
+                'remarks'         => $item->remarks ?? 'N/A',
             ],
         ];
-        //dd($batches);
 
+        // Prepare data for PDF
         $data = [
             'job_no'           => $item->job_no,
             'transaction_no'   => $item->transaction_no,
@@ -285,6 +295,7 @@ class BirdTransferController extends Controller
             'generatedAt'      => now(),
         ];
 
+        // PDF options
         Pdf::setOptions([
             'isHtml5ParserEnabled' => true,
             'isRemoteEnabled'      => true,
