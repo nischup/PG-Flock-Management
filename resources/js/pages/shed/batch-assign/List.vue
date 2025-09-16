@@ -30,11 +30,13 @@ const props = defineProps<{
             batch_total_qty: number;
             level: number;
             batch_no: string;
+            batch_name: string;
             percentage?: number;
             created_at: string;
-            flock?: { id: number; name: string } | null;
+            flock?: { id: number; name: string; code: string } | null;
             shed?: { id: number; name: string } | null;
             company?: { id: number; name: string } | null;
+            batch?: { id: number; name: string } | null;
         }>;
         meta: { current_page: number; last_page: number; per_page: number; total: number };
     };
@@ -49,7 +51,7 @@ const props = defineProps<{
         date_to?: string; 
     };
     companies?: Array<{ id: number; name: string }>;
-    flocks?: Array<{ id: number; name: string }>;
+    flocks?: Array<{ id: number; code: string; name: string }>;
     sheds?: Array<{ id: number; name: string }>;
     levels?: Array<{ id: number; name: string }>;
     batches?: Array<{ id: number; name: string }>;
@@ -177,7 +179,7 @@ const getCompanyName = (companyId: string | number) => {
 
 const getFlockName = (flockId: string | number) => {
     const flock = props.flocks?.find(f => f.id === Number(flockId));
-    return flock?.name || 'Unknown';
+    return flock?.code || 'Unknown';
 };
 
 const getShedName = (shedId: string | number) => {
@@ -257,7 +259,7 @@ const clearCompanyFilter = () => {
 const getSelectedFlockName = () => {
     if (!filters.value.flock_id) return '';
     const flock = props.flocks?.find(f => f.id === Number(filters.value.flock_id));
-    return flock?.name || '';
+    return flock?.code || '';
 };
 
 const selectFlock = (flockId: string | number) => {
@@ -371,8 +373,8 @@ const cardData = computed(() => {
             value2: ''
         },
         { 
-            title: 'Batch No', 
-            value: selectedItem.batch_no || 'N/A',
+            title: 'Batch Name', 
+            value: selectedItem.batch?.name || selectedItem.batch_name || 'N/A',
             title1: '',
             value1: '',
             title2: '',
@@ -620,7 +622,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                             class="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-600"
                                             :class="{ 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': filters.flock_id == flock.id }"
                                         >
-                                            <span>{{ flock.name }}</span>
+                                            <span>{{ flock.code }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -916,11 +918,11 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <thead class="bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left text-gray-600 dark:text-gray-300">
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 60px;">S/N</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Flock Name</th>
+                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Flock No</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Shed Name</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Company</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Level</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Batch No</th>
+                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Batch </th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Male Qty</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Female Qty</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Total Qty</th>
@@ -950,7 +952,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                         {{ getLevelName(item.level) }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">{{ item.batch_no }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap">{{ item.batch?.name || item.batch_name }}</td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap">{{ item.batch_male_qty }}</td>
                                 <td class="px-4 py-3 text-center whitespace-nowrap">{{ item.batch_female_qty }}</td>
                                 <td class="px-4 py-3 text-center font-medium whitespace-nowrap">{{ item.batch_total_qty }}</td>

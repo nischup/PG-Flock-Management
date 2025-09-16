@@ -4,13 +4,13 @@ namespace App\Http\Controllers\Shed;
 
 use App\Exports\ArrayExport;
 use App\Http\Controllers\Controller;
+use App\Models\BirdTransfer\BirdTransfer;
 use App\Models\Master\Batch;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Level;
 use App\Models\Shed\BatchAssign;
 use App\Models\Shed\ShedReceive;
-use App\Models\BirdTransfer\BirdTransfer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,15 +24,19 @@ class BatchAssignController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BatchAssign::with(['shedReceive', 'flock', 'company', 'shed']);
+        $query = BatchAssign::with(['shedReceive', 'flock:id,code,name', 'company', 'shed', 'batch:id,name']);
 
         // Apply search filters
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('job_no', 'like', '%'.$request->search.'%')
                     ->orWhere('batch_no', 'like', '%'.$request->search.'%')
+                    ->orWhereHas('batch', function ($bq) use ($request) {
+                        $bq->where('name', 'like', '%'.$request->search.'%');
+                    })
                     ->orWhereHas('flock', function ($fq) use ($request) {
-                        $fq->where('name', 'like', '%'.$request->search.'%');
+                        $fq->where('name', 'like', '%'.$request->search.'%')
+                           ->orWhere('code', 'like', '%'.$request->search.'%');
                     })
                     ->orWhereHas('shed', function ($sq) use ($request) {
                         $sq->where('name', 'like', '%'.$request->search.'%');
@@ -79,7 +83,7 @@ class BatchAssignController extends Controller
                     'job_no' => $batch->job_no,
                     'flock_no' => $batch->flock_no,
                     'flock_id' => $batch->flock_id,
-                    'flock_name' => $batch->flock->name ?? '',
+                    'flock_name' => $batch->flock->code ?? '',
                     'company_id' => $batch->company_id,
                     'company_name' => $batch->company->name ?? '',
                     'shed_id' => $batch->shed_id,
@@ -87,14 +91,16 @@ class BatchAssignController extends Controller
                     'level' => $batch->level,
                     'stage' => $batch->stage,
                     'batch_no' => $batch->batch_no,
+                    'batch_name' => $batch->batch?->name ?? '',
                     'batch_female_qty' => $batch->batch_female_qty,
                     'batch_male_qty' => $batch->batch_male_qty,
                     'batch_total_qty' => $batch->batch_total_qty,
                     'percentage' => $batch->percentage,
                     'created_at' => $batch->created_at,
-                    'flock' => $batch->flock ? ['id' => $batch->flock->id, 'name' => $batch->flock->name] : null,
+                    'flock' => $batch->flock ? ['id' => $batch->flock->id, 'name' => $batch->flock->code] : null,
                     'company' => $batch->company ? ['id' => $batch->company->id, 'name' => $batch->company->name] : null,
                     'shed' => $batch->shed ? ['id' => $batch->shed->id, 'name' => $batch->shed->name] : null,
+                    'batch' => $batch->batch ? ['id' => $batch->batch->id, 'name' => $batch->batch->name] : null,
                 ];
             });
 
@@ -102,7 +108,7 @@ class BatchAssignController extends Controller
             'batchAssigns' => $batchAssigns,
             'filters' => $request->only(['search', 'per_page', 'company_id', 'flock_id', 'shed_id', 'level', 'date_from', 'date_to']),
             'companies' => Company::select('id', 'name')->get(),
-            'flocks' => Flock::select('id', 'name')->get(),
+            'flocks' => Flock::select('id', 'code', 'name')->get(),
             'sheds' => \App\Models\Shed::select('id', 'name')->get(),
             'levels' => Level::select('id', 'name')->get(),
             'batches' => Batch::select('id', 'name')->get(),
@@ -116,14 +122,14 @@ class BatchAssignController extends Controller
     {
 
         // Get all Shed Receives with relations
-        $shedReceives = ShedReceive::with(['flock:id,name', 'shed:id,name', 'company:id,name'])
+        $shedReceives = ShedReceive::with(['flock:id,code,name', 'shed:id,name', 'company:id,name'])
             ->get()
             ->map(function ($shed) {
                 return [
                     'id' => $shed->id,
                     'transaction_no' => $shed->transaction_no,
                     'flock_id' => $shed->flock_id,
-                    'flock' => $shed->flock?->name,
+                    'flock' => $shed->flock?->code,
                     'shed_id' => $shed->shed_id,
                     'shed' => $shed->shed?->name,
                     'company_id' => $shed->company_id,
@@ -167,8 +173,7 @@ class BatchAssignController extends Controller
         $batches = $request->batches ?? [];
 
         $shedReceive = ShedReceive::findOrFail($request->shed_receive_id);
-        
-        
+
         // check once using the Transaction model
         $exists = BirdTransfer::where('job_no', $shedReceive->job_no)->exists();
 
@@ -194,7 +199,7 @@ class BatchAssignController extends Controller
                 'batch_sortage_male' => $batch['batch_sortage_male'] ?? null,
                 'batch_sortage_female' => $batch['batch_sortage_female'] ?? 0,
                 'percentage' => $batch['percentage'] ?? 0,
-                'stage' => $exists ? 3 : 1, 
+                'stage' => $exists ? 3 : 1,
                 'created_by' => Auth::id(),
             ]);
         }
@@ -269,14 +274,14 @@ class BatchAssignController extends Controller
             ->findOrFail($id);
 
         // Get all Shed Receives with relations
-        $shedReceives = ShedReceive::with(['flock:id,name', 'shed:id,name', 'company:id,name'])
+        $shedReceives = ShedReceive::with(['flock:id,code,name', 'shed:id,name', 'company:id,name'])
             ->get()
             ->map(function ($shed) {
                 return [
                     'id' => $shed->id,
                     'transaction_no' => $shed->transaction_no,
                     'flock_id' => $shed->flock_id,
-                    'flock' => $shed->flock?->name,
+                    'flock' => $shed->flock?->code,
                     'shed_id' => $shed->shed_id,
                     'shed' => $shed->shed?->name,
                     'company_id' => $shed->company_id,
@@ -647,14 +652,13 @@ class BatchAssignController extends Controller
         return $pdf->stream("batch-assignment-{$id}.pdf");
     }
 
-
     public function nextStage(BatchAssign $batchAssign)
     {
         // Increment stage safely (1 → 2 → 3)
         if ($batchAssign->stage < 3) {
             $batchAssign->stage++;
 
-            $batchAssign->growing_start_date = date("Y-m-d");
+            $batchAssign->growing_start_date = date('Y-m-d');
             $batchAssign->save();
         }
 
