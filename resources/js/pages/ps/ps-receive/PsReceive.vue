@@ -290,10 +290,6 @@ const cardData = computed(() => {
         { 
             title: 'Challan Box', 
             value: chick.ps_challan_box_qty, 
-            title1: 'F Box', 
-            value1: chick.ps_female_rec_box, 
-            title2: 'M Box', 
-            value2: chick.ps_male_rec_box 
         },
         { 
             title: 'Receive Box', 
@@ -319,22 +315,6 @@ const cardData = computed(() => {
             title2: '',
             value2: ''
         },
-        { 
-            title: 'Gross Weight', 
-            value: `${chick.ps_gross_weight} kg`,
-            title1: '',
-            value1: '',
-            title2: '',
-            value2: ''
-        },
-        { 
-            title: 'Net Weight', 
-            value: `${chick.ps_net_weight} kg`,
-            title1: '',
-            value1: '',
-            title2: '',
-            value2: ''
-        },
     ];
 });
 
@@ -354,13 +334,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                 v-model="selectedPI"
                 class="block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 sm:text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
             >
-                <option :value="null" disabled>Select PI No</option>
+                <option :value="null" disabled>Select Parent Stock Receive</option>
                 <option 
                     v-for="item in props.psReceives?.data ?? []" 
                     :key="item.id" 
                     :value="item.id"
                 >
-                    PI-No {{ item.pi_no }} : {{ dayjs(item.pi_date).format('YYYY-MM-DD') }}
+                    {{ item.shipment_type_id === 1 ? ( "Invoice No - " + item.order_no || 'N/A') : ( "LC NO - " + item.lc_no || 'N/A') }} - {{ item.shipment_type_id === 1 ? 'Local' : 'Foreign' }}
                 </option>
             </select>
         </div>
@@ -762,7 +742,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">LC No</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Order No</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Supplier</th>
-                            <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Total Box</th>
+                            <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Total Rcv Box</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Weight (kg)</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Gov Lab Total</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Provita Lab Total</th>
