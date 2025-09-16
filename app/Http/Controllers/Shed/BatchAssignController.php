@@ -647,6 +647,8 @@ class BatchAssignController extends Controller
         // Increment stage safely (1 → 2 → 3)
         if ($batchAssign->stage < 3) {
             $batchAssign->stage++;
+
+            $batchAssign->growing_start_date = date("Y-m-d");
             $batchAssign->save();
         }
 

@@ -99,7 +99,7 @@ class BirdTransferController extends Controller
         $deviationTotal = $deviationFemale + $deviationMale;
 
         // Save transfer
-        $transfer = BirdTransfer::create([
+        BirdTransfer::create([
             'batch_assign_id' => $batch->id,
             'job_no' => $batch->job_no,
             'transaction_no' => $batch->transaction_no,
@@ -129,8 +129,10 @@ class BirdTransferController extends Controller
 
         if ($batch->stage == 1) {
             $batch->stage = 2; // Growing
+            
         } elseif ($batch->stage == 2) {
-            $batch->stage = 3; // Laying
+            $batch->status = 0; // Laying
+             $batch->transfer_date = date("Y-m-d");
         }
         // Add your own logic for transition
 

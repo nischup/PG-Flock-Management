@@ -13,7 +13,15 @@ class DailyOperation extends Model
         'operation_date',   // Date of the operation
         'created_by',       // User who created this record
         'updated_by',       // User who updated (nullable)
-        'status',           // Status (default 1)
+        'status',
+        'job_no', 
+        'transaction_no',  
+        'flock_no',  
+        'flock_id', 
+        'company_id', 
+        'shed_id',
+        'batch_no', 
+        'stage',   // Status (default 1)
     ];
 
     protected $casts = [

@@ -33,6 +33,11 @@ return new class extends Migration
             $table->integer('deviation_female_qty')->default(0);
             $table->integer('deviation_male_qty')->default(0);
             $table->integer('deviation_total_qty')->default(0);
+            $table->tinyInteger('shipment_type_id');
+            $table->string('lc_no')->nullable();
+            $table->json('breed_type')->nullable();
+            $table->tinyInteger('country_of_origin')->default(0);
+            $table->tinyInteger('transport_type')->default(0);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->unsignedTinyInteger('status')->default(1);

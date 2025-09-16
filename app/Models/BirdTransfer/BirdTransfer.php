@@ -44,7 +44,13 @@ class BirdTransfer extends Model
         'created_by',
         'updated_by',
         'status',
+        'shipment_type_id',
+        'lc_no',
+        'breed_type',
+        'country_of_origin',
+        'transport_type',
     ];
+
 
     protected $casts = [
         'transfer_date' => 'date',

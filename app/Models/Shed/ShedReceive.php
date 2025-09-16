@@ -5,6 +5,7 @@ namespace App\Models\Shed;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
+use App\Models\Ps\PsFirmReceive;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -33,13 +34,16 @@ class ShedReceive extends Model
     ];
 
 
-    public function flock() {
-    return $this->belongsTo(Flock::class);
+        public function flock() {
+            return $this->belongsTo(Flock::class);
         }
         public function shed() {
             return $this->belongsTo(Shed::class);
         }
         public function company() {
             return $this->belongsTo(Company::class);
+        }
+        public function firmReceive() {
+            return $this->belongsTo(PsFirmReceive::class, 'firm_receive_id');
         }
 }

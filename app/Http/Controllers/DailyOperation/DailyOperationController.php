@@ -273,10 +273,22 @@ class DailyOperationController extends Controller
         
         
         
+        
+        
+        $batch = BatchAssign::findOrFail($request->batchassign_id);
+        
         $dailyOperation = DailyOperation::create([
             'batchassign_id' => $request->batchassign_id,
             'operation_date' => $request->operation_date,
             'created_by' => Auth::id(),
+            'job_no' => $batch->job_no,
+            'transaction_no' => $batch->transaction_no,
+            'flock_no' => $batch->flock_no,
+            'flock_id' => $batch->flock_id,
+            'company_id'=>$batch->company_id,
+            'shed_id'=>$batch->shed_id,
+            'batch_no'=>$batch->batch_no,
+            'stage'=>$batch->stage,
             'status' => 1,
         ]);
 
