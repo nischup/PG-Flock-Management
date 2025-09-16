@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('source_type')->nullable();
             $table->unsignedTinyInteger('source_id');
             $table->unsignedTinyInteger('flock_id')->nullable();
-            $table->string('flock_name')->nullable();
+            $table->string('flock_no')->nullable();
             $table->unsignedTinyInteger('receiving_company_id')->default(0)->change();
             $table->string('remarks')->nullable()->change();
             $table->unsignedTinyInteger('created_by')->nullable()->change();

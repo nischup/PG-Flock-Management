@@ -85,7 +85,10 @@ class BirdTransferController extends Controller
     public function store(Request $request)
     {
 
-        $batch = BatchAssign::findOrFail($request->batch_assign_id);
+        $batch = BatchAssign::with('shedReceive.firmReceive.psReceive')->find($request->batch_assign_id);
+
+    if ($batch && $batch->shedReceive && $batch->shedReceive->firmReceive && $batch->shedReceive->firmReceive->psReceive) {
+        $ps = $batch->shedReceive->firmReceive->psReceive;
 
         // Auto calculations
         $transferTotal = ($request->transfer_female_qty ?? 0) + ($request->transfer_male_qty ?? 0);
@@ -123,9 +126,23 @@ class BirdTransferController extends Controller
             'deviation_male_qty' => $deviationMale,
             'deviation_total_qty' => $deviationTotal,
 
+
+            'shipment_type_id'=>$ps->shipment_type_id,
+            'lc_no'=>$ps->lc_no,
+            'breed_type'=>$ps->breed_type,
+            'country_of_origin'=>$ps->country_of_origin,
+            'transport_type'=>$ps->transport_type,
+
+
             'created_by' => Auth::id(),
             'status' => 1,
         ]);
+
+
+
+
+
+
 
         if ($batch->stage == 1) {
             $batch->stage = 2; // Growing
@@ -138,7 +155,7 @@ class BirdTransferController extends Controller
 
         // 3. Save updated stage
         $batch->save();
-
+    }
         // PsFirmReceive::create([
         //     'ps_receive_id'        => $transfer->id, // link to transfer
         //     'job_no'               =>  null,

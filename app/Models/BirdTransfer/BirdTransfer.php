@@ -54,6 +54,7 @@ class BirdTransfer extends Model
 
     protected $casts = [
         'transfer_date' => 'date',
+        'breed_type' => 'array',
     ];
 
     public function flock()

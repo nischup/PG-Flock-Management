@@ -16,7 +16,7 @@ class ShedReceive extends Model
         'job_no',
         'transaction_no',
         'flock_id',
-        'flock_name',
+        'flock_no',
         'shed_id',
         'shed_female_qty',
         'company_id',
@@ -44,6 +44,6 @@ class ShedReceive extends Model
             return $this->belongsTo(Company::class);
         }
         public function firmReceive() {
-            return $this->belongsTo(PsFirmReceive::class, 'firm_receive_id');
+            return $this->belongsTo(PsFirmReceive::class, 'receive_id');
         }
 }

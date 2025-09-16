@@ -118,7 +118,7 @@ class ProductionFirmReceiveController extends Controller
         $psReceive = PsFirmReceive::where('job_no', $job_no)->first();
         
         
-        
+       // PsFirmReceive::where('job_no', $job_no)->update(['status' => 0]);
        
        
         // $jobNo = "{$request->transfer_bird_id}-{$companyInfo->short_name}-{$flockInfo->name}";

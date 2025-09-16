@@ -16,7 +16,7 @@ class PsFirmReceive extends Model
         'source_type',
         'source_id',
         'flock_id',
-        'flock_name',
+        'flock_no',
         'receiving_company_id',
         'firm_female_qty',
         'firm_male_qty',

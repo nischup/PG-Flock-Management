@@ -33,8 +33,8 @@ return new class extends Migration
                 $table->unsignedBigInteger('flock_id')->nullable();
             }
 
-            if (!Schema::hasColumn('shed_receives', 'flock_name')) {
-                $table->string('flock_name')->nullable();
+            if (!Schema::hasColumn('shed_receives', 'flock_no')) {
+                $table->string('flock_no')->nullable();
             }
 
             if (!Schema::hasColumn('shed_receives', 'shed_id')) {
