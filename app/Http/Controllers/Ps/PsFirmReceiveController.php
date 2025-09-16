@@ -6,10 +6,13 @@ use App\Exports\ArrayExport;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
+use App\Models\Master\BreedType;
+use App\Models\Master\Supplier;
 use App\Models\Ps\PsFirmReceive;
 use App\Models\Ps\PsReceive;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
@@ -69,10 +72,15 @@ class PsFirmReceiveController extends Controller
      */
     public function create()
     {
+        
+        $breeds = BreedType::pluck('name', 'id')->toArray();
+        
+       
+        
         // Fetch all PS Receives (you may filter by status if needed)
         $psReceives = PsReceive::with('chickCounts', 'labTransfers')
             ->get()
-            ->map(function ($ps) {
+            ->map(function ($ps,$suppliers) {
                 return [
                     'id' => $ps->id,
                     'pi_no' => $ps->pi_no,
@@ -89,7 +97,7 @@ class PsFirmReceiveController extends Controller
                     'company_id' => $ps->company_id,
                     'remarks' => $ps->remarks,
                     'created_at' => $ps->created_at->format('Y-m-d'),
-
+                    'receive_type'=>"box",
                     // Chick counts
                     'total_chicks_qty' => $ps->chickCounts->ps_total_qty ?? 0,
                     'total_box_qty' => $ps->chickCounts->ps_total_re_box_qty ?? 0,
@@ -104,7 +112,8 @@ class PsFirmReceiveController extends Controller
                     'labTest' => $ps->labTransfers, // important
                 ];
             });
-
+           
+           
         $flocks = Flock::select('id', 'name')->get();
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
@@ -113,6 +122,7 @@ class PsFirmReceiveController extends Controller
             'psReceives' => $psReceives,
             'companies' => $companies,
             'flocks' => $flocks,
+            'breeds'=>$breeds,
         ]);
     }
 

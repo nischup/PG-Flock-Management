@@ -127,7 +127,7 @@ class ProductionFirmReceiveController extends Controller
         
         $firmReceive = PsFirmReceive::create([
             'ps_receive_id'        => $psReceive->ps_receive_id ,
-            'receive_type'         => 'chicks', // indicate it's a transfer
+            'receive_type'         => 'pcs', // indicate it's a transfer
             'source_type'          => 'transfer',
             'job_no'               => $psReceive->job_no,
             'source_id'            => $request->transfer_bird_id,
