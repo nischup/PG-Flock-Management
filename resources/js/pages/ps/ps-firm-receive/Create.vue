@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, Head, useForm } from '@inertiajs/vue3'
-import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount,reactive } from 'vue'
 import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,7 +32,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 const props = defineProps<{
   psReceives: Array<any>
   flocks: Array<any>
+  breeds: Object
 }>()
+
+function getBreedNames(ids) {
+  if (!ids || ids.length === 0) return ''
+  return ids.map(id => props.breeds[id] || '').filter(Boolean).join(', ')
+}
 
 // Main form state
 const selectedPsId = ref<number | string>('')
@@ -66,7 +72,7 @@ const form = useForm({
 })
 
 // Company options
-const shipmentTypes = ['Local', 'Foreign']
+const shipmentTypes = {1: 'Local', 2: 'Foreign'}
 const suppliers = {1: 'PBL', 2: 'PCL'} 
 const breeds = {1: 'Broiler', 2: 'Layer'}
 const transports = {1: 'Freezing Microbus', 2: 'Freezing Van',3:'Open Truck'}
@@ -147,6 +153,29 @@ function submit() {
   })
 }
 
+const displayInfo = reactive({
+  shipment_type: '',
+  pi_no: '',
+  pi_date: '',
+  order_no: '',
+  order_date: '',
+  lc_no: '',
+  lc_date: '',
+  receive_type: '',
+  breed: '',
+  transport: '',
+  rnote: '',
+  challan_box: 0,
+  gross_weight: 0,
+  net_weight: 0,
+  female_chicks: 0,
+  male_chicks: 0,
+  female_chicks_box: 0,
+  male_chicks_box:0,
+  female_box_qty:0,
+  receiving_company_id: null,
+})
+
 // Toggle PS info
 function toggleInfo() {
   const selected = props.psReceives.find(ps => ps.id === Number(selectedPsId.value))
@@ -170,24 +199,29 @@ function toggleInfo() {
     labInput.value = false
   }
 
-  form.shipment_type = shipmentTypes[selected.shipment_type_id] || ''
-  form.pi_no = selected.pi_no || ''
-  form.pi_date = selected.pi_date || ''
-  form.order_no = selected.order_no || ''
-  form.order_date = selected.order_date || ''
-  form.lc_no = selected.lc_no || ''
-  form.lc_date = selected.lc_date || ''
-  form.supplier = suppliers[selected.supplier_id] || ''
-  form.breed = breeds[selected.breed_type] || ''
-  form.transport = transports[selected.transport_type] || ''
-  form.rnote = selected.remarks || ''
-  form.challan_box = selected.total_box_qty || 0
-  form.gross_weight = selected.gross_weight || 0
-  form.net_weight = selected.net_weight || 0
-  form.female_chicks = selected.female_chicks || 0
-  form.male_chicks = selected.male_chicks || 0
-  form.total_chicks = selected.total_chicks_qty || 0
-  form.receiving_company_id = selected.company_id
+  Object.assign(displayInfo, {
+    shipment_type: shipmentTypes[selected.shipment_type_id] || '',
+    pi_no: selected.pi_no || '',
+    pi_date: selected.pi_date || '',
+    order_no: selected.order_no || '',
+    order_date: selected.order_date || '',
+    lc_no: selected.lc_no || '',
+    lc_date: selected.lc_date || '',
+    receive_type:selected.receive_type || '',
+    breed: getBreedNames(selected.breed_type) || '',
+    transport: transports[selected.transport_type] || '',
+    rnote: selected.remarks || '',
+    challan_box: selected.total_box_qty || 0,
+    gross_weight: selected.gross_weight || 0,
+    net_weight: selected.net_weight || 0,
+    female_chicks_box:selected.female_box_qty|| 0,
+    male_chicks_box:selected.male_box_qty|| 0,
+    female_chicks: selected.female_chicks || 0,
+    male_chicks: selected.male_chicks || 0,
+    total_chicks: selected.total_chicks_qty || 0,
+    receiving_company_id: selected.company_id,
+  })
+
   showInfo.value = true
 }
 
@@ -527,19 +561,22 @@ function addNewFlock() {
               Parent Stock Details
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Shipment Type:</span><div class="text-gray-900 dark:text-gray-100">{{ form.shipment_type }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">PI No:</span><div class="text-gray-900 dark:text-gray-100">{{ form.pi_no }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">LC No:</span><div class="text-gray-900 dark:text-gray-100">{{ form.lc_no }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Order No:</span><div class="text-gray-900 dark:text-gray-100">{{ form.order_no }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Supplier:</span><div class="text-gray-900 dark:text-gray-100">{{ form.supplier }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Breed:</span><div class="text-gray-900 dark:text-gray-100">{{ form.breed }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Transport:</span><div class="text-gray-900 dark:text-gray-100">{{ form.transport }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Challan Box:</span><div class="text-gray-900 dark:text-gray-100">{{ form.challan_box }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Gross Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ form.gross_weight }} kg</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Net Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ form.net_weight }} kg</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Chicks:</span><div class="text-gray-900 dark:text-gray-100">{{ form.female_chicks }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Chicks:</span><div class="text-gray-900 dark:text-gray-100">{{ form.male_chicks }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Chicks:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ form.total_chicks }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Shipment Type:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.shipment_type }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">PI No:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.pi_no }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">LC No:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.lc_no }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Order No:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.order_no }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Receive Type:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.receive_type }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Breed:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.breed }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Transport:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.transport }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Challan Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.challan_box }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Chicks Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.female_chicks_box }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Chicks Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.male_chicks_box }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Gross Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.gross_weight }} kg</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Net Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.net_weight }} kg</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Chicks:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.female_chicks }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Chicks:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.male_chicks }}</div></div>
+              
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Chicks:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ displayInfo.total_chicks }}</div></div>
       </div>
         </div>
       </transition>
