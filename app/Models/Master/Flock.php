@@ -20,7 +20,9 @@ class Flock extends Model
 
     protected $casts = [
         'created_at' => 'date',
+        'status' => 'integer',
     ];
+
     public function psReceive()
     {
         return $this->hasOne(\App\Models\Ps\PsReceive::class, 'flock_id', 'id');

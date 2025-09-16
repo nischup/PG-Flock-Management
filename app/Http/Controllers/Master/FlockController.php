@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
-use Inertia\Inertia;
+use App\Http\Requests\StoreFlockRequest;
 use App\Models\Master\Flock;
 use Illuminate\Http\Request;
 
@@ -28,30 +28,19 @@ class FlockController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreFlockRequest $request)
     {
-        
-       
-        
         $flock = Flock::create([
             'name' => $request->name,
             'parent_flock_id' => $request->parent_flock_id ?? null,
             'status' => 1,
         ]);
 
-       
-       
         // Auto-generate code based on ID
-        $flock->code = 'FLOCK-' . str_pad($flock->id, 4, '0', STR_PAD_LEFT);
+        $flock->code = 'FLOCK-'.str_pad($flock->id, 4, '0', STR_PAD_LEFT);
         $flock->save();
 
-     
-    
-
-        // Return updated flocks list as Inertia props
-        $flocks = Flock::orderBy('id', 'desc')->get();
-
-         return redirect()->back()->with('flock', $flock);
+        return redirect()->back()->with('flock', $flock);
     }
 
     /**
