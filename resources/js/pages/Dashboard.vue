@@ -11,11 +11,11 @@ import BirdStage from '@/components/BirdStage.vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 
-// --- Import Lucide icons
+// Lucide icons
 import { User, Drumstick, ShieldX, Egg, FlaskConical, PackageSearch, Factory, Syringe, Archive } from "lucide-vue-next"
 import { BabyChick } from '@/icons/BabyChick'
 
-// --- Props from backend
+// Props
 const props = defineProps<{
   filterOptions: Record<string,string[]>,
   cards: any[],
@@ -25,14 +25,14 @@ const props = defineProps<{
   filters: Record<string,string>
 }>()
 
-// --- Breadcrumbs
+// Breadcrumb
 const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }]
 
-// --- Tabs
+// Tabs
 const alltabs = ['Dashboard','Company','Project','Flock','Shed','Batch']
 const activeTab = ref('Dashboard')
 
-// --- Filters reactive with proper default placeholders
+// Filters reactive with default placeholders
 const filters = ref({
   company: props.filters.company || '',
   project: props.filters.project || '',
@@ -40,22 +40,45 @@ const filters = ref({
   shed: props.filters.shed || '',
   batch: props.filters.batch || '',
   date: props.filters.date || '',
-  dateRange: props.filters.dateRange || '',
+  dateRange: props.filters.dateRange || [],
   date_from: props.filters.date_from || '',
   date_to: props.filters.date_to || ''
 })
 
-// --- Icon mapping
-const iconMap: Record<string, any> = {
-  User, Drumstick, ShieldX, Egg, FlaskConical, PackageSearch, Factory, Syringe, Archive, BabyChick
-}
+// Icon mapping
+const iconMap: Record<string, any> = { User, Drumstick, ShieldX, Egg, FlaskConical, PackageSearch, Factory, Syringe, Archive, BabyChick }
 
-// --- Watch filters & send backend request
+// Watch filters & send backend request
 watch(filters, (newFilters) => {
-  router.get('/dashboard', newFilters, { preserveState: true, replace: true })
+  const payload = { ...newFilters }
+  if(payload.date === 'Custom' && payload.dateRange?.length === 2){
+    payload.date_from = payload.dateRange[0]
+    payload.date_to = payload.dateRange[1]
+  }
+  router.get('/dashboard', payload, { preserveState: true, replace: true })
 }, { deep: true })
 
-// --- Tab configuration
+// Dependent dropdowns reset
+watch(() => filters.company, () => {
+  filters.project = ''
+  filters.flock = ''
+  filters.shed = ''
+  filters.batch = ''
+})
+watch(() => filters.project, () => {
+  filters.flock = ''
+  filters.shed = ''
+  filters.batch = ''
+})
+watch(() => filters.flock, () => {
+  filters.shed = ''
+  filters.batch = ''
+})
+watch(() => filters.shed, () => {
+  filters.batch = ''
+})
+
+// Tab configuration
 const tabConfig = {
   Dashboard: { filters: [], cards: props.cards },
   Company: { filters: ["company", "date"], cards: props.cards },
@@ -65,7 +88,7 @@ const tabConfig = {
   Batch: { filters: ["company","project","flock","shed","batch","date"], cards: props.cards },
 }
 
-// --- Active tab content
+// Active tab content
 const activeContent = computed(() => tabConfig[activeTab.value] || { filters: [], cards: [] })
 </script>
 
@@ -81,8 +104,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
           :key="tab"
           @click="activeTab = tab"
           class="flex-1 text-center px-4 py-2 text-sm font-medium transition"
-          :class="activeTab === tab ? 'bg-black text-white' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'"
-        >
+          :class="activeTab === tab ? 'bg-black text-white' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'">
           {{ tab }}
         </button>
       </div>
@@ -91,39 +113,26 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
     <!-- Filters -->
     <div v-if="activeContent.filters.length" class="flex gap-4 p-4 flex-wrap items-center">
       <template v-for="f in activeContent.filters" :key="f">
-
-        <!-- Normal select filters (company, project, flock, shed, batch) -->
+        <!-- Normal selects -->
         <select
           v-if="f !== 'date'"
           v-model="filters[f]"
           class="border rounded-md shadow-md px-4 py-2 bg-white text-gray-800 hover:bg-black hover:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 cursor-pointer"
         >
-          <!-- Default placeholder -->
-          <option :value="''" disabled>
-            Select {{ f.charAt(0).toUpperCase() + f.slice(1) }}
-          </option>
-
-          <option
-            v-for="(name, id) in props.filterOptions[f]"
-            :key="id"
-            :value="id"
-          >
-            {{ name }}
-          </option>
+          <option :value="''" disabled>Select {{ f.charAt(0).toUpperCase() + f.slice(1) }}</option>
+          <option v-for="(name,id) in props.filterOptions[f]" :key="id" :value="id">{{ name }}</option>
         </select>
 
-        <!-- Date select + Datepicker -->
+        <!-- Date -->
         <div v-else class="flex items-center gap-2">
           <select
             v-model="filters.date"
             class="border rounded-md shadow-md px-4 py-2 bg-white text-gray-800 hover:bg-black hover:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 cursor-pointer"
           >
-            <!-- Default placeholder -->
             <option :value="''" disabled>Select Date Range</option>
             <option v-for="opt in props.filterOptions.date" :key="opt" :value="opt">{{ opt }}</option>
           </select>
 
-          <!-- Custom Datepicker: appears to the right if "Custom" is selected -->
           <Datepicker
             v-if="filters.date === 'Custom'"
             v-model="filters.dateRange"
@@ -135,47 +144,42 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
             :calendar-position="'right-start'"
           />
         </div>
-
       </template>
     </div>
 
     <!-- Progress Bars -->
-    <div class="p-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <ProgressInfoBar
-          v-for="(pb, i) in props.progressBars"
-          :key="i"
-          :title="pb.title"
-          :progress="pb.progress"
-          colorFrom="#34d399"
-          colorTo="#10b981"
-          :extra="pb.extra"
-          :tooltip="pb.progress + '%'"
-        />
-        <BirdStage
-          title="Birds Stage"
-          :bordingTotal="props.birdStage.bordingTotal"
-          :growingTotal="props.birdStage.growingTotal"
-          :productionTotal="props.birdStage.productionTotal"
-          bordingColor="#fbbf24"
-          growingColor="#22c55e"
-          productionColor="#3b82f6"
-        />
-      </div>
+    <div class="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <ProgressInfoBar
+        v-for="(pb,i) in props.progressBars"
+        :key="i"
+        :title="pb.title"
+        :progress="pb.progress"
+        colorFrom="#34d399"
+        colorTo="#10b981"
+        :extra="pb.extra"
+        :tooltip="pb.progress + '%'"
+      />
+      <BirdStage
+        title="Birds Stage"
+        :bordingTotal="props.birdStage.bordingTotal"
+        :growingTotal="props.birdStage.growingTotal"
+        :productionTotal="props.birdStage.productionTotal"
+        bordingColor="#fbbf24"
+        growingColor="#22c55e"
+        productionColor="#3b82f6"
+      />
     </div>
 
-    <!-- Cards -->
-    <div class="p-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <DashboardCard
-          v-for="(card, i) in props.cards"
-          :key="i"
-          :title="card.title"
-          :value="card.value"
-          :icon="iconMap[card.icon]"
-          :index="i"
-        />
-      </div>
+    <!-- Dashboard Cards -->
+    <div class="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <DashboardCard
+        v-for="(card,i) in props.cards"
+        :key="i"
+        :title="card.title"
+        :value="card.value"
+        :icon="iconMap[card.icon]"
+        :index="i"
+      />
     </div>
 
     <!-- Circle Bars -->
