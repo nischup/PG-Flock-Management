@@ -166,7 +166,7 @@
             display: flex;
             justify-content: space-evenly;
             /* evenly distribute space between items */
-            margin-top: 100px;
+            margin-top: 90px;
             font-size: 10px;
         }
 
@@ -281,16 +281,16 @@
                         <tr>
                             <td class="bold">Flock :</td>
                             <td class="details-td">{{ $flock_name }}</td>
-                            <td class="bold">Batch :</td>
-                            <td class="details-td">{{ $batches[0]['batch_no'] ?? '-' }}</td>
-                            <td class="bold">Shed :</td>
-                            <td class="details-td">{{ $source_id }}</td>
+                            {{-- <td class="bold">Batch :</td>
+                            <td class="details-td">{{ $batches[0]['batch_no'] ?? '-' }}</td> --}}
+                            {{-- <td class="bold">Shed :</td>
+                            <td class="details-td">{{ $source_id }}</td> --}}
                         </tr>
                         <tr>
                             <td class="bold">Flock origin :</td>
                             <td class="details-td">{{ $source_type }}</td>
                             <td class="bold">Breed :</td>
-                            <td class="details-td">{{ $receive_type }}</td>
+                            <td class="details-td">{{ $breed_type ?? '-' }}</td>
                             <td class="bold">Invoice / Gate pass :</td>
                             <td class="details-td">
                                 @foreach ($batches as $batch)
@@ -307,28 +307,28 @@
                 <thead>
                     <tr>
                         <th rowspan="3">Batch</th>
-                        <th colspan="10">Birds Number</th>
-                        <th colspan="3" rowspan="2">Deviation (From PBL)</th>
+                        <th colspan="9">Birds Number</th>
+                        <th colspan="3" rowspan="2">Deviation</th>
                         <th rowspan="3">Remarks</th>
                     </tr>
                     <tr>
                         <th colspan="3">As per challan</th>
-                        <th colspan="7">As physical count</th>
+                        <th colspan="6">As physical count</th>
                     </tr>
                     <tr>
-                        <th>Female</th>
-                        <th>Male</th>
-                        <th>Total</th>
-                        <th>Female</th>
-                        <th>BOX F</th>
-                        <th>Total (Female)</th>
-                        <th>Male</th>
-                        <th>BOX M</th>
-                        <th>Total (Male)</th>
-                        <th>Total</th>
-                        <th>Female</th>
-                        <th>Male</th>
-                        <th>Total</th>
+                        <th>Female Box</th>
+                        <th>Male Box</th>
+                        <th>Total Box</th>
+                        <th>Female Box</th>
+                        <th>Shortage Female BOX</th>
+                        {{-- <th>Total (Female)</th> --}}
+                        <th>Male Box</th>
+                        <th>Shortage Male BOX</th>
+                        <th>Total Shortage</th>
+                        <th>Total Box</th>
+                        <th>Female BOX</th>
+                        <th>Male Box</th>
+                        <th>Total BOX</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -340,10 +340,10 @@
                             <td>{{ $batch['challan_total'] }}</td>
                             <td>{{ $batch['physical_female'] }}</td>
                             <td>{{ $batch['box_f'] }}</td>
-                            <td>{{ $batch['total_female'] }}</td>
+                            {{-- <td>{{ $batch['total_female'] }}</td> --}}
                             <td>{{ $batch['physical_male'] }}</td>
                             <td>{{ $batch['box_m'] }}</td>
-                            <td>{{ $batch['total_male'] }}</td>
+                            <td>{{ $batch['box_shortage'] }}</td>
                             <td>{{ $batch['total'] }}</td>
                             <td>{{ $batch['deviation_female'] }}</td>
                             <td>{{ $batch['deviation_male'] }}</td>

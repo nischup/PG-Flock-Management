@@ -73,6 +73,8 @@ class PsFirmReceiveController extends Controller
 
         $breeds = BreedType::pluck('name', 'id')->toArray();
 
+
+
         // Fetch all PS Receives (you may filter by status if needed)
         $psReceives = PsReceive::with('chickCounts', 'labTransfers')
             ->get()
@@ -93,7 +95,7 @@ class PsFirmReceiveController extends Controller
                     'company_id' => $ps->company_id,
                     'remarks' => $ps->remarks,
                     'created_at' => $ps->created_at->format('Y-m-d'),
-                    'receive_type' => 'box',
+                    'receive_type' => "box",
                     // Chick counts
                     'total_chicks_qty' => $ps->chickCounts->ps_total_qty ?? 0,
                     'total_box_qty' => $ps->chickCounts->ps_total_re_box_qty ?? 0,
@@ -108,6 +110,7 @@ class PsFirmReceiveController extends Controller
                     'labTest' => $ps->labTransfers, // important
                 ];
             });
+
 
         $flocks = Flock::select('id', 'name', 'status')->get();
         // Fetch all companies
@@ -440,52 +443,77 @@ class PsFirmReceiveController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $item = PsFirmReceive::with(['flock', 'company', 'psReceive.chickCounts'])->findOrFail($id);
-        // dd($item);
+        // Load PsFirmReceive with valid relationships
+        $item = PsFirmReceive::with([
+            'flock',
+            'company',
+            'psReceive.chickCounts',
+        ])->findOrFail($id);
+
+        // Get breed type from psReceive
+        $breedName = $item->psReceive?->breed_type; // string or JSON
+        if (is_array($breedName)) {
+            $breedName = implode(', ', $breedName); // If multiple breeds stored as array
+        }
+
         $psChickCounts = $item->psReceive?->chickCounts;
+
+        // Do calculations first
+        $physical_female = $item->firm_female_qty;
+        $physical_male   = $item->firm_male_qty;
+
+        $box_f = ($psChickCounts->ps_female_rec_box ?? 0) - $physical_female;
+        $box_m = ($psChickCounts->ps_male_rec_box ?? 0) - $physical_male;
+
+        $box_shortage = $box_f + $box_m;
+
+        $deviation_female = $physical_female - ($psChickCounts->ps_female_rec_box ?? 0);
+        $deviation_male = $physical_male - ($psChickCounts->ps_male_rec_box ?? 0);
 
         // Prepare data for Blade view
         $data = [
-            'job_no' => $item->job_no,
+            'job_no'         => $item->job_no,
             'transaction_no' => $item->transaction_no,
-            'pi_no' => $item->psReceive->pi_no ?? '-',
-            'pi_date' => optional($item->psReceive->pi_date)->format('Y-m-d') ?? '-',
-            'flock_name' => $item->flock->name ?? '-',
-            'flock_id' => $item->flock_id,
-            'company_name' => $item->company->name ?? '-',
-            'company_id' => $item->receiving_company_id,
-            'firm_male_qty' => $item->firm_male_qty,
+            'pi_no'          => $item->psReceive->pi_no ?? '-',
+            'pi_date'        => optional($item->psReceive->pi_date)->format('Y-m-d') ?? '-',
+            'flock_name'     => $item->flock->name ?? '-',
+            'flock_id'       => $item->flock_id,
+            'company_name'   => $item->company->name ?? '-',
+            'company_id'     => $item->receiving_company_id,
+            'firm_male_qty'  => $item->firm_male_qty,
             'firm_female_qty' => $item->firm_female_qty,
             'firm_total_qty' => $item->firm_total_qty,
-            'remarks' => $item->remarks ?? '-',
-            'receive_date' => $item->created_at->format('Y-m-d'),
-            'created_by' => $item->created_by,
-            'status' => $item->status,
-            'receive_type' => $item->receive_type,
-            'source_type' => $item->source_type ?? '-',
-            'source_id' => $item->source_id ?? '-',
+            'remarks'        => $item->remarks ?? '-',
+            'receive_date'   => $item->created_at->format('Y-m-d'),
+            'created_by'     => $item->created_by,
+            'status'         => $item->status,
+            'receive_type'   => $item->receive_type,
+            'breed_type'     => $breedName,
+            'source_type'    => $item->source_type ?? '-',
+            'source_id'      => $item->source_id ?? '-',
 
-            // ✅ batches section pulling challan_female from psReceive->chickCounts->ps_female_qty
+            // batches section
             'batches' => [
                 [
-                    'batch_no' => 'A1',
-                    'challan_female' => $psChickCounts->ps_female_qty ?? 0,
-                    'challan_male' => $psChickCounts->ps_male_qty ?? 0,
-                    'challan_total' => $psChickCounts->ps_total_qty ?? 0,
+                    'batch_no'        => 'A1',
+                    'challan_female'  => $psChickCounts->ps_female_rec_box ?? 0,
+                    'challan_male'    => $psChickCounts->ps_male_rec_box ?? 0,
+                    'challan_total'   => $psChickCounts->ps_total_re_box_qty ?? 0,
 
-                    'physical_female' => $item->firm_female_qty,
-                    'box_f' => 40,
-                    'total_female' => $item->firm_female_qty,
+                    'physical_female' => $physical_female,
+                    'box_f'           => $box_f,
+                    'total_female'    => $physical_female + $box_f,
 
-                    'physical_male' => $item->firm_male_qty,
-                    'box_m' => 30,
-                    'total_male' => $item->firm_male_qty,
+                    'physical_male'   => $physical_male,
+                    'box_m'           => $box_m,
+                    'total_male'      => $physical_male + $box_m,
 
-                    'total' => $item->firm_total_qty,
+                    'box_shortage'    => $box_shortage,
+                    'total'           => $item->firm_total_qty,
 
-                    'deviation_female' => $item->firm_female_qty - ($psChickCounts->ps_female_qty ?? 0),
-                    'deviation_male' => $item->firm_male_qty - ($psChickCounts->ps_male_qty ?? 0),
-                    'deviation_total' => $item->firm_total_qty - ($psChickCounts->ps_total_qty ?? 0),
+                    'deviation_female' => $deviation_female,
+                    'deviation_male'  => $deviation_male,
+                    'deviation_total' => $deviation_female + $deviation_male,
 
                     'remarks' => $item->remarks ?? 'OK',
                 ],
