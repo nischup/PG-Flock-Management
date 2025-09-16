@@ -62,6 +62,7 @@ const form = useForm({
     vehicle_inside_temp: '',
 
     remarks: '',
+    lab_remarks: '', // separate field for lab remarks
     file: [], // file upload
     labfile: [],
     net_weight: 0,
@@ -471,7 +472,7 @@ function validateTab(index: number) {
                                 class="relative flex-1 cursor-pointer rounded-lg px-6 py-4 text-center font-medium transition-all duration-200"
                             :class="[
                                 activeTab === index
-                                        ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-gray-900 shadow-lg'
+                                        ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-2xl ring-2 ring-gray-200/60 backdrop-blur-sm'
                                     : completedTabs.includes(index)
                                           ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md'
                                           : 'bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-md hover:from-gray-700 hover:to-gray-800',
@@ -479,13 +480,13 @@ function validateTab(index: number) {
                         >
                                 <div class="flex items-center justify-center gap-2">
                                     <div class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold"
-                                         :class="activeTab === index ? 'bg-gray-900/20' : completedTabs.includes(index) ? 'bg-white/20' : 'bg-white/20'">
+                                         :class="activeTab === index ? 'bg-gray-900/30' : completedTabs.includes(index) ? 'bg-white/20' : 'bg-white/20'">
                                         {{ index + 1 }}
                                     </div>
                             {{ tab.label }}
                         </div>
                                 <!-- Progress indicator -->
-                                <div v-if="activeTab === index" class="absolute bottom-0 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-white/30"></div>
+                                <div v-if="activeTab === index" class="absolute bottom-0 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-gray-900/60"></div>
                     </div>
                         </div>
                 </div>
@@ -493,7 +494,7 @@ function validateTab(index: number) {
                 <!-- Master Info Tab -->
                     <div v-if="activeTab === 0" class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-gray-200">
                         <!-- Tab Header -->
-                        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 px-8 py-6">
+                        <div class="bg-gradient-to-r from-gray-400 to-gray-500 px-8 py-6 shadow-2xl ring-2 ring-gray-200/60 backdrop-blur-sm">
                             <div class="flex items-center gap-3">
                                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-900/20">
                                     <svg class="h-5 w-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -841,14 +842,14 @@ function validateTab(index: number) {
                         <div class="p-8">
                             <!-- Weight and Box Information -->
                             <div class="mb-8">
-                                <h3 class="mb-4 text-lg font-semibold text-gray-900">Weight & Box Information</h3>
+                                <!-- <h3 class="mb-4 text-lg font-semibold text-gray-900">Weight & Box Information</h3> -->
                                 <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                                     <div class="space-y-2">
                                         <Label class="text-sm font-semibold text-gray-700">Challan Box Qty</Label>
                                         <Input 
                                             v-model.number="form.ps_challan_box_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
                                         />
                                         <InputError :message="tabErrors.ps_challan_box_qty || form.errors.ps_challan_box_qty" class="text-sm text-red-600" />
                         </div>
@@ -858,7 +859,7 @@ function validateTab(index: number) {
                                             v-model.number="form.ps_gross_weight" 
                                             type="number" 
                                             step="0.01" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
                                         />
                                         <InputError :message="tabErrors.ps_gross_weight || form.errors.ps_gross_weight" class="text-sm text-red-600" />
                         </div>
@@ -868,7 +869,7 @@ function validateTab(index: number) {
                                             v-model.number="form.ps_net_weight" 
                                             type="number" 
                                             step="0.01" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
                                         />
                                         <InputError :message="tabErrors.ps_net_weight || form.errors.ps_net_weight" class="text-sm text-red-600" />
                                     </div>
@@ -877,14 +878,14 @@ function validateTab(index: number) {
 
                             <!-- Box Quantities -->
                             <div class="mb-8">
-                                <h3 class="mb-4 text-lg font-semibold text-gray-900">Box Quantities</h3>
+                                <!-- <h3 class="mb-4 text-lg font-semibold text-gray-900">Box Quantities</h3> -->
                                 <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                                     <div class="space-y-2">
                                         <Label class="text-sm font-semibold text-gray-700">Female Box Receive Qty</Label>
                                         <Input 
                                             v-model.number="form.ps_female_rec_box" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
                                         />
                                         <InputError :message="tabErrors.ps_female_rec_box || form.errors.ps_female_rec_box" class="text-sm text-red-600" />
                         </div>
@@ -893,7 +894,7 @@ function validateTab(index: number) {
                                         <Input 
                                             v-model.number="form.ps_male_rec_box" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
                                         />
                                         <InputError :message="tabErrors.ps_male_rec_box || form.errors.ps_male_rec_box" class="text-sm text-red-600" />
                         </div>
@@ -902,7 +903,7 @@ function validateTab(index: number) {
                                         <Input 
                                             v-model.number="form.ps_total_re_box_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-100 px-4 py-3 text-gray-900 ring-1 ring-gray-200" 
+                                            class="w-full rounded-lg border-0 bg-gray-100 px-3 py-2 text-gray-900 ring-1 ring-gray-200" 
                                             readonly 
                                         />
                                         <InputError :message="tabErrors.ps_total_re_box_qty || form.errors.ps_total_re_box_qty" class="text-sm text-red-600" />
@@ -912,14 +913,14 @@ function validateTab(index: number) {
 
                             <!-- Chick Quantities -->
                             <div class="mb-8">
-                                <h3 class="mb-4 text-lg font-semibold text-gray-900">Chick Quantities</h3>
+                                <!-- <h3 class="mb-4 text-lg font-semibold text-gray-900">Chick Quantities</h3> -->
                                 <div class="grid grid-cols-1 gap-6 md:grid-cols-4">
                                     <div class="space-y-2">
                                         <Label class="text-sm font-semibold text-gray-700">Female Chicks Qty</Label>
                                         <Input 
                                             v-model.number="form.ps_female_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
                                         />
                                         <InputError :message="tabErrors.ps_female_qty || form.errors.ps_female_qty" class="text-sm text-red-600" />
                                     </div>
@@ -928,7 +929,7 @@ function validateTab(index: number) {
                                         <Input 
                                             v-model.number="form.ps_male_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
                                         />
                                         <InputError :message="tabErrors.ps_male_qty || form.errors.ps_male_qty" class="text-sm text-red-600" />
                                     </div>
@@ -937,7 +938,7 @@ function validateTab(index: number) {
                                         <Input 
                                             v-model.number="form.ps_total_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-100 px-4 py-3 text-gray-900 ring-1 ring-gray-200" 
+                                            class="w-full rounded-lg border-0 bg-gray-100 px-3 py-2 text-gray-900 ring-1 ring-gray-200" 
                                             readonly 
                                         />
                                         <InputError :message="tabErrors.ps_total_qty || form.errors.ps_total_qty" class="text-sm text-red-600" />
@@ -947,7 +948,7 @@ function validateTab(index: number) {
                                         <Input 
                                             v-model.number="form.ps_bonus_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500"
                                         />
                                     </div>
                                 </div>
@@ -958,39 +959,39 @@ function validateTab(index: number) {
                     <!-- Lab Transfer Tab -->
                     <div v-if="activeTab === 2" class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-gray-200">
                         <!-- Tab Header -->
-                        <div class="bg-gradient-to-r from-gray-800 to-gray-900 px-8 py-6">
-                            <div class="flex items-center gap-3">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-                                    <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+                                    <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <h2 class="text-2xl font-bold text-white">Lab Transfer</h2>
-                                    <p class="text-gray-300">Configure laboratory testing and file uploads</p>
+                                    <h2 class="text-xl font-bold text-white">Lab Transfer</h2>
+                                    <p class="text-sm text-gray-300">Configure laboratory testing and file uploads</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Tab Content -->
-                        <div class="p-8">
+                        <div class="p-6">
                             <!-- Government Lab Section -->
-                            <div class="mb-8">
-                                <div class="mb-6 flex items-center gap-3">
-                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                                        <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="mb-6">
+                                <div class="mb-4 flex items-center gap-2">
+                                    <div class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100">
+                                        <svg class="h-3 w-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                         </div>
-                                    <h3 class="text-xl font-semibold text-gray-900">Government Lab</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900">Government Lab</h3>
                         </div>
-                                <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                     <div class="space-y-2">
                                         <Label class="text-sm font-semibold text-gray-700">Male Qty</Label>
                                         <Input 
                                             v-model.number="form.gov_lab_send_male_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-blue-500" 
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-blue-500" 
                                             @input="updateTotalQty" 
                                         />
                                         <InputError :message="tabErrors.gov_lab_send_male_qty || form.errors.gov_lab_send_male_qty" class="text-sm text-red-600" />
@@ -1000,7 +1001,7 @@ function validateTab(index: number) {
                                         <Input 
                                             v-model.number="form.gov_lab_send_female_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-blue-500" 
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-blue-500" 
                                             @input="updateTotalQty" 
                                         />
                                         <InputError :message="tabErrors.gov_lab_send_female_qty || form.errors.gov_lab_send_female_qty" class="text-sm text-red-600" />
@@ -1010,7 +1011,7 @@ function validateTab(index: number) {
                                         <Input 
                                             v-model.number="form.gov_lab_send_total_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-100 px-4 py-3 text-gray-900 ring-1 ring-gray-200" 
+                                            class="w-full rounded-lg border-0 bg-gray-100 px-3 py-2 text-gray-900 ring-1 ring-gray-200" 
                                             readonly 
                                         />
                                     </div>
@@ -1018,22 +1019,22 @@ function validateTab(index: number) {
                         </div>
 
                             <!-- Provita Lab Section -->
-                            <div class="mb-8">
-                                <div class="mb-6 flex items-center gap-3">
-                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-                                        <svg class="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="mb-6">
+                                <div class="mb-4 flex items-center gap-2">
+                                    <div class="flex h-6 w-6 items-center justify-center rounded-full bg-green-100">
+                                        <svg class="h-3 w-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                         </div>
-                                    <h3 class="text-xl font-semibold text-gray-900">Provita Lab</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900">Provita Lab</h3>
                         </div>
-                                <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                     <div class="space-y-2">
                                         <Label class="text-sm font-semibold text-gray-700">Male Qty</Label>
                                         <Input 
                                             v-model.number="form.provita_lab_send_male_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500" 
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500" 
                                             @input="updateTotalQty" 
                                         />
                                         <InputError :message="tabErrors.provita_lab_send_male_qty || form.errors.provita_lab_send_male_qty" class="text-sm text-red-600" />
@@ -1043,7 +1044,7 @@ function validateTab(index: number) {
                                         <Input 
                                             v-model.number="form.provita_lab_send_female_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500" 
+                                            class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-green-500" 
                                             @input="updateTotalQty" 
                                         />
                                         <InputError :message="tabErrors.provita_lab_send_female_qty || form.errors.provita_lab_send_female_qty" class="text-sm text-red-600" />
@@ -1053,7 +1054,7 @@ function validateTab(index: number) {
                                         <Input 
                                             v-model.number="form.provita_lab_send_total_qty" 
                                             type="number" 
-                                            class="w-full rounded-lg border-0 bg-gray-100 px-4 py-3 text-gray-900 ring-1 ring-gray-200" 
+                                            class="w-full rounded-lg border-0 bg-gray-100 px-3 py-2 text-gray-900 ring-1 ring-gray-200" 
                                             readonly 
                                         />
                                     </div>
@@ -1065,14 +1066,14 @@ function validateTab(index: number) {
                         </div>
 
                             <!-- Additional Information -->
-                            <div class="space-y-6">
+                            <div class="space-y-4">
                                 <div class="space-y-2">
                                     <Label class="text-sm font-semibold text-gray-700">Lab Remarks</Label>
                                     <textarea 
-                                        v-model="form.remarks" 
-                                        class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-purple-500" 
+                                        v-model="form.lab_remarks" 
+                                        class="w-full rounded-lg border-0 bg-gray-50 px-3 py-2 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-purple-500" 
                                         placeholder="Enter any additional notes for lab testing"
-                                        rows="3"
+                                        rows="2"
                                     ></textarea>
                         </div>
 

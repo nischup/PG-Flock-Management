@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, Head, useForm } from '@inertiajs/vue3'
-import { ref, watch, computed, onMounted, onBeforeUnmount,reactive } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount, reactive } from 'vue'
 import InputError from '@/components/InputError.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -95,7 +95,9 @@ const filteredPsReceives = computed(() => {
 const filteredFlocks = computed(() => {
     if (!flockSearchQuery.value) return props.flocks
     return props.flocks.filter(flock => 
-        flock.name.toLowerCase().includes(flockSearchQuery.value.toLowerCase())
+        flock.name.toString().includes(flockSearchQuery.value) ||
+        `Flock No: ${flock.name}`.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+        (flock.status == 1 ? 'Active' : 'Inactive').toLowerCase().includes(flockSearchQuery.value.toLowerCase())
     )
 })
 
@@ -106,6 +108,14 @@ const selectedPs = computed(() => {
 
 const selectedFlock = computed(() => {
     return props.flocks.find(flock => flock.id === Number(selectedFlockId.value))
+})
+
+// Debug: Log flock data to see the actual values
+onMounted(() => {
+    console.log('Flocks data:', props.flocks)
+    if (props.flocks && props.flocks.length > 0) {
+        console.log('First flock status:', props.flocks[0].status, 'Type:', typeof props.flocks[0].status)
+    }
 })
 
 // Close dropdowns on outside click
@@ -235,6 +245,36 @@ const flockForm = useForm({
   parent_flock_id: null
 })
 
+// Basic validation for flock name (frontend only)
+const validateFlockName = (name) => {
+  // Check if it's a valid integer
+  if (name && !/^\d+$/.test(name)) {
+    return 'Flock No must be a valid integer'
+  }
+  
+  // Check if it's at least 1
+  if (name && parseInt(name) < 1) {
+    return 'Flock No must be at least 1'
+  }
+  
+  return null
+}
+
+// Real-time validation for flock name
+const flockNameError = computed(() => {
+  if (!flockForm.name) return ''
+  return validateFlockName(flockForm.name)
+})
+
+// Watch for form errors and update display error
+watch(() => flockForm.errors, (errors) => {
+  if (errors.name) {
+    flockFormError.value = errors.name
+  } else if (errors.parent_flock_id) {
+    flockFormError.value = errors.parent_flock_id
+  }
+}, { deep: true })
+
 // Draggable Flock modal
 const flockModalRef = ref<HTMLElement | null>(null)
 let flockDragOffset = { x: 0, y: 0 }
@@ -264,6 +304,9 @@ function resetFlockForm() {
 
 // Add new Flock via Inertia
 function addNewFlock() {
+  // Clear any previous errors
+  flockFormError.value = ''
+  
   flockForm.post(route('flocks.store'), {
     onSuccess: (page) => {
       // page.props won't automatically contain the new flock
@@ -277,7 +320,20 @@ function addNewFlock() {
       resetFlockForm();
     },
     onError: (errors) => {
-      flockFormError.value = errors.name || 'Something went wrong';
+      // Handle validation errors from the backend
+      console.log('Validation errors:', errors); // Debug log
+      console.log('Form errors:', flockForm.errors); // Debug form errors
+      
+      // Get error message from form errors (Inertia handles this automatically)
+      if (flockForm.errors && flockForm.errors.name) {
+        const nameError = flockForm.errors.name;
+        flockFormError.value = Array.isArray(nameError) ? nameError[0] : nameError;
+      } else if (flockForm.errors && flockForm.errors.parent_flock_id) {
+        const parentError = flockForm.errors.parent_flock_id;
+        flockFormError.value = Array.isArray(parentError) ? parentError[0] : parentError;
+      } else {
+        flockFormError.value = 'Something went wrong';
+      }
     },
   });
 }
@@ -291,12 +347,12 @@ function addNewFlock() {
   <div class="mb-8">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Create Farm Receive</h1>
-        <p class="mt-2 text-gray-600 dark:text-gray-400">Add a new parent stock farm receive record</p>
+        <!-- <h4 class="text-3xl font-bold text-gray-900 dark:text-white">Add a new parent stock farm receive record</h4> -->
+        <!-- <p class="mt-2 text-gray-600 dark:text-gray-400">Add a new parent stock farm receive record</p> -->
       </div>
         <Link 
           href="/ps-firm-receive" 
-        class="group relative overflow-hidden rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+        class="group relative overflow-hidden rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl mt-2"
         style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);"
       >
         <span class="relative z-10 flex items-center gap-2">
@@ -326,23 +382,6 @@ function addNewFlock() {
           </div>
         </div>
 
-        <!-- Data Status Indicator -->
-        <div class="mb-4 flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
-          <div class="flex items-center gap-2 text-sm">
-            <div class="h-2 w-2 rounded-full bg-green-500"></div>
-            <span class="font-medium text-green-800 dark:text-green-200">
-              Data Status: {{ props.psReceives?.length || 0 }} PS Receives | {{ props.flocks?.length || 0 }} Flocks loaded
-            </span>
-          </div>
-          <button 
-            type="button"
-            @click="debugDropdown" 
-            class="rounded bg-green-600 px-3 py-1 text-xs text-white hover:bg-green-700"
-          >
-            Debug Console
-          </button>
-        </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           <!-- PS Receive Dropdown -->
@@ -359,7 +398,7 @@ function addNewFlock() {
               >
                 <span class="flex items-center gap-3">
                   <div class="h-2 w-2 rounded-full bg-blue-500"></div>
-                  {{ selectedPs ? selectedPs.pi_no : 'Select PS Receive Number' }}
+                  {{ selectedPs ? (selectedPs.shipment_type_id === 1 ? ( "Invoice No - " + (selectedPs.order_no || 'N/A')) : ( "LC NO - " + (selectedPs.lc_no || 'N/A'))) + ' - ' + (selectedPs.shipment_type_id === 1 ? 'Local' : 'Foreign') : 'Select PS Receive Number' }}
                 </span>
                 <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showPsDropdown }" />
               </button>
@@ -406,9 +445,10 @@ function addNewFlock() {
                     >
                       <div class="h-3 w-3 rounded-full bg-blue-500 flex-shrink-0"></div>
                       <div class="flex-1">
-                        <div class="font-semibold text-gray-900 dark:text-white">{{ ps.pi_no }}</div>
-                        <div class="text-sm text-gray-500 dark:text-gray-400">Date: {{ ps.pi_date || 'N/A' }}</div>
-                        <div class="text-xs text-gray-400 dark:text-gray-500">Order: {{ ps.order_no || 'N/A' }}</div>
+                        <div class="font-semibold text-gray-900 dark:text-white">
+                          {{ ps.shipment_type_id === 1 ? ( "Invoice No - " + (ps.order_no || 'N/A')) : ( "LC NO - " + (ps.lc_no || 'N/A')) }} - {{ ps.shipment_type_id === 1 ? 'Local' : 'Foreign' }}
+                        </div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">PI No: {{ ps.pi_no }}</div>
                       </div>
                       <CheckCircle2 v-if="selectedPsId == ps.id" class="h-4 w-4 text-blue-500 flex-shrink-0" />
                     </button>
@@ -448,7 +488,7 @@ function addNewFlock() {
                 >
                   <span class="flex items-center gap-3">
                     <div class="h-2 w-2 rounded-full bg-emerald-500"></div>
-                    {{ selectedFlock ? selectedFlock.name : 'Select Flock' }}
+                    {{ selectedFlock ? `Flock No: ${selectedFlock.name}` : 'Select Flock' }}
                   </span>
                   <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFlockDropdownList }" />
                 </button>
@@ -471,7 +511,7 @@ function addNewFlock() {
                         <input
                           v-model="flockSearchQuery"
                           type="text"
-                          placeholder="Search flocks..."
+                          placeholder="Search flock numbers or status..."
                           class="w-full rounded-lg border border-gray-300 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           @click.stop
                         />
@@ -495,8 +535,17 @@ function addNewFlock() {
                       >
                         <div class="h-3 w-3 rounded-full bg-emerald-500 flex-shrink-0"></div>
                         <div class="flex-1">
-                          <div class="font-semibold text-gray-900 dark:text-white">{{ flock.name }}</div>
-                          <div class="text-sm text-gray-500 dark:text-gray-400">ID: {{ flock.id }}</div>
+                          <div class="font-semibold text-gray-900 dark:text-white">Flock No: {{ flock.name }}</div>
+                          <div class="text-sm text-gray-500 dark:text-gray-400">
+                            <span 
+                              class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                              :class="flock.status == 1 
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
+                            >
+                              {{ flock.status == 1 ? 'Active' : 'Inactive' }}
+                            </span>
+                          </div>
                         </div>
                         <CheckCircle2 v-if="selectedFlockId == flock.id" class="h-4 w-4 text-emerald-500 flex-shrink-0" />
                       </button>
@@ -881,14 +930,15 @@ function addNewFlock() {
           <div class="space-y-2">
             <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
               <Users class="h-4 w-4" />
-              Flock Name
+              Flock No
             </Label>
             <Input 
               v-model="flockForm.name" 
-              placeholder="Enter flock name..." 
+              type="number"
+              placeholder="Enter flock no..." 
               class="rounded-xl border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700" 
             />
-            <InputError :message="flockFormError" />
+            <InputError :message="flockNameError || flockFormError || (flockForm.errors.name ? (Array.isArray(flockForm.errors.name) ? flockForm.errors.name[0] : flockForm.errors.name) : '')" />
           </div>
           
           <div class="space-y-2">
@@ -918,7 +968,7 @@ function addNewFlock() {
           <Button 
             type="button"
             @click="addNewFlock" 
-            :disabled="flockForm.processing || !flockForm.name"
+            :disabled="flockForm.processing || !flockForm.name || flockNameError"
             class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-2 font-semibold text-white shadow-lg transition-all duration-300 hover:from-emerald-700 hover:to-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
           >
             <span class="relative z-10 flex items-center gap-2">

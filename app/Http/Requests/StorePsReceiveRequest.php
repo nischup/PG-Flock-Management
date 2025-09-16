@@ -38,6 +38,7 @@ class StorePsReceiveRequest extends FormRequest
             'company_id' => 'required|integer|exists:companies,id',
             'vehicle_inside_temp' => 'nullable|numeric|between:-50,50',
             'remarks' => 'nullable|string|max:500',
+            'lab_remarks' => 'nullable|string|max:500',
 
             // Chick Counts
             'ps_male_rec_box' => 'required|numeric|min:0',
@@ -147,6 +148,7 @@ class StorePsReceiveRequest extends FormRequest
             'company_id.exists' => 'Selected company does not exist.',
             'vehicle_inside_temp.between' => 'Vehicle temperature must be between -50°C and 50°C.',
             'remarks.max' => 'Remarks cannot exceed 500 characters.',
+            'lab_remarks.max' => 'Lab remarks cannot exceed 500 characters.',
             
             // Chick Counts Messages
             'ps_male_rec_box.required' => 'Male box quantity is required.',

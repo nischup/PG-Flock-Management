@@ -4,15 +4,13 @@ namespace App\Http\Controllers\Ps;
 
 use App\Exports\ArrayExport;
 use App\Http\Controllers\Controller;
+use App\Models\Master\BreedType;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
-use App\Models\Master\BreedType;
-use App\Models\Master\Supplier;
 use App\Models\Ps\PsFirmReceive;
 use App\Models\Ps\PsReceive;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
@@ -29,21 +27,21 @@ class PsFirmReceiveController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('job_no', 'like', "%{$search}%")
-                        ->orWhereHas('flock', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('company', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('psReceive', fn($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
+                        ->orWhereHas('flock', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('company', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('psReceive', fn ($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
                 });
             })
-            ->when($request->company_id, fn($q) => $q->where('receiving_company_id', $request->company_id))
-            ->when($request->flock_id, fn($q) => $q->where('flock_id', $request->flock_id))
-            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->company_id, fn ($q) => $q->where('receiving_company_id', $request->company_id))
+            ->when($request->flock_id, fn ($q) => $q->where('flock_id', $request->flock_id))
+            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->orderBy('id', 'desc')
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
 
         return Inertia::render('ps/ps-firm-receive/List', [
-            'psFirmReceives' => $psFirmReceives->through(fn($item) => [
+            'psFirmReceives' => $psFirmReceives->through(fn ($item) => [
                 'id' => $item->id,
                 'job_no' => $item->job_no,
                 'flock_name' => $item->flock->name ?? '-',
@@ -72,15 +70,15 @@ class PsFirmReceiveController extends Controller
      */
     public function create()
     {
-        
+
         $breeds = BreedType::pluck('name', 'id')->toArray();
-        
-       
-        
+
+
+
         // Fetch all PS Receives (you may filter by status if needed)
         $psReceives = PsReceive::with('chickCounts', 'labTransfers')
             ->get()
-            ->map(function ($ps,$suppliers) {
+            ->map(function ($ps, $suppliers) {
                 return [
                     'id' => $ps->id,
                     'pi_no' => $ps->pi_no,
@@ -97,7 +95,7 @@ class PsFirmReceiveController extends Controller
                     'company_id' => $ps->company_id,
                     'remarks' => $ps->remarks,
                     'created_at' => $ps->created_at->format('Y-m-d'),
-                    'receive_type'=>"box",
+                    'receive_type' => "box",
                     // Chick counts
                     'total_chicks_qty' => $ps->chickCounts->ps_total_qty ?? 0,
                     'total_box_qty' => $ps->chickCounts->ps_total_re_box_qty ?? 0,
@@ -112,9 +110,9 @@ class PsFirmReceiveController extends Controller
                     'labTest' => $ps->labTransfers, // important
                 ];
             });
-           
-           
-        $flocks = Flock::select('id', 'name')->get();
+
+
+        $flocks = Flock::select('id', 'name', 'status')->get();
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
 
@@ -122,7 +120,7 @@ class PsFirmReceiveController extends Controller
             'psReceives' => $psReceives,
             'companies' => $companies,
             'flocks' => $flocks,
-            'breeds'=>$breeds,
+            'breeds' => $breeds,
         ]);
     }
 
@@ -240,7 +238,7 @@ class PsFirmReceiveController extends Controller
                 ];
             });
 
-        $flocks = Flock::select('id', 'name')->get();
+        $flocks = Flock::select('id', 'name', 'status')->get();
         $companies = Company::select('id', 'name')->get();
 
         return Inertia::render('ps/ps-firm-receive/Edit', [
@@ -321,15 +319,15 @@ class PsFirmReceiveController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('job_no', 'like', "%{$search}%")
-                        ->orWhereHas('flock', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('company', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('psReceive', fn($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
+                        ->orWhereHas('flock', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('company', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('psReceive', fn ($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
                 });
             })
-            ->when($request->company_id, fn($q) => $q->where('receiving_company_id', $request->company_id))
-            ->when($request->flock_id, fn($q) => $q->where('flock_id', $request->flock_id))
-            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->company_id, fn ($q) => $q->where('receiving_company_id', $request->company_id))
+            ->when($request->flock_id, fn ($q) => $q->where('flock_id', $request->flock_id))
+            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->latest()
             ->get()
             ->map(function ($r) {
@@ -347,7 +345,7 @@ class PsFirmReceiveController extends Controller
             ->toArray();
 
         $columns = [
-            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
+            ['label' => '#', 'key' => 'index', 'callback' => fn ($r, $i) => $i + 1],
             ['label' => 'PI No', 'key' => 'pi_no'],
             ['label' => 'Flock Name', 'key' => 'flock_name'],
             ['label' => 'Company', 'key' => 'company_name'],
@@ -386,18 +384,18 @@ class PsFirmReceiveController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('job_no', 'like', "%{$search}%")
-                        ->orWhereHas('flock', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('company', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('psReceive', fn($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
+                        ->orWhereHas('flock', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('company', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('psReceive', fn ($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
                 });
             })
-            ->when($request->company_id, fn($q) => $q->where('receiving_company_id', $request->company_id))
-            ->when($request->flock_id, fn($q) => $q->where('flock_id', $request->flock_id))
-            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->company_id, fn ($q) => $q->where('receiving_company_id', $request->company_id))
+            ->when($request->flock_id, fn ($q) => $q->where('flock_id', $request->flock_id))
+            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->latest()
             ->get()
-            ->map(fn($r) => [
+            ->map(fn ($r) => [
                 'pi_no' => $r->psReceive->pi_no ?? '-',
                 'flock_name' => $r->flock->name ?? '-',
                 'company_name' => $r->company->name ?? '-',
@@ -410,7 +408,7 @@ class PsFirmReceiveController extends Controller
             ->toArray();
 
         $columns = [
-            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
+            ['label' => '#', 'key' => 'index', 'callback' => fn ($r, $i) => $i + 1],
             ['label' => 'PI No', 'key' => 'pi_no'],
             ['label' => 'Flock Name', 'key' => 'flock_name'],
             ['label' => 'Company', 'key' => 'company_name'],
@@ -421,7 +419,7 @@ class PsFirmReceiveController extends Controller
             ['label' => 'Receive Date', 'key' => 'receive_date'],
         ];
 
-        $headings = array_map(fn($c) => $c['label'], $columns);
+        $headings = array_map(fn ($c) => $c['label'], $columns);
         $body = [];
         foreach ($rows as $i => $row) {
             $line = [];
@@ -445,52 +443,77 @@ class PsFirmReceiveController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $item = PsFirmReceive::with(['flock', 'company', 'psReceive.chickCounts'])->findOrFail($id);
-        // dd($item);
+        // Load PsFirmReceive with valid relationships
+        $item = PsFirmReceive::with([
+            'flock',
+            'company',
+            'psReceive.chickCounts',
+        ])->findOrFail($id);
+
+        // Get breed type from psReceive
+        $breedName = $item->psReceive?->breed_type; // string or JSON
+        if (is_array($breedName)) {
+            $breedName = implode(', ', $breedName); // If multiple breeds stored as array
+        }
+
         $psChickCounts = $item->psReceive?->chickCounts;
+
+        // Do calculations first
+        $physical_female = $item->firm_female_qty;
+        $physical_male   = $item->firm_male_qty;
+
+        $box_f = ($psChickCounts->ps_female_rec_box ?? 0) - $physical_female;
+        $box_m = ($psChickCounts->ps_male_rec_box ?? 0) - $physical_male;
+
+        $box_shortage = $box_f + $box_m;
+
+        $deviation_female = $physical_female - ($psChickCounts->ps_female_rec_box ?? 0);
+        $deviation_male = $physical_male - ($psChickCounts->ps_male_rec_box ?? 0);
 
         // Prepare data for Blade view
         $data = [
-            'job_no' => $item->job_no,
+            'job_no'         => $item->job_no,
             'transaction_no' => $item->transaction_no,
-            'pi_no' => $item->psReceive->pi_no ?? '-',
-            'pi_date' => optional($item->psReceive->pi_date)->format('Y-m-d') ?? '-',
-            'flock_name' => $item->flock->name ?? '-',
-            'flock_id' => $item->flock_id,
-            'company_name' => $item->company->name ?? '-',
-            'company_id' => $item->receiving_company_id,
-            'firm_male_qty' => $item->firm_male_qty,
+            'pi_no'          => $item->psReceive->pi_no ?? '-',
+            'pi_date'        => optional($item->psReceive->pi_date)->format('Y-m-d') ?? '-',
+            'flock_name'     => $item->flock->name ?? '-',
+            'flock_id'       => $item->flock_id,
+            'company_name'   => $item->company->name ?? '-',
+            'company_id'     => $item->receiving_company_id,
+            'firm_male_qty'  => $item->firm_male_qty,
             'firm_female_qty' => $item->firm_female_qty,
             'firm_total_qty' => $item->firm_total_qty,
-            'remarks' => $item->remarks ?? '-',
-            'receive_date' => $item->created_at->format('Y-m-d'),
-            'created_by' => $item->created_by,
-            'status' => $item->status,
-            'receive_type' => $item->receive_type,
-            'source_type' => $item->source_type ?? '-',
-            'source_id' => $item->source_id ?? '-',
+            'remarks'        => $item->remarks ?? '-',
+            'receive_date'   => $item->created_at->format('Y-m-d'),
+            'created_by'     => $item->created_by,
+            'status'         => $item->status,
+            'receive_type'   => $item->receive_type,
+            'breed_type'     => $breedName,
+            'source_type'    => $item->source_type ?? '-',
+            'source_id'      => $item->source_id ?? '-',
 
-            // ✅ batches section pulling challan_female from psReceive->chickCounts->ps_female_qty
+            // batches section
             'batches' => [
                 [
-                    'batch_no' => 'A1',
-                    'challan_female' => $psChickCounts->ps_female_qty ?? 0,
-                    'challan_male'   => $psChickCounts->ps_male_qty ?? 0,
-                    'challan_total'  => $psChickCounts->ps_total_qty ?? 0,
+                    'batch_no'        => 'A1',
+                    'challan_female'  => $psChickCounts->ps_female_rec_box ?? 0,
+                    'challan_male'    => $psChickCounts->ps_male_rec_box ?? 0,
+                    'challan_total'   => $psChickCounts->ps_total_re_box_qty ?? 0,
 
-                    'physical_female' => $item->firm_female_qty,
-                    'box_f' => 40,
-                    'total_female' => $item->firm_female_qty,
+                    'physical_female' => $physical_female,
+                    'box_f'           => $box_f,
+                    'total_female'    => $physical_female + $box_f,
 
-                    'physical_male' => $item->firm_male_qty,
-                    'box_m' => 30,
-                    'total_male' => $item->firm_male_qty,
+                    'physical_male'   => $physical_male,
+                    'box_m'           => $box_m,
+                    'total_male'      => $physical_male + $box_m,
 
-                    'total' => $item->firm_total_qty,
+                    'box_shortage'    => $box_shortage,
+                    'total'           => $item->firm_total_qty,
 
-                    'deviation_female' => $item->firm_female_qty - ($psChickCounts->ps_female_qty ?? 0),
-                    'deviation_male'   => $item->firm_male_qty - ($psChickCounts->ps_male_qty ?? 0),
-                    'deviation_total'  => $item->firm_total_qty - ($psChickCounts->ps_total_qty ?? 0),
+                    'deviation_female' => $deviation_female,
+                    'deviation_male'  => $deviation_male,
+                    'deviation_total' => $deviation_female + $deviation_male,
 
                     'remarks' => $item->remarks ?? 'OK',
                 ],
@@ -498,11 +521,10 @@ class PsFirmReceiveController extends Controller
             'generatedAt' => now(),
         ];
 
-
         Pdf::setOptions([
             'isHtml5ParserEnabled' => true,
             'isRemoteEnabled' => true,
-            'defaultFont' => 'DejaVu Sans'
+            'defaultFont' => 'DejaVu Sans',
         ]);
 
         $pdf = Pdf::loadView('reports.ps.ps-firm-receive-row', $data)

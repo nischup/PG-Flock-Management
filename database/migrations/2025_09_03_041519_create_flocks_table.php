@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('flocks', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique()->nullable();
-            $table->string('name')->unique();
+            $table->integer('name')->unique();
             $table->unsignedBigInteger('parent_flock_id')->nullable();
             $table->tinyInteger('status')->default(1)->comment('1 = active, 0 = inactive');
             $table->timestamps();

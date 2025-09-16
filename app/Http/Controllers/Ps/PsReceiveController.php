@@ -153,7 +153,7 @@ class PsReceiveController extends Controller
                 'lab_receive_female_qty' => (int) $request->gov_lab_receive_female_qty ?? 0,
                 'lab_receive_male_qty' => (int) $request->gov_lab_receive_male_qty ?? 0,
                 'lab_receive_total_qty' => (int) $request->gov_lab_receive_total_qty ?? 0,
-                'notes' => $request->notes ?? null,
+                'notes' => $request->lab_remarks ?? null,
                 'status' => 1,
             ]);
 
@@ -170,7 +170,7 @@ class PsReceiveController extends Controller
                 'lab_receive_female_qty' => (int) $request->provita_lab_receive_female_qty ?? 0,
                 'lab_receive_male_qty' => (int) $request->provita_lab_receive_male_qty ?? 0,
                 'lab_receive_total_qty' => (int) $request->provita_lab_receive_total_qty ?? 0,
-                'notes' => $request->notes ?? null,
+                'notes' => $request->lab_remarks ?? null,
                 'status' => 1,
             ]);
 
@@ -203,12 +203,12 @@ class PsReceiveController extends Controller
             DB::commit();
 
             return redirect()->route('ps-receive.index')
-                ->with('success', 'PS Receive created successfully.');
+                ->with('success', 'Parent Stock Receive Successfully.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('PS Receive create failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            Log::error('Parent Stock Receive create failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 
-            return back()->withErrors(['general' => 'Failed to create PS Receive: ' . $e->getMessage()]);
+            return back()->withErrors(['general' => 'Failed to create Parent Stock Receive: ' . $e->getMessage()]);
         }
     }
 
