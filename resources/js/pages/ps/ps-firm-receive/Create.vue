@@ -64,6 +64,8 @@ const form = useForm({
   firm_excess_male_box: 0,
   firm_excess_female_box: 0,
   firm_excess_box_qty: 0,   
+  firm_mortality_female: 0,  // female mortality
+  firm_mortality_male: 0,    // male mortality
   remarks: '',
   status: 1,
   send_female_qty: 0,
@@ -364,25 +366,25 @@ function addNewFlock() {
     </div>
       </div>
 
-  <form @submit.prevent="submit" class="space-y-8">
+  <form @submit.prevent="submit" class="space-y-4">
         
     <!-- Parent Stock Selection Card -->
-    <div class="relative rounded-2xl border-0 bg-gradient-to-br from-white via-gray-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 dark:ring-gray-700">
+    <div class="relative rounded-xl border-0 bg-gradient-to-br from-white via-gray-50 to-white p-4 shadow-lg ring-1 ring-gray-200 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 dark:ring-gray-700">
       <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20"></div>
       <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10"></div>
         
       <div class="relative">
-        <div class="mb-8 flex items-center gap-3">
-          <div class="rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 shadow-lg">
-            <Package class="h-6 w-6 text-white" />
+        <div class="mb-4 flex items-center gap-2">
+          <div class="rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 p-2 shadow-lg">
+            <Package class="h-4 w-4 text-white" />
           </div>
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Parent Stock Information</h2>
-            <p class="text-gray-600 dark:text-gray-400">Select PS receive and flock details</p>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Parent Stock Information</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Select PS receive and flock details</p>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           
           <!-- PS Receive Dropdown -->
           <div class="space-y-2">
@@ -619,8 +621,8 @@ function addNewFlock() {
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Breed:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.breed }}</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Transport:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.transport }}</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Challan Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.challan_box }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Chicks Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.female_chicks_box }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Chicks Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.male_chicks_box }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Receive Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.female_chicks_box }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Receive Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.male_chicks_box }}</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Gross Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.gross_weight }} kg</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Net Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.net_weight }} kg</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Chicks:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.female_chicks }}</div></div>
@@ -634,23 +636,23 @@ function addNewFlock() {
     </div>
 
     <!-- Company & Boxes Card -->
-    <div class="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-white via-orange-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-orange-900/20 dark:to-gray-800 dark:ring-gray-700">
+    <div class="relative overflow-hidden rounded-xl border-0 bg-gradient-to-br from-white via-orange-50 to-white p-4 shadow-lg ring-1 ring-gray-200 dark:from-gray-800 dark:via-orange-900/20 dark:to-gray-800 dark:ring-gray-700">
       <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-orange-500/20 to-red-500/20"></div>
       <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-500/10 to-orange-500/10"></div>
       
       <div class="relative">
-        <div class="mb-8 flex items-center gap-3">
-          <div class="rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 p-3 shadow-lg">
-            <Building2 class="h-6 w-6 text-white" />
+        <div class="mb-4 flex items-center gap-2">
+          <div class="rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 p-2 shadow-lg">
+            <Building2 class="h-4 w-4 text-white" />
           </div>
           <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Receiving Company & Boxes</h2>
-            <p class="text-gray-600 dark:text-gray-400">Enter box quantities and receiving details</p>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Receiving Company & Boxes</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Enter box quantities and receiving details</p>
           </div>
         </div>
 
         <!-- Receiving Company -->
-        <div class="mb-8 space-y-2">
+        <div class="mb-4 space-y-2">
           <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
             <Building2 class="h-4 w-4" />
             Receiving Company
@@ -673,7 +675,7 @@ function addNewFlock() {
 
         <!-- Main Box Quantities -->
         <div class="mb-8">
-          <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Main Box Quantities</h3>
+          <!-- <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Main Box Quantities</h3> -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="space-y-2">
               <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Female Box Qty</Label>
@@ -705,195 +707,159 @@ function addNewFlock() {
       </div>
         </div>
 
-        <!-- Shortage & Excess Quantities -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <!-- Shortage Boxes -->
-          <div class="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-pink-50 p-6 dark:border-red-800 dark:from-red-900/20 dark:to-pink-900/20">
-            <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-red-800 dark:text-red-200">
-              <AlertCircle class="h-5 w-5" />
-              Shortage Boxes
-            </h3>
-            <div class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Male Shortage</Label>
-                  <Input 
-                    type="number" 
-                    v-model.number="form.firm_sortage_male_box" 
-                    min="0"
-                    class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Female Shortage</Label>
-                  <Input 
-                    type="number" 
-                    v-model.number="form.firm_sortage_female_box" 
-                    min="0"
-                    class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
-                  />
-                </div>
-        </div>
-              <div class="space-y-2">
-                <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Total Shortage</Label>
-          <Input 
-            type="number" 
-            :value="Number(form.firm_sortage_male_box || 0) + Number(form.firm_sortage_female_box || 0)" 
-            readonly 
-                  class="rounded-xl border-red-300 bg-gradient-to-r from-red-100 to-red-50 px-4 py-2 font-bold text-red-800 cursor-not-allowed dark:border-red-600 dark:from-red-800/50 dark:to-red-900/50 dark:text-red-200"
-          />
-              </div>
+        <!-- Shortage Section -->
+        <div class="rounded-lg border border-red-200 bg-gradient-to-br from-red-50 to-pink-50 p-4 dark:border-red-800 dark:from-red-900/20 dark:to-pink-900/20">
+          <!-- <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-red-800 dark:text-red-200">
+            <AlertCircle class="h-5 w-5" />
+            Shortage Boxes
+          </h3> -->
+          <div class="grid grid-cols-3 gap-4">
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Male Shortage</Label>
+              <Input 
+                type="number" 
+                v-model.number="form.firm_sortage_male_box" 
+                min="0"
+                class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
+              />
             </div>
-        </div>
-
-        <!-- Excess Boxes -->
-          <div class="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 p-6 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-green-900/20">
-            <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-emerald-800 dark:text-emerald-200">
-              <Plus class="h-5 w-5" />
-              Excess Boxes
-            </h3>
-            <div class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Male Excess</Label>
-                  <Input 
-                    type="number" 
-                    v-model.number="form.firm_excess_male_box" 
-                    min="0"
-                    class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Female Excess</Label>
-                  <Input 
-                    type="number" 
-                    v-model.number="form.firm_excess_female_box" 
-                    min="0"
-                    class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
-                  />
-        </div>
-        </div>
-              <div class="space-y-2">
-                <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Total Excess</Label>
-          <Input 
-            type="number" 
-            :value="Number(form.firm_excess_male_box || 0) + Number(form.firm_excess_female_box || 0)" 
-            readonly 
-                  class="rounded-xl border-emerald-300 bg-gradient-to-r from-emerald-100 to-emerald-50 px-4 py-2 font-bold text-emerald-800 cursor-not-allowed dark:border-emerald-600 dark:from-emerald-800/50 dark:to-emerald-900/50 dark:text-emerald-200"
-          />
-              </div>
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Female Shortage</Label>
+              <Input 
+                type="number" 
+                v-model.number="form.firm_sortage_female_box" 
+                min="0"
+                class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
+              />
+            </div>
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Total Shortage</Label>
+              <Input 
+                type="number" 
+                :value="Number(form.firm_sortage_male_box || 0) + Number(form.firm_sortage_female_box || 0)" 
+                readonly 
+                class="rounded-xl border-red-300 bg-gradient-to-r from-red-100 to-red-50 px-4 py-2 font-bold text-red-800 cursor-not-allowed dark:border-red-600 dark:from-red-800/50 dark:to-red-900/50 dark:text-red-200"
+              />
             </div>
           </div>
         </div>
+
+        <!-- Excess Section -->
+        <div class="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 p-4 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-green-900/20">
+          <!-- <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-emerald-800 dark:text-emerald-200">
+            <Plus class="h-5 w-5" />
+            Excess Boxes
+          </h3> -->
+          <div class="grid grid-cols-3 gap-4">
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Male Excess</Label>
+              <Input 
+                type="number" 
+                v-model.number="form.firm_excess_male_box" 
+                min="0"
+                class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
+              />
+            </div>
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Female Excess</Label>
+              <Input 
+                type="number" 
+                v-model.number="form.firm_excess_female_box" 
+                min="0"
+                class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
+              />
+            </div>
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Total Excess</Label>
+              <Input 
+                type="number" 
+                :value="Number(form.firm_excess_male_box || 0) + Number(form.firm_excess_female_box || 0)" 
+                readonly 
+                class="rounded-xl border-emerald-300 bg-gradient-to-r from-emerald-100 to-emerald-50 px-4 py-2 font-bold text-emerald-800 cursor-not-allowed dark:border-emerald-600 dark:from-emerald-800/50 dark:to-emerald-900/50 dark:text-emerald-200"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Mortality Section -->
+        <div class="rounded-lg border border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 p-4 dark:border-orange-800 dark:from-orange-900/20 dark:to-yellow-900/20">
+          <!-- <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-orange-800 dark:text-orange-200">
+            <AlertCircle class="h-5 w-5" />
+            Mortality
+          </h3> -->
+          <div class="grid grid-cols-3 gap-4">
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-orange-700 dark:text-orange-300">Female Mortality</Label>
+              <Input 
+                type="number" 
+                v-model.number="form.firm_mortality_female" 
+                min="0"
+                class="rounded-xl border-orange-300 bg-orange-50 px-4 py-2 text-orange-800 focus:border-orange-500 focus:ring-orange-500/20 dark:border-orange-600 dark:bg-orange-900/30 dark:text-orange-200" 
+              />
+            </div>
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-orange-700 dark:text-orange-300">Male Mortality</Label>
+              <Input 
+                type="number" 
+                v-model.number="form.firm_mortality_male" 
+                min="0"
+                class="rounded-xl border-orange-300 bg-orange-50 px-4 py-2 text-orange-800 focus:border-orange-500 focus:ring-orange-500/20 dark:border-orange-600 dark:bg-orange-900/30 dark:text-orange-200" 
+              />
+            </div>
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-orange-700 dark:text-orange-300">Total Mortality</Label>
+              <Input 
+                type="number" 
+                :value="Number(form.firm_mortality_female || 0) + Number(form.firm_mortality_male || 0)" 
+                readonly 
+                class="rounded-xl border-orange-300 bg-gradient-to-r from-orange-100 to-orange-50 px-4 py-2 font-bold text-orange-800 cursor-not-allowed dark:border-orange-600 dark:from-orange-800/50 dark:to-orange-900/50 dark:text-orange-200"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Remarks Section -->
+        <div class="rounded-lg border border-gray-200 bg-gradient-to-br from-amber-50 to-white p-3 dark:border-gray-600 dark:from-amber-900/20 dark:to-gray-800">
+          <div class="mb-2 flex items-center gap-2">
+            <div class="rounded-md bg-gradient-to-br from-amber-500 to-amber-600 p-1 shadow-md">
+              <Info class="h-3 w-3 text-white" />
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Remarks</h3>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <textarea 
+              v-model="form.remarks" 
+              class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none transition-all duration-200" 
+              rows="2" 
+              placeholder="Add notes..."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Submit Section -->
+        <div class="mt-4 flex items-center justify-end gap-4 rounded-lg bg-gradient-to-r from-gray-50 to-white p-4 dark:from-gray-800 dark:to-gray-900">
+          <Link 
+            href="/ps-firm-receive"
+            class="rounded-xl border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          >
+            Cancel
+          </Link>
+          <Button 
+            type="submit" 
+            :disabled="form.processing"
+            class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-gray-800 to-black px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:from-gray-900 hover:to-gray-800 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500/50 disabled:opacity-50"
+          >
+            <span class="relative z-10 flex items-center gap-2">
+              <Save class="h-4 w-4" />
+              {{ form.processing ? 'Saving...' : '  Submit' }}
+            </span>
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-20 group-hover:translate-x-full"></div>
+          </Button>
+        </div>
       </div>
-    </div>
-
-    <!-- Lab Test Section -->
-    <div v-if="labInput" class="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-white via-purple-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-purple-900/20 dark:to-gray-800 dark:ring-gray-700">
-      <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20"></div>
-      <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10"></div>
-      
-      <div class="relative">
-        <div class="mb-8 flex items-center gap-3">
-          <div class="rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 p-3 shadow-lg">
-            <Search class="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Lab Test Send Information</h2>
-            <p class="text-gray-600 dark:text-gray-400">Configure lab testing parameters</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div class="space-y-2">
-            <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Lab Type</Label>
-            <select 
-              v-model="form.lab_type" 
-              class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">Select Lab</option>
-              <option value="1">Gov Lab</option>
-              <option value="2">Provita Lab</option>
-            </select>
-          </div>
-          <div class="space-y-2">
-            <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Send Female Qty</Label>
-            <Input 
-              v-model.number="form.send_female_qty" 
-              type="number" 
-              min="0"
-              class="rounded-xl border-pink-300 bg-pink-50 px-4 py-3 shadow-sm focus:border-pink-500 focus:ring-pink-500/20 dark:border-pink-600 dark:bg-pink-900/20" 
-            />
-          </div>
-          <div class="space-y-2">
-            <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Send Male Qty</Label>
-            <Input 
-              v-model.number="form.send_male_qty" 
-              type="number" 
-              min="0"
-              class="rounded-xl border-blue-300 bg-blue-50 px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-blue-500/20 dark:border-blue-600 dark:bg-blue-900/20" 
-            />
-          </div>
-          <div class="space-y-2">
-            <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Qty</Label>
-            <Input 
-              v-model.number="form.send_total_qty" 
-              type="number" 
-              readonly 
-              class="rounded-xl border-gray-300 bg-gradient-to-r from-gray-100 to-gray-50 px-4 py-3 font-bold text-gray-700 shadow-sm cursor-not-allowed dark:border-gray-600 dark:from-gray-700 dark:to-gray-800 dark:text-gray-300" 
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Notes Section -->
-    <div class="relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-white via-amber-50 to-white p-8 shadow-xl ring-1 ring-gray-200 dark:from-gray-800 dark:via-amber-900/20 dark:to-gray-800 dark:ring-gray-700">
-      <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20"></div>
-      <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-500/10 to-amber-500/10"></div>
-      
-      <div class="relative">
-        <div class="mb-6 flex items-center gap-3">
-          <div class="rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 p-3 shadow-lg">
-            <Info class="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Additional Notes</h2>
-            <p class="text-gray-600 dark:text-gray-400">Add any relevant remarks or observations</p>
-          </div>
-        </div>
-
-        <div class="space-y-2">
-          <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Remarks</Label>
-          <textarea 
-            v-model="form.remarks" 
-            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none transition-all duration-200" 
-            rows="4" 
-            placeholder="Write your notes here..."
-          ></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- Submit Section -->
-    <div class="flex items-center justify-end gap-4 rounded-2xl bg-gradient-to-r from-gray-50 to-white p-6 dark:from-gray-800 dark:to-gray-900">
-      <Link 
-        href="/ps-firm-receive"
-        class="rounded-xl border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-      >
-        Cancel
-      </Link>
-      <Button 
-        type="submit" 
-        :disabled="form.processing"
-        class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50"
-      >
-        <span class="relative z-10 flex items-center gap-2">
-          <Save class="h-4 w-4" />
-          {{ form.processing ? 'Saving...' : 'Save & Submit' }}
-        </span>
-        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-20 group-hover:translate-x-full"></div>
-      </Button>
     </div>
 
     <!-- Modern Flock Modal -->
