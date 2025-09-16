@@ -32,8 +32,18 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }]
 const alltabs = ['Dashboard','Company','Project','Flock','Shed','Batch']
 const activeTab = ref('Dashboard')
 
-// --- Filters reactive
-const filters = ref({ ...props.filters })
+// --- Filters reactive with proper default placeholders
+const filters = ref({
+  company: props.filters.company || '',
+  project: props.filters.project || '',
+  flock: props.filters.flock || '',
+  shed: props.filters.shed || '',
+  batch: props.filters.batch || '',
+  date: props.filters.date || '',
+  dateRange: props.filters.dateRange || '',
+  date_from: props.filters.date_from || '',
+  date_to: props.filters.date_to || ''
+})
 
 // --- Icon mapping
 const iconMap: Record<string, any> = {
@@ -81,14 +91,25 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
     <!-- Filters -->
     <div v-if="activeContent.filters.length" class="flex gap-4 p-4 flex-wrap items-center">
       <template v-for="f in activeContent.filters" :key="f">
-        <!-- Normal select filters -->
+
+        <!-- Normal select filters (company, project, flock, shed, batch) -->
         <select
           v-if="f !== 'date'"
           v-model="filters[f]"
           class="border rounded-md shadow-md px-4 py-2 bg-white text-gray-800 hover:bg-black hover:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 cursor-pointer"
         >
-          <option disabled value="">Select {{ f }}</option>
-          <option v-for="opt in props.filterOptions[f]" :key="opt" :value="opt">{{ opt }}</option>
+          <!-- Default placeholder -->
+          <option :value="''" disabled>
+            Select {{ f.charAt(0).toUpperCase() + f.slice(1) }}
+          </option>
+
+          <option
+            v-for="(name, id) in props.filterOptions[f]"
+            :key="id"
+            :value="id"
+          >
+            {{ name }}
+          </option>
         </select>
 
         <!-- Date select + Datepicker -->
@@ -97,7 +118,8 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
             v-model="filters.date"
             class="border rounded-md shadow-md px-4 py-2 bg-white text-gray-800 hover:bg-black hover:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50 cursor-pointer"
           >
-            <option disabled value="">Select Date Range</option>
+            <!-- Default placeholder -->
+            <option :value="''" disabled>Select Date Range</option>
             <option v-for="opt in props.filterOptions.date" :key="opt" :value="opt">{{ opt }}</option>
           </select>
 
@@ -113,6 +135,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
             :calendar-position="'right-start'"
           />
         </div>
+
       </template>
     </div>
 

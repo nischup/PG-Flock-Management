@@ -449,24 +449,24 @@ class DailyOperationController extends Controller
             $dailyOperation->vaccines()->create($vaccineData);
         }
 
-        $stage = BatchAssign::findOrFail($dailyOperation->batch_assign_id);
+        
 
         
-        if ($stage->stage == 1) {
+        if ($batch->stage == 1) {
             $stageName = 'brooding';
-        } elseif ($$stage->stage == 2) {
+        } elseif ($batch->stage == 2) {
             $stageName = 'growing';
-        } elseif ($stage->stage == 3) {
+        } elseif ($batch->stage == 3) {
             $stageName = 'laying';
-        } elseif ($stage->stage == 4) {
+        } elseif ($batch->stage == 4) {
             $stageName = 'closing';
         } else {
             $stageName = 'brooding'; // fallback
         }
 
         return redirect()
-        ->route('daily-operation.stage', ['stage' => $stageName])
-        ->with('success', ucfirst($stageName) . 'data saved successfully.');
+        ->route('daily-operation.stage', ['stage' => strtolower($stageName)])
+        ->with('success', ucfirst($stageName).  'data saved successfully.');
     }
 
     /**

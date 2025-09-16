@@ -377,12 +377,12 @@ function getStatusColor(item: any) {
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Commercial
               </th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <!-- <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Rejected
               </th>
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Technical
-              </th>
+              </th> -->
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Status
               </th>
@@ -427,22 +427,22 @@ function getStatusColor(item: any) {
                 </div>
               </td>
 
-              <!-- Rejected Eggs -->
+              <!-- Rejected Eggs 
               <td class="px-6 py-4">
                 <div class="flex items-center">
                   <div class="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
                   <span class="text-sm font-medium text-orange-700">{{ item.rejected_eggs?.toLocaleString() || 0 }}</span>
                 </div>
               </td>
-
-              <!-- Technical Eggs -->
+              -->
+              <!-- Technical Eggs 
               <td class="px-6 py-4">
                 <div class="flex items-center">
                   <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                   <span class="text-sm font-medium text-blue-700">{{ item.technical_eggs?.toLocaleString() || 0 }}</span>
                 </div>
               </td>
-
+              -->
               <!-- Status -->
               <td class="px-6 py-4">
                 <span 

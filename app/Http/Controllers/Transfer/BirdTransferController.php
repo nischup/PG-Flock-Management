@@ -16,6 +16,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use App\Exports\ArrayExport;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\MovementAdjustment;
 
 class BirdTransferController extends Controller
 {
@@ -102,7 +103,7 @@ class BirdTransferController extends Controller
         $deviationTotal = $deviationFemale + $deviationMale;
 
         // Save transfer
-        BirdTransfer::create([
+        $transfer = BirdTransfer::create([
             'batch_assign_id' => $batch->id,
             'job_no' => $batch->job_no,
             'transaction_no' => $batch->transaction_no,
@@ -138,6 +139,22 @@ class BirdTransferController extends Controller
             'status' => 1,
         ]);
 
+
+
+        if ($deviationTotal>0) {
+            MovementAdjustment::create([
+                'flock_id'   =>  $batch->flock_id, 
+                'flock_no' =>    $batch->flock_no, // fetch from batch or pass from request
+                'stage'      => 5,                  // 5 = Bird Transfer stage
+                'stage_id'   =>  $transfer->id,
+                'type'       =>  4,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty'   =>  $deviationMale ?? 0,
+                'female_qty' =>  $deviationFemale ?? 0,
+                'total_qty'  =>  $deviationTotal ?? 0,
+                'date'       => $request->transfer_date,
+                'remarks'    => "Deviation When Transfer",
+            ]);
+        }
 
 
 

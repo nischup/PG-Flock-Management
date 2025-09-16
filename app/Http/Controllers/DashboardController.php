@@ -2,284 +2,191 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DailyOperation\DailyCulling;
-use Illuminate\Http\Request;
-
-use App\Models\Master\Flock;
-
-use App\Models\DailyOperation\DailyMortality;
-use App\Models\DailyOperation\DailyEggCollection;
-use App\Models\DailyOperation\DailyFeed;
 use App\Models\Shed\BatchAssign;
-use App\Models\Ps\PsLabTest;
+use App\Models\Master\Company;
+use App\Models\Master\Project;
+use App\Models\Master\Flock;
+use App\Models\Master\Shed;
+use App\Models\Master\Batch;
+use App\Models\DailyOperation\DailyMortality;
+use App\Models\DailyOperation\DailyCulling;
+use App\Models\DailyOperation\DailyEggCollection;
 use App\Models\Production\EggClassification;
-use Illuminate\Support\Facades\DB;
-
-
+use App\Models\DailyOperation\DailyFeed;
+use App\Models\Ps\PsLabTest;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-       // --- Filter options
+        // --- Fetch filter options from DB
         $filterOptions = [
-            'company' => ['pcl', 'phl', 'pbl'],
-            'project' => ['phl1', 'phl2'],
-            'flock' => ['12', '13'],
-            'shed' => ['1', '2', '3'],
-            'batch' => ['A', 'B'],
-            'date' => ['Last 7 Days', 'Last 1 Month', 'Custom'],
+            'company' => Company::pluck('name', 'id')->toArray(),
+            'project' => Project::pluck('name', 'id')->toArray(),
+            'flock'   => Flock::pluck('name', 'id')->toArray(),
+            'shed'    => Shed::pluck('name', 'id')->toArray(),
+            'batch'   => Batch::pluck('name', 'id')->toArray(),
+            'date'    => ['Last 7 Days', 'Last 1 Month', 'Custom'],
         ];
 
-        // --- Get selected filters, default to empty string
+        // --- Selected filters (default to null)
         $filters = array_merge([
-            'company' => '',
-            'project' => '',
-            'flock' => '',
-            'shed' => '',
-            'batch' => '',
-            'date' => '',
+            'company'   => null,
+            'project'   => null,
+            'flock'     => null,
+            'shed'      => null,
+            'batch'     => null,
+            'date'      => null,
             'date_from' => null,
-            'date_to' => null,
-        ], $request->only(['company','project','flock','shed','batch','date','date_from','date_to']));
+            'date_to'   => null,
+        ], $request->only([
+            'company','project','flock','shed','batch','date','date_from','date_to'
+        ]));
 
-        // --- Determine multiplier based on selected filters
-        $multiplier = 1;
-        if ($filters['company'] === 'pcl') $multiplier = 1;
-        elseif ($filters['company'] === 'phl') $multiplier = 2;
-        elseif ($filters['company'] === 'pbl') $multiplier = 3;
+        // --- Base BatchAssign query with filters
+        $batchQuery = BatchAssign::where('status', 1)
+            ->when($filters['company'], fn($q) => $q->where('company_id', $filters['company']))
+            ->when($filters['project'], fn($q) => $q->where('project_id', $filters['project']))
+            ->when($filters['flock'], fn($q) => $q->where('flock_id', $filters['flock']))
+            ->when($filters['shed'], fn($q) => $q->where('shed_id', $filters['shed']))
+            ->when($filters['batch'], fn($q) => $q->where('id', $filters['batch']));
 
-        // Increase multiplier if project or flock selected
-        if ($filters['project'] !== '') $multiplier += 1;
-        if ($filters['flock'] !== '') $multiplier += 1;
+        // --- Precompute filtered batch IDs
+        $filteredBatchIds = $batchQuery->pluck('id');
 
-        // --- Dummy cards (scaled by multiplier)
-        
-        $totalChicks = BatchAssign::where('status','1')->sum('batch_total_qty');
+        // --- Chicks and stages filtered properly
+        $broodingChicks = BatchAssign::whereIn('id', $filteredBatchIds)
+            ->where('stage', 1)
+            ->sum('batch_total_qty');
 
+        $growingChicks = BatchAssign::whereIn('id', $filteredBatchIds)
+            ->where('stage', 2)
+            ->sum('batch_total_qty');
 
-        $broodingChicks = BatchAssign::where('status','1')->where('stage','1')->sum('batch_total_qty');
-        $growingChicks = BatchAssign::where('status','1')->where('stage','3')->sum('batch_total_qty');
-        $layingChicks = BatchAssign::where('status','1')->where('stage','2')->sum('batch_total_qty');
+        $layingChicks = BatchAssign::whereIn('id', $filteredBatchIds)
+            ->where('stage', 3)
+            ->sum('batch_total_qty');
 
+        $totalChicks = $broodingChicks + $growingChicks + $layingChicks;
+        $maleChicks = BatchAssign::whereIn('id', $filteredBatchIds)->sum('batch_male_qty');
+        $femaleChicks = BatchAssign::whereIn('id', $filteredBatchIds)->sum('batch_female_qty');
 
-
-
-
-        $maleChicks = BatchAssign::where('status','1')->sum('batch_male_qty');
-        $femaleChicks = BatchAssign::where('status','1')->sum('batch_female_qty');
-       
-        $totalMortalitymale = DailyMortality::query()
-        ->join('daily_operations', 'daily_operations.id', '=', 'daily_mortalities.daily_operation_id')
-        ->join('batch_assigns', 'batch_assigns.id', '=', 'daily_operations.batchassign_id')
-        ->where('batch_assigns.status', 1) // only active batches
-        ->sum('daily_mortalities.male_qty');
-
-        $totalMortalityfemale = DailyMortality::query()
-        ->join('daily_operations', 'daily_operations.id', '=', 'daily_mortalities.daily_operation_id')
-        ->join('batch_assigns', 'batch_assigns.id', '=', 'daily_operations.batchassign_id')
-        ->where('batch_assigns.status', 1) // only active batches
-        ->sum('daily_mortalities.female_qty');
-
-        $totalCullingfemale = DailyCulling::query()
-        ->join('daily_operations', 'daily_operations.id', '=', 'daily_cullings.daily_operation_id')
-        ->join('batch_assigns', 'batch_assigns.id', '=', 'daily_operations.batchassign_id')
-        ->where('batch_assigns.status', 1) // only active batches
-        ->sum('daily_cullings.female_qty');
-
-        $totalCullingMale = DailyCulling::query()
-        ->join('daily_operations', 'daily_operations.id', '=', 'daily_cullings.daily_operation_id')
-        ->join('batch_assigns', 'batch_assigns.id', '=', 'daily_operations.batchassign_id')
-        ->where('batch_assigns.status', 1) // only active batches
-        ->sum('daily_cullings.male_qty');
-
-        $totalCulling = $totalCullingfemale+$totalCullingMale;
-        
-        $totaleggcollection = DailyEggCollection::query()
-                ->join('daily_operations', 'daily_operations.id', '=', 'daily_egg_collections.daily_operation_id')
-                ->join('batch_assigns', 'batch_assigns.id', '=', 'daily_operations.batchassign_id')
-                ->where('batch_assigns.status', 1) // only active batches
-                ->sum('daily_egg_collections.quantity');
-
-        $currentchicks = $totalChicks-$totalMortalitymale-$totalMortalityfemale;
-
-        $totalHatchableEggs = EggClassification::query()
-                ->join('batch_assigns', 'batch_assigns.id', '=', 'egg_classifications.batchassign_id')
-                ->where('batch_assigns.status', 1) 
-                ->sum('egg_classifications.hatching_eggs');
-
-        $totalCommercialEggs = EggClassification::query()
-                ->join('batch_assigns', 'batch_assigns.id', '=', 'egg_classifications.batchassign_id')
-                ->where('batch_assigns.status', 1) // only active batches
-
-                ->sum('egg_classifications.commercial_eggs');
-
-
-                
-        $cards = [
-            [
-                'title' => 'Total Flock',
-                'value' => Flock::where('status', '1')->count(),
-                'icon'  => 'User',
-            ],
-            [
-                'title' => 'Total Active Batchs', 
-                'value' => BatchAssign::where('status','1')->count(), 
-                'icon' => 'Archive'
-            ],
-            [
-                'title' => 'Total Chicks',
-                'value' => $totalChicks,
-                'icon'  => 'Drumstick',
-            ],
-            [
-                'title' => 'Female Chicks Qty',
-                'value' => BatchAssign::where('status','1')->sum('batch_female_qty'),
-                'icon'  => 'Drumstick',
-            ],
-            [
-                'title' => 'Male Chicks Qty',
-                'value' => BatchAssign::where('status','1')->sum('batch_male_qty'),
-                'icon'  => 'Drumstick',
-            ],
-            [
-                'title' => 'Total Mortality',
-                'value' => $totalMortalitymale+$totalMortalityfemale,
-                'icon'  => 'ShieldX',
-            ],
-            [
-                'title' => 'Male Mortality',
-                'value' => $totalMortalitymale,
-                'icon'  => 'ShieldX',
-            ],
-            [
-                'title' => 'Female Mortality',
-                'value' => $totalMortalityfemale,
-                'icon'  => 'ShieldX',
-            ],
-            [
-                'title' => 'Current Chicks',
-                'value' =>$currentchicks,
-                'icon'  => 'ShieldX',
-            ],
-            [
-                'title' => 'Total Egg Collection', 
-                'value' => $totaleggcollection,
-                'icon' => 'Egg'
-            ],
-            
-            [
-                'title' => 'Total Hatching Eggs', 
-                'value' => $totalHatchableEggs,
-                'icon' => 'PackageSearch'
-            ],
-            [
-                'title' => 'Total Commercial Eggs', 
-                'value' => $totalCommercialEggs, 
-                'icon' => 'PackageSearch'
-            ],
-            //['title' => 'Total Commercial Egg', 'value' => rand(500, 2000) * $multiplier, 'icon' => 'PackageSearch'],
-            ['title' => 'Total Feed Consumption', 
-            
-            'value' => DailyFeed::query()
-                ->join('daily_operations', 'daily_operations.id', '=', 'daily_feeds.daily_operation_id')
-                ->join('batch_assigns', 'batch_assigns.id', '=', 'daily_operations.batchassign_id')
-                ->where('batch_assigns.status', 1) // only active batches
-                ->sum('daily_feeds.quantity'),
-            
-            
-            'icon' => 'Factory'],
-            ['title' => 'Total Vaccination', 'value' => rand(20, 100) * $multiplier, 'icon' => 'Syringe'],
-            [
-                'title' => 'Sent for Lab From PS', 
-                'value' => PsLabTest::where('status','1')->sum('lab_send_total_qty'), 
-                'icon' => 'FlaskConical'
-            ],
-            ['title' => 'Sent for Lab From Batch', 'value' => 0, 'icon' => 'FlaskConical'],
-            
-        ];
-
-        // Avoid division by zero
-        $eggPercentage        = $currentchicks > 0 ? ($totaleggcollection / $currentchicks) * 100 : 0;
-        $hatchablePercentage  = $totaleggcollection > 0 ? ($totalHatchableEggs / $totaleggcollection) * 100 : 0;
-        $commercialPercentage = $totaleggcollection > 0 ? ($totalCommercialEggs / $totaleggcollection) * 100 : 0;
-
-
-        // --- Dummy progress bars
-        $progressBars = [
-            [
-                'title'    => 'Total Eggs',
-                'progress' => number_format($eggPercentage, 2),
-                'extra'    => "Goal: {$totaleggcollection} eggs"
-            ],
-            [
-                'title'    => 'Hatchable Eggs',
-                'progress' => number_format($hatchablePercentage, 2),
-                'extra'    => "Goal: {$totalHatchableEggs} eggs"
-            ],
-            [
-                'title'    => 'Commercial',
-                'progress' => number_format($commercialPercentage, 2),
-                'extra'    => "Goal: {$totalCommercialEggs} eggs"
-            ],
-        ];
-
-        // --- Dummy circle bars
-        // Avoid division by zero
+        // --- Calculate percentages
         $denominator = $totalChicks > 0 ? $totalChicks : 1;
-        $mortalityPercentage = (($totalMortalitymale + $totalMortalityfemale) / $denominator) * 100;
-        $male      = ($maleChicks / $denominator) * 100;
-        $female    = ($femaleChicks / $denominator) * 100;
 
-        $cullingTotal = ($totalCulling / $denominator) * 100;
-        $circleBars = [
-            [
-                'title' => 'Mortality', 
-                'value' => number_format($mortalityPercentage, 2),
-                'type' => 'rounded'
+        // --- Daily Operations date filter
+        $dailyOpsQuery = function($q) use ($filteredBatchIds, $filters) {
+            $q->whereIn('batchassign_id', $filteredBatchIds);
+
+            if ($filters['date'] === 'Last 7 Days') {
+                $q->where('created_at', '>=', now()->subDays(7));
+            } elseif ($filters['date'] === 'Last 1 Month') {
+                $q->where('created_at', '>=', now()->subMonth());
+            } elseif ($filters['date'] === 'Custom' && $filters['date_from'] && $filters['date_to']) {
+                $q->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+            }
+        };
+
+        // --- Mortality
+        $totalMortalityMale = DailyMortality::whereHas('dailyOperation', $dailyOpsQuery)->sum('male_qty');
+        $totalMortalityFemale = DailyMortality::whereHas('dailyOperation', $dailyOpsQuery)->sum('female_qty');
+
+        // --- Culling
+        $totalCullingMale = DailyCulling::whereHas('dailyOperation', $dailyOpsQuery)->sum('male_qty');
+        $totalCullingFemale = DailyCulling::whereHas('dailyOperation', $dailyOpsQuery)->sum('female_qty');
+        $totalCulling = $totalCullingMale + $totalCullingFemale;
+
+        // --- Egg collection
+        $totalEggCollection = DailyEggCollection::whereHas('dailyOperation', $dailyOpsQuery)->sum('quantity');
+
+        $currentChicks = $totalChicks - $totalMortalityMale - $totalMortalityFemale;
+
+        // --- Egg classification
+        $totalHatchableEggs = EggClassification::whereIn('batchassign_id', $filteredBatchIds)->sum('hatching_eggs');
+        $totalCommercialEggs = EggClassification::whereIn('batchassign_id', $filteredBatchIds)->sum('commercial_eggs');
+
+        // --- PsLabTest (filter only by date)
+        $totalPsLab = PsLabTest::whereHas('psReceive', function($q) use ($filters) {
+            if ($filters['date'] === 'Last 7 Days') {
+                $q->where('created_at', '>=', now()->subDays(7));
+            } elseif ($filters['date'] === 'Last 1 Month') {
+                $q->where('created_at', '>=', now()->subMonth());
+            } elseif ($filters['date'] === 'Custom' && $filters['date_from'] && $filters['date_to']) {
+                $q->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+            }
+        })->sum('lab_send_total_qty');
+
+        // --- Dashboard cards
+        $cards = [
+            ['title'=>'Total Flock','value'=>Flock::where('status',1)->count(),'icon'=>'User'],
+            ['title'=>'Total Active Batches','value'=>$batchQuery->count(),'icon'=>'Archive'],
+            ['title'=>'Total Chicks','value'=>$totalChicks,'icon'=>'Drumstick'],
+            ['title'=>'Female Chicks Qty','value'=>$femaleChicks,'icon'=>'Drumstick'],
+            ['title'=>'Male Chicks Qty','value'=>$maleChicks,'icon'=>'Drumstick'],
+            ['title'=>'Total Mortality','value'=>$totalMortalityMale+$totalMortalityFemale,'icon'=>'ShieldX'],
+            ['title'=>'Male Mortality','value'=>$totalMortalityMale,'icon'=>'ShieldX'],
+            ['title'=>'Female Mortality','value'=>$totalMortalityFemale,'icon'=>'ShieldX'],
+            ['title'=>'Current Chicks','value'=>$currentChicks,'icon'=>'ShieldX'],
+            ['title'=>'Total Egg Collection','value'=>$totalEggCollection,'icon'=>'Egg'],
+            ['title'=>'Total Hatching Eggs','value'=>$totalHatchableEggs,'icon'=>'PackageSearch'],
+            ['title'=>'Total Commercial Eggs','value'=>$totalCommercialEggs,'icon'=>'PackageSearch'],
+            ['title'=>'Total Feed Consumption',
+                'value'=>DailyFeed::whereHas('dailyOperation', $dailyOpsQuery)->sum('quantity'),
+                'icon'=>'Factory'
             ],
-            [
-                'title' => 'Culling', 
-                'value' => number_format($cullingTotal, 2), 
-                'type' => 'rounded'
-            ],
-            [
-                'title' => 'Male Chicks', 
-                'value' => number_format($male, 2),
-                'type' => 'rounded'],
-            [
-                'title' => 'Female Chicks', 
-                'value' => number_format($female, 2),
-                'type' => 'straight'],
-            [
-                'title' => 'Excess', 
-                'value' => rand(1, 50), 
-                'type' => 'straight'],
-            [
-                'title' => 'Worker', 
-                'value' => rand(50, 100), 
-                'type' => 'straight'],
+            ['title'=>'Total Vaccination','value'=>rand(20,100),'icon'=>'Syringe'],
+            ['title'=>'Sent for Lab From PS','value'=>$totalPsLab,'icon'=>'FlaskConical'],
+            ['title'=>'Sent for Lab From Batch','value'=>0,'icon'=>'FlaskConical'],
         ];
 
-        // --- Dummy bird stage
+        // --- Progress bars
+        $eggPercentage        = $currentChicks > 0 ? ($totalEggCollection / $currentChicks) * 100 : 0;
+        $hatchablePercentage  = $totalEggCollection > 0 ? ($totalHatchableEggs / $totalEggCollection) * 100 : 0;
+        $commercialPercentage = $totalEggCollection > 0 ? ($totalCommercialEggs / $totalEggCollection) * 100 : 0;
 
-        $broodingPercentage = ($broodingChicks / $denominator) * 100;
-        $growerPercentage   = ($growingChicks / $denominator) * 100;
-        $layingPercentage   = ($layingChicks / $denominator) * 100;
+        $progressBars = [
+            ['title'=>'Total Eggs','progress'=>number_format($eggPercentage,2),'extra'=>"Goal: {$totalEggCollection} eggs"],
+            ['title'=>'Hatchable Eggs','progress'=>number_format($hatchablePercentage,2),'extra'=>"Goal: {$totalHatchableEggs} eggs"],
+            ['title'=>'Commercial','progress'=>number_format($commercialPercentage,2),'extra'=>"Goal: {$totalCommercialEggs} eggs"],
+        ];
+
+        // --- Circle bars
+        $denominator = $totalChicks > 0 ? $totalChicks : 1;
+        $mortalityPercentage = (($totalMortalityMale + $totalMortalityFemale)/$denominator)*100;
+        $male = ($maleChicks/$denominator)*100;
+        $female = ($femaleChicks/$denominator)*100;
+        $cullingTotal = ($totalCulling/$denominator)*100;
+
+        $circleBars = [
+            ['title'=>'Mortality','value'=>number_format($mortalityPercentage,2),'type'=>'rounded'],
+            ['title'=>'Culling','value'=>number_format($cullingTotal,2),'type'=>'rounded'],
+            ['title'=>'Male Chicks','value'=>number_format($male,2),'type'=>'rounded'],
+            ['title'=>'Female Chicks','value'=>number_format($female,2),'type'=>'straight'],
+            ['title'=>'Excess','value'=>rand(1,50),'type'=>'straight'],
+            ['title'=>'Worker','value'=>rand(50,100),'type'=>'straight'],
+        ];
+
+        // --- Bird stage
+        $broodingPercentage = ($broodingChicks/$denominator)*100;
+        $growerPercentage   = ($growingChicks/$denominator)*100;
+        $layingPercentage   = ($layingChicks/$denominator)*100;
+
         $birdStage = [
-            'bordingTotal' => $broodingPercentage,
-            'growingTotal' => $growerPercentage,
+            'bordingTotal'    => $broodingPercentage,
+            'growingTotal'    => $growerPercentage,
             'productionTotal' => $layingPercentage,
         ];
 
+        // --- Return Inertia
         return Inertia::render('Dashboard', [
-            'cards' => $cards,
-            'progressBars' => $progressBars,
-            'circleBars' => $circleBars,
-            'birdStage' => $birdStage,
+            'cards'         => $cards,
+            'progressBars'  => $progressBars,
+            'circleBars'    => $circleBars,
+            'birdStage'     => $birdStage,
             'filterOptions' => $filterOptions,
-            'filters' => $filters,
+            'filters'       => $filters,
         ]);
     }
 }

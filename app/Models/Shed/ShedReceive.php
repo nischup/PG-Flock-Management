@@ -34,16 +34,16 @@ class ShedReceive extends Model
     ];
 
 
-        public function flock() {
-            return $this->belongsTo(Flock::class);
-        }
-        public function shed() {
-            return $this->belongsTo(Shed::class);
-        }
-        public function company() {
-            return $this->belongsTo(Company::class);
-        }
-        public function firmReceive() {
-            return $this->belongsTo(PsFirmReceive::class, 'receive_id');
-        }
+    public function flock() {
+        return $this->belongsTo(Flock::class);
+    }
+    public function shed() {
+        return $this->belongsTo(Shed::class);
+    }
+    public function company() {
+        return $this->belongsTo(Company::class);
+    }
+    public function firmReceive() {
+        return $this->belongsTo(PsFirmReceive::class, 'receive_id');
+    }
 }

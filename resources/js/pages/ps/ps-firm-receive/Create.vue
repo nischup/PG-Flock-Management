@@ -33,6 +33,7 @@ const props = defineProps<{
   psReceives: Array<any>
   flocks: Array<any>
   breeds: Object
+  companies: Array<any>
 }>()
 
 function getBreedNames(ids) {
@@ -173,7 +174,7 @@ const displayInfo = reactive({
   female_chicks_box: 0,
   male_chicks_box:0,
   female_box_qty:0,
-  receiving_company_id: null,
+  
 })
 
 // Toggle PS info
@@ -198,7 +199,7 @@ function toggleInfo() {
     messageType.value = 'error'
     labInput.value = false
   }
-
+  form.receiving_company_id= selected.company_id;
   Object.assign(displayInfo, {
     shipment_type: shipmentTypes[selected.shipment_type_id] || '',
     pi_no: selected.pi_no || '',
@@ -219,7 +220,7 @@ function toggleInfo() {
     female_chicks: selected.female_chicks || 0,
     male_chicks: selected.male_chicks || 0,
     total_chicks: selected.total_chicks_qty || 0,
-    receiving_company_id: selected.company_id,
+    
   })
 
   showInfo.value = true
@@ -611,8 +612,13 @@ function addNewFlock() {
             disabled
           >
           <option value="0">Select Company</option>
-          <option value="1">PBL</option>
-          <option value="2">PCL</option>
+          <option 
+            v-for="company in companies" 
+            :key="company.id" 
+            :value="company.id"
+          >
+            {{ company.name }}
+          </option>
         </select>
       </div>
 
