@@ -11,8 +11,9 @@ use App\Models\Master\Batch;
 use App\Models\DailyOperation\DailyMortality;
 use App\Models\DailyOperation\DailyCulling;
 use App\Models\DailyOperation\DailyEggCollection;
-use App\Models\Production\EggClassification;
 use App\Models\DailyOperation\DailyFeed;
+use App\Models\DailyOperation\DailyVaccine;
+use App\Models\Production\EggClassification;
 use App\Models\Ps\PsLabTest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,7 +22,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // --- Fetch filter options from DB
+        // --- Filter options for dropdowns
         $filterOptions = [
             'company' => Company::pluck('name', 'id')->toArray(),
             'project' => Project::pluck('name', 'id')->toArray(),
@@ -31,7 +32,7 @@ class DashboardController extends Controller
             'date'    => ['Last 7 Days', 'Last 1 Month', 'Custom'],
         ];
 
-        // --- Selected filters (default to null)
+        // --- Selected filters
         $filters = array_merge([
             'company'   => null,
             'project'   => null,
@@ -51,50 +52,41 @@ class DashboardController extends Controller
             ->when($filters['project'], fn($q) => $q->where('project_id', $filters['project']))
             ->when($filters['flock'], fn($q) => $q->where('flock_id', $filters['flock']))
             ->when($filters['shed'], fn($q) => $q->where('shed_id', $filters['shed']))
-            ->when($filters['batch'], fn($q) => $q->where('id', $filters['batch']));
+            ->when($filters['batch'], fn($q) => $q->where('batch_no', $filters['batch']));
 
-        // --- Precompute filtered batch IDs
+        // --- Get filtered batch IDs
         $filteredBatchIds = $batchQuery->pluck('id');
 
-        // --- Chicks and stages filtered properly
-        $broodingChicks = BatchAssign::whereIn('id', $filteredBatchIds)
-            ->where('stage', 1)
-            ->sum('batch_total_qty');
-
-        $growingChicks = BatchAssign::whereIn('id', $filteredBatchIds)
-            ->where('stage', 2)
-            ->sum('batch_total_qty');
-
-        $layingChicks = BatchAssign::whereIn('id', $filteredBatchIds)
-            ->where('stage', 3)
-            ->sum('batch_total_qty');
+        // --- Bird stages & totals
+        $broodingChicks = BatchAssign::whereIn('id', $filteredBatchIds)->where('stage', 1)->sum('batch_total_qty');
+        $growingChicks  = BatchAssign::whereIn('id', $filteredBatchIds)->where('stage', 2)->sum('batch_total_qty');
+        $layingChicks   = BatchAssign::whereIn('id', $filteredBatchIds)->where('stage', 3)->sum('batch_total_qty');
 
         $totalChicks = $broodingChicks + $growingChicks + $layingChicks;
-        $maleChicks = BatchAssign::whereIn('id', $filteredBatchIds)->sum('batch_male_qty');
-        $femaleChicks = BatchAssign::whereIn('id', $filteredBatchIds)->sum('batch_female_qty');
+        $maleChicks  = BatchAssign::whereIn('id', $filteredBatchIds)->sum('batch_male_qty');
+        $femaleChicks= BatchAssign::whereIn('id', $filteredBatchIds)->sum('batch_female_qty');
 
-        // --- Calculate percentages
         $denominator = $totalChicks > 0 ? $totalChicks : 1;
 
-        // --- Daily Operations date filter
+        // --- Daily Operations date + batch filter closure
         $dailyOpsQuery = function($q) use ($filteredBatchIds, $filters) {
             $q->whereIn('batchassign_id', $filteredBatchIds);
 
             if ($filters['date'] === 'Last 7 Days') {
-                $q->where('created_at', '>=', now()->subDays(7));
+                $q->where('operation_date', '>=', now()->subDays(7));
             } elseif ($filters['date'] === 'Last 1 Month') {
-                $q->where('created_at', '>=', now()->subMonth());
+                $q->where('operation_date', '>=', now()->subMonth());
             } elseif ($filters['date'] === 'Custom' && $filters['date_from'] && $filters['date_to']) {
-                $q->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+                $q->whereBetween('operation_date', [$filters['date_from'], $filters['date_to']]);
             }
         };
 
         // --- Mortality
-        $totalMortalityMale = DailyMortality::whereHas('dailyOperation', $dailyOpsQuery)->sum('male_qty');
+        $totalMortalityMale   = DailyMortality::whereHas('dailyOperation', $dailyOpsQuery)->sum('male_qty');
         $totalMortalityFemale = DailyMortality::whereHas('dailyOperation', $dailyOpsQuery)->sum('female_qty');
 
         // --- Culling
-        $totalCullingMale = DailyCulling::whereHas('dailyOperation', $dailyOpsQuery)->sum('male_qty');
+        $totalCullingMale   = DailyCulling::whereHas('dailyOperation', $dailyOpsQuery)->sum('male_qty');
         $totalCullingFemale = DailyCulling::whereHas('dailyOperation', $dailyOpsQuery)->sum('female_qty');
         $totalCulling = $totalCullingMale + $totalCullingFemale;
 
@@ -103,11 +95,15 @@ class DashboardController extends Controller
 
         $currentChicks = $totalChicks - $totalMortalityMale - $totalMortalityFemale;
 
+        // --- Feed consumption
+        $totalFeed = DailyFeed::whereHas('dailyOperation', $dailyOpsQuery)->sum('quantity');
+        $totalVaccine = DailyVaccine::whereHas('dailyOperation', $dailyOpsQuery)->count();
+
         // --- Egg classification
         $totalHatchableEggs = EggClassification::whereIn('batchassign_id', $filteredBatchIds)->sum('hatching_eggs');
-        $totalCommercialEggs = EggClassification::whereIn('batchassign_id', $filteredBatchIds)->sum('commercial_eggs');
+        $totalCommercialEggs= EggClassification::whereIn('batchassign_id', $filteredBatchIds)->sum('commercial_eggs');
 
-        // --- PsLabTest (filter only by date)
+        // --- PsLabTest (filter by date)
         $totalPsLab = PsLabTest::whereHas('psReceive', function($q) use ($filters) {
             if ($filters['date'] === 'Last 7 Days') {
                 $q->where('created_at', '>=', now()->subDays(7));
@@ -132,11 +128,8 @@ class DashboardController extends Controller
             ['title'=>'Total Egg Collection','value'=>$totalEggCollection,'icon'=>'Egg'],
             ['title'=>'Total Hatching Eggs','value'=>$totalHatchableEggs,'icon'=>'PackageSearch'],
             ['title'=>'Total Commercial Eggs','value'=>$totalCommercialEggs,'icon'=>'PackageSearch'],
-            ['title'=>'Total Feed Consumption',
-                'value'=>DailyFeed::whereHas('dailyOperation', $dailyOpsQuery)->sum('quantity'),
-                'icon'=>'Factory'
-            ],
-            ['title'=>'Total Vaccination','value'=>rand(20,100),'icon'=>'Syringe'],
+            ['title'=>'Total Feed Consumption','value'=>$totalFeed,'icon'=>'Factory'],
+            ['title'=>'Total Vaccination','value'=>$totalVaccine,'icon'=>'Syringe'],
             ['title'=>'Sent for Lab From PS','value'=>$totalPsLab,'icon'=>'FlaskConical'],
             ['title'=>'Sent for Lab From Batch','value'=>0,'icon'=>'FlaskConical'],
         ];
@@ -153,7 +146,6 @@ class DashboardController extends Controller
         ];
 
         // --- Circle bars
-        $denominator = $totalChicks > 0 ? $totalChicks : 1;
         $mortalityPercentage = (($totalMortalityMale + $totalMortalityFemale)/$denominator)*100;
         $male = ($maleChicks/$denominator)*100;
         $female = ($femaleChicks/$denominator)*100;
@@ -168,15 +160,11 @@ class DashboardController extends Controller
             ['title'=>'Worker','value'=>rand(50,100),'type'=>'straight'],
         ];
 
-        // --- Bird stage
-        $broodingPercentage = ($broodingChicks/$denominator)*100;
-        $growerPercentage   = ($growingChicks/$denominator)*100;
-        $layingPercentage   = ($layingChicks/$denominator)*100;
-
+        // --- Bird stage percentages
         $birdStage = [
-            'bordingTotal'    => $broodingPercentage,
-            'growingTotal'    => $growerPercentage,
-            'productionTotal' => $layingPercentage,
+            'bordingTotal'    => ($broodingChicks/$denominator)*100,
+            'growingTotal'    => ($growingChicks/$denominator)*100,
+            'productionTotal' => ($layingChicks/$denominator)*100,
         ];
 
         // --- Return Inertia
