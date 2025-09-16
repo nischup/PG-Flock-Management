@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Shed;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreShedReceiveRequest;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
@@ -20,7 +21,7 @@ class ShedReceiveController extends Controller
     public function index(Request $request)
     {
         // Fetch shed receives with comprehensive filtering
-        $shedReceives = ShedReceive::with(['flock', 'shed', 'company'])
+        $shedReceives = ShedReceive::with(['flock:id,name,code', 'shed:id,name', 'company:id,name'])
             ->where('receive_type', 'box')
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -57,13 +58,13 @@ class ShedReceiveController extends Controller
                 'remarks' => $item->remarks,
                 'created_at' => $item->created_at,
                 // Add relationship data for frontend dropdowns
-                'flock' => $item->flock ? ['id' => $item->flock->id, 'name' => $item->flock->name] : null,
+                'flock' => $item->flock ? ['id' => $item->flock->id, 'name' => $item->flock->name, 'code' => $item->flock->code] : null,
                 'shed' => $item->shed ? ['id' => $item->shed->id, 'name' => $item->shed->name] : null,
                 'company' => $item->company ? ['id' => $item->company->id, 'name' => $item->company->name] : null,
             ]),
             'filters' => $request->only(['search', 'per_page', 'company_id', 'flock_id', 'shed_id', 'date_from', 'date_to']),
             'companies' => Company::select('id', 'name')->orderBy('name')->get(),
-            'flocks' => Flock::select('id', 'name')->orderBy('name')->get(),
+            'flocks' => Flock::select('id', 'name', 'code')->orderBy('name')->get(),
             'sheds' => Shed::select('id', 'name')->orderBy('name')->get(),
         ]);
     }
@@ -110,7 +111,7 @@ class ShedReceiveController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreShedReceiveRequest $request)
     {
 
         $firmReceive = PsFirmReceive::findOrFail($request->transaction_id);

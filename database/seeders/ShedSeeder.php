@@ -19,10 +19,6 @@ class ShedSeeder extends Seeder
             ['name' => 'Shed-4', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Shed-5', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Shed-6', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Shed-7', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Shed-8', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Shed-9', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Shed-10', 'status' => 1, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }
