@@ -185,6 +185,7 @@ class BatchAssignController extends Controller
                 'flock_no' => $shedReceive->flock_no ?? 0,
                 'flock_id' => $shedReceive->flock_id ?? null,
                 'company_id' => $shedReceive->company_id ?? null,
+                'project_id'=> $shedReceive->project_id,
                 'shed_id' => $shedReceive->shed_id ?? null,
                 'level' => $batch['level'] ?? null,
                 'batch_no' => $batch['batch_no'] ?? 1,

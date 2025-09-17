@@ -286,6 +286,7 @@ class DailyOperationController extends Controller
             'flock_no' => $batch->flock_no,
             'flock_id' => $batch->flock_id,
             'company_id'=>$batch->company_id,
+            'project_id'=>$batch->project_id,
             'shed_id'=>$batch->shed_id,
             'batch_no'=>$batch->batch_no,
             'stage'=>$batch->stage,

@@ -109,6 +109,7 @@ class BirdTransferController extends Controller
                 'transaction_no' => $batch->transaction_no,
                 'flock_no' => $batch->flock_no,
                 'flock_id' => $batch->flock_id,
+                'project_id' => $batch->project_id,
                 'from_company_id' => $request->from_company_id,
                 'to_company_id' => $request->to_company_id,
                 'from_shed_id' => $request->from_shed_id,

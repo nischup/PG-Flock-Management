@@ -146,6 +146,7 @@ class PsFirmReceiveController extends Controller
             'source_type' => 'psreceive',
             'source_id' => $request->ps_receive_id,
             'flock_id' => $request->flock_id,
+            'project_id' => $request->receiving_project_id,
             'flock_no' => $flockInfo->name,
             'receiving_company_id' => $request->receiving_company_id,
             'firm_female_qty' => $request->firm_female_box_qty,

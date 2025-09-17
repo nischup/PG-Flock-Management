@@ -120,6 +120,7 @@ class ShedReceiveController extends Controller
             'receive_id' => $request->transaction_id,   // firm receive reference
             'job_no' => $firmReceive->job_no,
             'company_id' => $firmReceive->receiving_company_id,
+            'project_id'=> $firmReceive->project_id,
             'transaction_no' => $firmReceive->transaction_no,
             'flock_id' => $firmReceive->flock_id,
             'flock_no' => $firmReceive->flock_no,
