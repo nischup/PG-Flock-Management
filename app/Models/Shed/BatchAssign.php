@@ -7,6 +7,7 @@ use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
 use App\Models\Master\Batch;
+use App\Models\Master\Project;
 use App\Models\Shed\ShedReceive;
 use Illuminate\Database\Eloquent\Builder;
 class BatchAssign extends Model
@@ -67,6 +68,11 @@ class BatchAssign extends Model
     public function batch()
     {
          return $this->belongsTo(Batch::class, 'batch_no', 'id');
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
     }
 
 

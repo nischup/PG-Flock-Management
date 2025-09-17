@@ -94,9 +94,7 @@
               <div v-else-if="column.type === 'date'" class="text-sm text-gray-900">
                 {{ formatDate(row[column.key]) }}
               </div>
-              <div v-else-if="column.type === 'currency'" class="text-sm text-gray-900">
-                {{ formatCurrency(row[column.key]) }}
-              </div>
+            
               <div v-else class="text-sm text-gray-900">
                 {{ row[column.key] }}
               </div>
@@ -324,10 +322,4 @@ const formatDate = (date: string | Date) => {
   return new Date(date).toLocaleDateString()
 }
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount)
-}
 </script>

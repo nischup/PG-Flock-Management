@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Shed\BatchAssign;
+use App\Models\DailyOperation\DailyOperation;
 use App\Models\DailyOperation\DailyEggCollection;
 use App\Models\DailyOperation\DailyMortality;
 use App\Models\DailyOperation\DailyCulling;
@@ -10,6 +11,7 @@ use App\Models\DailyOperation\DailyFeed;
 use App\Models\DailyOperation\DailyVaccine;
 use App\Models\Production\EggClassification;
 use App\Models\Ps\PsLabTest;
+use App\Models\Master\Flock;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -87,13 +89,23 @@ class DashboardRealtimeService
         // Get bird stage distribution
         $birdStages = $this->getBirdStageDistribution($batchAssigns);
 
+        // Get active flocks count
+        $activeFlocksCount = $this->getActiveFlocksCount($filters);
+
         return [
             'cards' => [
+                [
+                    'title' => 'Active Flocks',
+                    'value' => number_format($activeFlocksCount),
+                    'icon' => 'Users',
+                    'extra' => 'Total active flocks',
+                    'trend' => $this->calculateTrend('active_flocks', $activeFlocksCount)
+                ],
                 [
                     'title' => 'Total Birds',
                     'value' => number_format($totalBirds),
                     'icon' => 'Drumstick',
-                    'extra' => 'Active Flocks',
+                    'extra' => 'All batches',
                     'trend' => $this->calculateTrend('total_birds', $totalBirds)
                 ],
                 [
@@ -356,6 +368,127 @@ class DashboardRealtimeService
     }
 
     /**
+     * Get batch performance data for table
+     */
+    public function getBatchPerformanceData(array $filters = []): array
+    {
+        try {
+            // Get base query with filters
+            $batchQuery = BatchAssign::where('status', 1);
+            
+            // Apply filters
+            if (!empty($filters['company'])) {
+                $batchQuery->where('company_id', $filters['company']);
+            }
+            if (!empty($filters['project'])) {
+                $batchQuery->where('project_id', $filters['project']);
+            }
+            if (!empty($filters['flock'])) {
+                $batchQuery->where('flock_id', $filters['flock']);
+            }
+            if (!empty($filters['shed'])) {
+                $batchQuery->where('shed_id', $filters['shed']);
+            }
+            if (!empty($filters['batch'])) {
+                $batchQuery->where('batch_no', $filters['batch']);
+            }
+
+            // Get batch assignments with relationships
+                $batchAssigns = $batchQuery->with(['flock', 'shed', 'company', 'batch', 'project'])
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+            // Transform data for table
+            $tableData = $batchAssigns->map(function ($batch) {
+                // Calculate mortality percentage
+                $mortalityPercentage = $batch->batch_total_qty > 0 
+                    ? round(($batch->batch_total_mortality / $batch->batch_total_qty) * 100, 2)
+                    : 0;
+
+                // Get recent egg collection data for this batch through daily operations
+                $recentEggs = DailyEggCollection::whereHas('dailyOperation', function($query) use ($batch) {
+                        $query->where('batchassign_id', $batch->id)
+                              ->whereDate('operation_date', today());
+                    })
+                    ->sum('quantity');
+
+                // Determine status based on stage and data
+                $status = $this->determineBatchStatus($batch);
+
+                return [
+                    'id' => $batch->id,
+                    'company' => $batch->company?->name ?? 'N/A',
+                    'project' => $batch->project?->name ?? 'N/A',
+                    'batch' => $batch->batch?->name ?? $batch->batch_no,
+                    'batch_name' => $batch->batch?->name ?? $batch->batch_no,
+                    'batch_no' => $batch->batch_no,
+                    'flock' => $batch->flock?->code ?? 'N/A',
+                    'flock_name' => $batch->flock?->name ?? 'N/A',
+                    'flock_code' => $batch->flock?->code ?? 'N/A',
+                    'shed' => $batch->shed?->name ?? 'N/A',
+                    'eggs' => $recentEggs,
+                    'mortality' => $mortalityPercentage,
+                    'mortality_count' => $batch->batch_total_mortality,
+                    'total_birds' => $batch->batch_total_qty,
+                    'male_birds' => $batch->batch_male_qty,
+                    'female_birds' => $batch->batch_female_qty,
+                    'stage' => $this->getStageName($batch->stage),
+                    'stage_number' => $batch->stage,
+                    'level' => $batch->level,
+                    'percentage' => $batch->percentage ?? 0,
+                    'status' => $status,
+                    'date' => $batch->created_at->format('Y-m-d'),
+                    'created_at' => $batch->created_at,
+                    'updated_at' => $batch->updated_at
+                ];
+            });
+
+            return $tableData->toArray();
+
+        } catch (\Exception $e) {
+            Log::error('Batch performance data error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Determine batch status based on stage and performance
+     */
+    private function determineBatchStatus($batch): string
+    {
+        // If stage is 1 (brooding), it's active
+        if ($batch->stage == 1) {
+            return 'Active';
+        }
+        
+        // If stage is 2 (growing), it's active
+        if ($batch->stage == 2) {
+            return 'Active';
+        }
+        
+        // If stage is 3 (production), it's active
+        if ($batch->stage == 3) {
+            return 'Active';
+        }
+        
+        // If no stage or stage 0, it's pending
+        return 'Pending';
+    }
+
+    /**
+     * Get stage name from stage number
+     */
+    private function getStageName($stage): string
+    {
+        return match($stage) {
+            1 => 'Brooding',
+            2 => 'Growing',
+            3 => 'Production',
+            default => 'Unknown'
+        };
+    }
+
+    /**
      * Get empty dashboard data
      */
     private function getEmptyDashboardData(): array
@@ -397,5 +530,52 @@ class DashboardRealtimeService
             'lastUpdated' => now()->format('Y-m-d H:i:s'),
             'timestamp' => now()->timestamp
         ];
+    }
+
+    /**
+     * Get count of active flocks based on filters
+     */
+    private function getActiveFlocksCount(array $filters = []): int
+    {
+        try {
+            $query = Flock::where('status', 1);
+
+            // If filters are applied, only count flocks that have active batch assignments
+            if (!empty($filters['company']) || !empty($filters['project']) || 
+                !empty($filters['flock']) || !empty($filters['shed']) || 
+                !empty($filters['batch'])) {
+                
+                $batchQuery = BatchAssign::where('status', 1);
+                
+                if (!empty($filters['company'])) {
+                    $batchQuery->where('company_id', $filters['company']);
+                }
+                if (!empty($filters['project'])) {
+                    $batchQuery->where('project_id', $filters['project']);
+                }
+                if (!empty($filters['flock'])) {
+                    $batchQuery->where('flock_id', $filters['flock']);
+                }
+                if (!empty($filters['shed'])) {
+                    $batchQuery->where('shed_id', $filters['shed']);
+                }
+                if (!empty($filters['batch'])) {
+                    $batchQuery->where('batch_no', $filters['batch']);
+                }
+
+                // Get unique flock IDs from active batch assignments
+                $activeFlockIds = $batchQuery->distinct()->pluck('flock_id');
+                
+                // Count active flocks that have active batch assignments
+                return $query->whereIn('id', $activeFlockIds)->count();
+            }
+
+            // If no filters, count all active flocks
+            return $query->count();
+
+        } catch (\Exception $e) {
+            Log::error('Error getting active flocks count: ' . $e->getMessage());
+            return 0;
+        }
     }
 }

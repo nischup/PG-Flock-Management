@@ -125,22 +125,20 @@ const chartData = ref({
   ]
 })
 
-// Sample data for interactive table
-const tableData = ref([
-  { id: 1, batch: 'B001', flock: 'Flock A', eggs: 1200, mortality: 5, status: 'Active', date: '2024-01-15' },
-  { id: 2, batch: 'B002', flock: 'Flock B', eggs: 1350, mortality: 3, status: 'Active', date: '2024-01-16' },
-  { id: 3, batch: 'B003', flock: 'Flock C', eggs: 1100, mortality: 8, status: 'Inactive', date: '2024-01-17' },
-  { id: 4, batch: 'B004', flock: 'Flock D', eggs: 1450, mortality: 2, status: 'Active', date: '2024-01-18' },
-  { id: 5, batch: 'B005', flock: 'Flock E', eggs: 1600, mortality: 4, status: 'Pending', date: '2024-01-19' }
-])
-
+// Batch performance table data
+const tableData = ref([])
 const tableColumns = ref([
-  { key: 'batch', label: 'Batch', type: 'text' },
-  { key: 'flock', label: 'Flock', type: 'text' },
-  { key: 'eggs', label: 'Eggs', type: 'currency' },
-  { key: 'mortality', label: 'Mortality', type: 'progress' },
+  { key: 'company', label: 'Company', type: 'text' },
+  { key: 'project', label: 'Project', type: 'text' },
+  { key: 'batch', label: 'Batch Name', type: 'text' },
+  { key: 'flock', label: 'Flock Code', type: 'text' },
+  { key: 'shed', label: 'Shed', type: 'text' },
+  { key: 'stage', label: 'Stage', type: 'badge' },
+  { key: 'total_birds', label: 'Total Birds', type: 'number' },
+  { key: 'eggs', label: 'Today\'s Eggs', type: 'number' },
+  { key: 'mortality', label: 'Mortality %', type: 'progress' },
   { key: 'status', label: 'Status', type: 'badge' },
-  { key: 'date', label: 'Date', type: 'date' }
+  { key: 'date', label: 'Created', type: 'date' }
 ])
 
 const tableActions = ref([
@@ -164,9 +162,25 @@ const refreshData = async () => {
   isRefreshing.value = true
   try {
     await refreshRealtimeData(filters.value)
+    await fetchBatchPerformanceData()
     console.log('Real-time data refreshed')
   } finally {
     isRefreshing.value = false
+  }
+}
+
+const fetchBatchPerformanceData = async () => {
+  try {
+    const response = await fetch(`/api/dashboard/batch-performance?${new URLSearchParams(filters.value)}`)
+    const result = await response.json()
+    
+    if (result.success) {
+      tableData.value = result.data
+    } else {
+      console.error('Failed to fetch batch performance data:', result.message)
+    }
+  } catch (error) {
+    console.error('Error fetching batch performance data:', error)
   }
 }
 
@@ -270,12 +284,16 @@ watch(filters, (newFilters) => {
 }, { deep: true })
 
 // Auto-refresh data every 5 minutes
-onMounted(() => {
+onMounted(async () => {
   // Check mobile on mount
   checkMobile()
   
   // Add resize listener for mobile detection
   window.addEventListener('resize', checkMobile)
+  
+  // Initial data fetch
+  await refreshData()
+  await fetchBatchPerformanceData()
   
   const interval = setInterval(() => {
     if (!isRefreshing.value) {
@@ -627,7 +645,6 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
           filter-key="status"
           :filter-options="[
             { value: 'Active', label: 'Active' },
-            { value: 'Inactive', label: 'Inactive' },
             { value: 'Pending', label: 'Pending' }
           ]"
         />

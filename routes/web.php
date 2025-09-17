@@ -160,4 +160,5 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/dashboard/realtime', [DashboardRealtimeController::class, 'getRealtimeData'])->name('dashboard.realtime');
     Route::post('/api/dashboard/trigger-update', [DashboardRealtimeController::class, 'triggerUpdate'])->name('dashboard.trigger-update');
     Route::get('/api/dashboard/poll', [DashboardRealtimeController::class, 'pollData'])->name('dashboard.poll');
+    Route::get('/api/dashboard/batch-performance', [DashboardRealtimeController::class, 'getBatchPerformanceData'])->name('dashboard.batch-performance');
 });
