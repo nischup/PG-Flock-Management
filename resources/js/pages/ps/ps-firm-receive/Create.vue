@@ -34,6 +34,7 @@ const props = defineProps<{
   flocks: Array<any>
   breeds: Object
   companies: Array<any>
+  projects: Array<any> 
 }>()
 
 function getBreedNames(ids) {
@@ -55,6 +56,7 @@ const form = useForm({
   flock_id: 0,
   job_no: '',
   receiving_company_id: 0,
+  receiving_project_id:0,
   firm_female_box_qty: 0,
   firm_male_box_qty: 0,
   firm_total_box_qty: 0,
@@ -238,6 +240,13 @@ function toggleInfo() {
   showInfo.value = true
 }
 
+const filteredProjects = computed(() => {
+  if (!form.receiving_company_id) return []
+  return props.projects.filter(
+    (p) => p.company_id === form.receiving_company_id
+  )
+})
+
 // Flock modal state
 const showFlockModal = ref(false)
 const flockFormError = ref('')
@@ -385,7 +394,6 @@ function addNewFlock() {
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          
           <!-- PS Receive Dropdown -->
           <div class="space-y-2">
             <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -669,6 +677,27 @@ function addNewFlock() {
             :value="company.id"
           >
             {{ company.name }}
+          </option>
+        </select>
+      </div>
+
+      <div class="mb-4 space-y-2">
+          <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+            <Building2 class="h-4 w-4" />
+            Receiving Project
+          </Label>
+          <select 
+            v-model="form.receiving_project_id" 
+            class="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-600 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+            
+          >
+          <option value="0">Select Project</option>
+          <option 
+            v-for="project in filteredProjects" 
+            :key="project.id" 
+            :value="project.id"
+          >
+            {{ project.name }}
           </option>
         </select>
       </div>

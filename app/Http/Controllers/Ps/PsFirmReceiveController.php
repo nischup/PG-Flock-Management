@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\BreedType;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
+use App\Models\Master\Project;
 use App\Models\Ps\PsFirmReceive;
 use App\Models\Ps\PsReceive;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -119,12 +120,14 @@ class PsFirmReceiveController extends Controller
         $flocks = Flock::select('id', 'name', 'status')->get();
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
+        $projects = Project::select('id', 'name', 'company_id')->get();    
 
         return Inertia::render('ps/ps-firm-receive/Create', [
             'psReceives' => $psReceives,
             'companies' => $companies,
             'flocks' => $flocks,
             'breeds' => $breeds,
+            'projects' => $projects, // pass all projects
         ]);
     }
 
