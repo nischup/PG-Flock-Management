@@ -79,8 +79,6 @@ class PsFirmReceiveController extends Controller
 
         $breeds = BreedType::pluck('name', 'id')->toArray();
 
-
-
         // Fetch all PS Receives (you may filter by status if needed)
         $psReceives = PsReceive::with('chickCounts', 'labTransfers')
             ->get()
@@ -116,6 +114,9 @@ class PsFirmReceiveController extends Controller
                     'labTest' => $ps->labTransfers, // important
                 ];
             });
+
+
+
 
 
         $flocks = Flock::select('id', 'name', 'status')->get();
@@ -512,10 +513,20 @@ class PsFirmReceiveController extends Controller
         ])->findOrFail($id);
 
         // Get breed type from psReceive
-        $breedName = $item->psReceive?->breed_type; // string or JSON
-        if (is_array($breedName)) {
-            $breedName = implode(', ', $breedName); // If multiple breeds stored as array
-        }
+
+            
+        $breeds = BreedType::pluck('name', 'id')->toArray(); // [1 => 'Rhode Island', 2 => 'Leghorn', ...]
+        $breedtype = $item->psReceive?->breed_type ?? [];
+        // Map IDs to names
+        $breedAll = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
+
+        // Remove nulls (optional)
+        $breedNames = array_filter($breedAll);
+
+        // Convert to comma-separated string if needed
+        $breedName = implode(', ', $breedNames);
+        
+        
 
         $psChickCounts = $item->psReceive?->chickCounts;
 
