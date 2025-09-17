@@ -8,6 +8,7 @@ class MovementAdjustment extends Model
 {
    protected $fillable = [
         'flock_id',    // FK to the flock
+        'flock_no',    // FK to the flock
         'stage',       // Stage of adjustment (1-5)
         'stage_id',    // ID of the related stage record
         'type',        // Adjustment type (1=Mortality, 2=Excess, 3=Shortage)

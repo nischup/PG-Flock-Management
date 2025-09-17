@@ -10,6 +10,7 @@ use App\Models\Master\Flock;
 use App\Models\Master\Project;
 use App\Models\Ps\PsFirmReceive;
 use App\Models\Ps\PsReceive;
+use App\Models\MovementAdjustment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -78,8 +79,6 @@ class PsFirmReceiveController extends Controller
 
         $breeds = BreedType::pluck('name', 'id')->toArray();
 
-
-
         // Fetch all PS Receives (you may filter by status if needed)
         $psReceives = PsReceive::with('chickCounts', 'labTransfers')
             ->get()
@@ -115,6 +114,9 @@ class PsFirmReceiveController extends Controller
                     'labTest' => $ps->labTransfers, // important
                 ];
             });
+
+
+
 
 
         $flocks = Flock::select('id', 'name', 'status')->get();
@@ -158,6 +160,58 @@ class PsFirmReceiveController extends Controller
         ]);
 
         $insertId = $firmReceive->id;
+
+        if ($request->firm_sortage_box_qty > 0) {
+            MovementAdjustment::create([
+                'flock_id'   =>  $flockInfo->id,
+                'flock_no' =>    $flockInfo->name, // fetch from batch or pass from request
+                'stage'      =>  2,                  // 5 = Bird Transfer stage
+                'stage_id'   =>  $insertId,
+                'type'       =>  3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty'   =>  $request->firm_sortage_male_box ?? 0,
+                'female_qty' =>  $request->firm_sortage_female_box ?? 0,
+                'total_qty'  =>  $request->firm_sortage_box_qty ?? 0,
+                'date'       =>  date('Y-m-d'),
+                'remarks'    => "Sortage when firm receive",
+            ]);
+        }
+
+        if ($request->firm_excess_box_qty > 0) {
+            MovementAdjustment::create([
+                'flock_id'   =>  $flockInfo->id,
+                'flock_no'   =>  $flockInfo->name, // fetch from batch or pass from request
+                'stage'      =>  2,                  // 5 = Bird Transfer stage
+                'stage_id'   =>  $insertId,
+                'type'       =>  2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty'   =>  $request->firm_excess_male_box ?? 0,
+                'female_qty' =>  $request->firm_excess_female_box ?? 0,
+                'total_qty'  =>  $request->firm_excess_box_qty ?? 0,
+                'date'       => date('Y-m-d'),
+                'remarks'    => "Excess when firm receive",
+            ]);
+        }
+
+        if ($request->firm_total_mortality > 0) {
+            MovementAdjustment::create([
+                'flock_id'   =>  $flockInfo->id,
+                'flock_no' =>    $flockInfo->name, // fetch from batch or pass from request
+                'stage'      =>  2,                  // 5 = Bird Transfer stage
+                'stage_id'   =>  $insertId,
+                'type'       =>  1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty'   =>  $request->firm_mortality_male ?? 0,
+                'female_qty' =>  $request->firm_mortality_female ?? 0,
+                'total_qty'  =>  $request->firm_total_mortality ?? 0,
+                'date'       => date('Y-m-d'),
+                'remarks'    => "Mortality when firm receive",
+            ]);
+        }
+
+
+
+
+
+
+
 
         $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
 
@@ -459,10 +513,20 @@ class PsFirmReceiveController extends Controller
         ])->findOrFail($id);
 
         // Get breed type from psReceive
-        $breedName = $item->psReceive?->breed_type; // string or JSON
-        if (is_array($breedName)) {
-            $breedName = implode(', ', $breedName); // If multiple breeds stored as array
-        }
+
+            
+        $breeds = BreedType::pluck('name', 'id')->toArray(); // [1 => 'Rhode Island', 2 => 'Leghorn', ...]
+        $breedtype = $item->psReceive?->breed_type ?? [];
+        // Map IDs to names
+        $breedAll = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
+
+        // Remove nulls (optional)
+        $breedNames = array_filter($breedAll);
+
+        // Convert to comma-separated string if needed
+        $breedName = implode(', ', $breedNames);
+        
+        
 
         $psChickCounts = $item->psReceive?->chickCounts;
 

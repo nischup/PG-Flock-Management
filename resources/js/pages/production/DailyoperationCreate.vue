@@ -150,6 +150,8 @@ watch(() => form.flock_id, (id) => {
     return
   }
   const data = (shedInfo as any)[id]
+
+  console.log(data);
   if (data) {
     shedQty.value = { opening: data.opening, current: data.current }
     counts.value = (tabCountsData as any)[id]
