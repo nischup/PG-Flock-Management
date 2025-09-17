@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Production;
 
 use App\Http\Controllers\Controller;
 use App\Models\Master\EggType;
+use App\Models\Master\Unit;
 use App\Models\Production\EggClassification;
 use App\Models\Production\EggClassificationRejected;
 use App\Models\Production\EggClassificationTechnical;
@@ -239,5 +240,153 @@ class EggClassificationController extends Controller
             'total_egg' => $totalEggs,
         ]);
     
+    }
+
+    /**
+     * Get batch data for egg classification statistics
+     */
+    public function getBatchData($batchId)
+    {
+        $batch = BatchAssign::with(['flock', 'shed', 'batch', 'shedReceive'])
+            ->find($batchId);
+
+        if (!$batch) {
+            return response()->json(['error' => 'Batch not found'], 404);
+        }
+
+        // Calculate age from shed receive date
+        $age = '0 weeks 0 days';
+        if ($batch->shedReceive && $batch->shedReceive->created_at) {
+            $startDate = $batch->shedReceive->created_at;
+            $days = $startDate->diffInDays(now());
+            $weeks = floor($days / 7);
+            $remainingDays = $days % 7;
+            $age = "{$weeks} weeks {$remainingDays} days";
+        }
+
+        // Get latest daily operation data for this batch
+        $latestOperation = DailyOperation::where('batchassign_id', $batchId)
+            ->with([
+                'mortalities', 'destroys', 'sexingErrors', 'cullings',
+                'feeds', 'waters', 'lights', 'weights', 'temperatures', 
+                'humidities', 'eggCollections', 'medicines', 'vaccines'
+            ])
+            ->latest('operation_date')
+            ->first();
+
+        $tabData = [
+            'total_eggs' => 0,
+            'daily_mortality' => 0,
+            'destroy' => 0,
+            'sexing_error' => 0,
+            'cull' => 0,
+            'feed_consumption' => '0 Kg',
+            'water_consumption' => '0 L',
+            'light_hour' => '0 H',
+            'weight' => '0 gm',
+            'temperature' => 0,
+            'humidity' => 0,
+            'egg_collection' => 0,
+            'medicine' => 0,
+            'vaccine' => 0,
+        ];
+
+        if ($latestOperation) {
+            // Get mortality data
+            $mortality = $latestOperation->mortalities()->first();
+            if ($mortality) {
+                $tabData['daily_mortality'] = $mortality->female_qty + $mortality->male_qty;
+            }
+
+            // Get destroy data
+            $destroy = $latestOperation->destroys()->first();
+            if ($destroy) {
+                $tabData['destroy'] = $destroy->female_qty + $destroy->male_qty;
+            }
+
+            // Get sexing error data
+            $sexingError = $latestOperation->sexingErrors()->first();
+            if ($sexingError) {
+                $tabData['sexing_error'] = $sexingError->female_qty + $sexingError->male_qty;
+            }
+
+            // Get cull data
+            $cull = $latestOperation->cullings()->first();
+            if ($cull) {
+                $tabData['cull'] = $cull->female_qty + $cull->male_qty;
+            }
+
+            // Get feed data
+            $feed = $latestOperation->feeds()->first();
+            if ($feed) {
+                $unit = Unit::find($feed->unit_id);
+                $unitName = $unit ? $unit->name : 'Kg';
+                $tabData['feed_consumption'] = $feed->quantity . ' ' . $unitName;
+            }
+
+            // Get water data
+            $water = $latestOperation->waters()->first();
+            if ($water) {
+                $unit = Unit::find($water->unit_id);
+                $unitName = $unit ? $unit->name : 'L';
+                $tabData['water_consumption'] = $water->quantity . ' ' . $unitName;
+            }
+
+            // Get light data
+            $light = $latestOperation->lights()->first();
+            if ($light) {
+                $tabData['light_hour'] = $light->hour . ' H';
+            }
+
+            // Get weight data
+            $weight = $latestOperation->weights()->first();
+            if ($weight) {
+                $tabData['weight'] = $weight->weight . ' gm';
+            }
+
+            // Get temperature data
+            $temperature = $latestOperation->temperatures()->first();
+            if ($temperature) {
+                $tabData['temperature'] = $temperature->inside_temp;
+            }
+
+            // Get humidity data
+            $humidity = $latestOperation->humidities()->first();
+            if ($humidity) {
+                $tabData['humidity'] = $humidity->today_humidity;
+            }
+
+            // Get egg collection data
+            $eggCollection = $latestOperation->eggCollections()->first();
+            if ($eggCollection) {
+                $tabData['egg_collection'] = $eggCollection->total_egg;
+                $tabData['total_eggs'] = $eggCollection->total_egg;
+            }
+
+            // Get medicine data
+            $medicine = $latestOperation->medicines()->first();
+            if ($medicine) {
+                $tabData['medicine'] = $medicine->quantity;
+            }
+
+            // Get vaccine data
+            $vaccine = $latestOperation->vaccines()->first();
+            if ($vaccine) {
+                $tabData['vaccine'] = $vaccine->quantity;
+            }
+        }
+
+        return response()->json([
+            'batch' => [
+                'id' => $batch->id,
+                'total_birds' => $batch->batch_total_qty,
+                'current_birds' => $batch->batch_total_qty - $batch->batch_total_mortality,
+                'age' => $age,
+                'flock_name' => $batch->flock?->name ?? 'N/A',
+                'shed_name' => $batch->shed?->name ?? 'N/A',
+                'batch_name' => $batch->batch?->name ?? 'N/A',
+            ],
+            'statistics' => $tabData
+        ]);
     }
 }

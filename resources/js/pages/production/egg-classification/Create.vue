@@ -125,7 +125,7 @@ const activeTab = computed(() => tabs[activeTabIndex.value].key)
 // Errors
 const errors = ref<Record<string, string>>({})
 
-// Shed & flock info (demo)
+// Shed & flock info (real data)
 const shedQty = ref({ opening: 0, current: 0 })
 const flockInfo = ref<{ age: string }>({ age: '0 weeks 0 days' })
 
@@ -169,27 +169,52 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-const shedInfo = {
-  1: { opening: 12000, current: 11500, start_date: '2025-07-12' },
-  2: { opening: 11500, current: 11450, start_date: '2025-05-12' },
-  3: { opening: 11000, current: 10000, start_date: '2025-06-12' },
-}
-
 const counts = ref<Record<string, number | string>>({})
 
-// Watch flock change (demo behavior)
-watch(() => form.batchassign_id, (id) => {
+// Watch flock change (real data)
+watch(() => form.batchassign_id, async (id) => {
   if (!id) {
     shedQty.value = { opening: 0, current: 0 }
     flockInfo.value.age = '0 weeks 0 days'
     counts.value = {}
     return
   }
-  const data = (shedInfo as any)[id]
-  if (data) {
-    shedQty.value = { opening: data.opening, current: data.current }
-    counts.value = { total_eggs: data.opening }
-    flockInfo.value.age = useAgeCalculator(data.start_date).value
+  
+  try {
+    // Fetch real batch data
+    const response = await fetch(`/production/egg-classification/batch/${id}/data`)
+    const data = await response.json()
+    
+    if (data.batch) {
+      shedQty.value = { 
+        opening: data.batch.total_birds || 0, 
+        current: data.batch.current_birds || 0 
+      }
+      flockInfo.value.age = data.batch.age || '0 weeks 0 days'
+      
+      // Set statistics data
+      counts.value = {
+        total_eggs: data.statistics.total_eggs || 0,
+        daily_mortality: data.statistics.daily_mortality || 0,
+        destroy: data.statistics.destroy || 0,
+        sexing_error: data.statistics.sexing_error || 0,
+        cull: data.statistics.cull || 0,
+        feed_consumption: data.statistics.feed_consumption || '0 Kg',
+        water_consumption: data.statistics.water_consumption || '0 L',
+        light_hour: data.statistics.light_hour || '0 H',
+        weight: data.statistics.weight || '0 gm',
+        temperature: data.statistics.temperature || 0,
+        humidity: data.statistics.humidity || 0,
+        egg_collection: data.statistics.egg_collection || 0,
+        medicine: data.statistics.medicine || 0,
+        vaccine: data.statistics.vaccine || 0,
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching batch data:', error)
+    shedQty.value = { opening: 0, current: 0 }
+    flockInfo.value.age = '0 weeks 0 days'
+    counts.value = {}
   }
 })
 
@@ -650,7 +675,7 @@ function goToTab(index: number) {
                   <span class="text-white text-xs">🥚</span>
               </div>
                 <p class="text-gray-600 font-medium text-xs mb-0.5">Total Eggs</p>
-                <p class="text-xs font-bold text-gray-900">{{ form.total_egg.toLocaleString() }}</p>
+                <p class="text-xs font-bold text-gray-900">{{ (counts.total_eggs || form.total_egg).toLocaleString() }}</p>
               </div>
               <div class="p-2 text-center border-r border-gray-200">
                 <div class="w-6 h-6 bg-gradient-to-br from-red-400 to-red-500 rounded-full flex items-center justify-center mx-auto mb-1">
@@ -674,6 +699,76 @@ function goToTab(index: number) {
                 <p class="text-xs font-bold text-gray-900">{{ hatching_egg.toLocaleString() }}</p>
               </div>
           </div>
+          </div>
+
+          <!-- Additional Statistics from Daily Operations -->
+          <div v-if="Object.keys(counts).length > 0" class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mt-4">
+            <div class="bg-gradient-to-r from-gray-50 to-green-50 px-2 py-1.5 border-b border-gray-200">
+              <h3 class="text-xs font-semibold text-gray-700 flex items-center">
+                <div class="w-1 h-1 bg-green-500 rounded-full mr-1.5"></div>
+                Daily Operations Data
+              </h3>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-0">
+              <div class="p-2 text-center border-r border-gray-200">
+                <div class="w-6 h-6 bg-gradient-to-br from-red-400 to-red-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span class="text-white text-xs">💀</span>
+                </div>
+                <p class="text-gray-600 font-medium text-xs mb-0.5">Mortality</p>
+                <p class="text-xs font-bold text-gray-900">{{ counts.daily_mortality || 0 }}</p>
+              </div>
+              <div class="p-2 text-center border-r border-gray-200">
+                <div class="w-6 h-6 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span class="text-white text-xs">🗑️</span>
+                </div>
+                <p class="text-gray-600 font-medium text-xs mb-0.5">Destroy</p>
+                <p class="text-xs font-bold text-gray-900">{{ counts.destroy || 0 }}</p>
+              </div>
+              <div class="p-2 text-center border-r border-gray-200">
+                <div class="w-6 h-6 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span class="text-white text-xs">⚠️</span>
+                </div>
+                <p class="text-gray-600 font-medium text-xs mb-0.5">Sexing Error</p>
+                <p class="text-xs font-bold text-gray-900">{{ counts.sexing_error || 0 }}</p>
+              </div>
+              <div class="p-2 text-center">
+                <div class="w-6 h-6 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span class="text-white text-xs">✂️</span>
+                </div>
+                <p class="text-gray-600 font-medium text-xs mb-0.5">Cull</p>
+                <p class="text-xs font-bold text-gray-900">{{ counts.cull || 0 }}</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-0 border-t border-gray-200">
+              <div class="p-2 text-center border-r border-gray-200">
+                <div class="w-6 h-6 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span class="text-white text-xs">🌾</span>
+                </div>
+                <p class="text-gray-600 font-medium text-xs mb-0.5">Feed</p>
+                <p class="text-xs font-bold text-gray-900">{{ counts.feed_consumption || '0 Kg' }}</p>
+              </div>
+              <div class="p-2 text-center border-r border-gray-200">
+                <div class="w-6 h-6 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span class="text-white text-xs">💧</span>
+                </div>
+                <p class="text-gray-600 font-medium text-xs mb-0.5">Water</p>
+                <p class="text-xs font-bold text-gray-900">{{ counts.water_consumption || '0 L' }}</p>
+              </div>
+              <div class="p-2 text-center border-r border-gray-200">
+                <div class="w-6 h-6 bg-gradient-to-br from-indigo-400 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span class="text-white text-xs">💡</span>
+                </div>
+                <p class="text-gray-600 font-medium text-xs mb-0.5">Light</p>
+                <p class="text-xs font-bold text-gray-900">{{ counts.light_hour || '0 H' }}</p>
+              </div>
+              <div class="p-2 text-center">
+                <div class="w-6 h-6 bg-gradient-to-br from-pink-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span class="text-white text-xs">⚖️</span>
+                </div>
+                <p class="text-gray-600 font-medium text-xs mb-0.5">Weight</p>
+                <p class="text-xs font-bold text-gray-900">{{ counts.weight || '0 gm' }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

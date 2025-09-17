@@ -204,7 +204,7 @@ const form = useForm({
 // Errors
 const errors = ref<Record<string, string>>({})
 
-// Shed & flock info (demo)
+// Shed & flock info (real data)
 const shedQty = ref({ opening: 0, current: 0 })
 const flockInfo = ref<{ age: string }>({ age: '0 weeks 0 days' })
 
@@ -292,31 +292,84 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-const shedInfo = {
-  1: { opening: 12000, current: 11500, start_date: '2025-07-12' },
-  2: { opening: 11500, current: 11450, start_date: '2025-05-12' },
-  3: { opening: 11000, current: 10000, start_date: '2025-06-12' },
-}
-const tabCountsData = {
-  1: { daily_mortality: 10, feed_consumption: "200 Kg", water_consumption: "150 L", light_hour: "80 H", destroy: 5, cull: 3, sexing_error: 2, weight: "1600 gm", temperature: 28, humidity: 70, egg_collection: 9000 },
-  2: { daily_mortality: 15, feed_consumption: "180 Kg", water_consumption: "130 L", light_hour: "80 H", destroy: 4, cull: 2, sexing_error: 1, weight: "1500 gm", temperature: 29, humidity: 65, egg_collection: 8900 },
-  3: { daily_mortality: 25, feed_consumption: "190 Kg", water_consumption: "160 L", light_hour: "70 H", destroy: 6, cull: 5, sexing_error: 3, weight: "1400 gm", temperature: 27, humidity: 72, egg_collection: 8000 },
-}
 const counts = ref<Record<string, number | string>>({})
 
-// Watch flock change (demo behavior)
-watch(() => form.batchassign_id, (id) => {
+// Watch flock change (real data)
+watch(() => form.batchassign_id, async (id) => {
   if (!id) {
     shedQty.value = { opening: 0, current: 0 }
     flockInfo.value.age = '0 weeks 0 days'
     counts.value = {}
     return
   }
-  const data = (shedInfo as any)[id]
-  if (data) {
-    shedQty.value = { opening: data.opening, current: data.current }
-    counts.value = (tabCountsData as any)[id]
-    flockInfo.value.age = useAgeCalculator(data.start_date).value
+  
+  // Find the selected flock from the props
+  const selectedFlock = batchWithLabel.value.find(flock => flock.id === Number(id))
+  if (selectedFlock) {
+    shedQty.value = { 
+      opening: selectedFlock.total_birds || 0, 
+      current: selectedFlock.current_birds || 0 
+    }
+    flockInfo.value.age = selectedFlock.age || '0 weeks 0 days'
+    
+    // Fetch real tab data from the API
+    try {
+      const response = await fetch(`/daily-operation/batch/${id}/data`)
+      const data = await response.json()
+      
+      if (data.tabData) {
+        counts.value = {
+          daily_mortality: data.tabData.daily_mortality || 0,
+          feed_consumption: data.tabData.feed_consumption || "0 Kg",
+          water_consumption: data.tabData.water_consumption || "0 L",
+          light_hour: data.tabData.light_hour || "0 H",
+          destroy: data.tabData.destroy || 0,
+          cull: data.tabData.cull || 0,
+          sexing_error: data.tabData.sexing_error || 0,
+          weight: data.tabData.weight || "0 gm",
+          temperature: data.tabData.temperature || 0,
+          humidity: data.tabData.humidity || 0,
+          egg_collection: data.tabData.egg_collection || 0,
+          medicine: data.tabData.medicine || 0,
+          vaccine: data.tabData.vaccine || 0
+        }
+      } else {
+        // Fallback to basic counts if no data
+        counts.value = {
+          daily_mortality: selectedFlock.batch_female_mortality + selectedFlock.batch_male_mortality,
+          feed_consumption: "0 Kg",
+          water_consumption: "0 L",
+          light_hour: "0 H",
+          destroy: 0,
+          cull: 0,
+          sexing_error: 0,
+          weight: "0 gm",
+          temperature: 0,
+          humidity: 0,
+          egg_collection: 0,
+          medicine: 0,
+          vaccine: 0
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching batch data:', error)
+      // Fallback to basic counts on error
+      counts.value = {
+        daily_mortality: selectedFlock.batch_female_mortality + selectedFlock.batch_male_mortality,
+        feed_consumption: "0 Kg",
+        water_consumption: "0 L",
+        light_hour: "0 H",
+        destroy: 0,
+        cull: 0,
+        sexing_error: 0,
+        weight: "0 gm",
+        temperature: 0,
+        humidity: 0,
+        egg_collection: 0,
+        medicine: 0,
+        vaccine: 0
+      }
+    }
   }
 })
 

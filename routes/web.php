@@ -80,6 +80,9 @@ Route::prefix('daily-operation')->group(function () {
         ->where('stage', 'brooding|growing|laying|closing')
         ->name('daily-operation.stage.create');
 
+    Route::get('/batch/{batchId}/data', [DailyOperationController::class, 'getBatchData'])
+        ->name('daily-operation.batch.data');
+
     Route::post('/store', [DailyOperationController::class, 'store'])
         ->name('daily-operation.store');
 });
@@ -92,6 +95,9 @@ Route::resource('production/egg-classification', EggClassificationController::cl
 
 Route::get('production/egg-classification/total-eggs', [EggClassificationController::class, 'getTotalEggs'])
     ->name('egg-classification.total-eggs');
+
+Route::get('production/egg-classification/batch/{batchId}/data', [EggClassificationController::class, 'getBatchData'])
+    ->name('egg-classification.batch.data');
 
 Route::get('/weather', [WeatherController::class, 'get']);
 
@@ -147,6 +153,9 @@ Route::get('/ps-firm-receive/{id}/pdf', [PsFirmReceiveController::class, 'downlo
     ->name('ps-firm-receive-row.row-pdf');
 
 Route::resource('egg-classification-grades', EggClassificationGradeController::class);
+
+Route::get('egg-classification-grades/batch/{batchId}/egg-data', [EggClassificationGradeController::class, 'getBatchEggData'])
+    ->name('egg-classification-grades.batch.egg-data');
 Route::get('/batch-assign/{id}/pdf', [BatchAssignController::class, 'downloadRowPdf'])
     ->name('batch-assign.row-pdf');
 

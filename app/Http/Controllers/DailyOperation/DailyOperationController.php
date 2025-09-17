@@ -169,11 +169,23 @@ class DailyOperationController extends Controller
             $st = 3;
         }
 
-        $flocks = BatchAssign::with(['flock', 'shed', 'batch'])
+        $flocks = BatchAssign::with(['flock', 'shed', 'batch', 'shedReceive'])
             ->where('stage', $st)
             ->orderBy('id', 'desc')
             ->get()
             ->map(function ($batch) {
+                // Calculate current birds (total - mortality)
+                $totalBirds = $batch->batch_total_qty;
+                $totalMortality = $batch->batch_total_mortality;
+                $currentBirds = $totalBirds - $totalMortality;
+                
+                // Calculate age from shed receive date
+                $startDate = $batch->shedReceive?->created_at ?? $batch->created_at;
+                $age = $startDate ? $startDate->diffInDays(now()) : 0;
+                $weeks = floor($age / 7);
+                $days = $age % 7;
+                $ageString = "{$weeks} weeks {$days} days";
+                
                 return [
                     'id' => $batch->id,
                     'flock' => $batch->flock?->name ?? 'N/A',
@@ -182,6 +194,15 @@ class DailyOperationController extends Controller
                     'shed_id' => $batch->shed_id,
                     'shed' => $batch->shed?->name ?? 'N/A',
                     'label' => "{$batch->transaction_no}-{$batch->shed?->name}-{$batch->batch?->name}",
+                    // Statistics data
+                    'total_birds' => $totalBirds,
+                    'current_birds' => $currentBirds,
+                    'age' => $ageString,
+                    'start_date' => $startDate?->format('Y-m-d'),
+                    'batch_female_qty' => $batch->batch_female_qty,
+                    'batch_male_qty' => $batch->batch_male_qty,
+                    'batch_female_mortality' => $batch->batch_female_mortality,
+                    'batch_male_mortality' => $batch->batch_male_mortality,
                 ];
             });
 
@@ -258,6 +279,123 @@ class DailyOperationController extends Controller
             'vaccines' => Vaccine::all(),
             'waters' => $waters,
             'todayVaccineSchedules' => $todayVaccineSchedules,
+        ]);
+    }
+
+    /**
+     * Get daily operation data for a specific batch
+     */
+    public function getBatchData($batchId)
+    {
+        $batch = BatchAssign::with(['flock', 'shed', 'batch'])->findOrFail($batchId);
+        
+        // Get the latest daily operation for this batch
+        $latestOperation = DailyOperation::where('batchassign_id', $batchId)
+            ->orderBy('operation_date', 'desc')
+            ->first();
+
+        // Initialize tab data
+        $tabData = [
+            'daily_mortality' => 0,
+            'destroy' => 0,
+            'sexing_error' => 0,
+            'cull' => 0,
+            'feed_consumption' => '0 Kg',
+            'water_consumption' => '0 L',
+            'light_hour' => '0 H',
+            'weight' => '0 gm',
+            'temperature' => 0,
+            'humidity' => 0,
+            'egg_collection' => 0,
+            'medicine' => 0,
+            'vaccine' => 0
+        ];
+
+        if ($latestOperation) {
+            // Get mortality data
+            $mortality = $latestOperation->mortalities()->first();
+            if ($mortality) {
+                $tabData['daily_mortality'] = $mortality->female_qty + $mortality->male_qty;
+            }
+
+            // Get destroy data
+            $destroy = $latestOperation->destroys()->first();
+            if ($destroy) {
+                $tabData['destroy'] = $destroy->female_qty + $destroy->male_qty;
+            }
+
+            // Get sexing error data
+            $sexingError = $latestOperation->sexingErrors()->first();
+            if ($sexingError) {
+                $tabData['sexing_error'] = $sexingError->female_qty + $sexingError->male_qty;
+            }
+
+            // Get culling data
+            $culling = $latestOperation->cullings()->first();
+            if ($culling) {
+                $tabData['cull'] = $culling->female_qty + $culling->male_qty;
+            }
+
+            // Get feed data
+            $feed = $latestOperation->feeds()->first();
+            if ($feed) {
+                $unit = Unit::find($feed->unit_id);
+                $unitName = $unit ? $unit->name : 'Kg';
+                $tabData['feed_consumption'] = $feed->quantity . ' ' . $unitName;
+            }
+
+            // Get water data
+            $water = $latestOperation->waters()->first();
+            if ($water) {
+                $tabData['water_consumption'] = $water->quantity . ' L';
+            }
+
+            // Get light data
+            $light = $latestOperation->lights()->first();
+            if ($light) {
+                $tabData['light_hour'] = $light->hour . ' H';
+            }
+
+            // Get weight data
+            $weight = $latestOperation->weights()->first();
+            if ($weight) {
+                $tabData['weight'] = ($weight->male_weight + $weight->female_weight) / 2 . ' gm';
+            }
+
+            // Get temperature data
+            $temperature = $latestOperation->temperatures()->first();
+            if ($temperature) {
+                $tabData['temperature'] = $temperature->inside_temp;
+            }
+
+            // Get humidity data
+            $humidity = $latestOperation->humidities()->first();
+            if ($humidity) {
+                $tabData['humidity'] = $humidity->today_humidity;
+            }
+
+            // Get egg collection data
+            $eggCollection = $latestOperation->eggCollections()->first();
+            if ($eggCollection) {
+                $tabData['egg_collection'] = $eggCollection->quantity;
+            }
+
+            // Get medicine data
+            $medicine = $latestOperation->medicines()->first();
+            if ($medicine) {
+                $tabData['medicine'] = $medicine->quantity;
+            }
+
+            // Get vaccine data
+            $vaccine = $latestOperation->vaccines()->first();
+            if ($vaccine) {
+                $tabData['vaccine'] = $vaccine->dose;
+            }
+        }
+
+        return response()->json([
+            'batch' => $batch,
+            'tabData' => $tabData
         ]);
     }
 

@@ -17,6 +17,9 @@ const props = defineProps<{
     hatching_egg: number
     transaction_no: string
     batch_name: string
+    flock_name?: string
+    shed_name?: string
+    is_batch_assign?: boolean
   }>
   grades: Array<{ id: number; name: string; type: number; min_weight: number | null; max_weight: number | null }>
 }>()
@@ -27,6 +30,13 @@ const notifier = useNotifier()
 const selectedClassification = ref<number | null>(null)
 const selectedType = ref<string | null>(null) // "commercial" | "hatching"
 const filteredGrades = ref<Array<{ id: number; name: string; min_weight: number | null; max_weight: number | null }>>([])
+
+// Real egg data
+const eggData = ref({
+  total_eggs: 0,
+  hatching_eggs: 0,
+  commercial_eggs: 0,
+})
 
 // Form
 const form = useForm({
@@ -39,6 +49,30 @@ const form = useForm({
 const selectedClass = computed(() =>
   props.classifications.find(c => c.id === selectedClassification.value)
 )
+
+// Watch batch selection to fetch real egg data
+watch(selectedClassification, async (batchId) => {
+  if (!batchId) {
+    eggData.value = { total_eggs: 0, hatching_eggs: 0, commercial_eggs: 0 }
+    return
+  }
+
+  try {
+    const response = await fetch(`/egg-classification-grades/batch/${batchId}/egg-data`)
+    const data = await response.json()
+    
+    if (data.egg_data) {
+      eggData.value = {
+        total_eggs: data.egg_data.total_eggs || 0,
+        hatching_eggs: data.egg_data.hatching_eggs || 0,
+        commercial_eggs: data.egg_data.commercial_eggs || 0,
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching egg data:', error)
+    eggData.value = { total_eggs: 0, hatching_eggs: 0, commercial_eggs: 0 }
+  }
+})
 
 // Watch category selection
 watch(selectedType, (val) => {
@@ -53,10 +87,10 @@ watch(selectedType, (val) => {
 
 // Computed totals for cards
 const relevantEggs = computed(() => {
-  if (!selectedClass.value || !selectedType.value) return 0
+  if (!selectedType.value) return 0
   return selectedType.value === 'commercial'
-    ? selectedClass.value.commercial_egg
-    : selectedClass.value.hatching_egg
+    ? eggData.value.commercial_eggs
+    : eggData.value.hatching_eggs
 })
 
 const gradedTotal = computed(() =>
@@ -131,6 +165,7 @@ function submit() {
                     class="py-2"
             >
                     {{ c.transaction_no }} - {{ c.batch_name }} - {{ c.classification_date }}
+                    <span v-if="c.is_batch_assign"> ({{ c.flock_name }} - {{ c.shed_name }})</span>
             </option>
           </select>
         </div>
@@ -163,7 +198,7 @@ function submit() {
                 <div class="flex items-center justify-between">
                   <div>
                     <p class="text-blue-100 text-xs font-medium">Total Eggs</p>
-                    <p class="text-2xl font-bold mt-1">{{ selectedClass?.total_eggs?.toLocaleString() }}</p>
+                    <p class="text-2xl font-bold mt-1">{{ eggData.total_eggs.toLocaleString() }}</p>
                   </div>
                   <div class="p-2 bg-white/20 rounded-lg">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
