@@ -67,7 +67,8 @@ const form = useForm({
   firm_excess_female_box: 0,
   firm_excess_box_qty: 0,   
   firm_mortality_female: 0,  // female mortality
-  firm_mortality_male: 0,    // male mortality
+  firm_mortality_male: 0,
+  firm_total_mortality:0,    // male mortality
   remarks: '',
   status: 1,
   send_female_qty: 0,
@@ -146,12 +147,13 @@ const debugDropdown = () => {
 }
 
 // Watch total boxes
-watch(() => [form.firm_male_box_qty, form.firm_female_box_qty], () => {
+watch(() => [form.firm_male_box_qty, form.firm_female_box_qty,form.firm_sortage_male_box,form.firm_sortage_female_box,form.firm_excess_male_box,form.firm_excess_female_box,form.firm_mortality_female,form.firm_mortality_male], () => {
   form.firm_total_box_qty = Number(form.firm_male_box_qty || 0) + Number(form.firm_female_box_qty || 0)
   // Total shortage
-    form.firm_sortage_box_qty = form.firm_sortage_male_box + form.firm_sortage_female_box
-    form.firm_excess_box_qty = form.firm_excess_male_box + form.firm_excess_female_box
-}, { deep: true, immediate: true })
+    form.firm_sortage_box_qty = Number(form.firm_sortage_male_box || 0) +  Number(form.firm_sortage_female_box || 0)
+    form.firm_excess_box_qty = Number(form.firm_excess_male_box || 0) + Number(form.firm_excess_female_box || 0)
+    form.firm_total_mortality = Number(form.firm_mortality_female || 0) + Number(form.firm_mortality_male || 0)
+  }, { deep: true, immediate: true })
 
 watch(() => [form.send_female_qty, form.send_male_qty], () => {
   form.send_total_qty = Number(form.send_female_qty || 0) + Number(form.send_male_qty || 0)
@@ -744,15 +746,6 @@ function addNewFlock() {
           </h3> -->
           <div class="grid grid-cols-3 gap-4">
             <div class="space-y-2">
-              <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Male Shortage</Label>
-              <Input 
-                type="number" 
-                v-model.number="form.firm_sortage_male_box" 
-                min="0"
-                class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
-              />
-            </div>
-            <div class="space-y-2">
               <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Female Shortage</Label>
               <Input 
                 type="number" 
@@ -761,11 +754,22 @@ function addNewFlock() {
                 class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
               />
             </div>
+            
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Male Shortage</Label>
+              <Input 
+                type="number" 
+                v-model.number="form.firm_sortage_male_box" 
+                min="0"
+                class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
+              />
+            </div>
+            
             <div class="space-y-2">
               <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Total Shortage</Label>
               <Input 
                 type="number" 
-                :value="Number(form.firm_sortage_male_box || 0) + Number(form.firm_sortage_female_box || 0)" 
+                v-model.number="form.firm_sortage_box_qty" 
                 readonly 
                 class="rounded-xl border-red-300 bg-gradient-to-r from-red-100 to-red-50 px-4 py-2 font-bold text-red-800 cursor-not-allowed dark:border-red-600 dark:from-red-800/50 dark:to-red-900/50 dark:text-red-200"
               />
@@ -780,15 +784,7 @@ function addNewFlock() {
             Excess Boxes
           </h3> -->
           <div class="grid grid-cols-3 gap-4">
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Male Excess</Label>
-              <Input 
-                type="number" 
-                v-model.number="form.firm_excess_male_box" 
-                min="0"
-                class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
-              />
-            </div>
+            
             <div class="space-y-2">
               <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Female Excess</Label>
               <Input 
@@ -798,11 +794,22 @@ function addNewFlock() {
                 class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
               />
             </div>
+            
+            <div class="space-y-2">
+              <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Male Excess</Label>
+              <Input 
+                type="number" 
+                v-model.number="form.firm_excess_male_box" 
+                min="0"
+                class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
+              />
+            </div>
+            
             <div class="space-y-2">
               <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Total Excess</Label>
               <Input 
                 type="number" 
-                :value="Number(form.firm_excess_male_box || 0) + Number(form.firm_excess_female_box || 0)" 
+                v-model.number="form.firm_excess_box_qty" 
                 readonly 
                 class="rounded-xl border-emerald-300 bg-gradient-to-r from-emerald-100 to-emerald-50 px-4 py-2 font-bold text-emerald-800 cursor-not-allowed dark:border-emerald-600 dark:from-emerald-800/50 dark:to-emerald-900/50 dark:text-emerald-200"
               />
@@ -839,7 +846,7 @@ function addNewFlock() {
               <Label class="text-sm font-semibold text-orange-700 dark:text-orange-300">Total Mortality</Label>
               <Input 
                 type="number" 
-                :value="Number(form.firm_mortality_female || 0) + Number(form.firm_mortality_male || 0)" 
+                v-model.number="form.firm_total_mortality" 
                 readonly 
                 class="rounded-xl border-orange-300 bg-gradient-to-r from-orange-100 to-orange-50 px-4 py-2 font-bold text-orange-800 cursor-not-allowed dark:border-orange-600 dark:from-orange-800/50 dark:to-orange-900/50 dark:text-orange-200"
               />
