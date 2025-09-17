@@ -18,6 +18,7 @@ use App\Http\Controllers\Master\UnitController;
 use App\Http\Controllers\Master\VaccineController;
 use App\Http\Controllers\Master\VaccineTypeController;
 use App\Http\Controllers\Production\EggClassificationController;
+use App\Http\Controllers\Api\DashboardRealtimeController;
 use App\Http\Controllers\Production\EggClassificationGradeController;
 use App\Http\Controllers\Production\ProductionFirmReceiveController;
 use App\Http\Controllers\Production\ProductionShedReceiveController;
@@ -153,3 +154,10 @@ Route::get('/bird-transfer/create/{batchAssignid}', [BirdTransferController::cla
 
 // Audit Log
 Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+
+// Real-time Dashboard API
+Route::middleware(['auth'])->group(function () {
+    Route::get('/api/dashboard/realtime', [DashboardRealtimeController::class, 'getRealtimeData'])->name('dashboard.realtime');
+    Route::post('/api/dashboard/trigger-update', [DashboardRealtimeController::class, 'triggerUpdate'])->name('dashboard.trigger-update');
+    Route::get('/api/dashboard/poll', [DashboardRealtimeController::class, 'pollData'])->name('dashboard.poll');
+});

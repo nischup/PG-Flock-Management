@@ -15,11 +15,19 @@ use App\Models\DailyOperation\DailyFeed;
 use App\Models\DailyOperation\DailyVaccine;
 use App\Models\Production\EggClassification;
 use App\Models\Ps\PsLabTest;
+use App\Services\DashboardRealtimeService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
+    protected $realtimeService;
+
+    public function __construct(DashboardRealtimeService $realtimeService)
+    {
+        $this->realtimeService = $realtimeService;
+    }
+
     public function index(Request $request)
     {
         // --- Filter options for dropdowns
@@ -167,14 +175,18 @@ class DashboardController extends Controller
             'productionTotal' => ($layingChicks/$denominator)*100,
         ];
 
+        // Get real-time data
+        $realtimeData = $this->realtimeService->getRealtimeData($filters);
+
         // --- Return Inertia
         return Inertia::render('Dashboard', [
-            'cards'         => $cards,
-            'progressBars'  => $progressBars,
-            'circleBars'    => $circleBars,
-            'birdStage'     => $birdStage,
+            'cards'         => $realtimeData['cards'],
+            'progressBars'  => $realtimeData['progressBars'],
+            'circleBars'    => $realtimeData['circleBars'],
+            'birdStage'     => $realtimeData['birdStage'],
             'filterOptions' => $filterOptions,
             'filters'       => $filters,
+            'realtimeData'  => $realtimeData,
         ]);
     }
 }

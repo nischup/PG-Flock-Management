@@ -1,18 +1,30 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, router } from '@inertiajs/vue3'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 import DashboardCard from '@/components/DashboardCard.vue'
 import ProgressInfoBar from '@/components/BigProgressbar.vue'
 import CircleProgress from '@/components/CircularProgress.vue'
 import BirdStage from '@/components/BirdStage.vue'
+import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import InteractiveChart from '@/components/InteractiveChart.vue'
+import InteractiveDataTable from '@/components/InteractiveDataTable.vue'
+import DashboardWidget from '@/components/DashboardWidget.vue'
+import MobileDashboardControls from '@/components/MobileDashboardControls.vue'
+import InteractiveTooltip from '@/components/InteractiveTooltip.vue'
+import InteractiveModal from '@/components/InteractiveModal.vue'
+import RealtimeNotification from '@/components/RealtimeNotification.vue'
+import { useRealtimeData } from '@/composables/useRealtimeData'
 
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 
 // Lucide icons
-import { User, Drumstick, ShieldX, Egg, FlaskConical, PackageSearch, Factory, Syringe, Archive } from "lucide-vue-next"
+import { 
+  User, Drumstick, ShieldX, Egg, FlaskConical, PackageSearch, Factory, Syringe, Archive,
+  TrendingUp, TrendingDown, Activity, BarChart3, PieChart, RefreshCw, Settings
+} from "lucide-vue-next"
 import { BabyChick } from '@/icons/BabyChick'
 
 // Props
@@ -32,6 +44,52 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }]
 const alltabs = ['Dashboard','Company','Project','Flock','Shed','Batch']
 const activeTab = ref('Dashboard')
 
+// Real-time data composable (temporarily disabled)
+// const {
+//   data: realtimeData,
+//   isLoading: isRealtimeLoading,
+//   isConnected,
+//   lastUpdate,
+//   error: realtimeError,
+//   connectionStatus,
+//   timeSinceUpdate,
+//   refresh: refreshRealtimeData,
+//   triggerUpdate: triggerRealtimeUpdate
+// } = useRealtimeData({
+//   pollingInterval: 30000, // 30 seconds
+//   enablePolling: true,
+//   autoRefresh: true
+// })
+
+// Temporary fallback values
+const realtimeData = ref(null)
+const isRealtimeLoading = ref(false)
+const isConnected = ref(false)
+const lastUpdate = ref(0)
+const realtimeError = ref(null)
+const connectionStatus = ref('disconnected')
+const timeSinceUpdate = ref(null)
+const refreshRealtimeData = async () => {}
+const triggerRealtimeUpdate = async () => {}
+
+// Interactive state
+const isRefreshing = ref(false)
+const showCharts = ref(true)
+const showDataTable = ref(false)
+const dashboardLayout = ref('grid') // 'grid' | 'list' | 'compact'
+const showModal = ref(false)
+const modalData = ref<any>(null)
+const isMobile = ref(false)
+
+// Real-time notifications
+const showNotification = ref(false)
+const notificationData = ref({
+  title: '',
+  message: '',
+  type: 'info' as 'success' | 'error' | 'info' | 'warning',
+  timestamp: Date.now()
+})
+
 // Filters reactive with default placeholders
 const filters = ref({
   company: props.filters.company || '',
@@ -45,8 +103,161 @@ const filters = ref({
   date_to: props.filters.date_to || ''
 })
 
+// Sample data for interactive charts
+const chartData = ref({
+  production: [
+    { label: 'Week 1', value: 1200, color: '#3b82f6' },
+    { label: 'Week 2', value: 1350, color: '#3b82f6' },
+    { label: 'Week 3', value: 1100, color: '#3b82f6' },
+    { label: 'Week 4', value: 1450, color: '#3b82f6' },
+    { label: 'Week 5', value: 1600, color: '#3b82f6' },
+    { label: 'Week 6', value: 1400, color: '#3b82f6' }
+  ],
+  mortality: [
+    { label: 'Male', value: 15, color: '#ef4444' },
+    { label: 'Female', value: 12, color: '#f97316' },
+    { label: 'Unknown', value: 8, color: '#eab308' }
+  ],
+  eggTypes: [
+    { label: 'Hatchable', value: 45, color: '#10b981' },
+    { label: 'Commercial', value: 35, color: '#3b82f6' },
+    { label: 'Broken', value: 20, color: '#ef4444' }
+  ]
+})
+
+// Sample data for interactive table
+const tableData = ref([
+  { id: 1, batch: 'B001', flock: 'Flock A', eggs: 1200, mortality: 5, status: 'Active', date: '2024-01-15' },
+  { id: 2, batch: 'B002', flock: 'Flock B', eggs: 1350, mortality: 3, status: 'Active', date: '2024-01-16' },
+  { id: 3, batch: 'B003', flock: 'Flock C', eggs: 1100, mortality: 8, status: 'Inactive', date: '2024-01-17' },
+  { id: 4, batch: 'B004', flock: 'Flock D', eggs: 1450, mortality: 2, status: 'Active', date: '2024-01-18' },
+  { id: 5, batch: 'B005', flock: 'Flock E', eggs: 1600, mortality: 4, status: 'Pending', date: '2024-01-19' }
+])
+
+const tableColumns = ref([
+  { key: 'batch', label: 'Batch', type: 'text' },
+  { key: 'flock', label: 'Flock', type: 'text' },
+  { key: 'eggs', label: 'Eggs', type: 'currency' },
+  { key: 'mortality', label: 'Mortality', type: 'progress' },
+  { key: 'status', label: 'Status', type: 'badge' },
+  { key: 'date', label: 'Date', type: 'date' }
+])
+
+const tableActions = ref([
+  {
+    name: 'view',
+    icon: 'Eye',
+    handler: (row: any) => console.log('View', row)
+  },
+  {
+    name: 'edit',
+    icon: 'Edit',
+    handler: (row: any) => console.log('Edit', row)
+  }
+])
+
 // Icon mapping
 const iconMap: Record<string, any> = { User, Drumstick, ShieldX, Egg, FlaskConical, PackageSearch, Factory, Syringe, Archive, BabyChick }
+
+// Interactive methods
+const refreshData = async () => {
+  isRefreshing.value = true
+  try {
+    await refreshRealtimeData(filters.value)
+    console.log('Real-time data refreshed')
+  } finally {
+    isRefreshing.value = false
+  }
+}
+
+const toggleCharts = () => {
+  showCharts.value = !showCharts.value
+}
+
+const toggleDataTable = () => {
+  showDataTable.value = !showDataTable.value
+}
+
+const changeLayout = (layout: string) => {
+  dashboardLayout.value = layout
+}
+
+const openModal = (data: any) => {
+  modalData.value = data
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  modalData.value = null
+}
+
+const handleCardClick = (card: any) => {
+  openModal({
+    title: card.title,
+    content: `Detailed information about ${card.title}`,
+    data: card
+  })
+}
+
+// Mobile detection
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 1024
+}
+
+// Handle mobile controls updates
+const handleMobileUpdate = (updates: any) => {
+  if (updates.activeTab) activeTab.value = updates.activeTab
+  if (updates.dashboardLayout) dashboardLayout.value = updates.dashboardLayout
+  if (updates.showCharts !== undefined) showCharts.value = updates.showCharts
+  if (updates.showDataTable !== undefined) showDataTable.value = updates.showDataTable
+  if (updates.filters) filters.value = { ...filters.value, ...updates.filters }
+}
+
+// Real-time notification methods
+const showRealtimeNotification = (title: string, message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+  notificationData.value = {
+    title,
+    message,
+    type,
+    timestamp: Date.now()
+  }
+  showNotification.value = true
+}
+
+const closeNotification = () => {
+  showNotification.value = false
+}
+
+// Watch for real-time data changes
+watch(realtimeData, (newData, oldData) => {
+  if (newData && oldData && newData.timestamp !== oldData.timestamp) {
+    showRealtimeNotification(
+      'Data Updated',
+      'Dashboard data has been refreshed with the latest information',
+      'success'
+    )
+  }
+}, { deep: true })
+
+// Watch for connection status changes
+watch(connectionStatus, (newStatus, oldStatus) => {
+  if (newStatus !== oldStatus) {
+    if (newStatus === 'connected') {
+      showRealtimeNotification(
+        'Connected',
+        'Real-time data connection established',
+        'success'
+      )
+    } else if (newStatus === 'error' || newStatus === 'disconnected') {
+      showRealtimeNotification(
+        'Connection Lost',
+        'Real-time data connection lost. Using cached data.',
+        'warning'
+      )
+    }
+  }
+})
 
 // Watch filters & send backend request
 watch(filters, (newFilters) => {
@@ -57,6 +268,27 @@ watch(filters, (newFilters) => {
   }
   router.get('/dashboard', payload, { preserveState: true, replace: true })
 }, { deep: true })
+
+// Auto-refresh data every 5 minutes
+onMounted(() => {
+  // Check mobile on mount
+  checkMobile()
+  
+  // Add resize listener for mobile detection
+  window.addEventListener('resize', checkMobile)
+  
+  const interval = setInterval(() => {
+    if (!isRefreshing.value) {
+      refreshData()
+    }
+  }, 300000) // 5 minutes
+
+  // Cleanup on unmount
+  return () => {
+    clearInterval(interval)
+    window.removeEventListener('resize', checkMobile)
+  }
+})
 
 // Dependent dropdowns reset
 watch(() => filters.company, () => {
@@ -78,14 +310,27 @@ watch(() => filters.shed, () => {
   filters.batch = ''
 })
 
+// Computed properties for real-time data
+const dashboardData = computed(() => {
+  return realtimeData.value || {
+    cards: props.cards,
+    progressBars: props.progressBars,
+    circleBars: props.circleBars,
+    birdStage: props.birdStage,
+    chartData: chartData.value
+  }
+})
+
+const isLoading = computed(() => isRealtimeLoading.value || isRefreshing.value)
+
 // Tab configuration
 const tabConfig = {
-  Dashboard: { filters: [], cards: props.cards },
-  Company: { filters: ["company", "date"], cards: props.cards },
-  Project: { filters: ["company","project","date"], cards: props.cards },
-  Flock: { filters: ["company","project","flock","shed"], cards: props.cards },
-  Shed: { filters: ["company","project","flock","shed","date"], cards: props.cards },
-  Batch: { filters: ["company","project","flock","shed","batch","date"], cards: props.cards },
+  Dashboard: { filters: [], cards: dashboardData.value.cards },
+  Company: { filters: ["company", "date"], cards: dashboardData.value.cards },
+  Project: { filters: ["company","project","date"], cards: dashboardData.value.cards },
+  Flock: { filters: ["company","project","flock","shed"], cards: dashboardData.value.cards },
+  Shed: { filters: ["company","project","flock","shed","date"], cards: dashboardData.value.cards },
+  Batch: { filters: ["company","project","flock","shed","batch","date"], cards: dashboardData.value.cards },
 }
 
 // Active tab content
@@ -96,18 +341,100 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
   <Head title="Dashboard" />
   <AppLayout :breadcrumbs="breadcrumbs">
 
-    <!-- Tabs -->
-    <div class="flex justify-end p-4">
+    <!-- Mobile Controls -->
+    <MobileDashboardControls
+      :filter-options="props.filterOptions"
+      :filters="filters"
+      :active-content="activeContent"
+      @update:active-tab="activeTab = $event"
+      @update:dashboard-layout="changeLayout($event)"
+      @update:show-charts="showCharts = $event"
+      @update:show-data-table="showDataTable = $event"
+      @refresh="refreshData"
+      @update:filters="filters = { ...filters, ...$event }"
+    />
+
+    <!-- Desktop Enhanced Header with Controls -->
+    <div class="hidden lg:block">
+    <div class="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50/50 to-white/30 border-b border-gray-200/50">
+      <!-- Tabs -->
       <div class="flex bg-white dark:bg-gray-800 rounded-full shadow overflow-hidden">
         <button
           v-for="tab in alltabs"
           :key="tab"
           @click="activeTab = tab"
-          class="flex-1 text-center px-4 py-2 text-sm font-medium transition"
-          :class="activeTab === tab ? 'bg-black text-white' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'">
+          class="flex-1 text-center px-4 py-2 text-sm font-medium transition-all duration-200"
+          :class="activeTab === tab ? 'bg-black text-white shadow-md' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'">
           {{ tab }}
         </button>
       </div>
+
+      <!-- Dashboard Controls -->
+      <div class="flex items-center space-x-4">
+        <!-- Layout Toggle -->
+        <div class="flex bg-white rounded-lg shadow overflow-hidden">
+          <button
+            v-for="layout in ['grid', 'list', 'compact']"
+            :key="layout"
+            @click="changeLayout(layout)"
+            class="px-3 py-2 text-sm font-medium transition-all duration-200 capitalize"
+            :class="dashboardLayout === layout ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'"
+          >
+            {{ layout }}
+          </button>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="flex space-x-2">
+          <button
+            @click="toggleCharts"
+            class="p-2 rounded-lg transition-all duration-200"
+            :class="showCharts ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+          >
+            <BarChart3 class="h-4 w-4" />
+          </button>
+          <button
+            @click="toggleDataTable"
+            class="p-2 rounded-lg transition-all duration-200"
+            :class="showDataTable ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+          >
+            <Activity class="h-4 w-4" />
+          </button>
+        </div>
+
+        <!-- Real-time Status -->
+        <div class="flex items-center space-x-2">
+          <!-- Connection Status -->
+          <div class="flex items-center space-x-1">
+            <div 
+              class="w-2 h-2 rounded-full"
+              :class="{
+                'bg-green-500': isConnected,
+                'bg-yellow-500': connectionStatus === 'connecting',
+                'bg-red-500': connectionStatus === 'error' || connectionStatus === 'disconnected'
+              }"
+            ></div>
+            <span class="text-xs text-gray-600">
+              {{ isConnected ? 'Live' : 'Offline' }}
+            </span>
+          </div>
+          
+          <!-- Last Update Time -->
+          <div v-if="timeSinceUpdate !== null" class="text-xs text-gray-500">
+            {{ timeSinceUpdate < 60 ? `${timeSinceUpdate}s ago` : `${Math.floor(timeSinceUpdate / 60)}m ago` }}
+          </div>
+          
+          <!-- Refresh Button -->
+          <button
+            @click="refreshData"
+            :disabled="isRefreshing"
+            class="p-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all duration-200 disabled:opacity-50"
+          >
+            <RefreshCw :class="{ 'animate-spin': isRefreshing }" class="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
     </div>
 
     <!-- Filters -->
@@ -148,7 +475,14 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
     </div>
 
     <!-- Progress Bars -->
-    <div class="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div 
+      class="p-6 grid gap-4"
+      :class="{
+        'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4': dashboardLayout === 'grid',
+        'grid-cols-1': dashboardLayout === 'list',
+        'grid-cols-4': dashboardLayout === 'compact'
+      }"
+    >
       <ProgressInfoBar
         v-for="(pb,i) in props.progressBars"
         :key="i"
@@ -170,30 +504,209 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
       />
     </div>
 
-    <!-- Dashboard Cards -->
-    <div class="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <DashboardCard
-        v-for="(card,i) in props.cards"
-        :key="i"
-        :title="card.title"
-        :value="card.value"
-        :icon="iconMap[card.icon]"
-        :index="i"
-      />
+    <!-- Loading State -->
+    <div v-if="isLoading" class="p-6">
+      <div 
+        class="grid gap-4"
+        :class="{
+          'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4': dashboardLayout === 'grid',
+          'grid-cols-1': dashboardLayout === 'list',
+          'grid-cols-4': dashboardLayout === 'compact'
+        }"
+      >
+        <SkeletonLoader v-for="i in 8" :key="i" type="card" />
+      </div>
     </div>
 
-    <!-- Circle Bars -->
-    <div class="flex justify-start p-4">
-      <div class="grid grid-cols-6 gap-4 w-full">
-        <CircleProgress
-          v-for="(c,i) in props.circleBars"
+    <!-- Main Dashboard Content -->
+    <div v-else class="p-6 space-y-6">
+      <!-- Dashboard Cards with Enhanced Layout -->
+      <div 
+        class="grid gap-4"
+        :class="{
+          'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4': dashboardLayout === 'grid',
+          'grid-cols-1': dashboardLayout === 'list',
+          'grid-cols-4': dashboardLayout === 'compact'
+        }"
+      >
+        <InteractiveTooltip
+          v-for="(card,i) in dashboardData.cards"
           :key="i"
-          v-bind="c"
-          colorFrom="#34D399"
-          colorTo="#10B981"
+          :content="`Click to view detailed information about ${card.title}`"
+          placement="top"
+        >
+          <DashboardWidget
+            :title="card.title"
+            :subtitle="card.extra"
+            :icon="iconMap[card.icon]"
+            :data="card"
+            :size="dashboardLayout === 'compact' ? 'sm' : 'md'"
+            :refreshable="true"
+            :configurable="true"
+            :trend="card.trend ? { icon: iconMap[card.trend.icon], text: card.trend.percentage > 0 ? `+${card.trend.percentage.toFixed(1)}%` : `${card.trend.percentage.toFixed(1)}%`, color: card.trend.direction === 'up' ? 'text-green-600' : card.trend.direction === 'down' ? 'text-red-600' : 'text-gray-600' } : null"
+            :last-updated="timeSinceUpdate ? `${timeSinceUpdate}s ago` : 'Just now'"
+            class="cursor-pointer hover:scale-105 transition-transform duration-200"
+            @click="handleCardClick(card)"
+          >
+            <template #default="{ data }">
+              <div class="text-center">
+                <div class="text-3xl font-bold text-gray-800 mb-2">{{ data.value ?? '-' }}</div>
+                <div class="text-sm text-gray-600">{{ data.title }}</div>
+              </div>
+            </template>
+          </DashboardWidget>
+        </InteractiveTooltip>
+      </div>
+
+      <!-- Interactive Charts Section -->
+      <div v-if="showCharts" class="space-y-6">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold text-gray-800">Analytics & Insights</h2>
+          <div class="flex space-x-2">
+            <button class="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-md">Export</button>
+            <button class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md">Settings</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Production Chart -->
+          <InteractiveChart
+            title="Egg Production Trend"
+            :data="dashboardData.chartData?.production || chartData.production"
+            chart-type="line"
+            :show-legend="true"
+          />
+
+          <!-- Mortality Distribution -->
+          <InteractiveChart
+            title="Mortality Distribution"
+            :data="dashboardData.chartData?.mortality || chartData.mortality"
+            chart-type="doughnut"
+            :show-legend="true"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Egg Types Chart -->
+          <InteractiveChart
+            title="Egg Classification"
+            :data="dashboardData.chartData?.eggTypes || chartData.eggTypes"
+            chart-type="bar"
+            :show-legend="true"
+          />
+
+          <!-- Circle Progress Widgets -->
+          <div class="lg:col-span-2">
+            <div 
+              class="grid gap-4"
+              :class="{
+                'grid-cols-3': dashboardLayout === 'grid',
+                'grid-cols-1': dashboardLayout === 'list',
+                'grid-cols-4': dashboardLayout === 'compact'
+              }"
+            >
+              <CircleProgress
+                v-for="(c,i) in dashboardData.circleBars"
+                :key="i"
+                v-bind="c"
+                colorFrom="#34D399"
+                colorTo="#10B981"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Data Table -->
+      <div v-if="showDataTable">
+        <InteractiveDataTable
+          title="Batch Performance Overview"
+          :data="tableData"
+          :columns="tableColumns"
+          :actions="tableActions"
+          filter-key="status"
+          :filter-options="[
+            { value: 'Active', label: 'Active' },
+            { value: 'Inactive', label: 'Inactive' },
+            { value: 'Pending', label: 'Pending' }
+          ]"
+        />
+      </div>
+
+      <!-- Progress Bars Section -->
+      <div class="space-y-4">
+        <h3 class="text-lg font-semibold text-gray-800">Performance Metrics</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ProgressInfoBar
+            v-for="(bar,i) in dashboardData.progressBars"
+            :key="i"
+            v-bind="bar"
+            colorFrom="#fde68a"
+            colorTo="#f59e0b"
+            :width="300"
+            :height="40"
+          />
+        </div>
+      </div>
+
+      <!-- Bird Stage Visualization -->
+      <div class="bg-white/40 backdrop-blur-md border border-white/50 rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Bird Lifecycle Distribution</h3>
+        <BirdStage
+          :bording-total="dashboardData.birdStage.bordingTotal"
+          :growing-total="dashboardData.birdStage.growingTotal"
+          :production-total="dashboardData.birdStage.productionTotal"
         />
       </div>
     </div>
+
+    <!-- Interactive Modal -->
+    <InteractiveModal
+      :is-visible="showModal"
+      :title="modalData?.title"
+      :icon="modalData?.icon"
+      size="lg"
+      @update:is-visible="showModal = $event"
+      @close="closeModal"
+    >
+      <div v-if="modalData" class="space-y-4">
+        <div class="text-center">
+          <div class="text-4xl font-bold text-gray-800 mb-2">{{ modalData.data?.value ?? '-' }}</div>
+          <div class="text-lg text-gray-600 mb-4">{{ modalData.data?.title }}</div>
+          <div class="text-sm text-gray-500">{{ modalData.content }}</div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mt-6">
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="text-sm text-gray-600">Current Value</div>
+            <div class="text-xl font-semibold text-gray-800">{{ modalData.data?.value ?? '-' }}</div>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="text-sm text-gray-600">Trend</div>
+            <div class="text-xl font-semibold text-green-600">+12%</div>
+          </div>
+        </div>
+        
+        <div class="mt-6">
+          <h4 class="text-sm font-semibold text-gray-700 mb-2">Additional Information</h4>
+          <p class="text-sm text-gray-600">
+            This metric represents the current status of {{ modalData.data?.title?.toLowerCase() }} 
+            in your flock management system. Click refresh to get the latest data.
+          </p>
+        </div>
+      </div>
+    </InteractiveModal>
+
+    <!-- Real-time Notification (temporarily disabled) -->
+    <!-- <RealtimeNotification
+      :is-visible="showNotification"
+      :title="notificationData.title"
+      :message="notificationData.message"
+      :type="notificationData.type"
+      :timestamp="notificationData.timestamp"
+      @update:is-visible="showNotification = $event"
+      @close="closeNotification"
+    /> -->
 
   </AppLayout>
 </template>

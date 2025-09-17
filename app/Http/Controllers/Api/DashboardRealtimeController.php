@@ -1,0 +1,107 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\DashboardRealtimeService;
+use App\Events\DashboardDataUpdated;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+class DashboardRealtimeController extends Controller
+{
+    protected $realtimeService;
+
+    public function __construct(DashboardRealtimeService $realtimeService)
+    {
+        $this->realtimeService = $realtimeService;
+    }
+
+    /**
+     * Get real-time dashboard data
+     */
+    public function getRealtimeData(Request $request): JsonResponse
+    {
+        try {
+            $filters = $request->only([
+                'company', 'project', 'flock', 'shed', 'batch', 
+                'date', 'date_from', 'date_to'
+            ]);
+
+            $data = $this->realtimeService->getRealtimeData($filters);
+
+            return response()->json($data);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch real-time data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Trigger real-time data update
+     */
+    public function triggerUpdate(Request $request): JsonResponse
+    {
+        try {
+            $filters = $request->only([
+                'company', 'project', 'flock', 'shed', 'batch', 
+                'date', 'date_from', 'date_to'
+            ]);
+
+            $data = $this->realtimeService->getRealtimeData($filters);
+
+            // Broadcast the update
+            broadcast(new DashboardDataUpdated($data, $filters));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Real-time update triggered',
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to trigger update',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get dashboard data with polling
+     */
+    public function pollData(Request $request): JsonResponse
+    {
+        try {
+            $filters = $request->only([
+                'company', 'project', 'flock', 'shed', 'batch', 
+                'date', 'date_from', 'date_to'
+            ]);
+
+            $lastUpdate = $request->input('last_update', 0);
+            $data = $this->realtimeService->getRealtimeData($filters);
+
+            // Check if data has changed
+            $hasChanged = $data['timestamp'] > $lastUpdate;
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'hasChanged' => $hasChanged,
+                'timestamp' => $data['timestamp']
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to poll data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+}
