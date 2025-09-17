@@ -120,42 +120,42 @@ const form = useForm({
   shed_female_qty: null,
   shed_male_qty: null,
   shed_total_qty: 0,
+  
   shed_sortage_male_box: 0,
   shed_sortage_female_box: 0,
-  shed_sortage_male_mortality: 0,
-  shed_sortage_female_mortality: 0,
-  shed_sortage_mortality: 0,
   shed_sortage_box_qty: 0,
+ 
+  shed_male_mortality: 0,
+  shed_female_mortality: 0,
+  shed_total_mortality: 0,
+  
   shed_excess_male_box: 0,
   shed_excess_female_box: 0,
-  shed_excess_male_mortality: 0,
-  shed_excess_female_mortality: 0,
-  shed_excess_mortality: 0,
   shed_excess_box_qty: 0,
+
   remarks: '',
   status: 1,
 })
 
 // Watch for total boxes and auto-calc shortages/excess
 watch(
-  () => [form.shed_male_qty, form.shed_female_qty, form.shed_sortage_male_box, form.shed_sortage_female_box, form.shed_sortage_male_mortality, form.shed_sortage_female_mortality, form.shed_excess_male_box, form.shed_excess_female_box, form.shed_excess_male_mortality, form.shed_excess_female_mortality],
+  () => [form.shed_male_qty, form.shed_female_qty, form.shed_sortage_male_box, form.shed_sortage_female_box, form.shed_male_mortality, form.shed_female_mortality, form.shed_excess_male_box, form.shed_excess_female_box],
   () => {
     form.shed_total_qty =
       Number(form.shed_male_qty || 0) + Number(form.shed_female_qty || 0)
 
     // Calculate total mortality for shortage
-    form.shed_sortage_mortality =
-      Number(form.shed_sortage_male_mortality || 0) + Number(form.shed_sortage_female_mortality || 0)
+    form.shed_total_mortality =
+      Number(form.shed_male_mortality || 0) + Number(form.shed_female_mortality || 0)
     
     // Calculate total mortality for excess
-    form.shed_excess_mortality =
-      Number(form.shed_excess_male_mortality || 0) + Number(form.shed_excess_female_mortality || 0)
+    form.shed_excess_box_qty =
+      Number(form.shed_excess_male_box || 0) + Number(form.shed_excess_female_box || 0)
 
     // Total shortage
     form.shed_sortage_box_qty =
-      Number(form.shed_sortage_male_box || 0) + Number(form.shed_sortage_female_box || 0) + Number(form.shed_sortage_mortality || 0)
-    form.shed_excess_box_qty =
-      Number(form.shed_excess_male_box || 0) + Number(form.shed_excess_female_box || 0) + Number(form.shed_excess_mortality || 0)
+      Number(form.shed_sortage_male_box || 0) + Number(form.shed_sortage_female_box || 0)
+    
   },
   { deep: true, immediate: true }
 )
@@ -590,7 +590,7 @@ function submit() {
                   <Label class="text-xs font-semibold text-red-700 dark:text-red-300">Male Mortality</Label>
                   <Input 
                     type="number" 
-                    v-model.number="form.shed_sortage_male_mortality" 
+                    v-model.number="form.shed_male_mortality" 
                     min="0"
                     class="rounded-lg border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
                   />
@@ -599,7 +599,7 @@ function submit() {
                   <Label class="text-xs font-semibold text-red-700 dark:text-red-300">Female Mortality</Label>
                   <Input 
                     type="number" 
-                    v-model.number="form.shed_sortage_female_mortality" 
+                    v-model.number="form.shed_female_mortality" 
                     min="0"
                     class="rounded-lg border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
                   />
@@ -608,7 +608,7 @@ function submit() {
                   <Label class="text-xs font-semibold text-red-700 dark:text-red-300">Total Mortality</Label>
                 <Input 
                   type="number" 
-                    :value="form.shed_sortage_mortality" 
+                    v-model.number="form.shed_total_mortality" 
                   readonly 
                     class="rounded-lg border-red-300 bg-gradient-to-r from-red-100 to-red-50 px-3 py-2 text-sm font-bold text-red-800 cursor-not-allowed dark:border-red-600 dark:from-red-800/50 dark:to-red-900/50 dark:text-red-200"
                 />
@@ -643,7 +643,7 @@ function submit() {
                   <Label class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Total Excess</Label>
                 <Input 
                   type="number" 
-                  :value="form.shed_excess_box_qty" 
+                  v-model.number="form.shed_excess_box_qty" 
                   readonly 
                     class="rounded-lg border-emerald-300 bg-gradient-to-r from-emerald-100 to-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800 cursor-not-allowed dark:border-emerald-600 dark:from-emerald-800/50 dark:to-emerald-900/50 dark:text-emerald-200"
                 />
