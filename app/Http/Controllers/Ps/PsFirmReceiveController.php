@@ -213,9 +213,6 @@ class PsFirmReceiveController extends Controller
 
 
 
-
-
-
         $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
 
         // Save the job_no back to the record

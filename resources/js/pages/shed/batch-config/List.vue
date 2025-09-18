@@ -4,7 +4,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import dayjs from 'dayjs';
 import { Button } from '@/components/ui/button';
-
+import { useNotifier } from '@/composables/useNotifier';
 interface BatchConfig {
   id: number;
   batch_assign: {
@@ -26,7 +26,7 @@ interface BatchConfig {
   effective_to?: string | null;
   note?: string | null;
 }
-
+const { confirmDelete,confirmUpdate } = useNotifier();
 const props = defineProps<{
   batchConfigs: BatchConfig[];
 }>();
@@ -34,7 +34,6 @@ const props = defineProps<{
 const batchConfigs = ref([...props.batchConfigs]);
 
 const breadcrumbs = [
-  { title: 'Daily Operation', href: '/daily-operation' },
   { title: 'Batch Configuration', href: '/batch-config' },
 ];
 

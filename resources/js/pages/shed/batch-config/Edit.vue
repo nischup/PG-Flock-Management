@@ -9,6 +9,8 @@ const props = defineProps<{
     batchAssigns: any[];
 }>();
 
+
+console.log(props.batchConfiguration);
 // Make sure batch_assign_id is number
 const form = useForm({
     batch_assign_id: Number(props.batchConfiguration.batch_assign_id || ''),

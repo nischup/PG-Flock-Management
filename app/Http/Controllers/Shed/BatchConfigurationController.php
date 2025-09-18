@@ -64,15 +64,23 @@ class BatchConfigurationController extends Controller
     }
 
     // Edit page
-    public function edit(BatchConfiguration $batchConfiguration)
+    public function edit(BatchConfiguration $batchConfiguration,$id)
     {
        // Eager load batchAssign -> batch, company, shed, project
-            $batchAssigns = BatchAssign::with(['batch', 'company', 'shed', 'project'])
-                            ->select('id', 'batch_no', 'company_id', 'shed_id', 'project_id')
-                            ->get();
+            $batchConfig = BatchConfiguration::with('batchAssign')->findOrFail($id);
+
+            $batchAssigns = BatchAssign::with('batch') // if batchAssign has batch relation
+                ->get()
+                ->map(function($b) {
+                    return [
+                        'id' => $b->id,
+                        'transaction_no' => $b->transaction_no,
+                        'batch_name' => $b->batch->name ?? '', // fetch batch name from related batch
+                    ];
+                });
 
             return inertia('shed/batch-config/Edit', [
-                'batchConfiguration' => $batchConfiguration->load('batchAssign'), // make sure relationship exists
+                'batchConfiguration' => $batchConfig, // make sure relationship exists
                 'batchAssigns' => $batchAssigns,
             ]);
     }
@@ -96,6 +104,6 @@ class BatchConfigurationController extends Controller
 
         $batchConfiguration->update($validated);
 
-        return redirect()->route('batch-configuration.index')->with('success', 'Batch Configuration updated successfully!');
+        return redirect()->route('batch-config.index')->with('success', 'Batch Configuration updated successfully!');
     }
 }

@@ -179,7 +179,7 @@ function submit() {
           <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-white/20">
             <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
               <BuildingOfficeIcon class="h-6 w-6 text-blue-600" />
-              Current Status of - ( {{ batchAssign.flock?.name || 'Flock-' + batchAssign.flock_id }}-{{ batchAssign.shed?.name || 'Shed-' + batchAssign.shed_id }}-Batch {{ batchAssign.batch_name || batchAssign.id }} )
+              Current Status of - ( {{ batchAssign.company?.name }}-{{ batchAssign.company?.name || batchAssign.flock?.name  }}-{{ batchAssign.shed?.name || 'Shed-' + batchAssign.shed_id }}-Batch {{ batchAssign.batch_name || batchAssign.id }} )
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div class="flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200">
