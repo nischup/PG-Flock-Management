@@ -238,6 +238,16 @@ const handleCardClick = (card: any) => {
   // Special handling for Total Flock card
   if (card.title === 'Total Flock' || card.title === 'Active Flocks') {
     handleFlockCardClick(card)
+  } else if (card.title === 'Total Birds') {
+    handleBirdsCardClick(card)
+  } else if (card.title === 'Mortality Rate') {
+    handleMortalityCardClick(card)
+  } else if (card.title === 'Daily Eggs') {
+    handleDailyEggsCardClick(card)
+  } else if (card.title === 'Hatchable Eggs') {
+    handleHatchableEggsCardClick(card)
+  } else if (card.title === 'Male Birds') {
+    handleMaleBirdsCardClick(card)
   } else {
     openModal({
       title: card.title,
@@ -287,6 +297,236 @@ const handleFlockCardClick = async (card: any) => {
     modalData.value = {
       title: 'Error',
       content: 'Failed to load flock details. Please try again.',
+      data: card,
+      error: true,
+      loading: false
+    }
+  }
+}
+
+const handleBirdsCardClick = async (card: any) => {
+  try {
+    // Store current sidebar state and collapse it (if sidebar control is available)
+    if (setSidebarOpen && sidebarState) {
+      sidebarWasOpen.value = sidebarState.value === 'expanded'
+      if (sidebarState.value === 'expanded') {
+        setSidebarOpen(false)
+      }
+    }
+    
+    // Show loading state
+    modalData.value = {
+      title: 'Loading Birds Details...',
+      content: 'Fetching detailed birds information by batch...',
+      data: card,
+      loading: true
+    }
+    showModal.value = true
+
+    // Fetch detailed birds data
+    const response = await fetch(`/api/dashboard/birds-details?${new URLSearchParams(filters.value)}`)
+    const result = await response.json()
+    
+    if (result.success) {
+      modalData.value = {
+        title: 'Total Birds Details',
+        content: 'Comprehensive birds information organized by batch',
+        data: card,
+        birdsData: result.data,
+        loading: false
+      }
+    } else {
+      throw new Error(result.message || 'Failed to fetch birds details')
+    }
+  } catch (error) {
+    console.error('Error fetching birds details:', error)
+    modalData.value = {
+      title: 'Error',
+      content: 'Failed to load birds details. Please try again.',
+      data: card,
+      error: true,
+      loading: false
+    }
+  }
+}
+
+const handleMortalityCardClick = async (card: any) => {
+  try {
+    // Store current sidebar state and collapse it (if sidebar control is available)
+    if (setSidebarOpen && sidebarState) {
+      sidebarWasOpen.value = sidebarState.value === 'expanded'
+      if (sidebarState.value === 'expanded') {
+        setSidebarOpen(false)
+      }
+    }
+    
+    // Show loading state
+    modalData.value = {
+      title: 'Loading Mortality Details...',
+      content: 'Fetching detailed mortality information...',
+      data: card,
+      loading: true
+    }
+    showModal.value = true
+
+    // Fetch detailed mortality data
+    const response = await fetch(`/api/dashboard/mortality-details?${new URLSearchParams(filters.value)}`)
+    const result = await response.json()
+    
+    if (result.success) {
+      modalData.value = {
+        title: 'Mortality Rate Details',
+        content: 'Comprehensive mortality analysis and trends',
+        data: card,
+        mortalityData: result.data,
+        loading: false
+      }
+    } else {
+      throw new Error(result.message || 'Failed to fetch mortality details')
+    }
+  } catch (error) {
+    console.error('Error fetching mortality details:', error)
+    modalData.value = {
+      title: 'Error',
+      content: 'Failed to load mortality details. Please try again.',
+      data: card,
+      error: true,
+      loading: false
+    }
+  }
+}
+
+const handleDailyEggsCardClick = async (card: any) => {
+  try {
+    // Store current sidebar state and collapse it (if sidebar control is available)
+    if (setSidebarOpen && sidebarState) {
+      sidebarWasOpen.value = sidebarState.value === 'expanded'
+      if (sidebarState.value === 'expanded') {
+        setSidebarOpen(false)
+      }
+    }
+    
+    // Show loading state
+    modalData.value = {
+      title: 'Loading Daily Eggs Details...',
+      content: 'Fetching detailed egg production information...',
+      data: card,
+      loading: true
+    }
+    showModal.value = true
+
+    // Fetch detailed eggs data
+    const response = await fetch(`/api/dashboard/daily-eggs-details?${new URLSearchParams(filters.value)}`)
+    const result = await response.json()
+    
+    if (result.success) {
+      modalData.value = {
+        title: 'Daily Eggs Details',
+        content: 'Comprehensive egg production analysis and trends',
+        data: card,
+        eggsData: result.data,
+        loading: false
+      }
+    } else {
+      throw new Error(result.message || 'Failed to fetch daily eggs details')
+    }
+  } catch (error) {
+    console.error('Error fetching daily eggs details:', error)
+    modalData.value = {
+      title: 'Error',
+      content: 'Failed to load daily eggs details. Please try again.',
+      data: card,
+      error: true,
+      loading: false
+    }
+  }
+}
+
+const handleHatchableEggsCardClick = async (card: any) => {
+  try {
+    // Store current sidebar state and collapse it (if sidebar control is available)
+    if (setSidebarOpen && sidebarState) {
+      sidebarWasOpen.value = sidebarState.value === 'expanded'
+      if (sidebarState.value === 'expanded') {
+        setSidebarOpen(false)
+      }
+    }
+    
+    // Show loading state
+    modalData.value = {
+      title: 'Loading Hatchable Eggs Details...',
+      content: 'Fetching detailed hatchable eggs information...',
+      data: card,
+      loading: true
+    }
+    showModal.value = true
+
+    // Fetch detailed hatchable eggs data
+    const response = await fetch(`/api/dashboard/hatchable-eggs-details?${new URLSearchParams(filters.value)}`)
+    const result = await response.json()
+    
+    if (result.success) {
+      modalData.value = {
+        title: 'Hatchable Eggs Details',
+        content: 'Comprehensive hatchable eggs analysis and trends',
+        data: card,
+        hatchableEggsData: result.data,
+        loading: false
+      }
+    } else {
+      throw new Error(result.message || 'Failed to fetch hatchable eggs details')
+    }
+  } catch (error) {
+    console.error('Error fetching hatchable eggs details:', error)
+    modalData.value = {
+      title: 'Error',
+      content: 'Failed to load hatchable eggs details. Please try again.',
+      data: card,
+      error: true,
+      loading: false
+    }
+  }
+}
+
+const handleMaleBirdsCardClick = async (card: any) => {
+  try {
+    // Store current sidebar state and collapse it (if sidebar control is available)
+    if (setSidebarOpen && sidebarState) {
+      sidebarWasOpen.value = sidebarState.value === 'expanded'
+      if (sidebarState.value === 'expanded') {
+        setSidebarOpen(false)
+      }
+    }
+    
+    // Show loading state
+    modalData.value = {
+      title: 'Loading Male Birds Details...',
+      content: 'Fetching detailed male birds information...',
+      data: card,
+      loading: true
+    }
+    showModal.value = true
+
+    // Fetch detailed male birds data
+    const response = await fetch(`/api/dashboard/male-birds-details?${new URLSearchParams(filters.value)}`)
+    const result = await response.json()
+    
+    if (result.success) {
+      modalData.value = {
+        title: 'Male Birds Details',
+        content: 'Comprehensive male birds analysis and trends',
+        data: card,
+        maleBirdsData: result.data,
+        loading: false
+      }
+    } else {
+      throw new Error(result.message || 'Failed to fetch male birds details')
+    }
+  } catch (error) {
+    console.error('Error fetching male birds details:', error)
+    modalData.value = {
+      title: 'Error',
+      content: 'Failed to load male birds details. Please try again.',
       data: card,
       error: true,
       loading: false
@@ -762,7 +1002,8 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
       :is-visible="showModal"
       :title="modalData?.title"
       :icon="modalData?.icon"
-      :size="modalData?.flockData ? '5xl' : 'lg'"
+      :size="modalData?.flockData || modalData?.birdsData || modalData?.mortalityData || modalData?.eggsData || modalData?.hatchableEggsData || modalData?.maleBirdsData ? '5xl' : 'lg'"
+      :show-confirm="false"
       @update:is-visible="showModal = $event"
       @close="closeModal"
     >
@@ -891,6 +1132,1036 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         <!-- Last Updated -->
         <div class="text-center text-sm text-gray-500">
           Last updated: {{ modalData.flockData.last_updated }}
+        </div>
+      </div>
+
+      <!-- Birds Details Content -->
+      <div v-else-if="modalData?.birdsData" class="space-y-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Total Birds</div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.birdsData.summary.total_birds.toLocaleString() }}</div>
+          </div>
+          <div class="bg-orange-50 p-4 rounded-lg">
+            <div class="text-sm text-orange-600 font-medium">Male Birds</div>
+            <div class="text-2xl font-bold text-orange-800">{{ modalData.birdsData.summary.male_birds.toLocaleString() }}</div>
+          </div>
+          <div class="bg-pink-50 p-4 rounded-lg">
+            <div class="text-sm text-pink-600 font-medium">Female Birds</div>
+            <div class="text-2xl font-bold text-pink-800">{{ modalData.birdsData.summary.female_birds.toLocaleString() }}</div>
+          </div>
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 font-medium">Mortality Rate</div>
+            <div class="text-2xl font-bold text-red-800">{{ modalData.birdsData.summary.mortality_rate }}%</div>
+          </div>
+        </div>
+
+        <!-- Additional Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 font-medium">Total Batches</div>
+            <div class="text-xl font-bold text-green-800">{{ modalData.birdsData.summary.total_batches }}</div>
+          </div>
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <div class="text-sm text-purple-600 font-medium">Active Batches</div>
+            <div class="text-xl font-bold text-purple-800">{{ modalData.birdsData.summary.active_batches }}</div>
+          </div>
+          <div class="bg-indigo-50 p-4 rounded-lg">
+            <div class="text-sm text-indigo-600 font-medium">Total Assignments</div>
+            <div class="text-xl font-bold text-indigo-800">{{ modalData.birdsData.summary.total_assignments }}</div>
+          </div>
+        </div>
+
+        <!-- Batch Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Birds by Batch</h3>
+            <p class="text-sm text-gray-600">Detailed breakdown of birds organized by batch</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male/Female</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shed</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="batch in modalData.birdsData.batch_details" :key="batch.batch_id" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.batch_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.assignments_count }} assignment(s)</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.flock_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.total_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">
+                      <div>M: {{ batch.male_birds.toLocaleString() }}</div>
+                      <div>F: {{ batch.female_birds.toLocaleString() }}</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.mortality_count.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.mortality_rate }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.company_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.project_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.shed_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="batch.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'" 
+                          class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                      {{ batch.status }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Operations -->
+        <div v-if="modalData.birdsData.recent_operations.length > 0" class="bg-white rounded-lg border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Operations</h3>
+            <p class="text-sm text-gray-600">Latest operations across all batches</p>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <div v-for="operation in modalData.birdsData.recent_operations" :key="operation.id" 
+                   class="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                <div class="flex-shrink-0">
+                  <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-gray-900">{{ operation.operation_type }}</p>
+                    <p class="text-xs text-gray-500">{{ operation.operation_date }}</p>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1">{{ operation.description }}</p>
+                  <div class="mt-2 text-xs text-gray-500">
+                    <span class="font-medium">{{ operation.batch_name }}</span> in 
+                    <span class="font-medium">{{ operation.shed_name }}</span> - 
+                    <span class="font-medium">{{ operation.flock_name }}</span>
+                    <span v-if="operation.birds_affected > 0"> ({{ operation.birds_affected }} birds affected)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Last Updated -->
+        <div class="text-center text-sm text-gray-500">
+          Last updated: {{ new Date(modalData.birdsData.timestamp * 1000).toLocaleString() }}
+        </div>
+      </div>
+
+      <!-- Mortality Details Content -->
+      <div v-else-if="modalData?.mortalityData" class="space-y-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 font-medium">Total Mortality</div>
+            <div class="text-2xl font-bold text-red-800">{{ modalData.mortalityData.summary.total_mortality.toLocaleString() }}</div>
+          </div>
+          <div class="bg-orange-50 p-4 rounded-lg">
+            <div class="text-sm text-orange-600 font-medium">Male Mortality</div>
+            <div class="text-2xl font-bold text-orange-800">{{ modalData.mortalityData.summary.male_mortality.toLocaleString() }}</div>
+          </div>
+          <div class="bg-pink-50 p-4 rounded-lg">
+            <div class="text-sm text-pink-600 font-medium">Female Mortality</div>
+            <div class="text-2xl font-bold text-pink-800">{{ modalData.mortalityData.summary.female_mortality.toLocaleString() }}</div>
+          </div>
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <div class="text-sm text-purple-600 font-medium">Overall Rate</div>
+            <div class="text-2xl font-bold text-purple-800">{{ modalData.mortalityData.summary.overall_mortality_rate }}%</div>
+          </div>
+        </div>
+
+        <!-- Risk Assessment Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 font-medium">Excellent Flocks</div>
+            <div class="text-xl font-bold text-green-800">{{ modalData.mortalityData.summary.excellent_flocks }}</div>
+            <div class="text-xs text-green-600">≤ 2% mortality</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Good Flocks</div>
+            <div class="text-xl font-bold text-blue-800">{{ modalData.mortalityData.summary.good_flocks }}</div>
+            <div class="text-xs text-blue-600">2-5% mortality</div>
+          </div>
+          <div class="bg-yellow-50 p-4 rounded-lg">
+            <div class="text-sm text-yellow-600 font-medium">Moderate Risk</div>
+            <div class="text-xl font-bold text-yellow-800">{{ modalData.mortalityData.summary.moderate_flocks }}</div>
+            <div class="text-xs text-yellow-600">5-10% mortality</div>
+          </div>
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 font-medium">High Risk</div>
+            <div class="text-xl font-bold text-red-800">{{ modalData.mortalityData.summary.high_risk_flocks }}</div>
+            <div class="text-xs text-red-600">> 10% mortality</div>
+          </div>
+        </div>
+
+        <!-- Flock Mortality Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Mortality by Flock</h3>
+            <p class="text-sm text-gray-600">Detailed mortality breakdown for each flock</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male/Female</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batches</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Level</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="flock in modalData.mortalityData.flock_details" :key="flock.flock_id" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">{{ flock.flock_name }}</div>
+                      <div class="text-sm text-gray-500">{{ flock.flock_code }}</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.total_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ flock.total_mortality.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ flock.mortality_rate }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">
+                      <div>M: {{ flock.male_mortality.toLocaleString() }}</div>
+                      <div>F: {{ flock.female_mortality.toLocaleString() }}</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.batches_count }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="{
+                      'bg-green-100 text-green-800': flock.mortality_rate <= 2,
+                      'bg-blue-100 text-blue-800': flock.mortality_rate > 2 && flock.mortality_rate <= 5,
+                      'bg-yellow-100 text-yellow-800': flock.mortality_rate > 5 && flock.mortality_rate <= 10,
+                      'bg-red-100 text-red-800': flock.mortality_rate > 10
+                    }" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                      {{ flock.mortality_rate <= 2 ? 'Excellent' : 
+                         flock.mortality_rate <= 5 ? 'Good' : 
+                         flock.mortality_rate <= 10 ? 'Moderate' : 'High Risk' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Batch Mortality Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Mortality by Batch</h3>
+            <p class="text-sm text-gray-600">Detailed mortality breakdown for each batch</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shed</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="batch in modalData.mortalityData.batch_details" :key="batch.batch_no" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.batch_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.assignments_count }} assignment(s)</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.flock_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.total_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.total_mortality.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">
+                      M: {{ batch.male_mortality.toLocaleString() }} | F: {{ batch.female_mortality.toLocaleString() }}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.mortality_rate }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.company_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.project_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.shed_name }}</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Mortality Operations -->
+        <div v-if="modalData.mortalityData.recent_operations.length > 0" class="bg-white rounded-lg border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Mortality Operations</h3>
+            <p class="text-sm text-gray-600">Latest mortality-related operations and incidents</p>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <div v-for="operation in modalData.mortalityData.recent_operations" :key="operation.id" 
+                   class="flex items-start space-x-4 p-4 bg-red-50 rounded-lg border-l-4 border-red-400">
+                <div class="flex-shrink-0">
+                  <div class="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-gray-900">{{ operation.operation_type }}</p>
+                    <p class="text-xs text-gray-500">{{ operation.operation_date }}</p>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1">{{ operation.description }}</p>
+                  <div class="mt-2 text-xs text-gray-500">
+                    <span class="font-medium">{{ operation.batch_name }}</span> in 
+                    <span class="font-medium">{{ operation.shed_name }}</span> - 
+                    <span class="font-medium">{{ operation.flock_name }}</span>
+                    <span class="text-gray-400"> • by {{ operation.created_by }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Last Updated -->
+        <div class="text-center text-sm text-gray-500">
+          Last updated: {{ new Date(modalData.mortalityData.timestamp * 1000).toLocaleString() }}
+        </div>
+      </div>
+
+      <!-- Daily Eggs Details Content -->
+      <div v-else-if="modalData?.eggsData" class="space-y-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Total Eggs</div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.eggsData.summary.total_eggs.toLocaleString() }}</div>
+          </div>
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 font-medium">Commercial Eggs</div>
+            <div class="text-2xl font-bold text-green-800">{{ modalData.eggsData.summary.commercial_eggs.toLocaleString() }}</div>
+            <div class="text-xs text-green-600">{{ modalData.eggsData.summary.commercial_percentage }}% of total</div>
+          </div>
+          <div class="bg-orange-50 p-4 rounded-lg">
+            <div class="text-sm text-orange-600 font-medium">Technical Eggs</div>
+            <div class="text-2xl font-bold text-orange-800">{{ modalData.eggsData.summary.technical_eggs.toLocaleString() }}</div>
+          </div>
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <div class="text-sm text-purple-600 font-medium">Hatching Eggs</div>
+            <div class="text-2xl font-bold text-purple-800">{{ modalData.eggsData.summary.hatching_eggs.toLocaleString() }}</div>
+          </div>
+        </div>
+
+        <!-- Additional Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 font-medium">Rejected Eggs</div>
+            <div class="text-xl font-bold text-red-800">{{ modalData.eggsData.summary.rejected_eggs.toLocaleString() }}</div>
+            <div class="text-xs text-red-600">{{ modalData.eggsData.summary.rejection_rate }}% rejection rate</div>
+          </div>
+          <div class="bg-indigo-50 p-4 rounded-lg">
+            <div class="text-sm text-indigo-600 font-medium">Total Flocks</div>
+            <div class="text-xl font-bold text-indigo-800">{{ modalData.eggsData.summary.total_flocks }}</div>
+          </div>
+          <div class="bg-teal-50 p-4 rounded-lg">
+            <div class="text-sm text-teal-600 font-medium">Total Batches</div>
+            <div class="text-xl font-bold text-teal-800">{{ modalData.eggsData.summary.total_batches }}</div>
+          </div>
+          <div class="bg-cyan-50 p-4 rounded-lg">
+            <div class="text-sm text-cyan-600 font-medium">Classifications</div>
+            <div class="text-xl font-bold text-cyan-800">{{ modalData.eggsData.summary.total_classifications }}</div>
+          </div>
+        </div>
+
+        <!-- Production Performance Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 font-medium">Excellent Flocks</div>
+            <div class="text-xl font-bold text-green-800">{{ modalData.eggsData.summary.excellent_flocks }}</div>
+            <div class="text-xs text-green-600">≥ 80% commercial</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Good Flocks</div>
+            <div class="text-xl font-bold text-blue-800">{{ modalData.eggsData.summary.good_flocks }}</div>
+            <div class="text-xs text-blue-600">70-79% commercial</div>
+          </div>
+          <div class="bg-yellow-50 p-4 rounded-lg">
+            <div class="text-sm text-yellow-600 font-medium">Moderate Flocks</div>
+            <div class="text-xl font-bold text-yellow-800">{{ modalData.eggsData.summary.moderate_flocks }}</div>
+            <div class="text-xs text-yellow-600">60-69% commercial</div>
+          </div>
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 font-medium">Poor Flocks</div>
+            <div class="text-xl font-bold text-red-800">{{ modalData.eggsData.summary.poor_flocks }}</div>
+            <div class="text-xs text-red-600">< 60% commercial</div>
+          </div>
+        </div>
+
+        <!-- Flock Egg Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Egg Production by Flock</h3>
+            <p class="text-sm text-gray-600">Detailed egg production breakdown for each flock</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Eggs</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commercial</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Technical</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hatching</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rejected</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="flock in modalData.eggsData.flock_details" :key="flock.flock_id" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">{{ flock.flock_name }}</div>
+                      <div class="text-sm text-gray-500">{{ flock.flock_code }}</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ flock.total_eggs.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ flock.classifications_count }} classifications</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.commercial_eggs.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ flock.commercial_percentage }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.technical_eggs.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.hatching_eggs.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.rejected_eggs.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ flock.rejection_rate }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="{
+                      'bg-green-100 text-green-800': flock.commercial_percentage >= 80,
+                      'bg-blue-100 text-blue-800': flock.commercial_percentage >= 70 && flock.commercial_percentage < 80,
+                      'bg-yellow-100 text-yellow-800': flock.commercial_percentage >= 60 && flock.commercial_percentage < 70,
+                      'bg-red-100 text-red-800': flock.commercial_percentage < 60
+                    }" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                      {{ flock.commercial_percentage >= 80 ? 'Excellent' : 
+                         flock.commercial_percentage >= 70 ? 'Good' : 
+                         flock.commercial_percentage >= 60 ? 'Moderate' : 'Poor' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Batch Egg Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Egg Production by Batch</h3>
+            <p class="text-sm text-gray-600">Detailed egg production breakdown for each batch</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Eggs</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commercial</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Technical</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hatching</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rejected</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="batch in modalData.eggsData.batch_details" :key="batch.batch_no" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.batch_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.classifications_count }} classifications</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.flock_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.total_eggs.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.commercial_eggs.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.commercial_percentage }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.technical_eggs.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.hatching_eggs.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.rejected_eggs.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.rejection_rate }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.company_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.project_name }}</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Egg Classifications -->
+        <div v-if="modalData.eggsData.recent_classifications.length > 0" class="bg-white rounded-lg border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Egg Classifications</h3>
+            <p class="text-sm text-gray-600">Latest egg classification records</p>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <div v-for="classification in modalData.eggsData.recent_classifications" :key="classification.id" 
+                   class="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                <div class="flex-shrink-0">
+                  <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-gray-900">Egg Classification</p>
+                    <p class="text-xs text-gray-500">{{ classification.classification_date }}</p>
+                  </div>
+                  <div class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span class="text-gray-600">Total:</span>
+                      <span class="font-medium">{{ classification.total_eggs.toLocaleString() }}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-600">Commercial:</span>
+                      <span class="font-medium text-green-600">{{ classification.commercial_eggs.toLocaleString() }}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-600">Technical:</span>
+                      <span class="font-medium text-orange-600">{{ classification.technical_eggs.toLocaleString() }}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-600">Hatching:</span>
+                      <span class="font-medium text-purple-600">{{ classification.hatching_eggs.toLocaleString() }}</span>
+                    </div>
+                  </div>
+                  <div class="mt-2 text-xs text-gray-500">
+                    <span class="font-medium">{{ classification.batch_name }}</span> in 
+                    <span class="font-medium">{{ classification.shed_name }}</span> - 
+                    <span class="font-medium">{{ classification.flock_name }}</span>
+                    <span class="text-gray-400"> • by {{ classification.created_by }}</span>
+                  </div>
+                  <div v-if="classification.remarks" class="mt-2 text-xs text-gray-600 italic">
+                    "{{ classification.remarks }}"
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Last Updated -->
+        <div class="text-center text-sm text-gray-500">
+          Last updated: {{ new Date(modalData.eggsData.timestamp * 1000).toLocaleString() }}
+        </div>
+      </div>
+
+      <!-- Hatchable Eggs Details Content -->
+      <div v-else-if="modalData?.hatchableEggsData" class="space-y-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <div class="text-sm text-purple-600 font-medium">Total Hatchable Eggs</div>
+            <div class="text-2xl font-bold text-purple-800">{{ modalData.hatchableEggsData.summary.total_hatching_eggs.toLocaleString() }}</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Total Eggs</div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.hatchableEggsData.summary.total_eggs.toLocaleString() }}</div>
+          </div>
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 font-medium">Hatching Rate</div>
+            <div class="text-2xl font-bold text-green-800">{{ modalData.hatchableEggsData.summary.hatching_percentage }}%</div>
+          </div>
+          <div class="bg-cyan-50 p-4 rounded-lg">
+            <div class="text-sm text-cyan-600 font-medium">Classifications</div>
+            <div class="text-xl font-bold text-cyan-800">{{ modalData.hatchableEggsData.summary.total_classifications }}</div>
+          </div>
+        </div>
+
+        <!-- Priority System Info -->
+        <div class="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+          <div class="flex items-center space-x-3">
+            <div class="flex-shrink-0">
+              <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <span class="text-purple-600 font-bold">1</span>
+              </div>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-sm font-semibold text-gray-800">Priority System</h3>
+              <p class="text-xs text-gray-600">
+                <span class="font-medium text-purple-600">Hatchable Eggs</span> are the first priority (95%+ = Excellent, 80-95% = Good, 70-79% = Moderate, <70% = Poor), 
+                <span class="font-medium text-gray-600">Commercial Eggs</span> are the second priority (lower percentages = better for breeding)
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hatching Performance Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 font-medium">Excellent Flocks</div>
+            <div class="text-xl font-bold text-green-800">{{ modalData.hatchableEggsData.summary.excellent_flocks }}</div>
+            <div class="text-xs text-green-600">≥ 95% hatching rate</div>
+            <div class="text-xs text-gray-500">Priority: Hatchable</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Good Flocks</div>
+            <div class="text-xl font-bold text-blue-800">{{ modalData.hatchableEggsData.summary.good_flocks }}</div>
+            <div class="text-xs text-blue-600">80-95% hatching rate</div>
+            <div class="text-xs text-gray-500">Priority: Hatchable</div>
+          </div>
+          <div class="bg-yellow-50 p-4 rounded-lg">
+            <div class="text-sm text-yellow-600 font-medium">Moderate Flocks</div>
+            <div class="text-xl font-bold text-yellow-800">{{ modalData.hatchableEggsData.summary.moderate_flocks }}</div>
+            <div class="text-xs text-yellow-600">70-79% hatching rate</div>
+            <div class="text-xs text-gray-500">Priority: Hatchable</div>
+          </div>
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 font-medium">Poor Flocks</div>
+            <div class="text-xl font-bold text-red-800">{{ modalData.hatchableEggsData.summary.poor_flocks }}</div>
+            <div class="text-xs text-red-600">< 70% hatching rate</div>
+            <div class="text-xs text-gray-500">Priority: Commercial</div>
+          </div>
+        </div>
+
+        <!-- Flock Hatching Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Hatchable Eggs by Flock</h3>
+            <p class="text-sm text-gray-600">Detailed hatchable eggs breakdown for each flock</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hatchable Eggs</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Eggs</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hatching Rate</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Classifications</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="flock in modalData.hatchableEggsData.flock_details" :key="flock.flock_id" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">{{ flock.flock_name }}</div>
+                      <div class="text-sm text-gray-500">{{ flock.flock_code }}</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-purple-900">{{ flock.total_hatching_eggs.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.total_eggs.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ flock.hatching_percentage }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.classifications_count }}</div>
+                    <div class="text-xs text-gray-500">Last: {{ flock.last_classification_date }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="{
+                      'bg-green-100 text-green-800': flock.hatching_percentage >= 95,
+                      'bg-blue-100 text-blue-800': flock.hatching_percentage >= 80 && flock.hatching_percentage < 95,
+                      'bg-yellow-100 text-yellow-800': flock.hatching_percentage >= 70 && flock.hatching_percentage < 80,
+                      'bg-red-100 text-red-800': flock.hatching_percentage < 70
+                    }" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                      {{ flock.hatching_percentage >= 95 ? 'Excellent' : 
+                         flock.hatching_percentage >= 80 ? 'Good' : 
+                         flock.hatching_percentage >= 70 ? 'Moderate' : 'Poor' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Batch Hatching Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Hatchable Eggs by Batch</h3>
+            <p class="text-sm text-gray-600">Detailed hatchable eggs breakdown for each batch</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hatchable Eggs</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Eggs</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hatching Rate</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="batch in modalData.hatchableEggsData.batch_details" :key="batch.batch_no" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.batch_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.classifications_count }} classifications</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.flock_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-purple-900">{{ batch.total_hatching_eggs.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.total_eggs.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.hatching_percentage }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.company_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.project_name }}</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Hatching Classifications -->
+        <div v-if="modalData.hatchableEggsData.recent_classifications.length > 0" class="bg-white rounded-lg border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Hatching Egg Classifications</h3>
+            <p class="text-sm text-gray-600">Latest hatchable egg classification records</p>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <div v-for="classification in modalData.hatchableEggsData.recent_classifications" :key="classification.id" 
+                   class="flex items-start space-x-4 p-4 bg-purple-50 rounded-lg border-l-4 border-purple-400">
+                <div class="flex-shrink-0">
+                  <div class="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-gray-900">Hatching Egg Classification</p>
+                    <p class="text-xs text-gray-500">{{ classification.classification_date }}</p>
+                  </div>
+                  <div class="mt-2 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span class="text-gray-600">Hatchable:</span>
+                      <span class="font-medium text-purple-600">{{ classification.total_hatching_eggs.toLocaleString() }}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-600">Total:</span>
+                      <span class="font-medium">{{ classification.total_eggs.toLocaleString() }}</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-600">Rate:</span>
+                      <span class="font-medium text-green-600">{{ classification.hatching_percentage }}%</span>
+                    </div>
+                  </div>
+                  <div class="mt-2 text-xs text-gray-500">
+                    <span class="font-medium">{{ classification.batch_name }}</span> in 
+                    <span class="font-medium">{{ classification.shed_name }}</span> - 
+                    <span class="font-medium">{{ classification.flock_name }}</span>
+                    <span class="text-gray-400"> • by {{ classification.created_by }}</span>
+                  </div>
+                  <div class="mt-1 text-xs text-purple-600 font-medium">
+                    Hatching Rate: {{ classification.hatching_percentage }}%
+                  </div>
+                  <div v-if="classification.remarks" class="mt-2 text-xs text-gray-600 italic">
+                    "{{ classification.remarks }}"
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Last Updated -->
+        <div class="text-center text-sm text-gray-500">
+          Last updated: {{ new Date(modalData.hatchableEggsData.timestamp * 1000).toLocaleString() }}
+        </div>
+      </div>
+
+      <!-- Male Birds Details Content -->
+      <div v-else-if="modalData?.maleBirdsData" class="space-y-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Total Male Birds</div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.maleBirdsData.summary.total_male_birds.toLocaleString() }}</div>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="text-sm text-gray-600 font-medium">Total Birds</div>
+            <div class="text-2xl font-bold text-gray-800">{{ modalData.maleBirdsData.summary.total_birds.toLocaleString() }}</div>
+          </div>
+          <div class="bg-pink-50 p-4 rounded-lg">
+            <div class="text-sm text-pink-600 font-medium">Female Birds</div>
+            <div class="text-2xl font-bold text-pink-800">{{ modalData.maleBirdsData.summary.total_female_birds.toLocaleString() }}</div>
+          </div>
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 font-medium">Male Percentage</div>
+            <div class="text-2xl font-bold text-green-800">{{ modalData.maleBirdsData.summary.male_percentage }}%</div>
+          </div>
+        </div>
+
+        <!-- Additional Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 font-medium">Male Mortality</div>
+            <div class="text-xl font-bold text-red-800">{{ modalData.maleBirdsData.summary.male_mortality.toLocaleString() }}</div>
+            <div class="text-xs text-red-600">{{ modalData.maleBirdsData.summary.male_mortality_rate }}% mortality rate</div>
+          </div>
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <div class="text-sm text-purple-600 font-medium">Active Flocks</div>
+            <div class="text-xl font-bold text-purple-800">{{ modalData.maleBirdsData.summary.total_flocks }}</div>
+            <div class="text-xs text-purple-600">{{ modalData.maleBirdsData.summary.total_batches }} batches</div>
+          </div>
+          <div class="bg-cyan-50 p-4 rounded-lg">
+            <div class="text-sm text-cyan-600 font-medium">Assignments</div>
+            <div class="text-xl font-bold text-cyan-800">{{ modalData.maleBirdsData.summary.total_assignments }}</div>
+            <div class="text-xs text-cyan-600">Total assignments</div>
+          </div>
+        </div>
+
+        <!-- Male Bird Performance Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 font-medium">Excellent Flocks</div>
+            <div class="text-xl font-bold text-green-800">{{ modalData.maleBirdsData.summary.excellent_flocks }}</div>
+            <div class="text-xs text-green-600">≥ 50% male ratio</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Good Flocks</div>
+            <div class="text-xl font-bold text-blue-800">{{ modalData.maleBirdsData.summary.good_flocks }}</div>
+            <div class="text-xs text-blue-600">45-50% male ratio</div>
+          </div>
+          <div class="bg-yellow-50 p-4 rounded-lg">
+            <div class="text-sm text-yellow-600 font-medium">Moderate Flocks</div>
+            <div class="text-xl font-bold text-yellow-800">{{ modalData.maleBirdsData.summary.moderate_flocks }}</div>
+            <div class="text-xs text-yellow-600">40-45% male ratio</div>
+          </div>
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 font-medium">Poor Flocks</div>
+            <div class="text-xl font-bold text-red-800">{{ modalData.maleBirdsData.summary.poor_flocks }}</div>
+            <div class="text-xs text-red-600">< 40% male ratio</div>
+          </div>
+        </div>
+
+        <!-- Flock Male Birds Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Male Birds by Flock</h3>
+            <p class="text-sm text-gray-600">Detailed male birds breakdown for each flock</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Female Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male %</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="flock in modalData.maleBirdsData.flock_details" :key="flock.flock_id" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">{{ flock.flock_name }}</div>
+                      <div class="text-sm text-gray-500">{{ flock.flock_code }}</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-blue-900">{{ flock.total_male_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-pink-900">{{ flock.total_female_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.total_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ flock.male_percentage }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.male_mortality.toLocaleString() }}</div>
+                    <div class="text-xs text-red-600">{{ flock.male_mortality_rate }}% rate</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="{
+                      'bg-green-100 text-green-800': flock.male_percentage >= 50,
+                      'bg-blue-100 text-blue-800': flock.male_percentage >= 45 && flock.male_percentage < 50,
+                      'bg-yellow-100 text-yellow-800': flock.male_percentage >= 40 && flock.male_percentage < 45,
+                      'bg-red-100 text-red-800': flock.male_percentage < 40
+                    }" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                      {{ flock.male_percentage >= 50 ? 'Excellent' : 
+                         flock.male_percentage >= 45 ? 'Good' : 
+                         flock.male_percentage >= 40 ? 'Moderate' : 'Poor' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Batch Male Birds Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Male Birds by Batch</h3>
+            <p class="text-sm text-gray-600">Detailed male birds breakdown for each batch</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Female Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male %</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="batch in modalData.maleBirdsData.batch_details" :key="batch.batch_no" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.batch_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.assignments_count }} assignments</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.flock_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-blue-900">{{ batch.total_male_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-pink-900">{{ batch.total_female_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.total_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.male_percentage }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.company_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.project_name }}</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Operations -->
+        <div v-if="modalData.maleBirdsData.recent_operations.length > 0" class="bg-white rounded-lg border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Operations</h3>
+            <p class="text-sm text-gray-600">Latest operations related to male birds</p>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <div v-for="operation in modalData.maleBirdsData.recent_operations" :key="operation.id" 
+                   class="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                <div class="flex-shrink-0">
+                  <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-gray-900">{{ operation.operation_type }}</p>
+                    <p class="text-xs text-gray-500">{{ operation.operation_date }}</p>
+                  </div>
+                  <div class="mt-2 text-xs text-gray-500">
+                    <span class="font-medium">{{ operation.batch_name }}</span> in 
+                    <span class="font-medium">{{ operation.shed_name }}</span> - 
+                    <span class="font-medium">{{ operation.flock_name }}</span>
+                    <span class="text-gray-400"> • by {{ operation.created_by }}</span>
+                  </div>
+                  <div class="mt-1 text-xs text-gray-600">
+                    {{ operation.description }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Last Updated -->
+        <div class="text-center text-sm text-gray-500">
+          Last updated: {{ new Date(modalData.maleBirdsData.timestamp * 1000).toLocaleString() }}
         </div>
       </div>
 
