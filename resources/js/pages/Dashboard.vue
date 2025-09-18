@@ -248,6 +248,8 @@ const handleCardClick = (card: any) => {
     handleHatchableEggsCardClick(card)
   } else if (card.title === 'Male Birds') {
     handleMaleBirdsCardClick(card)
+  } else if (card.title === 'Female Birds') {
+    handleFemaleBirdsCardClick(card)
   } else {
     openModal({
       title: card.title,
@@ -527,6 +529,52 @@ const handleMaleBirdsCardClick = async (card: any) => {
     modalData.value = {
       title: 'Error',
       content: 'Failed to load male birds details. Please try again.',
+      data: card,
+      error: true,
+      loading: false
+    }
+  }
+}
+
+const handleFemaleBirdsCardClick = async (card: any) => {
+  try {
+    // Store current sidebar state and collapse it (if sidebar control is available)
+    if (setSidebarOpen && sidebarState) {
+      sidebarWasOpen.value = sidebarState.value === 'expanded'
+      if (sidebarState.value === 'expanded') {
+        setSidebarOpen(false)
+      }
+    }
+    
+    // Show loading state
+    modalData.value = {
+      title: 'Loading Female Birds Details...',
+      content: 'Fetching detailed female birds information...',
+      data: card,
+      loading: true
+    }
+    showModal.value = true
+
+    // Fetch detailed female birds data
+    const response = await fetch(`/api/dashboard/female-birds-details?${new URLSearchParams(filters.value)}`)
+    const result = await response.json()
+    
+    if (result.success) {
+      modalData.value = {
+        title: 'Female Birds Details',
+        content: 'Comprehensive female birds analysis and trends',
+        data: card,
+        femaleBirdsData: result.data,
+        loading: false
+      }
+    } else {
+      throw new Error(result.message || 'Failed to fetch female birds details')
+    }
+  } catch (error) {
+    console.error('Error fetching female birds details:', error)
+    modalData.value = {
+      title: 'Error',
+      content: 'Failed to load female birds details. Please try again.',
       data: card,
       error: true,
       loading: false
@@ -1002,7 +1050,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
       :is-visible="showModal"
       :title="modalData?.title"
       :icon="modalData?.icon"
-      :size="modalData?.flockData || modalData?.birdsData || modalData?.mortalityData || modalData?.eggsData || modalData?.hatchableEggsData || modalData?.maleBirdsData ? '5xl' : 'lg'"
+      :size="modalData?.flockData || modalData?.birdsData || modalData?.mortalityData || modalData?.eggsData || modalData?.hatchableEggsData || modalData?.maleBirdsData || modalData?.femaleBirdsData ? '5xl' : 'lg'"
       :show-confirm="false"
       @update:is-visible="showModal = $event"
       @close="closeModal"
@@ -2174,6 +2222,235 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         <!-- Last Updated -->
         <div class="text-center text-sm text-gray-500">
           Last updated: {{ new Date(modalData.maleBirdsData.timestamp * 1000).toLocaleString() }}
+        </div>
+      </div>
+
+      <!-- Female Birds Details Content -->
+      <div v-else-if="modalData?.femaleBirdsData" class="space-y-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-pink-50 p-4 rounded-lg">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-pink-600">🐣</div>
+              <div class="text-sm text-pink-600 font-medium">Total Female Birds</div>
+            </div>
+            <div class="text-2xl font-bold text-pink-800">{{ modalData.femaleBirdsData.summary.total_female_birds.toLocaleString() }}</div>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-gray-600">🐣</div>
+              <div class="text-sm text-gray-600 font-medium">Total Birds</div>
+            </div>
+            <div class="text-2xl font-bold text-gray-800">{{ modalData.femaleBirdsData.summary.total_birds.toLocaleString() }}</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-blue-600">🐣</div>
+              <div class="text-sm text-blue-600 font-medium">Male Birds</div>
+            </div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.femaleBirdsData.summary.total_male_birds.toLocaleString() }}</div>
+          </div>
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-green-600">📊</div>
+              <div class="text-sm text-green-600 font-medium">Female Percentage</div>
+            </div>
+            <div class="text-2xl font-bold text-green-800">{{ modalData.femaleBirdsData.summary.female_percentage }}%</div>
+          </div>
+        </div>
+
+        <!-- Additional Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 font-medium">Female Mortality</div>
+            <div class="text-xl font-bold text-red-800">{{ modalData.femaleBirdsData.summary.female_mortality.toLocaleString() }}</div>
+            <div class="text-xs text-red-600">{{ modalData.femaleBirdsData.summary.female_mortality_rate }}% mortality rate</div>
+          </div>
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <div class="text-sm text-purple-600 font-medium">Active Flocks</div>
+            <div class="text-xl font-bold text-purple-800">{{ modalData.femaleBirdsData.summary.total_flocks }}</div>
+            <div class="text-xs text-purple-600">{{ modalData.femaleBirdsData.summary.total_batches }} batches</div>
+          </div>
+          <div class="bg-cyan-50 p-4 rounded-lg">
+            <div class="text-sm text-cyan-600 font-medium">Assignments</div>
+            <div class="text-xl font-bold text-cyan-800">{{ modalData.femaleBirdsData.summary.total_assignments }}</div>
+            <div class="text-xs text-cyan-600">Total assignments</div>
+          </div>
+        </div>
+
+        <!-- Female Bird Performance Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 font-medium">Excellent Flocks</div>
+            <div class="text-xl font-bold text-green-800">{{ modalData.femaleBirdsData.summary.excellent_flocks }}</div>
+            <div class="text-xs text-green-600">≥ 50% female ratio</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Good Flocks</div>
+            <div class="text-xl font-bold text-blue-800">{{ modalData.femaleBirdsData.summary.good_flocks }}</div>
+            <div class="text-xs text-blue-600">45-50% female ratio</div>
+          </div>
+          <div class="bg-yellow-50 p-4 rounded-lg">
+            <div class="text-sm text-yellow-600 font-medium">Moderate Flocks</div>
+            <div class="text-xl font-bold text-yellow-800">{{ modalData.femaleBirdsData.summary.moderate_flocks }}</div>
+            <div class="text-xs text-yellow-600">40-45% female ratio</div>
+          </div>
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 font-medium">Poor Flocks</div>
+            <div class="text-xl font-bold text-red-800">{{ modalData.femaleBirdsData.summary.poor_flocks }}</div>
+            <div class="text-xs text-red-600">< 40% female ratio</div>
+          </div>
+        </div>
+
+        <!-- Flock Female Birds Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Female Birds by Flock</h3>
+            <p class="text-sm text-gray-600">Detailed female birds breakdown for each flock</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Female Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Male Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Female %</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="flock in modalData.femaleBirdsData.flock_details" :key="flock.flock_id" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">{{ flock.flock_name }}</div>
+                      <div class="text-sm text-gray-500">{{ flock.flock_code }}</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-pink-900">{{ flock.total_female_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-blue-900">{{ flock.total_male_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.total_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ flock.female_percentage }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.female_mortality.toLocaleString() }}</div>
+                    <div class="text-xs text-red-600">{{ flock.female_mortality_rate }}% rate</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="{
+                      'bg-green-100 text-green-800': flock.female_percentage >= 50,
+                      'bg-blue-100 text-blue-800': flock.female_percentage >= 45 && flock.female_percentage < 50,
+                      'bg-yellow-100 text-yellow-800': flock.female_percentage >= 40 && flock.female_percentage < 45,
+                      'bg-red-100 text-red-800': flock.female_percentage < 40
+                    }" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                      {{ flock.female_percentage >= 50 ? 'Excellent' : 
+                         flock.female_percentage >= 45 ? 'Good' : 
+                         flock.female_percentage >= 40 ? 'Moderate' : 'Poor' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Batch Female Birds Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Female Birds by Batch</h3>
+            <p class="text-sm text-gray-600">Detailed female birds breakdown for each batch</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Female Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Male Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Female %</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="batch in modalData.femaleBirdsData.batch_details" :key="batch.batch_no" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.batch_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.assignments_count }} assignments</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.flock_name }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-pink-900">{{ batch.total_female_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-blue-900">{{ batch.total_male_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.total_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.female_percentage }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.company_name }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.project_name }}</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Operations -->
+        <div v-if="modalData.femaleBirdsData.recent_operations.length > 0" class="bg-white rounded-lg border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Operations</h3>
+            <p class="text-sm text-gray-600">Latest operations related to female birds</p>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <div v-for="operation in modalData.femaleBirdsData.recent_operations" :key="operation.id" 
+                   class="flex items-start space-x-4 p-4 bg-pink-50 rounded-lg border-l-4 border-pink-400">
+                <div class="flex-shrink-0">
+                  <div class="w-2 h-2 bg-pink-500 rounded-full mt-2"></div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-gray-900">{{ operation.operation_type }}</p>
+                    <p class="text-xs text-gray-500">{{ operation.operation_date }}</p>
+                  </div>
+                  <div class="mt-2 text-xs text-gray-500">
+                    <span class="font-medium">{{ operation.batch_name }}</span> in 
+                    <span class="font-medium">{{ operation.shed_name }}</span> - 
+                    <span class="font-medium">{{ operation.flock_name }}</span>
+                    <span class="text-gray-400"> • by {{ operation.created_by }}</span>
+                  </div>
+                  <div class="mt-1 text-xs text-gray-600">
+                    {{ operation.description }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Last Updated -->
+        <div class="text-center text-sm text-gray-500">
+          Last updated: {{ new Date(modalData.femaleBirdsData.timestamp * 1000).toLocaleString() }}
         </div>
       </div>
 

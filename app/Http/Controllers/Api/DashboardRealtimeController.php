@@ -262,6 +262,33 @@ class DashboardRealtimeController extends Controller
     }
 
     /**
+     * Get detailed female birds information for modal
+     */
+    public function getFemaleBirdsDetails(Request $request): JsonResponse
+    {
+        try {
+            $filters = $request->only([
+                'company', 'project', 'flock', 'shed', 'batch', 
+                'date', 'date_from', 'date_to'
+            ]);
+
+            $data = $this->realtimeService->getFemaleBirdsDetails($filters);
+
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch female birds details',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get dashboard data with polling
      */
     public function pollData(Request $request): JsonResponse
