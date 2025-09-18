@@ -27,4 +27,9 @@ class Flock extends Model
     {
         return $this->hasOne(\App\Models\Ps\PsReceive::class, 'flock_id', 'id');
     }
+
+    public function batchAssigns()
+    {
+        return $this->hasMany(\App\Models\Shed\BatchAssign::class, 'flock_id', 'id');
+    }
 }

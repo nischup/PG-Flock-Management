@@ -16,6 +16,7 @@ import InteractiveTooltip from '@/components/InteractiveTooltip.vue'
 import InteractiveModal from '@/components/InteractiveModal.vue'
 import RealtimeNotification from '@/components/RealtimeNotification.vue'
 import { useRealtimeData } from '@/composables/useRealtimeData'
+import { useSidebar } from '@/components/ui/sidebar'
 
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
@@ -80,6 +81,20 @@ const dashboardLayout = ref('grid') // 'grid' | 'list' | 'compact'
 const showModal = ref(false)
 const modalData = ref<any>(null)
 const isMobile = ref(false)
+
+// Sidebar control (optional - only if sidebar context is available)
+let setSidebarOpen: any = null
+let sidebarState: any = null
+const sidebarWasOpen = ref(false)
+
+try {
+  const sidebar = useSidebar()
+  setSidebarOpen = sidebar.setOpen
+  sidebarState = sidebar.state
+} catch (error) {
+  // Sidebar context not available, disable sidebar control
+  console.warn('Sidebar context not available, sidebar control disabled')
+}
 
 // Real-time notifications
 const showNotification = ref(false)
@@ -197,6 +212,14 @@ const changeLayout = (layout: string) => {
 }
 
 const openModal = (data: any) => {
+  // Store current sidebar state and collapse it (if sidebar control is available)
+  if (setSidebarOpen && sidebarState) {
+    sidebarWasOpen.value = sidebarState.value === 'expanded'
+    if (sidebarState.value === 'expanded') {
+      setSidebarOpen(false)
+    }
+  }
+  
   modalData.value = data
   showModal.value = true
 }
@@ -204,14 +227,71 @@ const openModal = (data: any) => {
 const closeModal = () => {
   showModal.value = false
   modalData.value = null
+  
+  // Restore sidebar state if it was open before (if sidebar control is available)
+  if (setSidebarOpen && sidebarWasOpen.value) {
+    setSidebarOpen(true)
+  }
 }
 
 const handleCardClick = (card: any) => {
-  openModal({
-    title: card.title,
-    content: `Detailed information about ${card.title}`,
-    data: card
-  })
+  // Special handling for Total Flock card
+  if (card.title === 'Total Flock' || card.title === 'Active Flocks') {
+    handleFlockCardClick(card)
+  } else {
+    openModal({
+      title: card.title,
+      content: `Detailed information about ${card.title}`,
+      data: card
+    })
+  }
+}
+
+
+const handleFlockCardClick = async (card: any) => {
+  try {
+    // Store current sidebar state and collapse it (if sidebar control is available)
+    if (setSidebarOpen && sidebarState) {
+      sidebarWasOpen.value = sidebarState.value === 'expanded'
+      if (sidebarState.value === 'expanded') {
+        setSidebarOpen(false)
+      }
+    }
+    
+    // Show loading state
+    modalData.value = {
+      title: 'Loading Flock Details...',
+      content: 'Fetching detailed flock information...',
+      data: card,
+      loading: true
+    }
+    showModal.value = true
+
+    // Fetch detailed flock data
+    const response = await fetch(`/api/dashboard/flock-details?${new URLSearchParams(filters.value)}`)
+    const result = await response.json()
+    
+    if (result.success) {
+      modalData.value = {
+        title: 'Active Flocks Details',
+        content: 'Comprehensive information about all active flocks',
+        data: card,
+        flockData: result.data,
+        loading: false
+      }
+    } else {
+      throw new Error(result.message || 'Failed to fetch flock details')
+    }
+  } catch (error) {
+    console.error('Error fetching flock details:', error)
+    modalData.value = {
+      title: 'Error',
+      content: 'Failed to load flock details. Please try again.',
+      data: card,
+      error: true,
+      loading: false
+    }
+  }
 }
 
 // Mobile detection
@@ -682,11 +762,140 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
       :is-visible="showModal"
       :title="modalData?.title"
       :icon="modalData?.icon"
-      size="lg"
+      :size="modalData?.flockData ? '5xl' : 'lg'"
       @update:is-visible="showModal = $event"
       @close="closeModal"
     >
-      <div v-if="modalData" class="space-y-4">
+      <!-- Loading State -->
+      <div v-if="modalData?.loading" class="flex items-center justify-center py-12">
+        <div class="text-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p class="text-gray-600">{{ modalData.content }}</p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="modalData?.error" class="text-center py-12">
+        <div class="text-red-500 text-6xl mb-4">⚠️</div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Error Loading Data</h3>
+        <p class="text-gray-600 mb-4">{{ modalData.content }}</p>
+        <button 
+          @click="handleFlockCardClick(modalData.data)"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+
+      <!-- Flock Details Content -->
+      <div v-else-if="modalData?.flockData" class="space-y-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Total Flocks</div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.flockData.total_flocks }}</div>
+          </div>
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-sm text-green-600 font-medium">Total Birds</div>
+            <div class="text-2xl font-bold text-green-800">{{ modalData.flockData.summary.total_birds.toLocaleString() }}</div>
+          </div>
+          <div class="bg-orange-50 p-4 rounded-lg">
+            <div class="text-sm text-orange-600 font-medium">Male Birds</div>
+            <div class="text-2xl font-bold text-orange-800">{{ modalData.flockData.summary.total_male.toLocaleString() }}</div>
+          </div>
+          <div class="bg-pink-50 p-4 rounded-lg">
+            <div class="text-sm text-pink-600 font-medium">Female Birds</div>
+            <div class="text-2xl font-bold text-pink-800">{{ modalData.flockData.summary.total_female.toLocaleString() }}</div>
+          </div>
+        </div>
+
+        <!-- Flock Details Table -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Flock Details</h3>
+            <p class="text-sm text-gray-600">Detailed information for each active flock</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batches</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Companies</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="flock in modalData.flockData.flocks" :key="flock.id" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">{{ flock.name }}</div>
+                      <div class="text-sm text-gray-500">{{ flock.code }}</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.total_birds.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">
+                      M: {{ flock.male_birds.toLocaleString() }} | F: {{ flock.female_birds.toLocaleString() }}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.total_mortality.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ flock.mortality_percentage }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.batch_assignments.length }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.companies.length }}</div>
+                    <div class="text-xs text-gray-500">
+                      {{ flock.companies.map(c => c.name).join(', ') }}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      Active
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div v-if="modalData.flockData.flocks.some(f => f.recent_operations.length > 0)" class="bg-white rounded-lg border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Activity</h3>
+            <p class="text-sm text-gray-600">Latest operations across all flocks</p>
+          </div>
+          <div class="p-6">
+            <div class="space-y-4">
+              <div v-for="flock in modalData.flockData.flocks.filter(f => f.recent_operations.length > 0)" :key="flock.id" class="border-l-4 border-blue-500 pl-4">
+                <h4 class="font-medium text-gray-900">{{ flock.name }} ({{ flock.code }})</h4>
+                <div class="mt-2 space-y-2">
+                  <div v-for="operation in flock.recent_operations.slice(0, 3)" :key="operation.id" class="text-sm text-gray-600">
+                    <span class="font-medium">{{ operation.operation_date }}</span> - 
+                    <span>{{ operation.stage }}</span> - 
+                    <span class="text-gray-500">by {{ operation.created_by }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Last Updated -->
+        <div class="text-center text-sm text-gray-500">
+          Last updated: {{ modalData.flockData.last_updated }}
+        </div>
+      </div>
+
+      <!-- Default Modal Content -->
+      <div v-else-if="modalData" class="space-y-4">
         <div class="text-center">
           <div class="text-4xl font-bold text-gray-800 mb-2">{{ modalData.data?.value ?? '-' }}</div>
           <div class="text-lg text-gray-600 mb-4">{{ modalData.data?.title }}</div>

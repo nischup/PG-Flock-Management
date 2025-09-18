@@ -170,4 +170,5 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/dashboard/trigger-update', [DashboardRealtimeController::class, 'triggerUpdate'])->name('dashboard.trigger-update');
     Route::get('/api/dashboard/poll', [DashboardRealtimeController::class, 'pollData'])->name('dashboard.poll');
     Route::get('/api/dashboard/batch-performance', [DashboardRealtimeController::class, 'getBatchPerformanceData'])->name('dashboard.batch-performance');
+    Route::get('/api/dashboard/flock-details', [DashboardRealtimeController::class, 'getFlockDetails'])->name('dashboard.flock-details');
 });

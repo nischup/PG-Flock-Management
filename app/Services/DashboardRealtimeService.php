@@ -533,6 +533,308 @@ class DashboardRealtimeService
     }
 
     /**
+     * Get detailed flock information for modal
+     */
+    public function getFlockDetails(array $filters = []): array
+    {
+        try {
+            // Get base query for active flocks
+            $flockQuery = Flock::where('status', 1);
+
+            // If filters are applied, only get flocks that have active batch assignments
+            if (!empty($filters['company']) || !empty($filters['project']) || 
+                !empty($filters['flock']) || !empty($filters['shed']) || 
+                !empty($filters['batch'])) {
+                
+                $batchQuery = BatchAssign::where('status', 1);
+                
+                if (!empty($filters['company'])) {
+                    $batchQuery->where('company_id', $filters['company']);
+                }
+                if (!empty($filters['project'])) {
+                    $batchQuery->where('project_id', $filters['project']);
+                }
+                if (!empty($filters['flock'])) {
+                    $batchQuery->where('flock_id', $filters['flock']);
+                }
+                if (!empty($filters['shed'])) {
+                    $batchQuery->where('shed_id', $filters['shed']);
+                }
+                if (!empty($filters['batch'])) {
+                    $batchQuery->where('batch_no', $filters['batch']);
+                }
+
+                // Get unique flock IDs from active batch assignments
+                $activeFlockIds = $batchQuery->distinct()->pluck('flock_id');
+                
+                // Get flocks that have active batch assignments
+                $flockQuery->whereIn('id', $activeFlockIds);
+            }
+
+            // Get flocks with their related data
+            $flocks = $flockQuery->with([
+                'batchAssigns' => function($query) {
+                    $query->where('status', 1)
+                          ->with(['company', 'shed', 'batch', 'project']);
+                }
+            ])->get();
+
+
+            // Transform data for detailed view
+            $flockDetails = $flocks->map(function ($flock) use ($filters) {
+                // Get all batch assignments for this flock
+                $batchAssigns = $flock->batchAssigns;
+                
+                // Calculate statistics
+                $totalBirds = $batchAssigns->sum('batch_total_qty');
+                $totalMale = $batchAssigns->sum('batch_male_qty');
+                $totalFemale = $batchAssigns->sum('batch_female_qty');
+                $totalMortality = $batchAssigns->sum('batch_total_mortality');
+                $totalMortalityMale = $batchAssigns->sum('batch_male_mortality');
+                $totalMortalityFemale = $batchAssigns->sum('batch_female_mortality');
+                
+                // Get recent daily operations for this flock
+                $recentOperations = $this->getRecentOperationsForFlock($flock->id, $filters);
+                
+                // Get egg collection data for this flock
+                $eggData = $this->getEggDataForFlock($flock->id, $filters);
+                
+                // Get mortality data for this flock
+                $mortalityData = $this->getMortalityDataForFlock($flock->id, $filters);
+                
+                // Calculate mortality percentage
+                $mortalityPercentage = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
+                
+                // Get unique companies, projects, and sheds for this flock
+                $companies = $batchAssigns->pluck('company')->unique('id')->filter()->values();
+                $projects = $batchAssigns->pluck('project')->unique('id')->filter()->values();
+                $sheds = $batchAssigns->pluck('shed')->unique('id')->filter()->values();
+                
+                return [
+                    'id' => $flock->id,
+                    'code' => $flock->code,
+                    'name' => $flock->name,
+                    'status' => $flock->status,
+                    'created_at' => $flock->created_at,
+                    'updated_at' => $flock->updated_at,
+                    
+                    // Statistics
+                    'total_birds' => $totalBirds,
+                    'male_birds' => $totalMale,
+                    'female_birds' => $totalFemale,
+                    'total_mortality' => $totalMortality,
+                    'male_mortality' => $totalMortalityMale,
+                    'female_mortality' => $totalMortalityFemale,
+                    'mortality_percentage' => round($mortalityPercentage, 2),
+                    
+                    // Related entities
+                    'companies' => $companies->map(function($company) {
+                        return [
+                            'name' => $company->name
+                        ];
+                    }),
+                    'projects' => $projects->map(function($project) {
+                        return [
+                            'name' => $project->name
+                        ];
+                    }),
+                    'sheds' => $sheds->map(function($shed) {
+                        return [
+                            'name' => $shed->name
+                        ];
+                    }),
+                    
+                    // Batch assignments
+                    'batch_assignments' => $batchAssigns->map(function($batch) {
+                        return [
+                            'id' => $batch->id,
+                            'batch_no' => $batch->batch_no,
+                            'batch_name' => $batch->batch?->name ?? 'N/A',
+                            'transaction_no' => $batch->transaction_no,
+                            'job_no' => $batch->job_no,
+                            'stage' => $this->getStageName($batch->stage),
+                            'stage_number' => $batch->stage,
+                            'level' => $batch->level,
+                            'percentage' => $batch->percentage ?? 0,
+                            'total_qty' => $batch->batch_total_qty,
+                            'male_qty' => $batch->batch_male_qty,
+                            'female_qty' => $batch->batch_female_qty,
+                            'total_mortality' => $batch->batch_total_mortality,
+                            'male_mortality' => $batch->batch_male_mortality,
+                            'female_mortality' => $batch->batch_female_mortality,
+                            'excess_male' => $batch->batch_excess_male,
+                            'excess_female' => $batch->batch_excess_female,
+                            'shortage_male' => $batch->batch_sortage_male,
+                            'shortage_female' => $batch->batch_sortage_female,
+                            'company' => $batch->company?->name ?? 'N/A',
+                            'project' => $batch->project?->name ?? 'N/A',
+                            'shed' => $batch->shed?->name ?? 'N/A',
+                            'created_at' => $batch->created_at,
+                            'updated_at' => $batch->updated_at
+                        ];
+                    }),
+                    
+                    // Recent activity
+                    'recent_operations' => $recentOperations,
+                    'egg_data' => $eggData,
+                    'mortality_data' => $mortalityData,
+                    
+                    // PS Receive information (not available in current schema)
+                    'ps_receive' => null
+                ];
+            });
+
+            return [
+                'flocks' => $flockDetails,
+                'total_flocks' => $flockDetails->count(),
+                'summary' => [
+                    'total_birds' => $flockDetails->sum('total_birds'),
+                    'total_male' => $flockDetails->sum('male_birds'),
+                    'total_female' => $flockDetails->sum('female_birds'),
+                    'total_mortality' => $flockDetails->sum('total_mortality'),
+                    'average_mortality_percentage' => $flockDetails->avg('mortality_percentage'),
+                    'total_batch_assignments' => $flockDetails->sum(function($flock) {
+                        return count($flock['batch_assignments']);
+                    })
+                ],
+                'last_updated' => now()->format('Y-m-d H:i:s'),
+                'timestamp' => now()->timestamp
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error getting flock details: ' . $e->getMessage());
+            return [
+                'flocks' => [],
+                'total_flocks' => 0,
+                'summary' => [
+                    'total_birds' => 0,
+                    'total_male' => 0,
+                    'total_female' => 0,
+                    'total_mortality' => 0,
+                    'average_mortality_percentage' => 0,
+                    'total_batch_assignments' => 0
+                ],
+                'last_updated' => now()->format('Y-m-d H:i:s'),
+                'timestamp' => now()->timestamp
+            ];
+        }
+    }
+
+    /**
+     * Get recent operations for a specific flock
+     */
+    private function getRecentOperationsForFlock(int $flockId, array $filters): array
+    {
+        try {
+            $query = DailyOperation::where('flock_id', $flockId)
+                ->with(['batchAssign', 'creator'])
+                ->orderBy('operation_date', 'desc')
+                ->limit(10);
+
+            // Apply date filters
+            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+                $query->whereBetween('operation_date', [$filters['date_from'], $filters['date_to']]);
+            } else {
+                $query->where('operation_date', '>=', now()->subDays(7));
+            }
+
+            return $query->get()->map(function($operation) {
+                return [
+                    'id' => $operation->id,
+                    'operation_date' => $operation->operation_date,
+                    'job_no' => $operation->job_no,
+                    'transaction_no' => $operation->transaction_no,
+                    'stage' => $this->getStageName($operation->stage),
+                    'stage_number' => $operation->stage,
+                    'created_by' => $operation->creator?->name ?? 'N/A',
+                    'created_at' => $operation->created_at
+                ];
+            })->toArray();
+
+        } catch (\Exception $e) {
+            Log::error('Error getting recent operations for flock: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get egg data for a specific flock
+     */
+    private function getEggDataForFlock(int $flockId, array $filters): array
+    {
+        try {
+            $query = DailyEggCollection::whereHas('dailyOperation', function($q) use ($flockId) {
+                $q->where('flock_id', $flockId);
+            });
+
+            // Apply date filters
+            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+                $query->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+            } else {
+                $query->where('created_at', '>=', now()->subDays(7));
+            }
+
+            $total = $query->sum('quantity');
+            $hatchable = $total * 0.6; // Assume 60% hatchable
+            $commercial = $total * 0.35; // Assume 35% commercial
+
+            return [
+                'total' => $total,
+                'hatchable' => $hatchable,
+                'commercial' => $commercial,
+                'hatchable_percentage' => $total > 0 ? ($hatchable / $total) * 100 : 0,
+                'commercial_percentage' => $total > 0 ? ($commercial / $total) * 100 : 0
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error getting egg data for flock: ' . $e->getMessage());
+            return [
+                'total' => 0,
+                'hatchable' => 0,
+                'commercial' => 0,
+                'hatchable_percentage' => 0,
+                'commercial_percentage' => 0
+            ];
+        }
+    }
+
+    /**
+     * Get mortality data for a specific flock
+     */
+    private function getMortalityDataForFlock(int $flockId, array $filters): array
+    {
+        try {
+            $query = DailyMortality::whereHas('dailyOperation', function($q) use ($flockId) {
+                $q->where('flock_id', $flockId);
+            });
+
+            // Apply date filters
+            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+                $query->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+            } else {
+                $query->where('created_at', '>=', now()->subDays(7));
+            }
+
+            $male = $query->sum('male_qty');
+            $female = $query->sum('female_qty');
+
+            return [
+                'male' => $male,
+                'female' => $female,
+                'total' => $male + $female
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error getting mortality data for flock: ' . $e->getMessage());
+            return [
+                'male' => 0,
+                'female' => 0,
+                'total' => 0
+            ];
+        }
+    }
+
+    /**
      * Get count of active flocks based on filters
      */
     private function getActiveFlocksCount(array $filters = []): int

@@ -14,17 +14,17 @@
         @click="handleBackdropClick"
       >
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 bg-transparent backdrop-blur-sm"></div>
 
         <!-- Modal Content -->
         <div
           ref="modalRef"
-          class="relative bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden"
+          class="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden"
           :class="sizeClasses"
           @click.stop
         >
           <!-- Header -->
-          <div v-if="title || $slots.header" class="flex items-center justify-between p-6 border-b border-gray-200">
+          <div v-if="title || $slots.header" class="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
             <div class="flex items-center space-x-3">
               <div v-if="icon" class="p-2 rounded-lg" :class="iconBgClass">
                 <component :is="icon" class="h-5 w-5" :class="iconClass" />
@@ -40,12 +40,14 @@
           </div>
 
           <!-- Body -->
-          <div class="p-6 overflow-y-auto" :class="bodyClasses">
-            <slot :close="close" :confirm="confirm" />
+          <div class="flex-1 overflow-y-auto" :class="bodyClasses">
+            <div class="p-6">
+              <slot :close="close" :confirm="confirm" />
+            </div>
           </div>
 
           <!-- Footer -->
-          <div v-if="showFooter || $slots.footer" class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+          <div v-if="showFooter || $slots.footer" class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
             <slot name="footer" :close="close" :confirm="confirm">
               <button
                 v-if="showCancel"
@@ -72,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { X, AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-vue-next'
 
 interface Props {
@@ -120,6 +122,10 @@ const sizeClasses = computed(() => {
     md: 'max-w-md',
     lg: 'max-w-lg',
     xl: 'max-w-xl',
+    '2xl': 'max-w-2xl',
+    '3xl': 'max-w-3xl',
+    '4xl': 'max-w-4xl',
+    '5xl': 'max-w-5xl',
     full: 'max-w-full mx-4'
   }
   return sizes[props.size]
