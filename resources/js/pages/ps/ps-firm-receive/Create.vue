@@ -774,7 +774,13 @@ function addNewFlock() {
                 type="number" 
                 v-model.number="form.firm_sortage_female_box" 
                 min="0"
-                class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
+                :readonly="!isEditing"
+                :class="[
+                  'rounded-xl px-4 py-2 focus:outline-none',
+                  !isEditing
+                    ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-red-50 border-red-300 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200'
+                ]"
               />
             </div>
             
@@ -784,8 +790,15 @@ function addNewFlock() {
                 type="number" 
                 v-model.number="form.firm_sortage_male_box" 
                 min="0"
-                class="rounded-xl border-red-300 bg-red-50 px-4 py-2 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200" 
-              />
+                :readonly="!isEditing"
+                :class="[
+                  'rounded-xl px-4 py-2 focus:outline-none',
+                  !isEditing
+                    ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-red-50 border-red-300 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200'
+                ]"
+              
+                />
             </div>
             
             <div class="space-y-2">
@@ -814,7 +827,13 @@ function addNewFlock() {
                 type="number" 
                 v-model.number="form.firm_excess_female_box" 
                 min="0"
-                class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
+                :readonly="!isEditing"
+                :class="[
+                  'rounded-xl px-4 py-2 focus:outline-none',
+                  !isEditing
+                    ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200'
+                ]"
               />
             </div>
             
@@ -824,7 +843,13 @@ function addNewFlock() {
                 type="number" 
                 v-model.number="form.firm_excess_male_box" 
                 min="0"
-                class="rounded-xl border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200" 
+                :readonly="!isEditing"
+                :class="[
+                  'rounded-xl px-4 py-2 focus:outline-none',
+                  !isEditing
+                    ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200'
+                ]"
               />
             </div>
             
@@ -853,8 +878,15 @@ function addNewFlock() {
                 type="number" 
                 v-model.number="form.firm_mortality_female" 
                 min="0"
-                class="rounded-xl border-orange-300 bg-orange-50 px-4 py-2 text-orange-800 focus:border-orange-500 focus:ring-orange-500/20 dark:border-orange-600 dark:bg-orange-900/30 dark:text-orange-200" 
-              />
+                :readonly="!isEditing"
+                :class="[
+                  'rounded-xl px-4 py-2 focus:outline-none',
+                  !isEditing
+                    ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-orange-50 border-orange-300 text-orange-800 focus:border-orange-500 focus:ring-orange-500/20 dark:border-orange-600 dark:bg-orange-900/30 dark:text-orange-200'
+                ]"
+              
+                />
             </div>
             <div class="space-y-2">
               <Label class="text-sm font-semibold text-orange-700 dark:text-orange-300">Male Mortality</Label>
@@ -862,7 +894,13 @@ function addNewFlock() {
                 type="number" 
                 v-model.number="form.firm_mortality_male" 
                 min="0"
-                class="rounded-xl border-orange-300 bg-orange-50 px-4 py-2 text-orange-800 focus:border-orange-500 focus:ring-orange-500/20 dark:border-orange-600 dark:bg-orange-900/30 dark:text-orange-200" 
+                :readonly="!isEditing"
+                :class="[
+                  'rounded-xl px-4 py-2 focus:outline-none',
+                  !isEditing
+                    ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-orange-50 border-orange-300 text-orange-800 focus:border-orange-500 focus:ring-orange-500/20 dark:border-orange-600 dark:bg-orange-900/30 dark:text-orange-200'
+                ]"
               />
             </div>
             <div class="space-y-2">
@@ -894,6 +932,7 @@ function addNewFlock() {
               class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none transition-all duration-200" 
               rows="2" 
               placeholder="Add notes..."
+              :readonly="!isEditing"
             ></textarea>
           </div>
         </div>

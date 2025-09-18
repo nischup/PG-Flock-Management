@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models\Shed;
-
+use App\Models\Shed\BatchAssign;
 use Illuminate\Database\Eloquent\Model;
 
 class BatchConfiguration extends Model
@@ -19,4 +19,10 @@ class BatchConfiguration extends Model
         'effective_from',
         'effective_to',
     ];
+
+    public function batchAssign()
+    {
+        return $this->belongsTo(BatchAssign::class);
+        
+    }
 }

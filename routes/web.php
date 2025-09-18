@@ -30,6 +30,7 @@ use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Transfer\BirdTransferController;
 use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
+use App\Http\Controllers\Shed\BatchConfigurationController;
 use App\Http\Controllers\WeatherController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -163,6 +164,9 @@ Route::get('/bird-transfer/create/{batchAssignid}', [BirdTransferController::cla
 
 // Audit Log
 Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+
+Route::resource('batch-config', BatchConfigurationController::class)
+    ->except(['show', 'destroy']); // remove show & delete if not needed
 
 // Real-time Dashboard API
 Route::middleware(['auth'])->group(function () {

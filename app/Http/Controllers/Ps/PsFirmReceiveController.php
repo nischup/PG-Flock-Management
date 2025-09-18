@@ -140,7 +140,7 @@ class PsFirmReceiveController extends Controller
     {
 
         
-        dd($request->all());
+       
         
         $companyInfo = Company::findOrFail($request->receiving_company_id);
         $flockInfo = Flock::findOrFail($request->flock_id);
