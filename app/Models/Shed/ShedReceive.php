@@ -20,6 +20,7 @@ class ShedReceive extends Model
         'shed_id',
         'shed_female_qty',
         'company_id',
+        'project_id',
         'shed_male_qty',
         'shed_total_qty',
         'receive_type',

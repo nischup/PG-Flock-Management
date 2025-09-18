@@ -24,6 +24,7 @@ class BirdTransfer extends Model
         'flock_no',
         'flock_id',
         'from_company_id',
+        'project_id',
         'to_company_id',
         'from_shed_id',
         'to_shed_id',

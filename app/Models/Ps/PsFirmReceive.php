@@ -12,6 +12,7 @@ class PsFirmReceive extends Model
         'ps_receive_id',
         'job_no',
         'transaction_no',
+        'project_id',
         'receive_type',
         'source_type',
         'source_id',

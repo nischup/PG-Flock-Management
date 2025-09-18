@@ -12,7 +12,8 @@ class DailyOperation extends Model
         'batchassign_id',   // FK to batch_assigns
         'operation_date',   // Date of the operation
         'created_by',       // User who created this record
-        'updated_by',       // User who updated (nullable)
+        'updated_by',
+        'project_id',       // User who updated (nullable)
         'status',
         'job_no', 
         'transaction_no',  
