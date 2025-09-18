@@ -19,6 +19,7 @@ class BatchAssign extends Model
         'flock_no',
         'flock_id',
         'company_id',
+        'project_id',
         'shed_id',
         'level',
         'batch_no',

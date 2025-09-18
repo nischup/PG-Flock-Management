@@ -77,6 +77,12 @@ const form = useForm({
   lab_type: 1,
 })
 
+
+const isEditing = ref(false)
+
+const enableEdit = () => {
+  isEditing.value = true
+}
 // Company options
 const shipmentTypes = {1: 'Local', 2: 'Foreign'}
 const suppliers = {1: 'PBL', 2: 'PCL'} 
@@ -215,6 +221,11 @@ function toggleInfo() {
     messageType.value = 'error'
     labInput.value = false
   }
+
+  form.firm_female_box_qty= selected.female_box_qty,
+  form.firm_male_box_qty= selected.male_box_qty,
+  form.firm_total_box_qty= selected.total_box_qty,
+
   form.receiving_company_id= selected.company_id;
   Object.assign(displayInfo, {
     shipment_type: shipmentTypes[selected.shipment_type_id] || '',
@@ -704,38 +715,50 @@ function addNewFlock() {
         </select>
       </div>
 
-        <!-- Main Box Quantities -->
-        <div class="mb-8">
-          <!-- <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Main Box Quantities</h3> -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Female Box Qty</Label>
-              <Input 
-                v-model.number="form.firm_female_box_qty" 
-                type="number" 
-                min="0"
-                class="rounded-xl border-pink-300 bg-pink-50 px-4 py-3 shadow-sm focus:border-pink-500 focus:ring-pink-500/20 dark:border-pink-600 dark:bg-pink-900/20" 
-              />
-            </div>
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Male Box Qty</Label>
-              <Input 
-                v-model.number="form.firm_male_box_qty" 
-                type="number" 
-                min="0"
-                class="rounded-xl border-blue-300 bg-blue-50 px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-blue-500/20 dark:border-blue-600 dark:bg-blue-900/20" 
-              />
-            </div>
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Box Qty</Label>
-              <Input 
-                v-model.number="form.firm_total_box_qty" 
-                type="number" 
-                readonly 
-                class="rounded-xl border-gray-300 bg-gradient-to-r from-gray-100 to-gray-50 px-4 py-3 font-bold text-gray-700 shadow-sm cursor-not-allowed dark:border-gray-600 dark:from-gray-700 dark:to-gray-800 dark:text-gray-300" 
-              />
-            </div>
-      </div>
+            <!-- Main Box Quantities -->
+            <div class="mb-8">
+              <!-- <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Main Box Quantities</h3> -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Female Box Qty</Label>
+                  <Input 
+                    v-model.number="form.firm_female_box_qty" 
+                    type="number" 
+                    min="0"
+                    :readonly="!isEditing"
+                    :class="[
+                      'rounded-xl px-4 py-3 shadow-sm focus:outline-none',
+                      !isEditing
+                        ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-pink-50 border-pink-300 focus:border-pink-500 focus:ring-pink-500/20 text-gray-700'
+                    ]" 
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Male Box Qty</Label>
+                  <Input 
+                    v-model.number="form.firm_male_box_qty" 
+                    type="number" 
+                    min="0"
+                    :readonly="!isEditing"
+                    :class="[
+                      'rounded-xl px-4 py-3 shadow-sm focus:outline-none',
+                      !isEditing
+                        ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-pink-50 border-pink-300 focus:border-pink-500 focus:ring-pink-500/20 text-gray-700'
+                    ]"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Box Qty</Label>
+                  <Input 
+                    v-model.number="form.firm_total_box_qty" 
+                    type="number" 
+                    readonly 
+                    class="rounded-xl border-gray-300 bg-gradient-to-r from-gray-100 to-gray-50 px-4 py-3 font-bold text-gray-700 shadow-sm cursor-not-allowed dark:border-gray-600 dark:from-gray-700 dark:to-gray-800 dark:text-gray-300" 
+                  />
+                </div>
+          </div>
         </div>
 
         <!-- Shortage Section -->
@@ -877,23 +900,51 @@ function addNewFlock() {
 
         <!-- Submit Section -->
         <div class="mt-4 flex items-center justify-end gap-4 rounded-lg bg-gradient-to-r from-gray-50 to-white p-4 dark:from-gray-800 dark:to-gray-900">
-          <Link 
-            href="/ps-firm-receive"
-            class="rounded-xl border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-          >
-            Cancel
-          </Link>
-          <Button 
-            type="submit" 
-            :disabled="form.processing"
-            class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-gray-800 to-black px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:from-gray-900 hover:to-gray-800 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500/50 disabled:opacity-50"
-          >
-            <span class="relative z-10 flex items-center gap-2">
-              <Save class="h-4 w-4" />
-              {{ form.processing ? 'Saving...' : '  Submit' }}
-            </span>
-            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-20 group-hover:translate-x-full"></div>
-          </Button>
+          
+          
+            <!-- Edit Button -->
+           <div class="flex flex-wrap gap-3">
+              <!-- Edit -->
+              <Button
+                type="button"
+                @click="enableEdit"
+                class="w-32 px-6 py-3 rounded-xl font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 transition-colors text-center"
+                :class="isEditing 
+                  ? 'bg-white text-red-600 border border-red-400 hover:bg-red-50 focus:ring-red-400/50' 
+                  : 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500/50'"
+              >
+                {{ isEditing ? 'Please edit' : 'Edit' }}
+              </Button>
+
+              <!-- Cancel -->
+              <Link
+                href="/ps-firm-receive"
+                class="w-32 px-6 py-1 rounded-xl font-semibold shadow-sm border transition-colors text-center
+                      bg-white text-gray-700 border-gray-300 hover:bg-gray-50 
+                      dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 
+                      focus:outline-none focus:ring-2 focus:ring-gray-500/20 focus:ring-offset-1"
+              >
+                Cancel
+              </Link>
+
+              <!-- Save -->
+              <Button
+                type="submit"
+                :disabled="form.processing"
+                class="relative group w-32 px-6 py-3 rounded-xl font-semibold shadow-sm text-white text-center
+                      bg-gradient-to-r from-gray-800 to-black hover:from-gray-900 hover:to-gray-800
+                      disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-gray-500/50 focus:ring-offset-1"
+              >
+                <span class="relative z-10 flex items-center gap-2 justify-center">
+                  <Save class="h-4 w-4" />
+                  {{ form.processing ? 'Saving...' : 'Receive' }}
+                </span>
+                <div
+                  class="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-20 pointer-events-none"
+                ></div>
+              </Button>
+            
+          </div>
         </div>
       </div>
     </div>
@@ -960,6 +1011,8 @@ function addNewFlock() {
 
         <!-- Modal Actions -->
         <div class="flex items-center justify-end gap-3 rounded-b-2xl border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-600 dark:bg-gray-700">
+          
+          
           <Button 
             type="button"
             @click="resetFlockForm" 
