@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\DashboardRealtimeController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DailyOperation\DailyOperationController;
 use App\Http\Controllers\DashboardController;
@@ -18,7 +19,6 @@ use App\Http\Controllers\Master\UnitController;
 use App\Http\Controllers\Master\VaccineController;
 use App\Http\Controllers\Master\VaccineTypeController;
 use App\Http\Controllers\Production\EggClassificationController;
-use App\Http\Controllers\Api\DashboardRealtimeController;
 use App\Http\Controllers\Production\EggClassificationGradeController;
 use App\Http\Controllers\Production\ProductionFirmReceiveController;
 use App\Http\Controllers\Production\ProductionShedReceiveController;
@@ -26,11 +26,11 @@ use App\Http\Controllers\Ps\PsFirmReceiveController;
 use App\Http\Controllers\Ps\PsLabTestController;
 use App\Http\Controllers\Ps\PsReceiveController;
 use App\Http\Controllers\Shed\BatchAssignController;
+use App\Http\Controllers\Shed\BatchConfigurationController;
 use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Transfer\BirdTransferController;
 use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
-use App\Http\Controllers\Shed\BatchConfigurationController;
 use App\Http\Controllers\WeatherController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -43,8 +43,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';
 
 Route::resource('chick-type', ChickTypeController::class);
 Route::resource('feed', FeedController::class);
@@ -141,6 +141,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('breed-type/excel', [BreedTypeController::class, 'exportExcel'])->name('breed-type.excel');
     Route::get('ps-firm-receive/pdf', [PsFirmReceiveController::class, 'downloadPdf'])->name('ps-firm-receive.pdf');
     Route::get('ps-firm-receive/excel', [PsFirmReceiveController::class, 'downloadExcel'])->name('ps-firm-receive.excel');
+    Route::get('production-farm-receive/pdf', [ProductionFirmReceiveController::class, 'exportPdf'])->name('production-farm-receive.pdf');
+    Route::get('production-farm-receive/excel', [ProductionFirmReceiveController::class, 'exportExcel'])->name('production-farm-receive.excel');
     Route::get('batch-assign/pdf', [BatchAssignController::class, 'exportPdf'])->name('batch-assign.pdf');
     Route::get('batch-assign/excel', [BatchAssignController::class, 'exportExcel'])->name('batch-assign.excel');
 });
@@ -160,11 +162,11 @@ Route::get('egg-classification-grades/batch/{batchId}/egg-data', [EggClassificat
 Route::get('/batch-assign/{id}/pdf', [BatchAssignController::class, 'downloadRowPdf'])
     ->name('batch-assign.row-pdf');
 
-Route::get('production-firm-receive/{id}/pdf', [ProductionFirmReceiveController::class, 'downloadRowPdf']);
+Route::get('production-farm-receive/{id}/pdf', [ProductionFirmReceiveController::class, 'downloadRowPdf'])
+    ->name('production-farm-receive.pdf');
 
-Route::get('production-firm-receive/{id}/pdf', [ProductionFirmReceiveController::class, 'downloadRowPdf']);
-
-
+Route::get('production-farm-receive/transfer/{id}/pdf', [ProductionFirmReceiveController::class, 'downloadTransferPdf'])
+    ->name('production-farm-receive.transfer-pdf');
 
 Route::get('/bird-transfer/create/{batchAssignid}', [BirdTransferController::class, 'create']);
 

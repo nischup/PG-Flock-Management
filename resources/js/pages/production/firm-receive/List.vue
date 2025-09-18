@@ -320,12 +320,31 @@ const handleDeleteTransfer = (transferId: number) => {
 const openExportDropdown = ref(false);
 
 const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
-    // Report functionality not available for production farm receive
-    console.log('Report functionality not implemented for production farm receive');
+    const params = new URLSearchParams();
+    
+    // Add current filters to the export URL
+    if (filters.value.search) params.append('search', filters.value.search);
+    if (filters.value.from_company_id) params.append('from_company_id', filters.value.from_company_id);
+    if (filters.value.flock_id) params.append('flock_id', filters.value.flock_id);
+    if (filters.value.date_from) params.append('date_from', filters.value.date_from);
+    if (filters.value.date_to) params.append('date_to', filters.value.date_to);
+    
+    const url = `/reports/production-farm-receive/pdf?${params.toString()}`;
+    window.open(url, '_blank');
 };
 
 const exportExcel = () => {
-    // Report functionality not available for production farm receive
+    const params = new URLSearchParams();
+    
+    // Add current filters to the export URL
+    if (filters.value.search) params.append('search', filters.value.search);
+    if (filters.value.from_company_id) params.append('from_company_id', filters.value.from_company_id);
+    if (filters.value.flock_id) params.append('flock_id', filters.value.flock_id);
+    if (filters.value.date_from) params.append('date_from', filters.value.date_from);
+    if (filters.value.date_to) params.append('date_to', filters.value.date_to);
+    
+    const url = `/reports/production-farm-receive/excel?${params.toString()}`;
+    window.open(url, '_blank');
 };
 
 // const downloadRowPdf = (id: number) => {
@@ -334,7 +353,7 @@ const exportExcel = () => {
 //     // console.log('Report functionality not implemented for production farm receive');
 // };
 const exportRowPdf = (id: number) => {
-    const url = `/production-firm-receive/${id}/pdf`; // route to new controller method
+    const url = `/production-farm-receive/transfer/${id}/pdf`; // route to BirdTransfer report method
     window.open(url, '_blank');
 };
 
