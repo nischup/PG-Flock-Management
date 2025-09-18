@@ -249,12 +249,17 @@ class BirdTransferController extends Controller
         $challanMale   = $batchAssign->batch_male_qty ?? 0;
         $challanTotal  = $batchAssign->batch_total_qty ?? ($challanFemale + $challanMale);
 
-        // Handle breed_type as string
-        if (is_array($item->breed_type)) {
-            $breedName = implode(', ', $item->breed_type);
-        } else {
-            $breedName = $item->breed_type ?? 'N/A';
+        // ✅ Map breed_type IDs to names (same as PsFirmReceiveController)
+        $breeds = \App\Models\Master\BreedType::pluck('name', 'id')->toArray();
+
+        $breedtype = $item->breed_type ?? [];
+        if (!is_array($breedtype)) {
+            $breedtype = is_null($breedtype) ? [] : [$breedtype]; // wrap single ID into array
         }
+
+        $breedAll   = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
+        $breedNames = array_filter($breedAll);
+        $breedName  = implode(', ', $breedNames);
 
         // Prepare batch data
         $batches = [
@@ -292,6 +297,7 @@ class BirdTransferController extends Controller
             'receive_date'     => optional($item->transfer_date)->format('Y-m-d'),
             'source_type'      => 'transfer',
             'source_id'        => $item->id,
+            'breed_type'       => $breedName, // ✅ added here
             'batches'          => $batches,
             'generatedAt'      => now(),
         ];

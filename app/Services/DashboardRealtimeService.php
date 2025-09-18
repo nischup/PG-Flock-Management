@@ -149,13 +149,6 @@ class DashboardRealtimeService
                     'icon' => 'PackageSearch',
                     'extra' => number_format($eggData['commercial_percentage'], 1) . '% of total',
                     'trend' => $this->calculateTrend('commercial_eggs', $eggData['commercial'])
-                ],
-                [
-                    'title' => 'Active Flocks',
-                    'value' => $batchAssigns->count(),
-                    'icon' => 'Factory',
-                    'extra' => 'In production',
-                    'trend' => $this->calculateTrend('active_flocks', $batchAssigns->count())
                 ]
             ],
             'progressBars' => [
@@ -878,6 +871,893 @@ class DashboardRealtimeService
         } catch (\Exception $e) {
             Log::error('Error getting active flocks count: ' . $e->getMessage());
             return 0;
+        }
+    }
+
+    /**
+     * Get detailed birds information by batch for modal
+     */
+    public function getBirdsDetails(array $filters = []): array
+    {
+        try {
+            // Get all active batch assignments with their related data
+            $batchQuery = BatchAssign::where('status', 1)
+                ->with(['flock', 'company', 'shed', 'batch', 'project']);
+
+            // Apply filters
+            if (!empty($filters['company'])) {
+                $batchQuery->where('company_id', $filters['company']);
+            }
+            if (!empty($filters['project'])) {
+                $batchQuery->where('project_id', $filters['project']);
+            }
+            if (!empty($filters['flock'])) {
+                $batchQuery->where('flock_id', $filters['flock']);
+            }
+            if (!empty($filters['shed'])) {
+                $batchQuery->where('shed_id', $filters['shed']);
+            }
+            if (!empty($filters['batch'])) {
+                $batchQuery->where('batch_id', $filters['batch']);
+            }
+
+            $batchAssigns = $batchQuery->get();
+
+            // Calculate summary statistics
+            $totalBirds = $batchAssigns->sum('batch_total_qty');
+            $maleBirds = $batchAssigns->sum('batch_male_qty');
+            $femaleBirds = $batchAssigns->sum('batch_female_qty');
+            $mortalityCount = $batchAssigns->sum('batch_total_mortality');
+            $mortalityRate = $totalBirds > 0 ? ($mortalityCount / $totalBirds) * 100 : 0;
+
+            // Group by batch for detailed breakdown
+            $batchDetails = $batchAssigns->groupBy('batch_no')->map(function ($batches, $batchNo) {
+                $firstBatch = $batches->first();
+                $totalBirds = $batches->sum('batch_total_qty');
+                $maleBirds = $batches->sum('batch_male_qty');
+                $femaleBirds = $batches->sum('batch_female_qty');
+                $mortalityCount = $batches->sum('batch_total_mortality');
+                $mortalityRate = $totalBirds > 0 ? ($mortalityCount / $totalBirds) * 100 : 0;
+
+                return [
+                    'batch_id' => $batchNo,
+                    'batch_name' => "Batch {$batchNo}",
+                    'flock_name' => $firstBatch->flock?->name ?? 'Unknown Flock',
+                    'company_name' => $firstBatch->company?->name ?? 'Unknown Company',
+                    'project_name' => $firstBatch->project?->name ?? 'Unknown Project',
+                    'shed_name' => $firstBatch->shed?->name ?? 'Unknown Shed',
+                    'total_birds' => $totalBirds,
+                    'male_birds' => $maleBirds,
+                    'female_birds' => $femaleBirds,
+                    'mortality_count' => $mortalityCount,
+                    'mortality_rate' => round($mortalityRate, 2),
+                    'assignments_count' => $batches->count(),
+                    'start_date' => $batches->min('start_date'),
+                    'end_date' => $batches->max('end_date'),
+                    'status' => $firstBatch->status == 1 ? 'Active' : 'Inactive'
+                ];
+            })->values();
+
+            // Get recent daily operations for context
+            $recentOperations = DailyOperation::whereIn('batchassign_id', $batchAssigns->pluck('id'))
+                ->with(['batchAssign.flock', 'batchAssign.batch', 'batchAssign.shed'])
+                ->orderBy('operation_date', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function ($operation) {
+                    return [
+                        'id' => $operation->id,
+                        'operation_date' => $operation->operation_date,
+                        'flock_name' => $operation->batchAssign?->flock?->name ?? 'Unknown',
+                        'batch_name' => $operation->batchAssign?->batch?->name ?? 'Unknown',
+                        'shed_name' => $operation->batchAssign?->shed?->name ?? 'Unknown',
+                        'operation_type' => $operation->operation_type ?? 'Unknown',
+                        'description' => $operation->description ?? 'No description',
+                        'birds_affected' => $operation->birds_affected ?? 0
+                    ];
+                });
+
+            // Summary statistics
+            $summary = [
+                'total_birds' => $totalBirds,
+                'male_birds' => $maleBirds,
+                'female_birds' => $femaleBirds,
+                'mortality_count' => $mortalityCount,
+                'mortality_rate' => round($mortalityRate, 2),
+                'total_batches' => $batchDetails->count(),
+                'active_batches' => $batchDetails->where('status', 'Active')->count(),
+                'total_assignments' => $batchAssigns->count()
+            ];
+
+            return [
+                'summary' => $summary,
+                'batch_details' => $batchDetails,
+                'recent_operations' => $recentOperations,
+                'timestamp' => time()
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error getting birds details: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return [
+                'summary' => [
+                    'total_birds' => 0,
+                    'male_birds' => 0,
+                    'female_birds' => 0,
+                    'mortality_count' => 0,
+                    'mortality_rate' => 0,
+                    'total_batches' => 0,
+                    'active_batches' => 0,
+                    'total_assignments' => 0
+                ],
+                'batch_details' => [],
+                'recent_operations' => [],
+                'timestamp' => time()
+            ];
+        }
+    }
+
+    /**
+     * Get detailed mortality information for modal
+     */
+    public function getMortalityDetails(array $filters = []): array
+    {
+        try {
+            // Get all active batch assignments with their related data
+            $batchQuery = BatchAssign::where('status', 1)
+                ->with(['flock', 'company', 'shed', 'batch', 'project']);
+
+            // Apply filters
+            if (!empty($filters['company'])) {
+                $batchQuery->where('company_id', $filters['company']);
+            }
+            if (!empty($filters['project'])) {
+                $batchQuery->where('project_id', $filters['project']);
+            }
+            if (!empty($filters['flock'])) {
+                $batchQuery->where('flock_id', $filters['flock']);
+            }
+            if (!empty($filters['shed'])) {
+                $batchQuery->where('shed_id', $filters['shed']);
+            }
+            if (!empty($filters['batch'])) {
+                $batchQuery->where('batch_no', $filters['batch']);
+            }
+
+            $batchAssigns = $batchQuery->get();
+
+            // Calculate summary statistics
+            $totalBirds = $batchAssigns->sum('batch_total_qty');
+            $totalMortality = $batchAssigns->sum('batch_total_mortality');
+            $maleMortality = $batchAssigns->sum('batch_male_mortality');
+            $femaleMortality = $batchAssigns->sum('batch_female_mortality');
+            $overallMortalityRate = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
+
+            // Group by flock for detailed breakdown
+            $flockMortalityDetails = $batchAssigns->groupBy('flock_id')->map(function ($batches, $flockId) {
+                $firstBatch = $batches->first();
+                $totalBirds = $batches->sum('batch_total_qty');
+                $totalMortality = $batches->sum('batch_total_mortality');
+                $maleMortality = $batches->sum('batch_male_mortality');
+                $femaleMortality = $batches->sum('batch_female_mortality');
+                $mortalityRate = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
+
+                return [
+                    'flock_id' => $flockId,
+                    'flock_name' => $firstBatch->flock?->name ?? 'Unknown Flock',
+                    'flock_code' => $firstBatch->flock?->code ?? 'N/A',
+                    'total_birds' => $totalBirds,
+                    'total_mortality' => $totalMortality,
+                    'male_mortality' => $maleMortality,
+                    'female_mortality' => $femaleMortality,
+                    'mortality_rate' => round($mortalityRate, 2),
+                    'batches_count' => $batches->count(),
+                    'companies' => $batches->map(fn($b) => $b->company?->name)->unique()->filter()->values(),
+                    'projects' => $batches->map(fn($b) => $b->project?->name)->unique()->filter()->values(),
+                    'sheds' => $batches->map(fn($b) => $b->shed?->name)->unique()->filter()->values(),
+                    'status' => 'Active'
+                ];
+            })->values();
+
+            // Group by batch for batch-level details
+            $batchMortalityDetails = $batchAssigns->groupBy('batch_no')->map(function ($batches, $batchNo) {
+                $firstBatch = $batches->first();
+                $totalBirds = $batches->sum('batch_total_qty');
+                $totalMortality = $batches->sum('batch_total_mortality');
+                $maleMortality = $batches->sum('batch_male_mortality');
+                $femaleMortality = $batches->sum('batch_female_mortality');
+                $mortalityRate = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
+
+                return [
+                    'batch_no' => $batchNo,
+                    'batch_name' => "Batch {$batchNo}",
+                    'flock_name' => $firstBatch->flock?->name ?? 'Unknown Flock',
+                    'company_name' => $firstBatch->company?->name ?? 'Unknown Company',
+                    'project_name' => $firstBatch->project?->name ?? 'Unknown Project',
+                    'shed_name' => $firstBatch->shed?->name ?? 'Unknown Shed',
+                    'total_birds' => $totalBirds,
+                    'total_mortality' => $totalMortality,
+                    'male_mortality' => $maleMortality,
+                    'female_mortality' => $femaleMortality,
+                    'mortality_rate' => round($mortalityRate, 2),
+                    'assignments_count' => $batches->count(),
+                    'start_date' => $batches->min('growing_start_date'),
+                    'transfer_date' => $batches->max('transfer_date'),
+                    'status' => 'Active'
+                ];
+            })->values();
+
+            // Get recent operations (simplified since daily_operations doesn't have operation_type/description)
+            $recentMortalityOperations = DailyOperation::whereIn('batchassign_id', $batchAssigns->pluck('id'))
+                ->with(['batchAssign.flock', 'batchAssign.batch', 'batchAssign.shed', 'creator'])
+                ->orderBy('operation_date', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function ($operation) {
+                    return [
+                        'id' => $operation->id,
+                        'operation_date' => $operation->operation_date,
+                        'operation_type' => 'Daily Operation',
+                        'flock_name' => $operation->batchAssign?->flock?->name ?? 'Unknown',
+                        'batch_name' => $operation->batchAssign?->batch?->name ?? 'Unknown',
+                        'shed_name' => $operation->batchAssign?->shed?->name ?? 'Unknown',
+                        'description' => 'Daily operation recorded',
+                        'created_by' => $operation->creator?->name ?? 'Unknown'
+                    ];
+                });
+
+            // Calculate mortality trends by flock
+            $mortalityTrends = $flockMortalityDetails->map(function ($flock) {
+                $rate = $flock['mortality_rate'];
+                if ($rate <= 2) {
+                    $trend = 'excellent';
+                    $trendColor = 'green';
+                } elseif ($rate <= 5) {
+                    $trend = 'good';
+                    $trendColor = 'blue';
+                } elseif ($rate <= 10) {
+                    $trend = 'moderate';
+                    $trendColor = 'yellow';
+                } else {
+                    $trend = 'high';
+                    $trendColor = 'red';
+                }
+
+                return [
+                    'flock_id' => $flock['flock_id'],
+                    'flock_name' => $flock['flock_name'],
+                    'mortality_rate' => $rate,
+                    'trend' => $trend,
+                    'trend_color' => $trendColor
+                ];
+            });
+
+            // Summary statistics
+            $summary = [
+                'total_birds' => $totalBirds,
+                'total_mortality' => $totalMortality,
+                'male_mortality' => $maleMortality,
+                'female_mortality' => $femaleMortality,
+                'overall_mortality_rate' => round($overallMortalityRate, 2),
+                'total_flocks' => $flockMortalityDetails->count(),
+                'total_batches' => $batchMortalityDetails->count(),
+                'excellent_flocks' => $mortalityTrends->where('trend', 'excellent')->count(),
+                'good_flocks' => $mortalityTrends->where('trend', 'good')->count(),
+                'moderate_flocks' => $mortalityTrends->where('trend', 'moderate')->count(),
+                'high_risk_flocks' => $mortalityTrends->where('trend', 'high')->count()
+            ];
+
+            return [
+                'summary' => $summary,
+                'flock_details' => $flockMortalityDetails,
+                'batch_details' => $batchMortalityDetails,
+                'mortality_trends' => $mortalityTrends,
+                'recent_operations' => $recentMortalityOperations,
+                'timestamp' => time()
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error getting mortality details: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return [
+                'summary' => [
+                    'total_birds' => 0,
+                    'total_mortality' => 0,
+                    'male_mortality' => 0,
+                    'female_mortality' => 0,
+                    'overall_mortality_rate' => 0,
+                    'total_flocks' => 0,
+                    'total_batches' => 0,
+                    'excellent_flocks' => 0,
+                    'good_flocks' => 0,
+                    'moderate_flocks' => 0,
+                    'high_risk_flocks' => 0
+                ],
+                'flock_details' => [],
+                'batch_details' => [],
+                'mortality_trends' => [],
+                'recent_operations' => [],
+                'timestamp' => time()
+            ];
+        }
+    }
+
+    /**
+     * Get detailed daily eggs information for modal
+     */
+    public function getDailyEggsDetails(array $filters = []): array
+    {
+        try {
+            // Get all active batch assignments with their related data
+            $batchQuery = BatchAssign::where('status', 1)
+                ->with(['flock', 'company', 'shed', 'batch', 'project']);
+
+            // Apply filters
+            if (!empty($filters['company'])) {
+                $batchQuery->where('company_id', $filters['company']);
+            }
+            if (!empty($filters['project'])) {
+                $batchQuery->where('project_id', $filters['project']);
+            }
+            if (!empty($filters['flock'])) {
+                $batchQuery->where('flock_id', $filters['flock']);
+            }
+            if (!empty($filters['shed'])) {
+                $batchQuery->where('shed_id', $filters['shed']);
+            }
+            if (!empty($filters['batch'])) {
+                $batchQuery->where('batch_no', $filters['batch']);
+            }
+
+            $batchAssigns = $batchQuery->get();
+
+            // Get egg classifications for these batch assignments
+            $eggClassifications = \App\Models\Production\EggClassification::whereIn('batchassign_id', $batchAssigns->pluck('id'))
+                ->with(['batchAssign.flock', 'batchAssign.company', 'batchAssign.shed', 'batchAssign.batch', 'batchAssign.project'])
+                ->orderBy('classification_date', 'desc')
+                ->get();
+
+            // Calculate summary statistics
+            $totalEggs = $eggClassifications->sum('total_eggs');
+            $commercialEggs = $eggClassifications->sum('commercial_eggs');
+            $technicalEggs = $eggClassifications->sum('technical_eggs');
+            $hatchingEggs = $eggClassifications->sum('hatching_eggs');
+            $rejectedEggs = $eggClassifications->sum('rejected_eggs');
+            $commercialPercentage = $totalEggs > 0 ? ($commercialEggs / $totalEggs) * 100 : 0;
+            $rejectionRate = $totalEggs > 0 ? ($rejectedEggs / $totalEggs) * 100 : 0;
+
+            // Group by flock for detailed breakdown
+            $flockEggDetails = $eggClassifications->groupBy('batchAssign.flock_id')->map(function ($classifications, $flockId) {
+                $firstClassification = $classifications->first();
+                $totalEggs = $classifications->sum('total_eggs');
+                $commercialEggs = $classifications->sum('commercial_eggs');
+                $technicalEggs = $classifications->sum('technical_eggs');
+                $hatchingEggs = $classifications->sum('hatching_eggs');
+                $rejectedEggs = $classifications->sum('rejected_eggs');
+                $commercialPercentage = $totalEggs > 0 ? ($commercialEggs / $totalEggs) * 100 : 0;
+                $rejectionRate = $totalEggs > 0 ? ($rejectedEggs / $totalEggs) * 100 : 0;
+
+                return [
+                    'flock_id' => $flockId,
+                    'flock_name' => $firstClassification->batchAssign?->flock?->name ?? 'Unknown Flock',
+                    'flock_code' => $firstClassification->batchAssign?->flock?->code ?? 'N/A',
+                    'total_eggs' => $totalEggs,
+                    'commercial_eggs' => $commercialEggs,
+                    'technical_eggs' => $technicalEggs,
+                    'hatching_eggs' => $hatchingEggs,
+                    'rejected_eggs' => $rejectedEggs,
+                    'commercial_percentage' => round($commercialPercentage, 2),
+                    'rejection_rate' => round($rejectionRate, 2),
+                    'classifications_count' => $classifications->count(),
+                    'companies' => $classifications->map(fn($c) => $c->batchAssign?->company?->name)->unique()->filter()->values(),
+                    'projects' => $classifications->map(fn($c) => $c->batchAssign?->project?->name)->unique()->filter()->values(),
+                    'sheds' => $classifications->map(fn($c) => $c->batchAssign?->shed?->name)->unique()->filter()->values(),
+                    'last_classification_date' => $classifications->max('classification_date'),
+                    'status' => 'Active'
+                ];
+            })->values();
+
+            // Group by batch for batch-level details
+            $batchEggDetails = $eggClassifications->groupBy('batchAssign.batch_no')->map(function ($classifications, $batchNo) {
+                $firstClassification = $classifications->first();
+                $totalEggs = $classifications->sum('total_eggs');
+                $commercialEggs = $classifications->sum('commercial_eggs');
+                $technicalEggs = $classifications->sum('technical_eggs');
+                $hatchingEggs = $classifications->sum('hatching_eggs');
+                $rejectedEggs = $classifications->sum('rejected_eggs');
+                $commercialPercentage = $totalEggs > 0 ? ($commercialEggs / $totalEggs) * 100 : 0;
+                $rejectionRate = $totalEggs > 0 ? ($rejectedEggs / $totalEggs) * 100 : 0;
+
+                return [
+                    'batch_no' => $batchNo,
+                    'batch_name' => "Batch {$batchNo}",
+                    'flock_name' => $firstClassification->batchAssign?->flock?->name ?? 'Unknown Flock',
+                    'company_name' => $firstClassification->batchAssign?->company?->name ?? 'Unknown Company',
+                    'project_name' => $firstClassification->batchAssign?->project?->name ?? 'Unknown Project',
+                    'shed_name' => $firstClassification->batchAssign?->shed?->name ?? 'Unknown Shed',
+                    'total_eggs' => $totalEggs,
+                    'commercial_eggs' => $commercialEggs,
+                    'technical_eggs' => $technicalEggs,
+                    'hatching_eggs' => $hatchingEggs,
+                    'rejected_eggs' => $rejectedEggs,
+                    'commercial_percentage' => round($commercialPercentage, 2),
+                    'rejection_rate' => round($rejectionRate, 2),
+                    'classifications_count' => $classifications->count(),
+                    'last_classification_date' => $classifications->max('classification_date'),
+                    'status' => 'Active'
+                ];
+            })->values();
+
+            // Get recent egg classifications
+            $recentEggClassifications = $eggClassifications->take(10)->map(function ($classification) {
+                return [
+                    'id' => $classification->id,
+                    'classification_date' => $classification->classification_date,
+                    'flock_name' => $classification->batchAssign?->flock?->name ?? 'Unknown',
+                    'batch_name' => $classification->batchAssign?->batch?->name ?? 'Unknown',
+                    'shed_name' => $classification->batchAssign?->shed?->name ?? 'Unknown',
+                    'total_eggs' => $classification->total_eggs,
+                    'commercial_eggs' => $classification->commercial_eggs,
+                    'technical_eggs' => $classification->technical_eggs,
+                    'hatching_eggs' => $classification->hatching_eggs,
+                    'rejected_eggs' => $classification->rejected_eggs,
+                    'commercial_percentage' => $classification->total_eggs > 0 ? round(($classification->commercial_eggs / $classification->total_eggs) * 100, 2) : 0,
+                    'remarks' => $classification->remarks ?? 'No remarks',
+                    'created_by' => $classification->creator?->name ?? 'Unknown'
+                ];
+            });
+
+            // Calculate production trends by flock
+            $productionTrends = $flockEggDetails->map(function ($flock) {
+                $commercialRate = $flock['commercial_percentage'];
+                if ($commercialRate >= 80) {
+                    $trend = 'excellent';
+                    $trendColor = 'green';
+                } elseif ($commercialRate >= 70) {
+                    $trend = 'good';
+                    $trendColor = 'blue';
+                } elseif ($commercialRate >= 60) {
+                    $trend = 'moderate';
+                    $trendColor = 'yellow';
+                } else {
+                    $trend = 'poor';
+                    $trendColor = 'red';
+                }
+
+                return [
+                    'flock_id' => $flock['flock_id'],
+                    'flock_name' => $flock['flock_name'],
+                    'commercial_percentage' => $commercialRate,
+                    'trend' => $trend,
+                    'trend_color' => $trendColor
+                ];
+            });
+
+            // Summary statistics
+            $summary = [
+                'total_eggs' => $totalEggs,
+                'commercial_eggs' => $commercialEggs,
+                'technical_eggs' => $technicalEggs,
+                'hatching_eggs' => $hatchingEggs,
+                'rejected_eggs' => $rejectedEggs,
+                'commercial_percentage' => round($commercialPercentage, 2),
+                'rejection_rate' => round($rejectionRate, 2),
+                'total_flocks' => $flockEggDetails->count(),
+                'total_batches' => $batchEggDetails->count(),
+                'total_classifications' => $eggClassifications->count(),
+                'excellent_flocks' => $productionTrends->where('trend', 'excellent')->count(),
+                'good_flocks' => $productionTrends->where('trend', 'good')->count(),
+                'moderate_flocks' => $productionTrends->where('trend', 'moderate')->count(),
+                'poor_flocks' => $productionTrends->where('trend', 'poor')->count()
+            ];
+
+            return [
+                'summary' => $summary,
+                'flock_details' => $flockEggDetails,
+                'batch_details' => $batchEggDetails,
+                'production_trends' => $productionTrends,
+                'recent_classifications' => $recentEggClassifications,
+                'timestamp' => time()
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error getting daily eggs details: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return [
+                'summary' => [
+                    'total_eggs' => 0,
+                    'commercial_eggs' => 0,
+                    'technical_eggs' => 0,
+                    'hatching_eggs' => 0,
+                    'rejected_eggs' => 0,
+                    'commercial_percentage' => 0,
+                    'rejection_rate' => 0,
+                    'total_flocks' => 0,
+                    'total_batches' => 0,
+                    'total_classifications' => 0,
+                    'excellent_flocks' => 0,
+                    'good_flocks' => 0,
+                    'moderate_flocks' => 0,
+                    'poor_flocks' => 0
+                ],
+                'flock_details' => [],
+                'batch_details' => [],
+                'production_trends' => [],
+                'recent_classifications' => [],
+                'timestamp' => time()
+            ];
+        }
+    }
+
+    /**
+     * Get detailed hatchable eggs information for modal
+     */
+    public function getHatchableEggsDetails(array $filters = []): array
+    {
+        try {
+            // Get all active batch assignments with their related data
+            $batchQuery = BatchAssign::where('status', 1)
+                ->with(['flock', 'company', 'shed', 'batch', 'project']);
+
+            // Apply filters
+            if (!empty($filters['company'])) {
+                $batchQuery->where('company_id', $filters['company']);
+            }
+            if (!empty($filters['project'])) {
+                $batchQuery->where('project_id', $filters['project']);
+            }
+            if (!empty($filters['flock'])) {
+                $batchQuery->where('flock_id', $filters['flock']);
+            }
+            if (!empty($filters['shed'])) {
+                $batchQuery->where('shed_id', $filters['shed']);
+            }
+            if (!empty($filters['batch'])) {
+                $batchQuery->where('batch_no', $filters['batch']);
+            }
+
+            $batchAssigns = $batchQuery->get();
+
+            // Get egg classifications for these batch assignments, focusing on hatching eggs
+            $eggClassifications = \App\Models\Production\EggClassification::whereIn('batchassign_id', $batchAssigns->pluck('id'))
+                ->where('hatching_eggs', '>', 0) // Only get records with hatching eggs
+                ->with(['batchAssign.flock', 'batchAssign.company', 'batchAssign.shed', 'batchAssign.batch', 'batchAssign.project'])
+                ->orderBy('classification_date', 'desc')
+                ->get();
+
+            // Calculate summary statistics for hatching eggs
+            $totalHatchingEggs = $eggClassifications->sum('hatching_eggs');
+            $totalEggs = $eggClassifications->sum('total_eggs');
+            $hatchingPercentage = $totalEggs > 0 ? ($totalHatchingEggs / $totalEggs) * 100 : 0;
+
+            // Group by flock for detailed breakdown
+            $flockHatchingDetails = $eggClassifications->groupBy('batchAssign.flock_id')->map(function ($classifications, $flockId) {
+                $firstClassification = $classifications->first();
+                $totalHatchingEggs = $classifications->sum('hatching_eggs');
+                $totalEggs = $classifications->sum('total_eggs');
+                $hatchingPercentage = $totalEggs > 0 ? ($totalHatchingEggs / $totalEggs) * 100 : 0;
+
+                return [
+                    'flock_id' => $flockId,
+                    'flock_name' => $firstClassification->batchAssign?->flock?->name ?? 'Unknown Flock',
+                    'flock_code' => $firstClassification->batchAssign?->flock?->code ?? 'N/A',
+                    'total_hatching_eggs' => $totalHatchingEggs,
+                    'total_eggs' => $totalEggs,
+                    'hatching_percentage' => round($hatchingPercentage, 2),
+                    'classifications_count' => $classifications->count(),
+                    'companies' => $classifications->map(fn($c) => $c->batchAssign?->company?->name)->unique()->filter()->values(),
+                    'projects' => $classifications->map(fn($c) => $c->batchAssign?->project?->name)->unique()->filter()->values(),
+                    'sheds' => $classifications->map(fn($c) => $c->batchAssign?->shed?->name)->unique()->filter()->values(),
+                    'last_classification_date' => $classifications->max('classification_date'),
+                    'status' => 'Active'
+                ];
+            })->values();
+
+            // Group by batch for batch-level details
+            $batchHatchingDetails = $eggClassifications->groupBy('batchAssign.batch_no')->map(function ($classifications, $batchNo) {
+                $firstClassification = $classifications->first();
+                $totalHatchingEggs = $classifications->sum('hatching_eggs');
+                $totalEggs = $classifications->sum('total_eggs');
+                $hatchingPercentage = $totalEggs > 0 ? ($totalHatchingEggs / $totalEggs) * 100 : 0;
+
+                return [
+                    'batch_no' => $batchNo,
+                    'batch_name' => "Batch {$batchNo}",
+                    'flock_name' => $firstClassification->batchAssign?->flock?->name ?? 'Unknown Flock',
+                    'company_name' => $firstClassification->batchAssign?->company?->name ?? 'Unknown Company',
+                    'project_name' => $firstClassification->batchAssign?->project?->name ?? 'Unknown Project',
+                    'shed_name' => $firstClassification->batchAssign?->shed?->name ?? 'Unknown Shed',
+                    'total_hatching_eggs' => $totalHatchingEggs,
+                    'total_eggs' => $totalEggs,
+                    'hatching_percentage' => round($hatchingPercentage, 2),
+                    'classifications_count' => $classifications->count(),
+                    'last_classification_date' => $classifications->max('classification_date'),
+                    'status' => 'Active'
+                ];
+            })->values();
+
+            // Get recent hatching egg classifications
+            $recentHatchingClassifications = $eggClassifications->take(10)->map(function ($classification) {
+                return [
+                    'id' => $classification->id,
+                    'classification_date' => $classification->classification_date,
+                    'flock_name' => $classification->batchAssign?->flock?->name ?? 'Unknown',
+                    'batch_name' => $classification->batchAssign?->batch?->name ?? 'Unknown',
+                    'shed_name' => $classification->batchAssign?->shed?->name ?? 'Unknown',
+                    'total_hatching_eggs' => $classification->hatching_eggs,
+                    'total_eggs' => $classification->total_eggs,
+                    'hatching_percentage' => $classification->total_eggs > 0 ? round(($classification->hatching_eggs / $classification->total_eggs) * 100, 2) : 0,
+                    'remarks' => $classification->remarks ?? 'No remarks',
+                    'created_by' => $classification->creator?->name ?? 'Unknown'
+                ];
+            });
+
+            // Calculate hatching performance trends by flock
+            // Priority system: Hatchable eggs are first priority, commercial eggs are second priority
+            $hatchingTrends = $flockHatchingDetails->map(function ($flock) {
+                $hatchingRate = $flock['hatching_percentage'];
+                if ($hatchingRate >= 95) {
+                    $trend = 'excellent';
+                    $trendColor = 'green';
+                } elseif ($hatchingRate >= 80) {
+                    $trend = 'good';
+                    $trendColor = 'blue';
+                } elseif ($hatchingRate >= 70) {
+                    $trend = 'moderate';
+                    $trendColor = 'yellow';
+                } else {
+                    $trend = 'poor';
+                    $trendColor = 'red';
+                }
+
+                return [
+                    'flock_id' => $flock['flock_id'],
+                    'flock_name' => $flock['flock_name'],
+                    'hatching_percentage' => $hatchingRate,
+                    'trend' => $trend,
+                    'trend_color' => $trendColor
+                ];
+            });
+
+            // Summary statistics
+            $summary = [
+                'total_hatching_eggs' => $totalHatchingEggs,
+                'total_eggs' => $totalEggs,
+                'hatching_percentage' => round($hatchingPercentage, 2),
+                'total_flocks' => $flockHatchingDetails->count(),
+                'total_batches' => $batchHatchingDetails->count(),
+                'total_classifications' => $eggClassifications->count(),
+                'excellent_flocks' => $hatchingTrends->where('trend', 'excellent')->count(),
+                'good_flocks' => $hatchingTrends->where('trend', 'good')->count(),
+                'moderate_flocks' => $hatchingTrends->where('trend', 'moderate')->count(),
+                'poor_flocks' => $hatchingTrends->where('trend', 'poor')->count()
+            ];
+
+            return [
+                'summary' => $summary,
+                'flock_details' => $flockHatchingDetails,
+                'batch_details' => $batchHatchingDetails,
+                'hatching_trends' => $hatchingTrends,
+                'recent_classifications' => $recentHatchingClassifications,
+                'timestamp' => time()
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error getting hatchable eggs details: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return [
+                'summary' => [
+                    'total_hatching_eggs' => 0,
+                    'total_eggs' => 0,
+                    'hatching_percentage' => 0,
+                    'total_flocks' => 0,
+                    'total_batches' => 0,
+                    'total_classifications' => 0,
+                    'excellent_flocks' => 0,
+                    'good_flocks' => 0,
+                    'moderate_flocks' => 0,
+                    'poor_flocks' => 0
+                ],
+                'flock_details' => [],
+                'batch_details' => [],
+                'hatching_trends' => [],
+                'recent_classifications' => [],
+                'timestamp' => time()
+            ];
+        }
+    }
+
+    /**
+     * Get detailed male birds information for modal
+     */
+    public function getMaleBirdsDetails(array $filters = []): array
+    {
+        try {
+            // Get all active batch assignments with their related data
+            $batchQuery = BatchAssign::where('status', 1)
+                ->with(['flock', 'company', 'shed', 'batch', 'project']);
+
+            // Apply filters
+            if (!empty($filters['company'])) {
+                $batchQuery->where('company_id', $filters['company']);
+            }
+            if (!empty($filters['project'])) {
+                $batchQuery->where('project_id', $filters['project']);
+            }
+            if (!empty($filters['flock'])) {
+                $batchQuery->where('flock_id', $filters['flock']);
+            }
+            if (!empty($filters['shed'])) {
+                $batchQuery->where('shed_id', $filters['shed']);
+            }
+            if (!empty($filters['batch'])) {
+                $batchQuery->where('batch_no', $filters['batch']);
+            }
+
+            $batchAssigns = $batchQuery->get();
+
+            // Calculate summary statistics for male birds
+            $totalMaleBirds = $batchAssigns->sum('batch_male_qty');
+            $totalBirds = $batchAssigns->sum('batch_total_qty');
+            $totalFemaleBirds = $batchAssigns->sum('batch_female_qty');
+            $maleMortality = $batchAssigns->sum('batch_male_mortality');
+            $malePercentage = $totalBirds > 0 ? ($totalMaleBirds / $totalBirds) * 100 : 0;
+            $maleMortalityRate = $totalMaleBirds > 0 ? ($maleMortality / $totalMaleBirds) * 100 : 0;
+
+            // Group by flock for detailed breakdown
+            $flockMaleDetails = $batchAssigns->groupBy('flock_id')->map(function ($batches, $flockId) {
+                $firstBatch = $batches->first();
+                $totalMaleBirds = $batches->sum('batch_male_qty');
+                $totalBirds = $batches->sum('batch_total_qty');
+                $totalFemaleBirds = $batches->sum('batch_female_qty');
+                $maleMortality = $batches->sum('batch_male_mortality');
+                $malePercentage = $totalBirds > 0 ? ($totalMaleBirds / $totalBirds) * 100 : 0;
+                $maleMortalityRate = $totalMaleBirds > 0 ? ($maleMortality / $totalMaleBirds) * 100 : 0;
+
+                return [
+                    'flock_id' => $flockId,
+                    'flock_name' => $firstBatch->flock?->name ?? 'Unknown Flock',
+                    'flock_code' => $firstBatch->flock?->code ?? 'N/A',
+                    'total_male_birds' => $totalMaleBirds,
+                    'total_birds' => $totalBirds,
+                    'total_female_birds' => $totalFemaleBirds,
+                    'male_percentage' => round($malePercentage, 2),
+                    'male_mortality' => $maleMortality,
+                    'male_mortality_rate' => round($maleMortalityRate, 2),
+                    'batches_count' => $batches->count(),
+                    'companies' => $batches->map(fn($b) => $b->company?->name)->unique()->filter()->values(),
+                    'projects' => $batches->map(fn($b) => $b->project?->name)->unique()->filter()->values(),
+                    'sheds' => $batches->map(fn($b) => $b->shed?->name)->unique()->filter()->values(),
+                    'last_update' => $batches->max('updated_at'),
+                    'status' => 'Active'
+                ];
+            })->values();
+
+            // Group by batch for batch-level details
+            $batchMaleDetails = $batchAssigns->groupBy('batch_no')->map(function ($batches, $batchNo) {
+                $firstBatch = $batches->first();
+                $totalMaleBirds = $batches->sum('batch_male_qty');
+                $totalBirds = $batches->sum('batch_total_qty');
+                $totalFemaleBirds = $batches->sum('batch_female_qty');
+                $maleMortality = $batches->sum('batch_male_mortality');
+                $malePercentage = $totalBirds > 0 ? ($totalMaleBirds / $totalBirds) * 100 : 0;
+                $maleMortalityRate = $totalMaleBirds > 0 ? ($maleMortality / $totalMaleBirds) * 100 : 0;
+
+                return [
+                    'batch_no' => $batchNo,
+                    'batch_name' => "Batch {$batchNo}",
+                    'flock_name' => $firstBatch->flock?->name ?? 'Unknown Flock',
+                    'company_name' => $firstBatch->company?->name ?? 'Unknown Company',
+                    'project_name' => $firstBatch->project?->name ?? 'Unknown Project',
+                    'shed_name' => $firstBatch->shed?->name ?? 'Unknown Shed',
+                    'total_male_birds' => $totalMaleBirds,
+                    'total_birds' => $totalBirds,
+                    'total_female_birds' => $totalFemaleBirds,
+                    'male_percentage' => round($malePercentage, 2),
+                    'male_mortality' => $maleMortality,
+                    'male_mortality_rate' => round($maleMortalityRate, 2),
+                    'assignments_count' => $batches->count(),
+                    'last_update' => $batches->max('updated_at'),
+                    'status' => 'Active'
+                ];
+            })->values();
+
+            // Get recent daily operations for male birds context
+            $recentMaleOperations = DailyOperation::whereIn('batchassign_id', $batchAssigns->pluck('id'))
+                ->with(['batchAssign.flock', 'batchAssign.batch', 'batchAssign.shed', 'creator'])
+                ->orderBy('operation_date', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function ($operation) {
+                    return [
+                        'id' => $operation->id,
+                        'operation_date' => $operation->operation_date,
+                        'flock_name' => $operation->batchAssign?->flock?->name ?? 'Unknown',
+                        'batch_name' => $operation->batchAssign?->batch?->name ?? 'Unknown',
+                        'shed_name' => $operation->batchAssign?->shed?->name ?? 'Unknown',
+                        'operation_type' => 'Daily Operation',
+                        'description' => 'Daily operation recorded',
+                        'created_by' => $operation->creator?->name ?? 'Unknown'
+                    ];
+                });
+
+            // Calculate male bird performance trends by flock
+            $maleTrends = $flockMaleDetails->map(function ($flock) {
+                $maleRate = $flock['male_percentage'];
+                if ($maleRate >= 50) {
+                    $trend = 'excellent';
+                    $trendColor = 'green';
+                } elseif ($maleRate >= 45) {
+                    $trend = 'good';
+                    $trendColor = 'blue';
+                } elseif ($maleRate >= 40) {
+                    $trend = 'moderate';
+                    $trendColor = 'yellow';
+                } else {
+                    $trend = 'poor';
+                    $trendColor = 'red';
+                }
+
+                return [
+                    'flock_id' => $flock['flock_id'],
+                    'flock_name' => $flock['flock_name'],
+                    'male_percentage' => $maleRate,
+                    'trend' => $trend,
+                    'trend_color' => $trendColor
+                ];
+            });
+
+            // Summary statistics
+            $summary = [
+                'total_male_birds' => $totalMaleBirds,
+                'total_birds' => $totalBirds,
+                'total_female_birds' => $totalFemaleBirds,
+                'male_percentage' => round($malePercentage, 2),
+                'male_mortality' => $maleMortality,
+                'male_mortality_rate' => round($maleMortalityRate, 2),
+                'total_flocks' => $flockMaleDetails->count(),
+                'total_batches' => $batchMaleDetails->count(),
+                'total_assignments' => $batchAssigns->count(),
+                'excellent_flocks' => $maleTrends->where('trend', 'excellent')->count(),
+                'good_flocks' => $maleTrends->where('trend', 'good')->count(),
+                'moderate_flocks' => $maleTrends->where('trend', 'moderate')->count(),
+                'poor_flocks' => $maleTrends->where('trend', 'poor')->count()
+            ];
+
+            return [
+                'summary' => $summary,
+                'flock_details' => $flockMaleDetails,
+                'batch_details' => $batchMaleDetails,
+                'male_trends' => $maleTrends,
+                'recent_operations' => $recentMaleOperations,
+                'timestamp' => time()
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error getting male birds details: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return [
+                'summary' => [
+                    'total_male_birds' => 0,
+                    'total_birds' => 0,
+                    'total_female_birds' => 0,
+                    'male_percentage' => 0,
+                    'male_mortality' => 0,
+                    'male_mortality_rate' => 0,
+                    'total_flocks' => 0,
+                    'total_batches' => 0,
+                    'total_assignments' => 0,
+                    'excellent_flocks' => 0,
+                    'good_flocks' => 0,
+                    'moderate_flocks' => 0,
+                    'poor_flocks' => 0
+                ],
+                'flock_details' => [],
+                'batch_details' => [],
+                'male_trends' => [],
+                'recent_operations' => [],
+                'timestamp' => time()
+            ];
         }
     }
 }

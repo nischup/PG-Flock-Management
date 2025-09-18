@@ -175,4 +175,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/dashboard/poll', [DashboardRealtimeController::class, 'pollData'])->name('dashboard.poll');
     Route::get('/api/dashboard/batch-performance', [DashboardRealtimeController::class, 'getBatchPerformanceData'])->name('dashboard.batch-performance');
     Route::get('/api/dashboard/flock-details', [DashboardRealtimeController::class, 'getFlockDetails'])->name('dashboard.flock-details');
+    Route::get('/api/dashboard/birds-details', [DashboardRealtimeController::class, 'getBirdsDetails'])->name('dashboard.birds-details');
+    Route::get('/api/dashboard/mortality-details', [DashboardRealtimeController::class, 'getMortalityDetails'])->name('dashboard.mortality-details');
+    Route::get('/api/dashboard/daily-eggs-details', [DashboardRealtimeController::class, 'getDailyEggsDetails'])->name('dashboard.daily-eggs-details');
+    Route::get('/api/dashboard/hatchable-eggs-details', [DashboardRealtimeController::class, 'getHatchableEggsDetails'])->name('dashboard.hatchable-eggs-details');
+    Route::get('/api/dashboard/male-birds-details', [DashboardRealtimeController::class, 'getMaleBirdsDetails'])->name('dashboard.male-birds-details');
 });
