@@ -1953,19 +1953,31 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         <!-- Summary Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="bg-blue-50 p-4 rounded-lg">
-            <div class="text-sm text-blue-600 font-medium">Total Male Birds</div>
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-blue-600">🐣</div>
+              <div class="text-sm text-blue-600 font-medium">Total Male Birds</div>
+            </div>
             <div class="text-2xl font-bold text-blue-800">{{ modalData.maleBirdsData.summary.total_male_birds.toLocaleString() }}</div>
           </div>
           <div class="bg-gray-50 p-4 rounded-lg">
-            <div class="text-sm text-gray-600 font-medium">Total Birds</div>
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-gray-600">🐣</div>
+              <div class="text-sm text-gray-600 font-medium">Total Birds</div>
+            </div>
             <div class="text-2xl font-bold text-gray-800">{{ modalData.maleBirdsData.summary.total_birds.toLocaleString() }}</div>
           </div>
           <div class="bg-pink-50 p-4 rounded-lg">
-            <div class="text-sm text-pink-600 font-medium">Female Birds</div>
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-pink-600">🐣</div>
+              <div class="text-sm text-pink-600 font-medium">Female Birds</div>
+            </div>
             <div class="text-2xl font-bold text-pink-800">{{ modalData.maleBirdsData.summary.total_female_birds.toLocaleString() }}</div>
           </div>
           <div class="bg-green-50 p-4 rounded-lg">
-            <div class="text-sm text-green-600 font-medium">Male Percentage</div>
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-green-600">📊</div>
+              <div class="text-sm text-green-600 font-medium">Male Percentage</div>
+            </div>
             <div class="text-2xl font-bold text-green-800">{{ modalData.maleBirdsData.summary.male_percentage }}%</div>
           </div>
         </div>
@@ -2025,9 +2037,9 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Female Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Male Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Female Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Total Birds</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male %</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
@@ -2088,9 +2100,9 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Female Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Male Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Female Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Total Birds</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male %</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
                 </tr>
