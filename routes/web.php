@@ -160,6 +160,12 @@ Route::get('egg-classification-grades/batch/{batchId}/egg-data', [EggClassificat
 Route::get('/batch-assign/{id}/pdf', [BatchAssignController::class, 'downloadRowPdf'])
     ->name('batch-assign.row-pdf');
 
+Route::get('production-firm-receive/{id}/pdf', [ProductionFirmReceiveController::class, 'downloadRowPdf']);
+
+Route::get('production-firm-receive/{id}/pdf', [ProductionFirmReceiveController::class, 'downloadRowPdf']);
+
+
+
 Route::get('/bird-transfer/create/{batchAssignid}', [BirdTransferController::class, 'create']);
 
 // Audit Log
@@ -180,5 +186,4 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/dashboard/daily-eggs-details', [DashboardRealtimeController::class, 'getDailyEggsDetails'])->name('dashboard.daily-eggs-details');
     Route::get('/api/dashboard/hatchable-eggs-details', [DashboardRealtimeController::class, 'getHatchableEggsDetails'])->name('dashboard.hatchable-eggs-details');
     Route::get('/api/dashboard/male-birds-details', [DashboardRealtimeController::class, 'getMaleBirdsDetails'])->name('dashboard.male-birds-details');
-    Route::get('/api/dashboard/female-birds-details', [DashboardRealtimeController::class, 'getFemaleBirdsDetails'])->name('dashboard.female-birds-details');
 });
