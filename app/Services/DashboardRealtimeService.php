@@ -12,6 +12,7 @@ use App\Models\DailyOperation\DailyVaccine;
 use App\Models\Production\EggClassification;
 use App\Models\Ps\PsLabTest;
 use App\Models\Master\Flock;
+use App\Models\MovementAdjustment;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -81,8 +82,14 @@ class DashboardRealtimeService
         $eggData = $this->getRecentEggData($filters);
         $mortalityData = $this->getRecentMortalityData($filters);
 
-        // Calculate percentages
-        $mortalityPercentage = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
+        // Use combined mortality data from both DailyMortality and MovementAdjustment
+        $combinedMortalityMale = $mortalityData['male'];
+        $combinedMortalityFemale = $mortalityData['female'];
+        $combinedTotalMortality = $mortalityData['total'];
+
+        // For mortality rate calculation, use combined data from DailyMortality and MovementAdjustment tables
+        // This gives us the actual mortality rate based on daily operations and movement adjustments
+        $mortalityPercentage = $totalBirds > 0 ? ($combinedTotalMortality / $totalBirds) * 100 : 0;
         $malePercentage = $totalBirds > 0 ? ($totalMale / $totalBirds) * 100 : 0;
         $femalePercentage = $totalBirds > 0 ? ($totalFemale / $totalBirds) * 100 : 0;
 
@@ -126,7 +133,7 @@ class DashboardRealtimeService
                     'title' => 'Mortality Rate',
                     'value' => number_format($mortalityPercentage, 2) . '%',
                     'icon' => 'ShieldX',
-                    'extra' => number_format($totalMortality) . ' birds',
+                    'extra' => number_format($combinedTotalMortality) . ' birds (Daily: ' . $mortalityData['daily_male'] . 'M/' . $mortalityData['daily_female'] . 'F, Movement: ' . $mortalityData['movement_male'] . 'M/' . $mortalityData['movement_female'] . 'F)',
                     'trend' => $this->calculateTrend('mortality', $mortalityPercentage)
                 ],
                 [
@@ -171,32 +178,32 @@ class DashboardRealtimeService
             'circleBars' => [
                 [
                     'title' => 'Mortality',
-                    'value' => number_format($mortalityPercentage, 2),
+                    'value' => round($mortalityPercentage, 2),
                     'type' => 'rounded'
                 ],
                 [
                     'title' => 'Male Chicks',
-                    'value' => number_format($malePercentage, 2),
+                    'value' => round($malePercentage, 2),
                     'type' => 'rounded'
                 ],
                 [
                     'title' => 'Female Chicks',
-                    'value' => number_format($femalePercentage, 2),
+                    'value' => round($femalePercentage, 2),
                     'type' => 'straight'
                 ],
                 [
                     'title' => 'Excess Male',
-                    'value' => number_format($batchAssigns->sum('batch_excess_male')),
+                    'value' => (int) $batchAssigns->sum('batch_excess_male'),
                     'type' => 'straight'
                 ],
                 [
                     'title' => 'Excess Female',
-                    'value' => number_format($batchAssigns->sum('batch_excess_female')),
+                    'value' => (int) $batchAssigns->sum('batch_excess_female'),
                     'type' => 'straight'
                 ],
                 [
                     'title' => 'Worker Efficiency',
-                    'value' => number_format(rand(85, 98)),
+                    'value' => rand(85, 98),
                     'type' => 'straight'
                 ]
             ],
@@ -243,22 +250,44 @@ class DashboardRealtimeService
     }
 
     /**
-     * Get recent mortality data
+     * Get mortality data from both DailyMortality and MovementAdjustment tables
      */
     private function getRecentMortalityData(array $filters): array
     {
-        $query = DailyMortality::query();
+        // Get mortality from DailyMortality table - get ALL data, not just recent
+        $dailyMortalityQuery = DailyMortality::query();
         
         if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
-            $query->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
-        } else {
-            $query->whereDate('created_at', today());
+            $dailyMortalityQuery->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
         }
+        // If no date filters, get all mortality data from DailyMortality
+
+        $dailyMale = $dailyMortalityQuery->sum('male_qty');
+        $dailyFemale = $dailyMortalityQuery->sum('female_qty');
+
+        // Get mortality from MovementAdjustment table (type = 1 for mortality) - get ALL data
+        $movementQuery = MovementAdjustment::where('type', 1);
+        
+        if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            $movementQuery->whereBetween('date', [$filters['date_from'], $filters['date_to']]);
+        }
+        // If no date filters, get all mortality data from MovementAdjustment
+
+        $movementMale = $movementQuery->sum('male_qty');
+        $movementFemale = $movementQuery->sum('female_qty');
+
+        // Combine data from both sources
+        $totalMale = $dailyMale + $movementMale;
+        $totalFemale = $dailyFemale + $movementFemale;
 
         return [
-            'male' => $query->sum('male_qty'),
-            'female' => $query->sum('female_qty'),
-            'total' => $query->sum('male_qty') + $query->sum('female_qty')
+            'male' => $totalMale,
+            'female' => $totalFemale,
+            'total' => $totalMale + $totalFemale,
+            'daily_male' => $dailyMale,
+            'daily_female' => $dailyFemale,
+            'movement_male' => $movementMale,
+            'movement_female' => $movementFemale
         ];
     }
 
@@ -294,11 +323,24 @@ class DashboardRealtimeService
             ->orderBy('date')
             ->get();
 
-        $mortalityData = DailyMortality::whereBetween('created_at', [$startDate, $endDate])
+        // Get mortality data from DailyMortality table
+        $dailyMortalityData = DailyMortality::whereBetween('created_at', [$startDate, $endDate])
             ->selectRaw('DATE(created_at) as date, SUM(male_qty) as male, SUM(female_qty) as female')
             ->groupBy('date')
             ->orderBy('date')
             ->get();
+
+        // Get mortality data from MovementAdjustment table (type = 1 for mortality)
+        $movementMortalityData = MovementAdjustment::where('type', 1) // 1 = Mortality
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->selectRaw('DATE(date) as date, SUM(male_qty) as male, SUM(female_qty) as female')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        // Combine mortality data from both sources
+        $totalMaleMortality = $dailyMortalityData->sum('male') + $movementMortalityData->sum('male');
+        $totalFemaleMortality = $dailyMortalityData->sum('female') + $movementMortalityData->sum('female');
 
         return [
             'production' => $eggCollections->map(function ($item, $index) {
@@ -311,12 +353,12 @@ class DashboardRealtimeService
             'mortality' => [
                 [
                     'label' => 'Male',
-                    'value' => $mortalityData->sum('male'),
+                    'value' => $totalMaleMortality,
                     'color' => '#ef4444'
                 ],
                 [
                     'label' => 'Female',
-                    'value' => $mortalityData->sum('female'),
+                    'value' => $totalFemaleMortality,
                     'color' => '#f97316'
                 ]
             ],
@@ -792,29 +834,50 @@ class DashboardRealtimeService
     }
 
     /**
-     * Get mortality data for a specific flock
+     * Get mortality data for a specific flock from both DailyMortality and MovementAdjustment tables
      */
     private function getMortalityDataForFlock(int $flockId, array $filters): array
     {
         try {
-            $query = DailyMortality::whereHas('dailyOperation', function($q) use ($flockId) {
+            // Get mortality from DailyMortality table for this flock
+            $dailyQuery = DailyMortality::whereHas('dailyOperation', function($q) use ($flockId) {
                 $q->where('flock_id', $flockId);
             });
 
             // Apply date filters
             if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
-                $query->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
-            } else {
-                $query->where('created_at', '>=', now()->subDays(7));
+                $dailyQuery->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
             }
+            // If no date filters, get all mortality data for this flock
 
-            $male = $query->sum('male_qty');
-            $female = $query->sum('female_qty');
+            $dailyMale = $dailyQuery->sum('male_qty');
+            $dailyFemale = $dailyQuery->sum('female_qty');
+
+            // Get mortality from MovementAdjustment table for this flock
+            $movementQuery = MovementAdjustment::where('type', 1)
+                ->where('flock_id', $flockId);
+
+            // Apply date filters
+            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+                $movementQuery->whereBetween('date', [$filters['date_from'], $filters['date_to']]);
+            }
+            // If no date filters, get all mortality data for this flock
+
+            $movementMale = $movementQuery->sum('male_qty');
+            $movementFemale = $movementQuery->sum('female_qty');
+
+            // Combine data from both sources
+            $totalMale = $dailyMale + $movementMale;
+            $totalFemale = $dailyFemale + $movementFemale;
 
             return [
-                'male' => $male,
-                'female' => $female,
-                'total' => $male + $female
+                'male' => $totalMale,
+                'female' => $totalFemale,
+                'total' => $totalMale + $totalFemale,
+                'daily_male' => $dailyMale,
+                'daily_female' => $dailyFemale,
+                'movement_male' => $movementMale,
+                'movement_female' => $movementFemale
             ];
 
         } catch (\Exception $e) {
@@ -822,7 +885,99 @@ class DashboardRealtimeService
             return [
                 'male' => 0,
                 'female' => 0,
-                'total' => 0
+                'total' => 0,
+                'daily_male' => 0,
+                'daily_female' => 0,
+                'movement_male' => 0,
+                'movement_female' => 0
+            ];
+        }
+    }
+
+    /**
+     * Get mortality data for a specific flock from DailyMortality table only (for batch calculations)
+     */
+    private function getDailyMortalityDataForFlock(int $flockId, array $filters): array
+    {
+        try {
+            // Get mortality from DailyMortality table for this flock only
+            $dailyQuery = DailyMortality::whereHas('dailyOperation', function($q) use ($flockId) {
+                $q->where('flock_id', $flockId);
+            });
+
+            // Apply date filters
+            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+                $dailyQuery->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+            }
+            // If no date filters, get all mortality data for this flock
+
+            $dailyMale = $dailyQuery->sum('male_qty');
+            $dailyFemale = $dailyQuery->sum('female_qty');
+
+            return [
+                'male' => $dailyMale,
+                'female' => $dailyFemale,
+                'total' => $dailyMale + $dailyFemale,
+                'daily_male' => $dailyMale,
+                'daily_female' => $dailyFemale,
+                'movement_male' => 0,
+                'movement_female' => 0
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error getting daily mortality data for flock: ' . $e->getMessage());
+            return [
+                'male' => 0,
+                'female' => 0,
+                'total' => 0,
+                'daily_male' => 0,
+                'daily_female' => 0,
+                'movement_male' => 0,
+                'movement_female' => 0
+            ];
+        }
+    }
+
+    /**
+     * Get mortality data for a specific batch from DailyMortality table only
+     */
+    private function getDailyMortalityDataForBatch(int $batchAssignId, array $filters): array
+    {
+        try {
+            // Get mortality from DailyMortality table for this specific batch assignment
+            $dailyQuery = DailyMortality::whereHas('dailyOperation', function($q) use ($batchAssignId) {
+                $q->where('batchassign_id', $batchAssignId);
+            });
+
+            // Apply date filters
+            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+                $dailyQuery->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+            }
+            // If no date filters, get all mortality data for this batch
+
+            $dailyMale = $dailyQuery->sum('male_qty');
+            $dailyFemale = $dailyQuery->sum('female_qty');
+
+            return [
+                'male' => $dailyMale,
+                'female' => $dailyFemale,
+                'total' => $dailyMale + $dailyFemale,
+                'daily_male' => $dailyMale,
+                'daily_female' => $dailyFemale,
+                'movement_male' => 0,
+                'movement_female' => 0
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error getting daily mortality data for batch: ' . $e->getMessage());
+            return [
+                'male' => 0,
+                'female' => 0,
+                'total' => 0,
+                'daily_male' => 0,
+                'daily_female' => 0,
+                'movement_male' => 0,
+                'movement_female' => 0
             ];
         }
     }
@@ -907,22 +1062,33 @@ class DashboardRealtimeService
             $totalBirds = $batchAssigns->sum('batch_total_qty');
             $maleBirds = $batchAssigns->sum('batch_male_qty');
             $femaleBirds = $batchAssigns->sum('batch_female_qty');
-            $mortalityCount = $batchAssigns->sum('batch_total_mortality');
+            
+            // Get mortality data from DailyMortality table only (for batch calculations)
+            $dailyMortalityData = DailyMortality::query();
+            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+                $dailyMortalityData->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+            }
+            $mortalityCount = $dailyMortalityData->sum('male_qty') + $dailyMortalityData->sum('female_qty');
             $mortalityRate = $totalBirds > 0 ? ($mortalityCount / $totalBirds) * 100 : 0;
 
             // Group by batch for detailed breakdown
-            $batchDetails = $batchAssigns->groupBy('batch_no')->map(function ($batches, $batchNo) {
+            $batchDetails = $batchAssigns->groupBy('batch_no')->map(function ($batches, $batchNo) use ($filters) {
                 $firstBatch = $batches->first();
                 $totalBirds = $batches->sum('batch_total_qty');
                 $maleBirds = $batches->sum('batch_male_qty');
                 $femaleBirds = $batches->sum('batch_female_qty');
-                $mortalityCount = $batches->sum('batch_total_mortality');
+                
+                // Get mortality data from DailyMortality table for this specific batch
+                $batchAssignId = $firstBatch->id;
+                $mortalityData = $this->getDailyMortalityDataForBatch($batchAssignId, $filters);
+                $mortalityCount = $mortalityData['total'];
                 $mortalityRate = $totalBirds > 0 ? ($mortalityCount / $totalBirds) * 100 : 0;
 
                 return [
                     'batch_id' => $batchNo,
-                    'batch_name' => "Batch {$batchNo}",
-                    'flock_name' => $firstBatch->flock?->name ?? 'Unknown Flock',
+                    'batch_name' => $firstBatch->batch?->name ?? "Batch {$batchNo}",
+                    'flock_name' => $firstBatch->flock?->code ?? 'Unknown Flock',
+                    'flock_code' => $firstBatch->flock?->code ?? 'N/A',
                     'company_name' => $firstBatch->company?->name ?? 'Unknown Company',
                     'project_name' => $firstBatch->project?->name ?? 'Unknown Project',
                     'shed_name' => $firstBatch->shed?->name ?? 'Unknown Shed',
@@ -931,6 +1097,10 @@ class DashboardRealtimeService
                     'female_birds' => $femaleBirds,
                     'mortality_count' => $mortalityCount,
                     'mortality_rate' => round($mortalityRate, 2),
+                    'daily_male' => $mortalityData['daily_male'],
+                    'daily_female' => $mortalityData['daily_female'],
+                    'movement_male' => $mortalityData['movement_male'],
+                    'movement_female' => $mortalityData['movement_female'],
                     'assignments_count' => $batches->count(),
                     'start_date' => $batches->min('start_date'),
                     'end_date' => $batches->max('end_date'),
@@ -1028,18 +1198,24 @@ class DashboardRealtimeService
 
             // Calculate summary statistics
             $totalBirds = $batchAssigns->sum('batch_total_qty');
-            $totalMortality = $batchAssigns->sum('batch_total_mortality');
-            $maleMortality = $batchAssigns->sum('batch_male_mortality');
-            $femaleMortality = $batchAssigns->sum('batch_female_mortality');
+            
+            // Get mortality data from DailyMortality and MovementAdjustment tables
+            $mortalityData = $this->getRecentMortalityData($filters);
+            $totalMortality = $mortalityData['total'];
+            $maleMortality = $mortalityData['male'];
+            $femaleMortality = $mortalityData['female'];
             $overallMortalityRate = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
 
             // Group by flock for detailed breakdown
-            $flockMortalityDetails = $batchAssigns->groupBy('flock_id')->map(function ($batches, $flockId) {
+            $flockMortalityDetails = $batchAssigns->groupBy('flock_id')->map(function ($batches, $flockId) use ($filters) {
                 $firstBatch = $batches->first();
                 $totalBirds = $batches->sum('batch_total_qty');
-                $totalMortality = $batches->sum('batch_total_mortality');
-                $maleMortality = $batches->sum('batch_male_mortality');
-                $femaleMortality = $batches->sum('batch_female_mortality');
+                
+                // Get mortality data from both DailyMortality and MovementAdjustment tables for this flock
+                $mortalityData = $this->getMortalityDataForFlock($flockId, $filters);
+                $totalMortality = $mortalityData['total'];
+                $maleMortality = $mortalityData['male'];
+                $femaleMortality = $mortalityData['female'];
                 $mortalityRate = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
 
                 return [
@@ -1051,6 +1227,10 @@ class DashboardRealtimeService
                     'male_mortality' => $maleMortality,
                     'female_mortality' => $femaleMortality,
                     'mortality_rate' => round($mortalityRate, 2),
+                    'daily_male' => $mortalityData['daily_male'],
+                    'daily_female' => $mortalityData['daily_female'],
+                    'movement_male' => $mortalityData['movement_male'],
+                    'movement_female' => $mortalityData['movement_female'],
                     'batches_count' => $batches->count(),
                     'companies' => $batches->map(fn($b) => $b->company?->name)->unique()->filter()->values(),
                     'projects' => $batches->map(fn($b) => $b->project?->name)->unique()->filter()->values(),
@@ -1060,18 +1240,23 @@ class DashboardRealtimeService
             })->values();
 
             // Group by batch for batch-level details
-            $batchMortalityDetails = $batchAssigns->groupBy('batch_no')->map(function ($batches, $batchNo) {
+            $batchMortalityDetails = $batchAssigns->groupBy('batch_no')->map(function ($batches, $batchNo) use ($filters) {
                 $firstBatch = $batches->first();
                 $totalBirds = $batches->sum('batch_total_qty');
-                $totalMortality = $batches->sum('batch_total_mortality');
-                $maleMortality = $batches->sum('batch_male_mortality');
-                $femaleMortality = $batches->sum('batch_female_mortality');
+                
+                // Get mortality data from DailyMortality table for this specific batch
+                $batchAssignId = $firstBatch->id;
+                $mortalityData = $this->getDailyMortalityDataForBatch($batchAssignId, $filters);
+                $totalMortality = $mortalityData['total'];
+                $maleMortality = $mortalityData['male'];
+                $femaleMortality = $mortalityData['female'];
                 $mortalityRate = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
 
                 return [
                     'batch_no' => $batchNo,
-                    'batch_name' => "Batch {$batchNo}",
-                    'flock_name' => $firstBatch->flock?->name ?? 'Unknown Flock',
+                    'batch_name' => $firstBatch->batch?->name ?? "Batch {$batchNo}",
+                    'flock_name' => $firstBatch->flock?->code ?? 'Unknown Flock',
+                    'flock_code' => $firstBatch->flock?->code ?? 'N/A',
                     'company_name' => $firstBatch->company?->name ?? 'Unknown Company',
                     'project_name' => $firstBatch->project?->name ?? 'Unknown Project',
                     'shed_name' => $firstBatch->shed?->name ?? 'Unknown Shed',
@@ -1080,6 +1265,10 @@ class DashboardRealtimeService
                     'male_mortality' => $maleMortality,
                     'female_mortality' => $femaleMortality,
                     'mortality_rate' => round($mortalityRate, 2),
+                    'daily_male' => $mortalityData['daily_male'],
+                    'daily_female' => $mortalityData['daily_female'],
+                    'movement_male' => $mortalityData['movement_male'],
+                    'movement_female' => $mortalityData['movement_female'],
                     'assignments_count' => $batches->count(),
                     'start_date' => $batches->min('growing_start_date'),
                     'transfer_date' => $batches->max('transfer_date'),
@@ -1270,8 +1459,9 @@ class DashboardRealtimeService
 
                 return [
                     'batch_no' => $batchNo,
-                    'batch_name' => "Batch {$batchNo}",
-                    'flock_name' => $firstClassification->batchAssign?->flock?->name ?? 'Unknown Flock',
+                    'batch_name' => $firstClassification->batchAssign?->batch?->name ?? "Batch {$batchNo}",
+                    'flock_name' => $firstClassification->batchAssign?->flock?->code ?? 'Unknown Flock',
+                    'flock_code' => $firstClassification->batchAssign?->flock?->code ?? 'N/A',
                     'company_name' => $firstClassification->batchAssign?->company?->name ?? 'Unknown Company',
                     'project_name' => $firstClassification->batchAssign?->project?->name ?? 'Unknown Project',
                     'shed_name' => $firstClassification->batchAssign?->shed?->name ?? 'Unknown Shed',
@@ -1462,8 +1652,9 @@ class DashboardRealtimeService
 
                 return [
                     'batch_no' => $batchNo,
-                    'batch_name' => "Batch {$batchNo}",
-                    'flock_name' => $firstClassification->batchAssign?->flock?->name ?? 'Unknown Flock',
+                    'batch_name' => $firstClassification->batchAssign?->batch?->name ?? "Batch {$batchNo}",
+                    'flock_name' => $firstClassification->batchAssign?->flock?->code ?? 'Unknown Flock',
+                    'flock_code' => $firstClassification->batchAssign?->flock?->code ?? 'N/A',
                     'company_name' => $firstClassification->batchAssign?->company?->name ?? 'Unknown Company',
                     'project_name' => $firstClassification->batchAssign?->project?->name ?? 'Unknown Project',
                     'shed_name' => $firstClassification->batchAssign?->shed?->name ?? 'Unknown Shed',
@@ -1600,17 +1791,26 @@ class DashboardRealtimeService
             $totalMaleBirds = $batchAssigns->sum('batch_male_qty');
             $totalBirds = $batchAssigns->sum('batch_total_qty');
             $totalFemaleBirds = $batchAssigns->sum('batch_female_qty');
-            $maleMortality = $batchAssigns->sum('batch_male_mortality');
+            
+            // Get mortality data from DailyMortality table only (for batch calculations)
+            $dailyMortalityData = DailyMortality::query();
+            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+                $dailyMortalityData->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+            }
+            $maleMortality = $dailyMortalityData->sum('male_qty');
             $malePercentage = $totalBirds > 0 ? ($totalMaleBirds / $totalBirds) * 100 : 0;
             $maleMortalityRate = $totalMaleBirds > 0 ? ($maleMortality / $totalMaleBirds) * 100 : 0;
 
             // Group by flock for detailed breakdown
-            $flockMaleDetails = $batchAssigns->groupBy('flock_id')->map(function ($batches, $flockId) {
+            $flockMaleDetails = $batchAssigns->groupBy('flock_id')->map(function ($batches, $flockId) use ($filters) {
                 $firstBatch = $batches->first();
                 $totalMaleBirds = $batches->sum('batch_male_qty');
                 $totalBirds = $batches->sum('batch_total_qty');
                 $totalFemaleBirds = $batches->sum('batch_female_qty');
-                $maleMortality = $batches->sum('batch_male_mortality');
+                
+                // Get mortality data from DailyMortality table only for this flock
+                $mortalityData = $this->getDailyMortalityDataForFlock($flockId, $filters);
+                $maleMortality = $mortalityData['male'];
                 $malePercentage = $totalBirds > 0 ? ($totalMaleBirds / $totalBirds) * 100 : 0;
                 $maleMortalityRate = $totalMaleBirds > 0 ? ($maleMortality / $totalMaleBirds) * 100 : 0;
 
@@ -1645,8 +1845,9 @@ class DashboardRealtimeService
 
                 return [
                     'batch_no' => $batchNo,
-                    'batch_name' => "Batch {$batchNo}",
-                    'flock_name' => $firstBatch->flock?->name ?? 'Unknown Flock',
+                    'batch_name' => $firstBatch->batch?->name ?? "Batch {$batchNo}",
+                    'flock_name' => $firstBatch->flock?->code ?? 'Unknown Flock',
+                    'flock_code' => $firstBatch->flock?->code ?? 'N/A',
                     'company_name' => $firstBatch->company?->name ?? 'Unknown Company',
                     'project_name' => $firstBatch->project?->name ?? 'Unknown Project',
                     'shed_name' => $firstBatch->shed?->name ?? 'Unknown Shed',
@@ -1794,17 +1995,26 @@ class DashboardRealtimeService
             $totalFemaleBirds = $batchAssigns->sum('batch_female_qty');
             $totalBirds = $batchAssigns->sum('batch_total_qty');
             $totalMaleBirds = $batchAssigns->sum('batch_male_qty');
-            $femaleMortality = $batchAssigns->sum('batch_female_mortality');
+            
+            // Get mortality data from DailyMortality table only (for batch calculations)
+            $dailyMortalityData = DailyMortality::query();
+            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+                $dailyMortalityData->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
+            }
+            $femaleMortality = $dailyMortalityData->sum('female_qty');
             $femalePercentage = $totalBirds > 0 ? ($totalFemaleBirds / $totalBirds) * 100 : 0;
             $femaleMortalityRate = $totalFemaleBirds > 0 ? ($femaleMortality / $totalFemaleBirds) * 100 : 0;
 
             // Group by flock for detailed breakdown
-            $flockFemaleDetails = $batchAssigns->groupBy('flock_id')->map(function ($batches, $flockId) {
+            $flockFemaleDetails = $batchAssigns->groupBy('flock_id')->map(function ($batches, $flockId) use ($filters) {
                 $firstBatch = $batches->first();
                 $totalFemaleBirds = $batches->sum('batch_female_qty');
                 $totalBirds = $batches->sum('batch_total_qty');
                 $totalMaleBirds = $batches->sum('batch_male_qty');
-                $femaleMortality = $batches->sum('batch_female_mortality');
+                
+                // Get mortality data from DailyMortality table only for this flock
+                $mortalityData = $this->getDailyMortalityDataForFlock($flockId, $filters);
+                $femaleMortality = $mortalityData['female'];
                 $femalePercentage = $totalBirds > 0 ? ($totalFemaleBirds / $totalBirds) * 100 : 0;
                 $femaleMortalityRate = $totalFemaleBirds > 0 ? ($femaleMortality / $totalFemaleBirds) * 100 : 0;
 
@@ -1839,8 +2049,9 @@ class DashboardRealtimeService
 
                 return [
                     'batch_no' => $batchNo,
-                    'batch_name' => "Batch {$batchNo}",
-                    'flock_name' => $firstBatch->flock?->name ?? 'Unknown Flock',
+                    'batch_name' => $firstBatch->batch?->name ?? "Batch {$batchNo}",
+                    'flock_name' => $firstBatch->flock?->code ?? 'Unknown Flock',
+                    'flock_code' => $firstBatch->flock?->code ?? 'N/A',
                     'company_name' => $firstBatch->company?->name ?? 'Unknown Company',
                     'project_name' => $firstBatch->project?->name ?? 'Unknown Project',
                     'shed_name' => $firstBatch->shed?->name ?? 'Unknown Shed',
