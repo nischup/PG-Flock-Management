@@ -47,7 +47,7 @@ class ProductionShedReceiveController extends Controller
     public function create()
     {
         $firmReceives = PsFirmReceive::with(['flock', 'company'])
-            ->where('receive_type', 'chicks')
+            ->where('receive_type', 'pcs')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($fr) {
