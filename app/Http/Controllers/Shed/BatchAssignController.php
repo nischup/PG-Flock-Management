@@ -144,7 +144,7 @@ class BatchAssignController extends Controller
             });
 
         // Flocks (for batch assign form)
-        $flocks = Flock::select('id', 'name')->get();
+        $flocks = Flock::select('id', 'code', 'name')->get();
 
         // Companies (if needed in assign)
         $companies = Company::select('id', 'name')->get();
@@ -353,7 +353,7 @@ class BatchAssignController extends Controller
             });
 
         // Flocks (for batch assign form)
-        $flocks = Flock::select('id', 'name')->get();
+        $flocks = Flock::select('id', 'code', 'name')->get();
 
         // Companies (if needed in assign)
         $companies = Company::select('id', 'name')->get();

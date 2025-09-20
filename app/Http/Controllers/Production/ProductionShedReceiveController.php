@@ -47,7 +47,7 @@ class ProductionShedReceiveController extends Controller
      */
     public function create()
     {
-        $firmReceives = PsFirmReceive::with(['flock', 'company'])
+        $firmReceives = PsFirmReceive::with(['flock', 'company', 'project'])
             ->where('receive_type', 'pcs')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -57,7 +57,12 @@ class ProductionShedReceiveController extends Controller
                     'transaction_no' => $fr->transaction_no,
                     'flock_id' => $fr->flock_id,
                     'flock_name' => $fr->flock?->name ?? 'N/A',
+                    'flock_code' => $fr->flock?->code ?? 'N/A',
                     'receiving_company_id' => $fr->receiving_company_id,
+                    'company_name' => $fr->company?->name ?? 'N/A',
+                    'company_short_name' => $fr->company?->short_name ?? $fr->company?->name ?? 'N/A',
+                    'project_id' => $fr->project_id,
+                    'project_name' => $fr->project?->name ?? 'N/A',
                     'firm_female_qty' => $fr->firm_female_qty,
                     'firm_male_qty' => $fr->firm_male_qty,
                     'firm_total_qty' => $fr->firm_total_qty,
@@ -66,7 +71,7 @@ class ProductionShedReceiveController extends Controller
             });
 
         // Fetch all flocks
-        $flocks = Flock::select('id', 'name')->get();
+        $flocks = Flock::select('id', 'code', 'name')->get();
 
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
@@ -97,7 +102,7 @@ class ProductionShedReceiveController extends Controller
             'company_id'       => $firmReceive->receiving_company_id,
             'project_id'       => $firmReceive->project_id,
             'flock_id'         => $flock->id,
-            'flock_no'         => $flock->name,
+            'flock_no'         => $flock->code,
             'shed_id'          => $request->shed_id,
             'shed_female_qty'  => $request->shed_female_qty,
             'shed_male_qty'    => $request->shed_male_qty,
@@ -115,7 +120,7 @@ class ProductionShedReceiveController extends Controller
         if ($request->shed_sortage_box_qty > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flock->id,
-                'flock_no' =>    $flock->name, // fetch from batch or pass from request
+                'flock_no' =>    $flock->code, // fetch from batch or pass from request
                 'stage'      =>  3,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $shedReceive->id,
                 'type'       =>  3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -145,7 +150,7 @@ class ProductionShedReceiveController extends Controller
         if ($request->shed_total_mortality > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flock->id,
-                'flock_no' =>    $flock->name, // fetch from batch or pass from request
+                'flock_no' =>    $flock->code, // fetch from batch or pass from request
                 'stage'      =>  3,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $shedReceive->id,
                 'type'       =>  1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
