@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use App\Exports\ArrayExport;
+use App\Models\FirmLabTest;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\MovementAdjustment;
 
@@ -93,17 +94,8 @@ class BirdTransferController extends Controller
         if ($batch && $batch->shedReceive && $batch->shedReceive->firmReceive && $batch->shedReceive->firmReceive->psReceive) {
             $ps = $batch->shedReceive->firmReceive->psReceive;
 
-            // Auto calculations
-            $transferTotal = ($request->transfer_female_qty ?? 0) + ($request->transfer_male_qty ?? 0);
-            $medicalTotal = ($request->medical_female_qty ?? 0) + ($request->medical_male_qty ?? 0);
-
-            $currentFemale = $batch->batch_female_qty - $batch->batch_female_mortality;
-            $currentMale = $batch->batch_male_qty - $batch->batch_male_mortality;
-
-            $deviationFemale = $currentFemale - ($request->transfer_female_qty ?? 0) - ($request->medical_female_qty ?? 0);
-            $deviationMale = $currentMale - ($request->transfer_male_qty ?? 0) - ($request->medical_male_qty ?? 0);
-            $deviationTotal = $deviationFemale + $deviationMale;
-
+            
+           
             // Save transfer
             $transfer = BirdTransfer::create([
                 'batch_assign_id' => $batch->id,
@@ -114,21 +106,22 @@ class BirdTransferController extends Controller
                 'project_id' => $batch->project_id,
                 'from_company_id' => $request->from_company_id,
                 'to_company_id' => $request->to_company_id,
+                'to_project_id' => $request->to_project_id,
                 'from_shed_id' => $request->from_shed_id,
                 'to_shed_id' => $request->to_shed_id,
                 'transfer_date' => $request->transfer_date,
 
                 'transfer_female_qty' => $request->transfer_female_qty ?? 0,
                 'transfer_male_qty' => $request->transfer_male_qty ?? 0,
-                'transfer_total_qty' => $transferTotal,
+                'transfer_total_qty' => $request->transfer_total_qty,
 
                 'medical_female_qty' => $request->medical_female_qty ?? 0,
                 'medical_male_qty' => $request->medical_male_qty ?? 0,
-                'medical_total_qty' => $medicalTotal,
+                'medical_total_qty' => $request->medical_total_qty,
 
-                'deviation_female_qty' => $deviationFemale,
-                'deviation_male_qty' => $deviationMale,
-                'deviation_total_qty' => $deviationTotal,
+                'deviation_female_qty' => $request->deviation_male_qty,
+                'deviation_male_qty' => $request->deviation_female_qty,
+                'deviation_total_qty' => $request->deviation_total_qty,
 
 
                 'shipment_type_id' => $ps->shipment_type_id,
@@ -142,27 +135,37 @@ class BirdTransferController extends Controller
                 'status' => 1,
             ]);
 
+           
 
-
-            if ($deviationTotal > 0) {
+            if ($request->deviation_total_qty > 0) {
                 MovementAdjustment::create([
                     'flock_id'   =>  $batch->flock_id,
                     'flock_no' =>    $batch->flock_no, // fetch from batch or pass from request
                     'stage'      => 5,                  // 5 = Bird Transfer stage
                     'stage_id'   =>  $transfer->id,
                     'type'       =>  4,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                    'male_qty'   =>  $deviationMale ?? 0,
-                    'female_qty' =>  $deviationFemale ?? 0,
-                    'total_qty'  =>  $deviationTotal ?? 0,
+                    'male_qty'   =>  $request->deviation_male_qty ?? 0,
+                    'female_qty' =>  $request->deviation_female_qty ?? 0,
+                    'total_qty'  =>  $request->deviation_total_qty ?? 0,
                     'date'       => $request->transfer_date,
                     'remarks'    => "Deviation When Transfer",
                 ]);
             }
 
-
-
-
-
+            if ($request->medical_total_qty > 0) {
+                FirmLabTest::create([
+                    'batch_assign_id'   =>  $batch->flock_id,
+                    'firm_lab_send_female_qty' => $request->medical_female_qty ?? 0, // fetch from batch or pass from request
+                    'firm_lab_send_male_qty'   => $request->medical_male_qty ?? 0,                 // 5 = Bird Transfer stage
+                    'firm_lab_send_total_qty'   =>  $request->medical_total_qty,
+                    'firm_lab_receive_female_qty'       => 0,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                    'firm_lab_receive_male_qty'   => 0,
+                    'firm_lab_receive_total_qty' => 0,
+                    'note'  =>  "",
+                    'remarks'=> "",
+                    'firm_lab_type'  => 2,
+                ]);
+            }
 
             if ($batch->stage == 1) {
                 $batch->stage = 2; // Growing
@@ -171,27 +174,10 @@ class BirdTransferController extends Controller
                 $batch->status = 0; // Laying
                 $batch->transfer_date = date("Y-m-d");
             }
-            // Add your own logic for transition
-
+            
             // 3. Save updated stage
             $batch->save();
         }
-        // PsFirmReceive::create([
-        //     'ps_receive_id'        => $transfer->id, // link to transfer
-        //     'job_no'               =>  null,
-        //     'receive_type'         => 'chicks', // indicate it's a transfer
-        //     'source_type'          => 'transfer',
-        //     'source_id'            => $transfer->id,
-        //     'flock_id'             => $request->flock_id,
-        //     'flock_name'           => $transfer->flock_no ?? '', // if you have flock relationship
-        //     'receiving_company_id' => $request->to_company_id,
-        //     'firm_female_qty'      => $request->transfer_female_qty,
-        //     'firm_male_qty'        => $request->transfer_male_qty,
-        //     'firm_total_qty'       => $request->transfer_male_qty + $request->transfer_female_qty,
-        //     'remarks'              => $request->transfer_note ?? null,
-        //     'created_by'           => Auth::id(),
-        //     'status'               => 1,
-        // ]);
 
         return redirect()->route('batch-assign.index')->with('success', 'Bird transfer recorded successfully.');
 
