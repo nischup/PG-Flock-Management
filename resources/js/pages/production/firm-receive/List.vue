@@ -10,7 +10,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 import { Calendar, FileText } from 'lucide-vue-next';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref,watch  } from 'vue';
 
 // ✅ Props
 const props = defineProps<{
@@ -97,9 +97,15 @@ const form = useForm({
     receive_female_qty: 0,
     receive_male_qty: 0,
     receive_total_qty: 0,
-    deviation_female_qty: 0,
-    deviation_male_qty: 0,
-    deviation_total_qty: 0,
+    shortage_male: 0,
+    shortage_female: 0,
+    total_shortage:0,
+    excess_male: 0,
+    excess_female: 0,
+    total_excess:0,
+    mortality_male:0,
+    mortality_female:0,
+    total_mortality:0,
     note: '',
 });
 
@@ -118,20 +124,42 @@ const openTransferModal = (transfer: any) => {
     form.receive_female_qty = 0;
     form.receive_male_qty = 0;
     form.receive_total_qty = 0;
-    form.deviation_female_qty = 0;
-    form.deviation_male_qty = 0;
-    form.deviation_total_qty = 0;
+ 
     form.note = '';
 
     showTransferModal.value = true;
 };
 
+
+
+// Watch Receive Qty to calculate Shortage & Excess only
+watch([() => form.receive_female_qty, () => form.receive_male_qty, () => form.challan_female_qty, () => form.challan_male_qty, () => form.mortality_male, () => form.mortality_female], () => {
+    // Total Receive
+    form.receive_total_qty = (form.receive_female_qty || 0) + (form.receive_male_qty || 0);
+
+    // Shortage = challan - received (if received < challan)
+    form.shortage_male = Math.max((form.challan_male_qty || 0) - (form.receive_male_qty || 0), 0);
+    form.shortage_female = Math.max((form.challan_female_qty || 0) - (form.receive_female_qty || 0), 0);
+    form.total_shortage = form.shortage_male + form.shortage_female;
+
+    // Excess = received - challan (if received > challan)
+    form.excess_male = Math.max((form.receive_male_qty || 0) - (form.challan_male_qty || 0), 0);
+    form.excess_female = Math.max((form.receive_female_qty || 0) - (form.challan_female_qty || 0), 0);
+    form.total_excess = form.excess_male + form.excess_female;
+
+    // Mortality remains manual
+    
+    form.total_mortality = form.mortality_male + form.mortality_female;
+
+
+});
+
+
+
 // Save transfer
 const saveTransfer = () => {
-    form.receive_total_qty = (form.receive_female_qty || 0) + (form.receive_male_qty || 0);
-    form.deviation_female_qty = form.challan_female_qty - form.receive_female_qty;
-    form.deviation_male_qty = form.challan_male_qty - form.receive_male_qty;
-    form.deviation_total_qty = form.challan_total_qty - form.receive_total_qty;
+    //form.receive_total_qty = (form.receive_female_qty || 0) + (form.receive_male_qty || 0);
+    
 
     form.post(route('production-farm-receive.store'), {
         onSuccess: () => {
@@ -139,6 +167,10 @@ const saveTransfer = () => {
         },
     });
 };
+
+
+
+
 
 // ✅ Close on outside click
 const handleClick = (e: MouseEvent) => {
@@ -988,256 +1020,190 @@ const breadcrumbs: BreadcrumbItem[] = [
                 v-if="showTransferModal"
                 class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
                 @click="showTransferModal = false"
-            >
+                >
                 <div
-                    class="relative z-[10000] max-h-[85vh] w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800"
+                    class="relative z-[10000] max-h-[85vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800"
                     @click.stop
                 >
                     <!-- Header -->
                     <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 text-white">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        ></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h2 class="text-lg font-bold">Receive Flock</h2>
-                                    <p class="text-xs text-blue-100">Record bird transfer reception</p>
-                                </div>
-                            </div>
-                            <button
-                                @click="showTransferModal = false"
-                                class="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 transition-colors hover:bg-white/30"
-                            >
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                         </div>
+                        <div>
+                            <h2 class="text-lg font-bold">Receive Flock</h2>
+                            <p class="text-xs text-blue-100">Record bird transfer reception</p>
+                        </div>
+                        </div>
+                        <button
+                        @click="showTransferModal = false"
+                        class="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 transition-colors hover:bg-white/30"
+                        >
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        </button>
+                    </div>
                     </div>
 
                     <!-- Body -->
                     <div class="max-h-[calc(85vh-100px)] space-y-4 overflow-y-auto p-4">
-                        <!-- Project, Flock & Date Section -->
-                        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-                            <!-- <h3 class="text-base font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                </svg>
-                Project, Flock & Date
-              </h3> -->
-                            <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Receive Project</label>
-                                    <select
-                                        v-model="form.receive_company_id"
-                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                    >
-                                        <option value="">Select Company</option>
-                                        <option v-for="c in props.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Flock</label>
-                                    <select
-                                        v-model="form.flock_id"
-                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                    >
-                                        <option value="">Select Flock</option>
-                                        <option v-for="f in props.flocks" :key="f.id" :value="f.id">{{ f.name }}</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Receive Date</label>
-                                    <input
-                                        type="date"
-                                        v-model="form.receive_date"
-                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                    />
-                                </div>
-                            </div>
+                    <!-- Project, Flock & Date Section -->
+                    <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Receive Project</label>
+                            <select v-model="form.receive_company_id" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                            <option value="">Select Company</option>
+                            <option v-for="c in props.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
+                            </select>
                         </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Flock</label>
+                            <select v-model="form.flock_id" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                            <option value="">Select Flock</option>
+                            <option v-for="f in props.flocks" :key="f.id" :value="f.id">{{ f.name }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Receive Date</label>
+                            <input type="date" v-model="form.receive_date" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                        </div>
+                        </div>
+                    </div>
 
-                        <!-- Challan Section -->
-                        <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
-                            <!-- <h3 class="text-base font-semibold text-amber-800 dark:text-amber-200 mb-3 flex items-center gap-2">
-                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Challan Quantities (Expected)
-              </h3> -->
-                            <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-amber-700 dark:text-amber-300">Challan Female</label>
-                                    <input
-                                        type="number"
-                                        v-model="form.challan_female_qty"
-                                        readonly
-                                        class="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-100"
-                                    />
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-amber-700 dark:text-amber-300">Challan Male</label>
-                                    <input
-                                        type="number"
-                                        v-model="form.challan_male_qty"
-                                        readonly
-                                        class="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-100"
-                                    />
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-amber-700 dark:text-amber-300">Challan Total</label>
-                                    <input
-                                        type="number"
-                                        v-model="form.challan_total_qty"
-                                        readonly
-                                        class="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-100"
-                                    />
-                                </div>
-                            </div>
+                    <!-- Challan Section -->
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-amber-700 dark:text-amber-300">Challan Female</label>
+                            <input type="number" v-model="form.challan_female_qty" readonly class="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-100" />
                         </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-amber-700 dark:text-amber-300">Challan Male</label>
+                            <input type="number" v-model="form.challan_male_qty" readonly class="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-100" />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-amber-700 dark:text-amber-300">Challan Total</label>
+                            <input type="number" v-model="form.challan_total_qty" readonly class="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-100" />
+                        </div>
+                        </div>
+                    </div>
 
-                        <!-- Receive Section -->
-                        <div class="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
-                            <!-- <h3 class="text-base font-semibold text-green-800 dark:text-green-200 mb-3 flex items-center gap-2">
-                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Actual Receive Quantities
-              </h3> -->
-                            <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-green-700 dark:text-green-300">Receive Female</label>
-                                    <input
-                                        type="number"
-                                        v-model.number="form.receive_female_qty"
-                                        class="w-full rounded-lg border border-green-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-green-600 dark:bg-gray-800 dark:text-white"
-                                    />
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-green-700 dark:text-green-300">Receive Male</label>
-                                    <input
-                                        type="number"
-                                        v-model.number="form.receive_male_qty"
-                                        class="w-full rounded-lg border border-green-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-green-600 dark:bg-gray-800 dark:text-white"
-                                    />
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-green-700 dark:text-green-300">Total Receive</label>
-                                    <input
-                                        type="number"
-                                        :value="form.receive_female_qty + form.receive_male_qty"
-                                        readonly
-                                        class="w-full rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-sm font-semibold text-green-900 dark:border-green-600 dark:bg-green-900/30 dark:text-green-100"
-                                    />
-                                </div>
-                            </div>
+                    <!-- Receive Section -->
+                    <div class="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-green-700 dark:text-green-300">Receive Female</label>
+                            <input type="number" v-model.number="form.receive_female_qty" class="w-full rounded-lg border border-green-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-green-600 dark:bg-gray-800 dark:text-white" />
                         </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-green-700 dark:text-green-300">Receive Male</label>
+                            <input type="number" v-model.number="form.receive_male_qty" class="w-full rounded-lg border border-green-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-green-600 dark:bg-gray-800 dark:text-white" />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-green-700 dark:text-green-300">Total Receive</label>
+                            <input type="number" :value="form.receive_female_qty + form.receive_male_qty" readonly class="w-full rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-sm font-semibold text-green-900 dark:border-green-600 dark:bg-green-900/30 dark:text-green-100" />
+                        </div>
+                        </div>
+                    </div>
 
-                        <!-- Deviation Section -->
-                        <div class="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
-                            <!-- <h3 class="text-base font-semibold text-red-800 dark:text-red-200 mb-3 flex items-center gap-2">
-                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                </svg>
-                Deviation Analysis
-              </h3> -->
-                            <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-red-700 dark:text-red-300">Deviation Female</label>
-                                    <input
-                                        type="number"
-                                        :value="form.challan_female_qty - (form.receive_female_qty || 0)"
-                                        readonly
-                                        class="w-full rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-900 dark:border-red-600 dark:bg-red-900/30 dark:text-red-100"
-                                    />
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-red-700 dark:text-red-300">Deviation Male</label>
-                                    <input
-                                        type="number"
-                                        :value="form.challan_male_qty - (form.receive_male_qty || 0)"
-                                        readonly
-                                        class="w-full rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-900 dark:border-red-600 dark:bg-red-900/30 dark:text-red-100"
-                                    />
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-xs font-medium text-red-700 dark:text-red-300">Deviation Total</label>
-                                    <input
-                                        type="number"
-                                        :value="form.challan_total_qty - ((form.receive_female_qty || 0) + (form.receive_male_qty || 0))"
-                                        readonly
-                                        class="w-full rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-900 dark:border-red-600 dark:bg-red-900/30 dark:text-red-100"
-                                    />
-                                </div>
-                            </div>
+                 
+                    <!-- Additional Metrics Section -->
+                    <div class="space-y-4">
+                    <!-- Shortage Row -->
+                    <div class="rounded-lg border border-yellow-300 bg-yellow-50 p-3 dark:border-yellow-600 dark:bg-yellow-900/20">
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-yellow-700 dark:text-yellow-300">Shortage Female</label>
+                            <input type="number" v-model.number="form.shortage_female" readonly class="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-yellow-600 dark:bg-gray-800 dark:text-white" />
                         </div>
+                        
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-yellow-700 dark:text-yellow-300">Shortage Male</label>
+                            <input type="number" v-model.number="form.shortage_male" readonly class="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-yellow-600 dark:bg-gray-800 dark:text-white" />
+                        </div>
+                        
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-yellow-700 dark:text-yellow-300">Total Shortage</label>
+                            <input type="number" v-model.number="form.total_shortage" readonly class="w-full rounded-lg border border-yellow-300 bg-yellow-100 px-3 py-2 text-sm font-semibold text-yellow-900 dark:border-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-100" />
+                        </div>
+                        </div>
+                    </div>
 
-                        <!-- Note Section -->
-                        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-                            <!-- <h3 class="text-base font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
-                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                </svg>
-                Additional Notes
-              </h3> -->
-                            <div>
-                                <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Note</label>
-                                <textarea
-                                    v-model="form.note"
-                                    rows="2"
-                                    placeholder="Enter any additional notes or comments..."
-                                    class="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                ></textarea>
-                            </div>
+                    <!-- Excess Row -->
+                    <div class="rounded-lg border border-blue-300 bg-blue-50 p-3 dark:border-blue-600 dark:bg-blue-900/20">
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-blue-700 dark:text-blue-300">Excess Female</label>
+                            <input type="number" v-model.number="form.excess_female" readonly class="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-blue-600 dark:bg-gray-800 dark:text-white" />
                         </div>
+                        
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-blue-700 dark:text-blue-300">Excess Male</label>
+                            <input type="number" v-model.number="form.excess_male" readonly class="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-blue-600 dark:bg-gray-800 dark:text-white" />
+                        </div>
+                        
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-blue-700 dark:text-blue-300">Total Excess</label>
+                            <input type="number"  v-model.number="form.total_excess" readonly class="w-full rounded-lg border border-blue-300 bg-blue-100 px-3 py-2 text-sm font-semibold text-blue-900 dark:border-blue-600 dark:bg-blue-900/30 dark:text-blue-100" />
+                        </div>
+                        </div>
+                    </div>
+
+                    <!-- Mortality Row -->
+                    <div class="rounded-lg border border-red-300 bg-red-50 p-3 dark:border-red-600 dark:bg-red-900/20">
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-red-700 dark:text-red-300">Mortality Female</label>
+                            <input type="number" v-model.number="form.mortality_female" class="w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-red-600 dark:bg-gray-800 dark:text-white" />
+                        </div>    
+
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-red-700 dark:text-red-300">Mortality Male</label>
+                            <input type="number" v-model.number="form.mortality_male" class="w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-red-600 dark:bg-gray-800 dark:text-white" />
+                        </div>
+                        
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-red-700 dark:text-red-300">Total Mortality</label>
+                            <input type="number" v-model.number="form.total_mortality" readonly class="w-full rounded-lg border border-red-300 bg-red-100 px-3 py-2 text-sm font-semibold text-red-900 dark:border-red-600 dark:bg-red-900/30 dark:text-red-100" />
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+
+
+                    <!-- Note Section -->
+                    <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                        <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Note</label>
+                        <textarea v-model="form.note" rows="2" placeholder="Enter any additional notes or comments..." class="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"></textarea>
+                    </div>
                     </div>
 
                     <!-- Footer -->
-                    <div
-                        class="modal-footer relative z-10 flex justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-600 dark:bg-gray-700/50"
-                    >
-                        <button
-                            class="rounded-lg bg-gray-200 px-6 py-3 text-sm font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
-                            @click="showTransferModal = false"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            class="receive-flock-button !focus:ring-4 !focus:ring-green-300 !relative !z-50 !flex !min-w-[160px] !items-center !justify-center !gap-3 !rounded-lg !border-0 !bg-green-600 !px-8 !py-4 !text-base !font-bold !text-white !shadow-xl !outline-none hover:!bg-green-700 hover:!shadow-2xl disabled:!cursor-not-allowed disabled:!opacity-50"
-                            @click="saveTransfer"
-                            :disabled="form.processing"
-                            style="z-index: 9999 !important; position: relative !important"
-                        >
-                            <svg v-if="form.processing" class="h-5 w-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                ></path>
-                            </svg>
-                            <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                ></path>
-                            </svg>
-                            {{ form.processing ? 'Processing...' : 'Receive Flock' }}
-                        </button>
+                    <div class="modal-footer relative z-10 flex justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-600 dark:bg-gray-700/50">
+                    <button class="rounded-lg bg-gray-200 px-6 py-3 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500" @click="showTransferModal = false">
+                        Cancel
+                    </button>
+                    <button type="button" class="receive-flock-button !focus:ring-4 !focus:ring-green-300 !flex !min-w-[160px] !items-center !justify-center !gap-3 !rounded-lg !border-0 !bg-green-600 !px-8 !py-4 !text-base !font-bold !text-white !shadow-xl hover:!bg-green-700 disabled:!cursor-not-allowed disabled:!opacity-50" @click="saveTransfer" :disabled="form.processing">
+                        <svg v-if="form.processing" class="h-5 w-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {{ form.processing ? 'Processing...' : 'Receive Flock' }}
+                    </button>
                     </div>
                 </div>
             </div>
+
         </div>
     </AppLayout>
 </template>

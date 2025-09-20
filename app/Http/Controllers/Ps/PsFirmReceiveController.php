@@ -210,7 +210,7 @@ class PsFirmReceiveController extends Controller
         }
 
 
-
+        
 
 
         $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";

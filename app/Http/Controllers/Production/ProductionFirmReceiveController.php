@@ -11,6 +11,7 @@ use App\Models\Master\Shed;
 use App\Models\Ps\PsFirmReceive;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use App\Models\MovementAdjustment;
 use Illuminate\Support\Facades\Auth;
 
 class ProductionFirmReceiveController extends Controller
@@ -102,9 +103,12 @@ class ProductionFirmReceiveController extends Controller
     public function store(Request $request)
     {
 
+       
+       
+       
         $companyInfo = Company::findOrFail($request->receive_company_id);
         $flockInfo = Flock::findOrFail($request->flock_id);
-
+       
         $transferBird = BirdTransfer::find($request->transfer_bird_id);
 
         $job_no = $transferBird->job_no;
@@ -112,9 +116,7 @@ class ProductionFirmReceiveController extends Controller
         // 2️⃣ Get ps_receive_id from ps_receives
         $psReceive = PsFirmReceive::where('job_no', $job_no)->first();
 
-        // PsFirmReceive::where('job_no', $job_no)->update(['status' => 0]);
-
-        // $jobNo = "{$request->transfer_bird_id}-{$companyInfo->short_name}-{$flockInfo->name}";
+        
 
         $firmReceive = PsFirmReceive::create([
             'ps_receive_id' => $psReceive->ps_receive_id,
@@ -122,8 +124,8 @@ class ProductionFirmReceiveController extends Controller
             'source_type' => 'transfer',
             'job_no' => $psReceive->job_no,
             'source_id' => $request->transfer_bird_id,
-            'flock_id' => $request->flock_id,
-            'flock_name' => $flockInfo->name ?? '', // if you have flock relationship
+            'flock_id' => $flockInfo->id,
+            'flock_no' => $flockInfo->name, // if you have flock relationship
             'receiving_company_id' => $request->receive_company_id,
             'firm_female_qty' => $request->receive_female_qty,
             'firm_male_qty' => $request->receive_male_qty,
@@ -134,6 +136,58 @@ class ProductionFirmReceiveController extends Controller
         ]);
 
         $insertId = $firmReceive->id;
+
+
+        
+        if ($request->total_shortage > 0) {
+            MovementAdjustment::create([
+                'flock_id'   =>  $flockInfo->id,
+                'flock_no' =>    $flockInfo->name, // fetch from batch or pass from request
+                'stage'      =>  1,                  // 5 = Bird Transfer stage
+                'stage_id'   =>  $insertId,
+                'type'       =>  3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty'   =>  $request->shortage_male ?? 0,
+                'female_qty' =>  $request->shortage_female ?? 0,
+                'total_qty'  =>  $request->total_shortage ?? 0,
+                'date'       =>  date('Y-m-d'),
+                'remarks'    => "Sortage when firm receive from tansfer",
+            ]);
+        }
+
+        if ($request->total_excess > 0) {
+            MovementAdjustment::create([
+                'flock_id'   =>  $flockInfo->id,
+                'flock_no'   =>  $flockInfo->name, // fetch from batch or pass from request
+                'stage'      =>  1,                  // 5 = Bird Transfer stage
+                'stage_id'   =>  $insertId,
+                'type'       =>  2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty'   =>  $request->excess_male ?? 0,
+                'female_qty' =>  $request->excess_female ?? 0,
+                'total_qty'  =>  $request->total_excess ?? 0,
+                'date'       => date('Y-m-d'),
+                'remarks'    => "Excess when firm receive from tansfer",
+            ]);
+        }
+
+        if ($request->total_mortality > 0) {
+            MovementAdjustment::create([
+                'flock_id'   =>  $flockInfo->id,
+                'flock_no' =>    $flockInfo->name, // fetch from batch or pass from request
+                'stage'      =>  1,                  // 5 = Bird Transfer stage
+                'stage_id'   =>  $insertId,
+                'type'       =>  1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty'   =>  $request->mortality_male ?? 0,
+                'female_qty' =>  $request->mortality_female ?? 0,
+                'total_qty'  =>  $request->total_mortality ?? 0,
+                'date'       => date('Y-m-d'),
+                'remarks'    => "Mortality when firm receive from tansfer",
+            ]);
+        }
+
+
+
+
+
 
         $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
 

@@ -5,62 +5,67 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+// Props
 const props = defineProps<{
   batchAssigns: Array<{
     id: number;
     transaction_no: string;
-    batch: { name: string };
+    batch_no: string;
   }>;
+  firmLabTest: {
+    id: number;
+    batch_assign_id: number;
+    firm_lab_send_female_qty: number;
+    firm_lab_send_male_qty: number;
+    firm_lab_send_total_qty: number;
+    firm_lab_receive_female_qty: number;
+    firm_lab_receive_male_qty: number;
+    firm_lab_receive_total_qty: number;
+    note: string;
+    remarks: string;
+  };
 }>();
 
-// Form
+// Form pre-filled with existing data
 const form = useForm({
-  batch_assign_id: '',
-  firm_lab_send_female_qty: 0,
-  firm_lab_send_male_qty: 0,
-  firm_lab_send_total_qty: 0,
-  firm_lab_receive_female_qty: 0,
-  firm_lab_receive_male_qty: 0,
-  firm_lab_receive_total_qty: 0,
-  note: '',
-  remarks: '',
+  batch_assign_id: props.firmLabTest.batch_assign_id,
+  firm_lab_send_female_qty: props.firmLabTest.firm_lab_send_female_qty,
+  firm_lab_send_male_qty: props.firmLabTest.firm_lab_send_male_qty,
+  firm_lab_send_total_qty: props.firmLabTest.firm_lab_send_total_qty,
+  firm_lab_receive_female_qty: props.firmLabTest.firm_lab_receive_female_qty,
+  firm_lab_receive_male_qty: props.firmLabTest.firm_lab_receive_male_qty,
+  firm_lab_receive_total_qty: props.firmLabTest.firm_lab_receive_total_qty,
+  note: props.firmLabTest.note,
+  remarks: props.firmLabTest.remarks,
 });
 
 // Submit
 const submit = () => {
-  router.post(route('firm-lab-tests.store'), form);
+  router.put(route('firm-lab-tests.update', props.firmLabTest.id), form);
 };
 
 // Breadcrumbs
 const breadcrumbs = [
   { title: 'Firm Lab Tests', href: route('firm-lab-tests.index') },
-  { title: 'Create', href: '' },
+  { title: 'Edit', href: '' },
 ];
 </script>
 
 <template>
   <AppLayout :breadcrumbs="breadcrumbs">
-    <Head title="Create Firm Lab Test" />
+    <Head title="Edit Firm Lab Test" />
 
-    <div class="p-6 bg-white rounded shadow">
-      <h2 class="text-xl font-semibold mb-4">Create Firm Lab Test</h2>
+    <div class="p-8 bg-white rounded shadow w-full min-h-screen">
+      <h2 class="text-3xl font-bold mb-8">Edit Firm Lab Test</h2>
 
-      <div class="grid grid-cols-1 gap-4 max-w-2xl">
+      <form class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Batch Select -->
-        <div>
+        <div class="col-span-2">
           <Label for="batch_assign_id">Select Batch</Label>
-          <select
-            v-model="form.batch_assign_id"
-            id="batch_assign_id"
-            class="w-full border rounded p-2"
-          >
+          <select v-model="form.batch_assign_id" id="batch_assign_id" class="w-full border rounded p-3">
             <option value="">-- Select Batch --</option>
-            <option
-              v-for="b in props.batchAssigns"
-              :key="b.id"
-              :value="b.id"
-            >
-              {{ b.transaction_no }} - {{ b.batch.name }}
+            <option v-for="b in props.batchAssigns" :key="b.id" :value="b.id">
+              {{ b.transaction_no }} - {{ b.batch_no }}
             </option>
           </select>
           <span class="text-red-600 text-sm">{{ form.errors.batch_assign_id }}</span>
@@ -104,34 +109,25 @@ const breadcrumbs = [
           <span class="text-red-600 text-sm">{{ form.errors.firm_lab_receive_total_qty }}</span>
         </div>
 
-        <!-- Note -->
-        <div>
+        <!-- Note & Remarks -->
+        <div class="col-span-2">
           <Label for="note">Note</Label>
-          <textarea
-            v-model="form.note"
-            id="note"
-            class="w-full border rounded p-2"
-          ></textarea>
+          <textarea v-model="form.note" id="note" class="w-full border rounded p-3 h-28"></textarea>
           <span class="text-red-600 text-sm">{{ form.errors.note }}</span>
         </div>
 
-        <!-- Remarks -->
-        <div>
+        <div class="col-span-2">
           <Label for="remarks">Remarks</Label>
-          <textarea
-            v-model="form.remarks"
-            id="remarks"
-            class="w-full border rounded p-2"
-          ></textarea>
+          <textarea v-model="form.remarks" id="remarks" class="w-full border rounded p-3 h-28"></textarea>
           <span class="text-red-600 text-sm">{{ form.errors.remarks }}</span>
         </div>
-      </div>
+      </form>
 
       <!-- Actions -->
-      <div class="mt-4 flex gap-2">
-        <Button class="bg-gray-300 text-black" @click="$router.back()">Cancel</Button>
+      <div class="mt-8 flex gap-4">
+        <Button class="bg-gray-300 text-black" @click="router.visit(route('firm-lab-tests.index'))">Cancel</Button>
         <Button class="bg-green-600 text-white" @click="submit" :disabled="form.processing">
-          {{ form.processing ? 'Saving...' : 'Save' }}
+          {{ form.processing ? 'Updating...' : 'Update' }}
         </Button>
       </div>
     </div>
