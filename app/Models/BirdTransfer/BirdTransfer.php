@@ -7,6 +7,7 @@ use App\Models\Master\Batch;
 use App\Models\Master\Flock;
 use App\Models\Master\Company;
 use App\Models\Master\BreedType;
+use App\Models\Ps\PsFirmReceive;
 use App\Models\Shed\BatchAssign;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -90,5 +91,10 @@ class BirdTransfer extends Model
     public function breed()
     {
         return $this->belongsTo(BreedType::class, 'breed_type');
+    }
+    public function firmReceive()
+    {
+        return $this->hasOne(PsFirmReceive::class, 'source_id')
+            ->where('source_type', 'transfer');
     }
 }
