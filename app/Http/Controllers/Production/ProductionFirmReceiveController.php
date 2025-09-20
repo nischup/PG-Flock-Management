@@ -116,8 +116,6 @@ class ProductionFirmReceiveController extends Controller
         // 2️⃣ Get ps_receive_id from ps_receives
         $psReceive = PsFirmReceive::where('job_no', $job_no)->first();
 
-
-
         $firmReceive = PsFirmReceive::create([
             'ps_receive_id' => $psReceive->ps_receive_id,
             'receive_type' => 'pcs', // indicate it's a transfer
