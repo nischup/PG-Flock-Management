@@ -34,10 +34,10 @@ class ProductionShedReceiveController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
-
+          
         // Return to Inertia page
         return inertia('production/shed-receive/List', [
-            'psReceives' => $shedReceives,
+            'shedReceives' => $shedReceives,
             'filters' => $request->only(['search', 'per_page']),
         ]);
     }
@@ -88,15 +88,16 @@ class ProductionShedReceiveController extends Controller
     {
         $firmReceive = PsFirmReceive::findOrFail($request->job_id);
         
-
+        $flock = Flock::findOrFail($request->flock_id);;
 
         $shedReceive = ShedReceive::create([
             'receive_id'       => $request->job_id,   // firm receive reference
             'job_no'           => $firmReceive->job_no,
             'transaction_no'   => $firmReceive->transaction_no,
             'company_id'       => $firmReceive->receiving_company_id,
-            'flock_id'         => $request->flock_id,
-            'flock_name'       => $request->flock_name,
+            'project_id'       => $firmReceive->project_id,
+            'flock_id'         => $flock->id,
+            'flock_no'         => $flock->name,
             'shed_id'          => $request->shed_id,
             'shed_female_qty'  => $request->shed_female_qty,
             'shed_male_qty'    => $request->shed_male_qty,
@@ -113,8 +114,8 @@ class ProductionShedReceiveController extends Controller
 
         if ($request->shed_sortage_box_qty > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $request->flock_id,
-                'flock_no' =>    $request->flock_no, // fetch from batch or pass from request
+                'flock_id'   =>  $flock->id,
+                'flock_no' =>    $flock->name, // fetch from batch or pass from request
                 'stage'      =>  3,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $shedReceive->id,
                 'type'       =>  3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -128,8 +129,8 @@ class ProductionShedReceiveController extends Controller
 
         if ($request->shed_excess_box_qty > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $firmReceive->flock_id,
-                'flock_no'   =>  $firmReceive->flock_no, // fetch from batch or pass from request
+                'flock_id'   =>  $flock->id,
+                'flock_no'   =>  $flock->name, // fetch from batch or pass from request
                 'stage'      =>  3,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $shedReceive->id,
                 'type'       =>  2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -143,8 +144,8 @@ class ProductionShedReceiveController extends Controller
 
         if ($request->shed_total_mortality > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $firmReceive->flock_id,
-                'flock_no' =>    $firmReceive->flock_no, // fetch from batch or pass from request
+                'flock_id'   =>  $flock->id,
+                'flock_no' =>    $flock->name, // fetch from batch or pass from request
                 'stage'      =>  3,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $shedReceive->id,
                 'type'       =>  1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation

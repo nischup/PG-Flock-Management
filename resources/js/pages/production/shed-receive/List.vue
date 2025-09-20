@@ -59,7 +59,7 @@ const props = defineProps<{
   sheds?: Array<{ id: number; name: string }>;
 }>();
 
-
+console.log(props.shedReceives);
 
 useListFilters({ routeName: '/production-shed-receive', filters: props.filters });
 const { confirmDelete } = useNotifier();
@@ -758,8 +758,7 @@ const breadcrumbs: BreadcrumbItem[] = [
               <th class="px-4 py-2 border-b whitespace-nowrap min-w-[150px]">Company</th>
               <th class="px-4 py-2 border-b whitespace-nowrap min-w-[120px]">Project</th>
               <th class="px-4 py-2 border-b whitespace-nowrap min-w-[120px]">Flock No</th>
-              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[100px]">Shed</th>  
-              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[120px]">Batch No</th>    
+              <th class="px-4 py-2 border-b whitespace-nowrap min-w-[100px]">Shed</th>    
               <th class="px-4 py-2 border-b whitespace-nowrap min-w-[100px]">Female Qty</th>
               <th class="px-4 py-2 border-b whitespace-nowrap min-w-[100px]">Male Qty</th>
               <th class="px-4 py-2 border-b whitespace-nowrap min-w-[120px]">Total Mortality</th>
@@ -780,7 +779,6 @@ const breadcrumbs: BreadcrumbItem[] = [
               <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.project?.name || 'N/A' }}</td>
               <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.flock?.name || 'Flock-' + receive.flock_no }}</td>
               <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.shed?.name || 'Shed-' + receive.shed_no }}</td> 
-              <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.batch?.name || 'Batch-' + receive.batch_no }}</td>
               <!-- Using optional chaining and default values --> 
               <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.shed_female_qty || 0 }}</td>
               <td class="px-4 py-2 border-b whitespace-nowrap">{{ receive.shed_male_qty || 0 }}</td>
