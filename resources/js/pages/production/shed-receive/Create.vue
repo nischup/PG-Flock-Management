@@ -131,7 +131,7 @@ const form = useForm({
 
 // Watch for total boxes and auto-calc shortages/excess
 watch(
-  () => [form.shed_male_qty, form.shed_female_qty],
+  () => [form.shed_male_qty, form.shed_female_qty,form.shed_sortage_male_box,form.shed_sortage_female_box,form.shed_excess_male_box,form.shed_excess_female_box],
   () => {
     form.shed_total_qty =
       Number(form.shed_male_qty || 0) + Number(form.shed_female_qty || 0)
@@ -543,7 +543,7 @@ function submit() {
                 <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Total Shortage</Label>
                 <Input 
                   type="number" 
-                  :value="form.shed_sortage_box_qty" 
+                  v-model.number="form.shed_sortage_box_qty" 
                   readonly 
                   class="rounded-xl border-red-300 bg-gradient-to-r from-red-100 to-red-50 px-4 py-2 font-bold text-red-800 cursor-not-allowed dark:border-red-600 dark:from-red-800/50 dark:to-red-900/50 dark:text-red-200"
                 />
@@ -582,7 +582,7 @@ function submit() {
                 <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Total Excess</Label>
                 <Input 
                   type="number" 
-                  :value="form.shed_excess_box_qty" 
+                  v-model.number="form.shed_excess_box_qty" 
                   readonly 
                   class="rounded-xl border-emerald-300 bg-gradient-to-r from-emerald-100 to-emerald-50 px-4 py-2 font-bold text-emerald-800 cursor-not-allowed dark:border-emerald-600 dark:from-emerald-800/50 dark:to-emerald-900/50 dark:text-emerald-200"
                 />

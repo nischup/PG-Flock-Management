@@ -35,6 +35,7 @@ const props = defineProps<{
   companies: any[],
   sheds: any[],
   batches: any[],
+  projects:any[],
 }>()
 
 // Get batch dropdown from composable

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BirdTransfer\BirdTransfer;
 use App\Models\Master\Batch;
 use App\Models\Master\Company;
+use App\Models\Master\Project;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
 use App\Models\Ps\PsFirmReceive;
@@ -70,6 +71,7 @@ class BirdTransferController extends Controller
             'batchAssign' => $batchAssign,
             'flocks' => Flock::all(),
             'companies' => Company::all(),
+            'projects' => Project::all(),
             'sheds' => Shed::all(),
             'batches' => Batch::where('status', true)->get(),
             'actualQty' => [
