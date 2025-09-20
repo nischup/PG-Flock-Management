@@ -96,17 +96,24 @@
 
         .details-table {
             border-collapse: collapse;
+            background: #f1f5f9;
         }
 
         .details-table td {
             padding: 2px 4px;
             border: none;
+            background: #f1f5f9;
+        }
+
+        .bg-f1f5f9 {
+            background: #f1f5f9;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 11px;
+
         }
 
         thead th {
@@ -162,7 +169,7 @@
         }
 
         .section-title {
-            margin-top: 14px;
+            margin-top: 5px;
             font-weight: 800;
             font-size: 15px;
             padding-bottom: 4px;
@@ -170,7 +177,7 @@
 
         .counting-team-container {
             width: 50%;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .team {
@@ -192,11 +199,11 @@
         }
 
         .footer {
-            margin-top: 12px;
+            margin-top: 10px;
             display: flex;
             justify-content: space-between;
             color: var(--muted);
-            font-size: 11px;
+            font-size: 10px;
             padding-top: 6px;
         }
     </style>
@@ -217,7 +224,8 @@
         <!-- Details -->
         <div>
             <div><span class="label">Date:</span> <span>{{ $receive_date ?? now()->format('Y-m-d') }}</span></div>
-            <div class="doc-meta"><span>Form: {{ now()->format('Y-m-d') }} PBL-PBRD</span></div>
+            <div class="doc-meta"><span>Form: {{ $from_company }}</span></div>
+            <div class="doc-meta"><span>To: {{ $to_company }}</span></div>
         </div>
 
         <!-- Details Table -->
@@ -228,12 +236,12 @@
                     <td>{{ $flock_name ?? 'N/A' }}</td>
                 </tr>
                 <tr>
-                    <td class="bold">Flock origin:</td>
-                    <td>{{ $from_company ?? 'N/A' }}</td>
-                    <td class="bold">Breed:</td>
-                    <td>{{ $breed_type ?? 'N/A' }}</td>
-                    <td class="bold">Invoice / Gate pass:</td>
-                    <td>{{ $invoice_numbers ?? '-' }}</td>
+                    <td class="bold " style="background-color: #f1f5f9;">Flock origin:</td>
+                    <td style="background-color: #f1f5f9;">{{ $country_of_origin ?? 'N/A' }}</td>
+                    <td class="bold" style="background-color: #f1f5f9;">Breed:</td>
+                    <td style="background-color: #f1f5f9;">{{ $breed_type ?? 'N/A' }}</td>
+                    <td class="bold" style="background-color: #f1f5f9;">Invoice / Gate pass:</td>
+                    <td style="background-color: #f1f5f9;">{{ $invoice_numbers ?? '-' }}</td>
                 </tr>
             </table>
         </div>

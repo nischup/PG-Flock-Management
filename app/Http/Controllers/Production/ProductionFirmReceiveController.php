@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\Production;
 
-use App\Http\Controllers\Controller;
-use App\Models\BirdTransfer\BirdTransfer;
-use App\Models\Master\BreedType;
-use App\Models\Master\Company;
-use App\Models\Master\Flock;
-use App\Models\Master\Project;
+use App\Models\Country;
 use App\Models\Master\Shed;
-use App\Models\Ps\PsFirmReceive;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Master\Flock;
 use Illuminate\Http\Request;
+use App\Models\Master\Company;
+use App\Models\Master\Project;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Master\BreedType;
+use App\Models\Ps\PsFirmReceive;
 use App\Models\MovementAdjustment;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\BirdTransfer\BirdTransfer;
 
 class ProductionFirmReceiveController extends Controller
 {
@@ -87,7 +88,7 @@ class ProductionFirmReceiveController extends Controller
             'companies' => $companies,
             'flocks' => $flocks,
             'sheds' => $sheds,
-            'projects'=> $projects,
+            'projects' => $projects,
             'filters' => $request->only(['search', 'per_page', 'from_company_id', 'flock_id', 'date_from', 'date_to']),
         ]);
     }
@@ -108,7 +109,7 @@ class ProductionFirmReceiveController extends Controller
 
         $companyInfo = Company::findOrFail($request->receive_company_id);
         $flockInfo = Flock::findOrFail($request->flock_id);
-        
+
         $transferBird = BirdTransfer::find($request->transfer_bird_id);
 
         $job_no = $transferBird->job_no;
@@ -266,7 +267,11 @@ class ProductionFirmReceiveController extends Controller
         $breedAll = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
         $breedNames = array_filter($breedAll);
         $breedName = implode(', ', $breedNames);
+        $fromCompany = Company::find($item->from_company_id);
+        $toCompany = Company::find($item->to_company_id);
 
+        $country = Country::find($item->country_of_origin);
+        $countryName = $country ? $country->name : 'N/A';
         // Prepare batch info
         $batchAssign = $item->batchAssign;
         $batches = [
@@ -278,25 +283,29 @@ class ProductionFirmReceiveController extends Controller
                 'challan_total' => $item->transfer_total_qty,
 
                 // Physical quantities from firmReceive
-                'physical_female' => $firmReceive->firm_female_qty ?? 0, // Access from PsFirmReceive
-                'physical_male' => $firmReceive->firm_male_qty ?? 0,     // Access from PsFirmReceive
-                'total' => $firmReceive->firm_total_qty ?? 0,             // Access from PsFirmReceive
+                'physical_female' => $firmReceive->firm_female_qty ?? 0,
+                'physical_male' => $firmReceive->firm_male_qty ?? 0,
+                'total' => $firmReceive->firm_total_qty ?? 0,
 
                 // Additional counts (medical, deviation)
-                'medical_female' => $firmReceive->medical_female_qty ?? 0, // If applicable
-                'medical_male' => $firmReceive->medical_male_qty ?? 0,     // If applicable
+                'medical_female' => $firmReceive->medical_female_qty ?? 0,
+                'medical_male' => $firmReceive->medical_male_qty ?? 0,
 
                 'deviation_female' => $firmReceive->firm_female_qty - $item->transfer_female_qty,
                 'deviation_male' => $firmReceive->firm_male_qty - $item->transfer_male_qty,
                 'deviation_total' => $firmReceive->firm_total_qty - $item->transfer_total_qty,
-                'from_company_id' => $item->from_company_id,
-                'to_company_id' => $item->to_company_id,
+
+                // Add the company names
+                'from_company_name' => $fromCompany?->name ?? 'N/A', // Get company name from `from_company_id`
+                'to_company_name' => $toCompany?->name ?? 'N/A', // Get company name from `to_company_id`
+
+                // Add country name
+                'country_of_origin' => $countryName, // Get the country name from `country_of_origin` ID
 
                 // Remarks
                 'remarks' => $firmReceive->remarks ?? 'N/A',
             ],
         ];
-        // dd($batches);
 
         // Prepare data for the Blade template
         $data = [
@@ -304,8 +313,8 @@ class ProductionFirmReceiveController extends Controller
             'job_no' => $item->job_no,
             'transaction_no' => $item->transaction_no,
             'flock_name' => $item->flock->name ?? '-',
-            'from_company' => $item->fromCompany->name ?? '-',
-            'to_company' => $item->toCompany->name ?? '-',
+            'from_company' => $fromCompany?->name ?? '-',
+            'to_company' => $toCompany?->name ?? '-',
             'breed_type' => $breedName,
             'firm_female_qty' => $item->transfer_female_qty,
             'firm_male_qty' => $item->transfer_male_qty,
@@ -314,8 +323,10 @@ class ProductionFirmReceiveController extends Controller
             'receive_date' => optional($item->transfer_date)->format('Y-m-d'),
             'invoice_numbers' => $firmReceive->psReceive?->order_no ?? 'N/A', // Invoice / Gate pass from PsReceive
             'batches' => $batches,
+            'country_of_origin' => $countryName, // Add the country of origin to the data
             'generatedAt' => now(),
         ];
+        // dd($batches);
 
         // PDF options
         Pdf::setOptions([
