@@ -191,4 +191,5 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/dashboard/daily-eggs-details', [DashboardRealtimeController::class, 'getDailyEggsDetails'])->name('dashboard.daily-eggs-details');
     Route::get('/api/dashboard/hatchable-eggs-details', [DashboardRealtimeController::class, 'getHatchableEggsDetails'])->name('dashboard.hatchable-eggs-details');
     Route::get('/api/dashboard/male-birds-details', [DashboardRealtimeController::class, 'getMaleBirdsDetails'])->name('dashboard.male-birds-details');
+    Route::get('/api/dashboard/female-birds-details', [DashboardRealtimeController::class, 'getFemaleBirdsDetails'])->name('dashboard.female-birds-details');
 });
