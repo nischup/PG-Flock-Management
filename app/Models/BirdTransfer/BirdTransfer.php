@@ -3,10 +3,11 @@
 namespace App\Models\BirdTransfer;
 
 use App\Models\Master\Shed;
-use App\Models\Master\Batch;
+use App\Models\Master\Project;
 use App\Models\Master\Flock;
 use App\Models\Master\Company;
 use App\Models\Master\BreedType;
+use App\Models\Ps\PsFirmReceive;
 use App\Models\Shed\BatchAssign;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -26,6 +27,7 @@ class BirdTransfer extends Model
         'from_company_id',
         'project_id',
         'to_company_id',
+        'to_project_id',
         'from_shed_id',
         'to_shed_id',
         'transfer_date',
@@ -73,6 +75,11 @@ class BirdTransfer extends Model
         return $this->belongsTo(Company::class, 'to_company_id');
     }
 
+        public function toProject()
+    {
+        return $this->belongsTo(Project::class, 'to_project_id');
+    }
+
     public function fromShed()
     {
         return $this->belongsTo(Shed::class, 'from_shed_id');
@@ -89,5 +96,10 @@ class BirdTransfer extends Model
     public function breed()
     {
         return $this->belongsTo(BreedType::class, 'breed_type');
+    }
+    public function firmReceive()
+    {
+        return $this->hasOne(PsFirmReceive::class, 'source_id')
+            ->where('source_type', 'transfer');
     }
 }

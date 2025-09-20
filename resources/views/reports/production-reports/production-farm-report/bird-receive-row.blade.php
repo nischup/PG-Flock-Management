@@ -70,15 +70,14 @@
             color: #000;
         }
 
-        .bold {
-            border: none;
-            font-weight: bold;
-        }
-
         .title {
             font-weight: 800;
             font-size: 14px;
             color: #000;
+        }
+
+        .bold {
+            font-weight: bold;
         }
 
         .doc-meta {
@@ -88,45 +87,33 @@
         }
 
         .details {
-            margin-top: 8px;
-            margin-bottom: 8px;
+            margin: 8px 0;
             padding: 8px;
             background: #f1f5f9;
             border: 1px solid var(--border);
             border-radius: 4px;
         }
 
-        .details-bg {
+        .details-table {
+            border-collapse: collapse;
             background: #f1f5f9;
         }
 
-        .details-table {
-            border-collapse: collapse;
-        }
-
-        .details-table td,
-        .details-table th {
-            padding: 0;
-            margin: 0;
+        .details-table td {
+            padding: 2px 4px;
             border: none;
-            line-height: 1;
-            vertical-align: middle;
+            background: #f1f5f9;
         }
 
-        .chip {
-            margin: 0;
-        }
-
-        table,
-        .borderless th,
-        .borderless td {
-            border: none;
+        .bg-f1f5f9 {
+            background: #f1f5f9;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 11px;
+
         }
 
         thead th {
@@ -148,17 +135,11 @@
             background: #fcfcfc;
         }
 
-        tfoot td {
-            border: 1px solid var(--border);
-            padding: 4px 6px;
-            font-weight: 700;
-            background: #f8fafc;
-        }
-
         .signatures {
             display: flex;
             justify-content: space-evenly;
-            margin-top: 100px;
+            /* evenly distribute space between items */
+            margin-top: 70px;
             font-size: 10px;
         }
 
@@ -166,35 +147,64 @@
             text-align: center;
             display: flex;
             flex-direction: column;
+            /* stack line above name */
             align-items: center;
             min-width: 80px;
+            /* optional: ensures minimum line width */
         }
 
         .signature-line {
             border-top: 1px solid #000;
             margin-bottom: 4px;
             width: 100%;
+            /* full width of signature block */
         }
 
         .sin {
             display: inline-flex;
             justify-content: space-between;
             align-items: center;
-            padding-right: 38px;
+            padding-right: 38;
             padding-left: 38px;
         }
 
         .section-title {
-            margin-top: 14px;
+            margin-top: 5px;
             font-weight: 800;
             font-size: 15px;
             padding-bottom: 4px;
         }
 
-        .details-td {
+        .counting-team-container {
+            width: 50%;
+            margin-top: 8px;
+        }
+
+        .team {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+            font-size: 11px;
+        }
+
+        .team th,
+        .team td {
+            border: 1px solid var(--border);
+            padding: 5px;
             text-align: left;
-            padding-left: 0px;
-            margin-left: 0px;
+        }
+
+        .team th {
+            background: #f1f5f9;
+        }
+
+        .footer {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--muted);
+            font-size: 10px;
+            padding-top: 6px;
         }
     </style>
 </head>
@@ -203,122 +213,93 @@
     <div class="sheet">
         <!-- Header -->
         <div class="header">
-            <div class="brand">
-                <span class="logo" aria-hidden="true"></span>
-            </div>
+            <div class="brand"><span class="logo"></span></div>
             <div class="header-titles">
-                <div class="title-head">{{ $company_name ?? '-' }}</div>
+                <div class="title-head">Provita Chicks Ltd.</div>
+                <div class="title">{{ $flock_name ?? 'N/A' }}</div>
                 <div class="title">Pullet Birds Receive Details</div>
-                <div class="title">
-                    Flock: {{ $flock_name ?? '-' }}
-                    {{ $batches[0]['batch_no'] ?? '-' }}
-                </div>
             </div>
         </div>
 
         <!-- Details -->
         <div>
-            <div class="doc-meta">
-                <span class="label">Form:</span>
-                <span class="value">{{ $receive_date }} PBL-PBRD</span>
-            </div>
-            <div>
-                <span class="label">Date:</span>
-                <span class="value">{{ $receive_date }}</span>
-            </div>
+            <div><span class="label">Date:</span> <span>{{ $receive_date ?? now()->format('Y-m-d') }}</span></div>
+            <div class="doc-meta"><span>Form: {{ $from_company }}</span></div>
+            <div class="doc-meta"><span>To: {{ $to_company }}</span></div>
         </div>
 
-        <!-- Borderless Details Table -->
-        <div class="details details-bg">
+        <!-- Details Table -->
+        <div class="details">
             <table class="details-table">
-                <tbody>
-                    <tr>
-                        <td class="bold"><strong>From:</strong></td>
-                        <td class="details-td">{{ $from_company_name ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="bold"><strong>To:</strong></td>
-                        <td class="details-td">{{ $to_company_name ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Breed:</strong></td>
-                        <td>
-                            @if (!empty($batches))
-                                @foreach ($batches as $index => $batch)
-                                    {{ $batch['breed_name'] ?? 'N/A' }}@if ($index < count($batches) - 1)
-                                        ,
-                                    @endif
-                                @endforeach
-                            @else
-                                N/A
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="bold">Invoice / Gate pass :</td>
-                        <td>N/A</td>
-                    </tr>
-                    <tr>
-                        <td>LC No</td>
-                        <td>{{ $batches[0]['lc_no'] ?? 'N/A' }}</td>
-                    </tr>
-                </tbody>
+                <tr>
+                    <td class="bold">Flock:</td>
+                    <td>{{ $flock_name ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td class="bold " style="background-color: #f1f5f9;">Flock origin:</td>
+                    <td style="background-color: #f1f5f9;">{{ $country_of_origin ?? 'N/A' }}</td>
+                    <td class="bold" style="background-color: #f1f5f9;">Breed:</td>
+                    <td style="background-color: #f1f5f9;">{{ $breed_type ?? 'N/A' }}</td>
+                    <td class="bold" style="background-color: #f1f5f9;">Invoice / Gate pass:</td>
+                    <td style="background-color: #f1f5f9;">{{ $invoice_numbers ?? '-' }}</td>
+                </tr>
             </table>
         </div>
 
-        <!-- Data table -->
-        <table aria-label="Pullet birds receive table">
+        <!-- Data Table -->
+        <table>
             <thead>
                 <tr>
                     <th rowspan="3">Batch</th>
-                    <th colspan="12">Birds Number</th>
+                    <th colspan="10">Birds Number</th>
                     <th colspan="3" rowspan="2">Deviation <br> Short/Excess</th>
                     <th rowspan="3">Remarks</th>
                 </tr>
                 <tr>
-                    <th colspan="3">As per Flock Report</th>
-                    <th colspan="3">As Physical Transfer</th>
-                    <th colspan="3">Mortality</th>
-                    <th colspan="3">Medical Bird</th>
+                    <th colspan="3">As per challan</th>
+                    <th colspan="7">As physical count</th>
                 </tr>
                 <tr>
                     <th>Female</th>
                     <th>Male</th>
                     <th>Total</th>
                     <th>Female</th>
+                    <th>Box F <br> Mortality</th>
+                    <th>Total<br> (Female)</th>
                     <th>Male</th>
+                    <th>Box M <br> Mortality</th>
+                    <th>Total <br> (Male)</th>
                     <th>Total</th>
-                    <th>Female</th>
                     <th>Male</th>
-                    <th>Total</th>
                     <th>Female</th>
-                    <th>Male</th>
-                    <th>Total</th>
-                    <th>Female</th>
-                    <th>Male</th>
                     <th>Total</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($batches as $batch)
                     <tr>
-                        <td>{{ $batch['batch_no'] }}</td>
-                        <td>{{ $batch['challan_female'] }}</td>
-                        <td>{{ $batch['challan_male'] }}</td>
-                        <td>{{ $batch['challan_total'] }}</td>
-                        <td>{{ $batch['physical_female'] }}</td>
-                        <td>{{ $batch['physical_male'] }}</td>
-                        <td>{{ $batch['total'] }}</td>
-                        <td>{{ $batch['transfer_female_mortality'] ?? 0 }}</td>
-                        <td>{{ $batch['transfer_male_mortality'] ?? 0 }}</td>
-                        <td>{{ $batch['transfer_total_mortality'] ?? 0 }}</td>
-                        <td>{{ $batch['medical_female'] }}</td>
-                        <td>{{ $batch['medical_male'] }}</td>
-                        <td>{{ $batch['medical_total'] }}</td>
-                        <td>{{ $batch['deviation_female'] }}</td>
-                        <td>{{ $batch['deviation_male'] }}</td>
-                        <td>{{ $batch['deviation_total'] }}</td>
-                        <td>{{ $batch['remarks'] }}</td>
+                        <td>{{ $batch['batch_no'] ?? '-' }}</td>
+
+                        <!-- Challan -->
+                        <td>{{ $batch['challan_female'] ?? 0 }}</td>
+                        <td>{{ $batch['challan_male'] ?? 0 }}</td>
+                        <td>{{ $batch['challan_total'] ?? 0 }}</td>
+
+                        <!-- Physical -->
+                        <td>{{ $batch['physical_female'] ?? 0 }}</td>
+                        <td>{{ $batch['medical_female'] ?? 0 }}</td>
+                        <td>{{ ($batch['physical_female'] ?? 0) - ($batch['medical_female'] ?? 0) }}</td>
+                        <td>{{ $batch['physical_male'] ?? 0 }}</td>
+                        <td>{{ $batch['medical_male'] ?? 0 }}</td>
+                        <td>{{ ($batch['physical_male'] ?? 0) - ($batch['medical_male'] ?? 0) }}</td>
+                        <td>{{ $batch['total'] ?? 0 }}</td>
+
+                        <!-- Deviation -->
+                        <td>{{ $batch['deviation_female'] ?? 0 }}</td>
+                        <td>{{ $batch['deviation_male'] ?? 0 }}</td>
+                        <td>{{ $batch['deviation_total'] ?? 0 }}</td>
+
+                        <td>{{ $batch['remarks'] ?? '-' }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -348,9 +329,50 @@
             </div>
         </div>
 
+        <!-- Counting team -->
+        <div class="counting-team-container">
+            <div class="section-title">Counting team</div>
+            <table class="team">
+                <thead>
+                    <tr>
+                        <th style="width: 40px">SL</th>
+                        <th>Name</th>
+                        <th style="width: 24%">Signature</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Mostafizur Rahman(Sr. Officer — Production)</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Md. Mizanur Uddin (Officer — Store)</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Md. Mohsin Reza Chowdhury (Audit)</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Md. Mahfuz Rahman (Asst. Manager — A/C)</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Md. Mizanur Rahman (Asst. Supervisor)</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         <!-- Footer -->
         <div class="footer">
-            <div>Powered by Provita Chicks Ltd. © 2024</div>
+            <div>Powered by Provita Chicks Ltd. © {{ now()->year }}</div>
             <div>www.provitachicks.com</div>
         </div>
     </div>

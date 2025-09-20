@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed,watch } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Label } from '@/components/ui/label'
@@ -25,6 +25,7 @@ const { showInfo } = useNotifier()
 // Overlay states
 const showBatchOverlay = ref(false)
 const showCompanyOverlay = ref(false)
+const showProjectOverlay = ref(false)
 const showFlockOverlay = ref(false)
 const showShedOverlay = ref(false)
 
@@ -61,6 +62,12 @@ const selectedCompanyName = computed(() => {
   return selectedCompany ? selectedCompany.name : 'Select company'
 })
 
+// Selected company display name
+const selectedProjectName = computed(() => {
+  const selectedProject = props.projects.find(project => project.id === form.to_project_id)
+  return selectedProject ? selectedProject.name : 'Select Project'
+})
+
 
 // Form pre-filled with backend data
 const form = useForm({
@@ -70,7 +77,7 @@ const form = useForm({
   from_shed_id: props.batchAssign.shed_id,
   to_company_id: undefined,
   to_shed_id: undefined,
-
+  to_project_id:undefined,
   total_bird: props.batchAssign.batch_total_qty,
   male_qty: props.batchAssign.batch_male_qty - props.batchAssign.batch_male_mortality,
   female_qty: props.batchAssign.batch_female_qty - props.batchAssign.batch_female_mortality,
@@ -96,12 +103,8 @@ const current_male_chicks = computed(() => form.male_qty)
 const current_female_chicks = computed(() => form.female_qty)
 const current_total_chicks = computed(() => current_male_chicks.value + current_female_chicks.value)
 
-const total_transfer_chicks = computed(() => form.transfer_male_qty + form.transfer_female_qty)
-const total_medical_bird = computed(() => form.medical_male_qty + form.medical_female_qty)
-
-const deviation_male = computed(() => current_male_chicks.value - form.transfer_male_qty - form.medical_male_qty)
-const deviation_female = computed(() => current_female_chicks.value - form.transfer_female_qty - form.medical_female_qty)
-const deviation_total = computed(() => deviation_male.value + deviation_female.value)
+const transfer_total_qty = computed(() => form.transfer_male_qty + form.transfer_female_qty)
+const medical_total_qty = computed(() => form.medical_male_qty + form.medical_female_qty)
 
 // Show shed only if same company
 const showShed = computed(() => props.batchAssign.company_id === form.to_company_id)
@@ -149,6 +152,47 @@ function submit() {
     onSuccess: () => showInfo("Bird transfer saved successfully")
   })
 }
+
+// Filter projects based on selected company
+const projectOptions = computed(() => {
+  if (!form.to_company_id) return [];
+
+ 
+  return props.projects
+    .filter(project => project.company_id === form.to_company_id) // filter by company
+    .map(project => ({
+      id: project.id,
+      name: project.name,
+      code: project.code,
+      location: project.location
+      
+    }));
+});
+
+watch(() => form.to_company_id, () => {
+  form.to_project_id = undefined; // reset project whenever company changes
+});
+
+watch(
+  [
+    () => form.transfer_male_qty,
+    () => form.transfer_female_qty,
+    () => form.medical_male_qty,
+    () => form.medical_female_qty,
+  ],
+  () => {
+    // Compute deviation dynamically and sync with form
+
+    form.transfer_total_qty = (form.transfer_male_qty || 0) + (form.transfer_female_qty || 0);
+    form.medical_total_qty = form.medical_male_qty + form.medical_female_qty;
+
+    form.deviation_male_qty = current_male_chicks.value - form.transfer_male_qty - form.medical_male_qty;
+    form.deviation_female_qty = current_female_chicks.value - form.transfer_female_qty - form.medical_female_qty;
+    form.deviation_total_qty = form.deviation_male_qty + form.deviation_female_qty;
+  },
+  { immediate: true }
+);
+
 </script>
 
 <template>
@@ -290,6 +334,17 @@ function submit() {
                       {{ selectedCompanyName }}
                     </Button>
                   </div>
+                  <div class="space-y-1">
+                    <Label class="text-xs font-medium text-slate-600">Destination Project</Label>
+                    <Button
+                      type="button"
+                      @click="showProjectOverlay = true"
+                      class="w-full h-9 text-sm bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 justify-start"
+                    >
+                      <BuildingOfficeIcon class="mr-2 h-4 w-4" />
+                      {{ selectedProjectName }}
+                    </Button>
+                  </div>
                 </div>
 
                 <!-- Shed Selection -->
@@ -334,7 +389,7 @@ function submit() {
                     <div class="space-y-1">
                       <Label class="text-xs font-medium text-slate-600">Total Transfer</Label>
                       <Input 
-                        :value="total_transfer_chicks" 
+                        v-model.number="transfer_total_qty" 
                         type="number" 
                         readonly 
                         class="w-full h-9 text-sm bg-slate-50"
@@ -372,7 +427,7 @@ function submit() {
                     <div class="space-y-1">
                       <Label class="text-xs font-medium text-slate-600">Total Medical</Label>
                       <Input 
-                        :value="total_medical_bird" 
+                        v-model.number="medical_total_qty" 
                         type="number" 
                         readonly 
                         class="w-full h-9 text-sm bg-slate-50"
@@ -380,6 +435,48 @@ function submit() {
                     </div>
                   </div>
                 </div>
+
+                <!-- Deviation Birds -->
+                <div class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Deviation Female -->
+                    <div class="space-y-1">
+                      <Label class="text-xs font-medium text-slate-600">Deviation Female</Label>
+                      <Input 
+                        v-model.number="form.deviation_female_qty" 
+                        type="number" 
+                        readonly
+                        class="w-full h-9 text-sm bg-yellow-50"
+                      />
+                      <p class="text-xs text-slate-500">Auto-calculated from female</p>
+                    </div>
+
+                    <!-- Deviation Male -->
+                    <div class="space-y-1">
+                      <Label class="text-xs font-medium text-slate-600">Deviation Male</Label>
+                      <Input 
+                        v-model.number="form.deviation_male_qty" 
+                        type="number" 
+                        readonly
+                        class="w-full h-9 text-sm bg-yellow-50"
+                      />
+                      <p class="text-xs text-slate-500">Auto-calculated from male</p>
+                    </div>
+
+                    <!-- Deviation Total -->
+                    <div class="space-y-1">
+                      <Label class="text-xs font-medium text-slate-600">Deviation Total</Label>
+                      <Input 
+                        v-model.number="form.deviation_total_qty" 
+                        type="number" 
+                        readonly
+                        class="w-full h-9 text-sm bg-yellow-100 font-semibold"
+                      />
+                      <p class="text-xs text-slate-500">Male + Female</p>
+                    </div>
+                  </div>
+                </div>
+
 
                 <!-- Notes -->
                 <div class="space-y-1">
@@ -667,6 +764,70 @@ function submit() {
             <Button 
               type="button" 
               @click="showCompanyOverlay = false"
+              class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Company Project Overlay -->
+    <div v-if="showProjectOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl p-6 shadow-2xl border border-white/20 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-slate-800">Select Destination Project</h3>
+          <Button
+            type="button"
+            @click="showProjectOverlay = false"
+            variant="outline"
+            class="h-8 w-8 p-0 rounded-full"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </Button>
+        </div>
+
+        <div class="space-y-3">
+          <div class="space-y-2">
+            <Label class="text-sm font-semibold text-slate-700">Available Companies</Label>
+            <div class="max-h-60 overflow-y-auto space-y-2">
+              <button
+                v-for="project in projectOptions"
+                :key="project.id"
+                @click="form.to_project_id = project.id; showProjectOverlay = false"
+                class="w-full text-left p-3 rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                :class="{ 'bg-blue-100 border-blue-300': form.to_project_id === project.id }"
+              >
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-medium text-slate-800">{{ project.name }}</div>
+                    <div class="text-xs text-slate-500">{{ project.code }} • {{ project.location }}</div>
+                  </div>
+                  <div v-if="form.to_project_id === project.id" class="text-blue-600">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <Button 
+              type="button" 
+              variant="outline" 
+              @click="showProjectOverlay = false"
+              class="px-4 py-2"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              @click="showProjectOverlay = false"
               class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
             >
               Confirm

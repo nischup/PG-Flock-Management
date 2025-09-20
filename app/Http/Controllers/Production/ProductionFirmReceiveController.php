@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Production;
 
-use App\Http\Controllers\Controller;
-use App\Models\BirdTransfer\BirdTransfer;
-use App\Models\Master\BreedType;
-use App\Models\Master\Company;
-use App\Models\Master\Flock;
+use App\Models\Country;
 use App\Models\Master\Shed;
-use App\Models\Ps\PsFirmReceive;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Master\Flock;
 use Illuminate\Http\Request;
+use App\Models\Master\Company;
+use App\Models\Master\Project;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Master\BreedType;
+use App\Models\Ps\PsFirmReceive;
 use App\Models\MovementAdjustment;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\BirdTransfer\BirdTransfer;
 
 class ProductionFirmReceiveController extends Controller
 {
@@ -34,6 +36,7 @@ class ProductionFirmReceiveController extends Controller
             'flock',
             'fromCompany',
             'toCompany',
+            'toProject',
             'fromShed',
             'toShed',
         ])
@@ -79,12 +82,13 @@ class ProductionFirmReceiveController extends Controller
         $companies = Company::all();
         $flocks = Flock::all();
         $sheds = Shed::all();
-
+        $projects = Project::all();
         return inertia('production/firm-receive/List', [
             'transferBirds' => $transfers,
             'companies' => $companies,
             'flocks' => $flocks,
             'sheds' => $sheds,
+            'projects' => $projects,
             'filters' => $request->only(['search', 'per_page', 'from_company_id', 'flock_id', 'date_from', 'date_to']),
         ]);
     }
@@ -103,20 +107,15 @@ class ProductionFirmReceiveController extends Controller
     public function store(Request $request)
     {
 
-       
-       
-       
         $companyInfo = Company::findOrFail($request->receive_company_id);
         $flockInfo = Flock::findOrFail($request->flock_id);
-       
+
         $transferBird = BirdTransfer::find($request->transfer_bird_id);
 
         $job_no = $transferBird->job_no;
 
         // 2️⃣ Get ps_receive_id from ps_receives
         $psReceive = PsFirmReceive::where('job_no', $job_no)->first();
-
-        
 
         $firmReceive = PsFirmReceive::create([
             'ps_receive_id' => $psReceive->ps_receive_id,
@@ -127,6 +126,7 @@ class ProductionFirmReceiveController extends Controller
             'flock_id' => $flockInfo->id,
             'flock_no' => $flockInfo->name, // if you have flock relationship
             'receiving_company_id' => $request->receive_company_id,
+            'project_id' => $request->project_id,
             'firm_female_qty' => $request->receive_female_qty,
             'firm_male_qty' => $request->receive_male_qty,
             'firm_total_qty' => $request->receive_total_qty,
@@ -135,10 +135,10 @@ class ProductionFirmReceiveController extends Controller
             'status' => 1,
         ]);
 
+
         $insertId = $firmReceive->id;
 
 
-        
         if ($request->total_shortage > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flockInfo->id,
@@ -229,97 +229,102 @@ class ProductionFirmReceiveController extends Controller
         //
     }
 
-    public function downloadRowPdf($id)
+    public function downloadProductionReceivePdf($id)
     {
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        // Load firm receive with relations
-        $item = PsFirmReceive::with([
+        // Load BirdTransfer with relations including firmReceive (PsFirmReceive), psReceive (PsReceive), and batchAssign
+        $item = BirdTransfer::with([
             'flock',
-            'company',
-            'psReceive.chickCounts',
+            'fromCompany',
+            'toCompany',
+            'fromShed',
+            'toShed',
+            'batchAssign.batch',          // Ensure batchAssign is loaded correctly
+            'firmReceive.psReceive',      // Load PsFirmReceive and its related PsReceive
+            'firmReceive.psReceive.company', // Load company from PsReceive model
+            'firmReceive.psReceive.country', // Load country from PsReceive model
         ])->findOrFail($id);
 
-        // ✅ Map breed_type IDs to names
-        $breeds = BreedType::pluck('name', 'id')->toArray();
+        // Access the associated PsFirmReceive through the firmReceive relationship
+        $firmReceive = $item->firmReceive;
 
-        $breedtype = $item->psReceive?->breed_type ?? [];
-        if (! is_array($breedtype)) {
-            $breedtype = is_null($breedtype) ? [] : [$breedtype]; // wrap single ID
+        // dd($firmReceive);
+        // Ensure PsFirmReceive is loaded properly
+        if (!$firmReceive) {
+            abort(404, 'Firm receive data not found.');
         }
 
-        $breedAll = array_map(fn ($id) => $breeds[$id] ?? null, $breedtype);
+        // Get breed type names
+        $breeds = BreedType::pluck('name', 'id')->toArray();
+        $breedtype = $item->breed_type ?? [];
+        if (!is_array($breedtype)) {
+            $breedtype = is_null($breedtype) ? [] : [$breedtype];
+        }
+        $breedAll = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
         $breedNames = array_filter($breedAll);
         $breedName = implode(', ', $breedNames);
+        $fromCompany = Company::find($item->from_company_id);
+        $toCompany = Company::find($item->to_company_id);
 
-        // Chick counts
-        $psChickCounts = $item->psReceive?->chickCounts;
+        $country = Country::find($item->country_of_origin);
+        $countryName = $country ? $country->name : 'N/A';
+        // Prepare batch info
+        $batchAssign = $item->batchAssign;
+        $batches = [
+            [
+                'batch_no' => $batchAssign?->batch?->name ?? 'N/A',
+                // Challan (sent quantities)
+                'challan_female' => $item->transfer_female_qty,
+                'challan_male' => $item->transfer_male_qty,
+                'challan_total' => $item->transfer_total_qty,
 
-        // Calculations
-        $physical_female = $item->firm_female_qty;
-        $physical_male = $item->firm_male_qty;
+                // Physical quantities from firmReceive
+                'physical_female' => $firmReceive->firm_female_qty ?? 0,
+                'physical_male' => $firmReceive->firm_male_qty ?? 0,
+                'total' => $firmReceive->firm_total_qty ?? 0,
 
-        $box_f = ($psChickCounts->ps_female_rec_box ?? 0) - $physical_female;
-        $box_m = ($psChickCounts->ps_male_rec_box ?? 0) - $physical_male;
+                // Additional counts (medical, deviation)
+                'medical_female' => $firmReceive->medical_female_qty ?? 0,
+                'medical_male' => $firmReceive->medical_male_qty ?? 0,
 
-        $box_shortage = $box_f + $box_m;
+                'deviation_female' => $firmReceive->firm_female_qty - $item->transfer_female_qty,
+                'deviation_male' => $firmReceive->firm_male_qty - $item->transfer_male_qty,
+                'deviation_total' => $firmReceive->firm_total_qty - $item->transfer_total_qty,
 
-        $deviation_female = $physical_female - ($psChickCounts->ps_female_rec_box ?? 0);
-        $deviation_male = $physical_male - ($psChickCounts->ps_male_rec_box ?? 0);
+                // Add the company names
+                'from_company_name' => $fromCompany?->name ?? 'N/A', // Get company name from `from_company_id`
+                'to_company_name' => $toCompany?->name ?? 'N/A', // Get company name from `to_company_id`
 
-        // Prepare data for Blade view
+                // Add country name
+                'country_of_origin' => $countryName, // Get the country name from `country_of_origin` ID
+
+                // Remarks
+                'remarks' => $firmReceive->remarks ?? 'N/A',
+            ],
+        ];
+
+        // Prepare data for the Blade template
         $data = [
+            'id' => $item->id,
             'job_no' => $item->job_no,
             'transaction_no' => $item->transaction_no,
-            'pi_no' => $item->psReceive->pi_no ?? '-',
-            'pi_date' => optional($item->psReceive->pi_date)->format('Y-m-d') ?? '-',
             'flock_name' => $item->flock->name ?? '-',
-            'flock_id' => $item->flock_id,
-            'company_name' => $item->company->name ?? '-',
-            'company_id' => $item->receiving_company_id,
-            'firm_male_qty' => $item->firm_male_qty,
-            'firm_female_qty' => $item->firm_female_qty,
-            'firm_total_qty' => $item->firm_total_qty,
-            'remarks' => $item->remarks ?? '-',
-            'receive_date' => $item->created_at->format('Y-m-d'),
-            'created_by' => $item->created_by,
-            'status' => $item->status,
-            'receive_type' => $item->receive_type,
+            'from_company' => $fromCompany?->name ?? '-',
+            'to_company' => $toCompany?->name ?? '-',
             'breed_type' => $breedName,
-            'source_type' => $item->source_type ?? '-',
-            'source_id' => $item->source_id ?? '-',
-
-            // batches section
-            'batches' => [
-                [
-                    'batch_no' => 'A1',
-                    'breed_name' => $breedName, // ✅ include breed name
-                    'challan_female' => $psChickCounts->ps_female_rec_box ?? 0,
-                    'challan_male' => $psChickCounts->ps_male_rec_box ?? 0,
-                    'challan_total' => $psChickCounts->ps_total_re_box_qty ?? 0,
-
-                    'physical_female' => $physical_female,
-                    'box_f' => $box_f,
-                    'total_female' => $physical_female + $box_f,
-
-                    'physical_male' => $physical_male,
-                    'box_m' => $box_m,
-                    'total_male' => $physical_male + $box_m,
-
-                    'box_shortage' => $box_shortage,
-                    'total' => $item->firm_total_qty,
-
-                    'deviation_female' => $deviation_female,
-                    'deviation_male' => $deviation_male,
-                    'deviation_total' => $deviation_female + $deviation_male,
-
-                    'remarks' => $item->remarks ?? 'OK',
-                ],
-            ],
+            'firm_female_qty' => $item->transfer_female_qty,
+            'firm_male_qty' => $item->transfer_male_qty,
+            'firm_total_qty' => $item->transfer_total_qty,
+            'remarks' => $firmReceive->remarks ?? '-',
+            'receive_date' => optional($item->transfer_date)->format('Y-m-d'),
+            'invoice_numbers' => $firmReceive->psReceive?->order_no ?? 'N/A', // Invoice / Gate pass from PsReceive
+            'batches' => $batches,
+            'country_of_origin' => $countryName, // Add the country of origin to the data
             'generatedAt' => now(),
         ];
-        // dd($data);
+        // dd($batches);
 
         // PDF options
         Pdf::setOptions([
@@ -328,18 +333,16 @@ class ProductionFirmReceiveController extends Controller
             'defaultFont' => 'DejaVu Sans',
         ]);
 
-        // ✅ Use correct Blade path
+        // Generate the PDF using the Blade view
         $pdf = Pdf::loadView('reports.production-reports.production-farm-report.bird-receive-row', $data)
             ->setPaper('a4', 'landscape');
 
+        // Return the PDF response (download or stream)
         return request()->query('download')
-            ? $pdf->download("production-firm-receive-{$item->id}.pdf")
-            : $pdf->stream("production-firm-receive-{$item->id}.pdf");
+            ? $pdf->download("production-receive-{$item->id}.pdf")
+            : $pdf->stream("production-receive-{$item->id}.pdf");
     }
 
-    /**
-     * Export production farm receive data as PDF
-     */
     public function exportPdf(Request $request)
     {
         ini_set('memory_limit', '512M');
@@ -523,7 +526,7 @@ class ProductionFirmReceiveController extends Controller
             $breedtype = is_null($breedtype) ? [] : [$breedtype];
         }
 
-        $breedAll = array_map(fn ($id) => $breeds[$id] ?? null, $breedtype);
+        $breedAll = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
         $breedNames = array_filter($breedAll);
         $breedName = implode(', ', $breedNames);
 
