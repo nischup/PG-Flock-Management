@@ -101,7 +101,7 @@ class ProductionShedReceiveController extends Controller
             'shed_female_qty'  => $request->shed_female_qty,
             'shed_male_qty'    => $request->shed_male_qty,
             'shed_total_qty'   => $request->shed_total_qty,
-            'receive_type'     => "chicks",
+            'receive_type'     => "pcs",
             'remarks'          => $request->remarks,
             'created_by'       => Auth::id(),
             'status'           => $request->status ?? 1,
