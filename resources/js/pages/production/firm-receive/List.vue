@@ -61,6 +61,7 @@ const props = defineProps<{
     companies?: Array<{ id: number; name: string; short_name?: string; code?: string }>;
     flocks?: Array<{ id: number; name: string }>;
     sheds?: Array<{ id: number; name: string }>;
+    projects?: Array<{ id: number; name: string }>;
 }>();
 
 useListFilters({ routeName: '/production-farm-receive', filters: props.filters });
@@ -89,6 +90,7 @@ const form = useForm({
     transfer_bird_id: null,
     flock_id: 0,
     receive_company_id: null,
+    project_id:null,
     transfer_date: '',
     receive_date: '',
     challan_female_qty: 0,
@@ -111,9 +113,11 @@ const form = useForm({
 
 // Open modal with transfer data
 const openTransferModal = (transfer: any) => {
+    console.log(transfer);
     form.transfer_bird_id = transfer.id;
     form.flock_id = transfer.flock_id;
     form.receive_company_id = transfer.to_company_id;
+    form.project_id = transfer.to_project_id;
     form.transfer_date = transfer.transfer_date;
     form.receive_date = new Date().toISOString().split('T')[0];
 
@@ -130,6 +134,18 @@ const openTransferModal = (transfer: any) => {
     showTransferModal.value = true;
 };
 
+// Computed: projects filtered by selected company
+const filteredProjects = computed(() => {
+  if (!form.receive_company_id) return [];
+  return props.projects.filter(p => p.company_id === form.receive_company_id);
+});
+
+
+watch(() => form.receive_company_id, (newVal, oldVal) => {
+  if (newVal !== oldVal) {
+    form.to_project_id = null;
+  }
+});
 // Watch Receive Qty to calculate Shortage & Excess only
 watch(
     [
@@ -242,6 +258,11 @@ const hasActiveFilters = computed(() => {
 const getCompanyName = (companyId: string | number) => {
     const company = props.companies?.find((c) => c.id === Number(companyId));
     return company?.name || 'Unknown';
+};
+
+const geProjectName = (projectId: string | number) => {
+    const project = props.projects?.find((c) => c.id === Number(projectId));
+    return project?.name || 'Unknown';
 };
 
 const getFlockName = (flockId: string | number) => {
@@ -1060,13 +1081,24 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
                             <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
                                 <div>
-                                    <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Receive Project</label>
+                                    <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Receive Company</label>
                                     <select
                                         v-model="form.receive_company_id"
                                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                     >
                                         <option value="">Select Company</option>
                                         <option v-for="c in props.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Receive Project</label>
+                                    <select
+                                        v-model="form.project_id"
+                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    >
+                                        <option value="">Select Project</option>
+                                        <option v-for="d in filteredProjects" :key="d.id" :value="d.id">{{ d.name }}</option>
                                     </select>
                                 </div>
                                 <div>

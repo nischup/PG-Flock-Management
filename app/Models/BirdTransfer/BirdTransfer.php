@@ -3,7 +3,7 @@
 namespace App\Models\BirdTransfer;
 
 use App\Models\Master\Shed;
-use App\Models\Master\Batch;
+use App\Models\Master\Project;
 use App\Models\Master\Flock;
 use App\Models\Master\Company;
 use App\Models\Master\BreedType;
@@ -73,6 +73,11 @@ class BirdTransfer extends Model
     public function toCompany()
     {
         return $this->belongsTo(Company::class, 'to_company_id');
+    }
+
+        public function toProject()
+    {
+        return $this->belongsTo(Project::class, 'to_project_id');
     }
 
     public function fromShed()
