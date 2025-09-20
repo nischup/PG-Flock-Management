@@ -25,7 +25,7 @@ class ProductionShedReceiveController extends Controller
         // Fetch shed receives with related flock, shed, and company
         $shedReceives = ShedReceive::with(['flock', 'shed', 'company']) 
         
-            ->where('receive_type', 'chicks')
+            ->where('receive_type', 'pcs')
             ->when($search, function ($query, $search) {
                 $query->whereHas('flock', fn($q) => $q->where('name', 'like', "%{$search}%"))
                       ->orWhereHas('shed', fn($q) => $q->where('name', 'like', "%{$search}%"))
