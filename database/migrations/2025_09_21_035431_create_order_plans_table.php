@@ -15,7 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('order_from');
             $table->string('order_to');
-            $table->text('cc')->nullable(); // store comma separated emails
+            $table->text('cc')->nullable();
+            $table->string('subject')->nullable(); 
+            $table->text('message')->nullable();
+            $table->string('attachment')->nullable(); // 👈 new column
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('approve_by')->nullable();
+            $table->dateTime('approve_date')->nullable();
+            $table->tinyInteger('status')->default(1); // 1 = created
             $table->timestamps();
         });
     }

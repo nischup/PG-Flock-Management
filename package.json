@@ -28,6 +28,7 @@
         "@tailwindcss/vite": "^4.1.11",
         "@vitejs/plugin-vue": "^6.0.0",
         "@vuepic/vue-datepicker": "^11.0.2",
+        "@vueup/vue-quill": "^1.2.0",
         "@vueuse/core": "^12.8.2",
         "apexcharts": "^5.3.3",
         "class-variance-authority": "^0.7.1",
