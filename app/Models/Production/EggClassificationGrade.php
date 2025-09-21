@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models\Production;
-use App\Models\Master\EggGrade;
+use App\Models\EggGrade;
 use Illuminate\Database\Eloquent\Model;
 
 class EggClassificationGrade extends Model

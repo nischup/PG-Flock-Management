@@ -136,7 +136,7 @@ class EggClassificationController extends Controller
         // 1️⃣ Create main classification record
         $classification = EggClassification::create([
             'batchassign_id' => $request->batchassign_id,
-            'classification_date' => $request->operation_date,
+            'classification_date' => date("Y-m-d"),
             'total_eggs' => $request->total_egg,
             'hatching_eggs' => $hatching_egg,
             'commercial_eggs' => $rejected_total,
