@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
-import { FileText, Pencil, Calendar, Mail, User, Trash2 } from 'lucide-vue-next';
+import { FileText, Pencil, Calendar, Mail, User } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 // ✅ Props
@@ -474,9 +474,8 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <button
                                     v-if="can('order-plans.delete')"
                                     @click="deleteOrderPlan(orderPlan.id)"
-                                    class="text-red-600 hover:underline font-medium flex items-center gap-1"
+                                    class="text-red-600 hover:underline font-medium"
                                 >
-                                    <Trash2 class="h-4 w-4" />
                                     Delete
                                 </button>
                             </td>

@@ -597,7 +597,7 @@ function submit() {
         </div>
 
         <!-- Shortage & Excess Quantities -->
-        <div class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Shortage Section -->
           <div class="rounded-lg border border-red-200 bg-gradient-to-br from-red-50 to-pink-50 p-4 dark:border-red-800 dark:from-red-900/20 dark:to-pink-900/20">
             <div class="space-y-3">

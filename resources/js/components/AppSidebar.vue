@@ -26,7 +26,7 @@ const mainNavItems: NavItem[] = [
         iconClass: 'text-yellow-500',
         children: [
             {
-                title: 'Order-plaiing',
+                title: 'Order Planing',
                 href: '/order-plans',
                 icon: ClockArrowUp ,
                 iconClass: 'text-yellow-500',
