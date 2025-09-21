@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderPlanningMail;
 
-class OrderPlanController extends Controller
+class OrderPlanningController extends Controller
 {
     public function store(Request $request)
     {
@@ -45,6 +45,6 @@ class OrderPlanController extends Controller
     public function index()
     {
         $plans = OrderPlan::with('items')->latest()->get();
-        return inertia('OrderPlans/List', ['plans' => $plans]);
+        return inertia('ps/order-planning/List', ['plans' => $plans]);
     }
 }
