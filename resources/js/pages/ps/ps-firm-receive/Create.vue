@@ -47,7 +47,8 @@ const selectedPsId = ref<number | string>('')
 const selectedFlockId = ref<number | string>('')
 const showInfo = ref(false)    
 const isLabData = ref(false)
-const labMessage = ref('') 
+const labMessage = ref('')
+const isDetailsExpanded = ref(true) 
 const labInput = ref(false)
 const messageType = ref('') 
 
@@ -629,28 +630,52 @@ function addNewFlock() {
           leave-to-class="opacity-0 scale-95 -translate-y-4"
         >
           <div v-if="showInfo" class="mt-8 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 dark:border-blue-800 dark:from-blue-900/20 dark:to-indigo-900/20">
-            <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-100">
-              <CheckCircle2 class="h-5 w-5" />
-              Parent Stock Details
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Shipment Type:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.shipment_type }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">PI No:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.pi_no }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">LC No:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.lc_no }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Order No:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.order_no }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Receive Type:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.receive_type }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Breed:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.breed }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Transport:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.transport }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Challan Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.challan_box }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Receive Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.female_chicks_box }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Receive Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.male_chicks_box }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Gross Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.gross_weight }} kg</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Net Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.net_weight }} kg</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Chicks:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.female_chicks }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Chicks:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.male_chicks }}</div></div>
-              
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Chicks:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ displayInfo.total_chicks }}</div></div>
-      </div>
+            <div class="mb-4 flex items-center justify-between">
+              <h3 class="flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-100">
+                <CheckCircle2 class="h-5 w-5" />
+                Parent Stock Details
+              </h3>
+              <button
+                type="button"
+                @click="isDetailsExpanded = !isDetailsExpanded"
+                class="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-800/30 dark:hover:bg-blue-800/50 transition-colors duration-200 border border-blue-200 dark:border-blue-700"
+              >
+                <ChevronDown 
+                  class="h-3 w-3 transition-transform duration-200" 
+                  :class="{ 'rotate-180': isDetailsExpanded }" 
+                />
+                {{ isDetailsExpanded ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+            <transition
+              enter-active-class="transition-all duration-300 ease-out"
+              leave-active-class="transition-all duration-300 ease-in"
+              enter-from-class="opacity-0 max-h-0"
+              enter-to-class="opacity-100 max-h-96"
+              leave-from-class="opacity-100 max-h-96"
+              leave-to-class="opacity-0 max-h-0"
+            >
+              <div v-if="isDetailsExpanded" class="overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Shipment Type:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.shipment_type }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">PI No:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.pi_no }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">LC No:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.lc_no }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Order No:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.order_no }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Receive Type:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.receive_type }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Breed:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.breed }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Transport:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.transport }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Challan Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.challan_box }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Receive Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.female_chicks_box }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Receive Box:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.male_chicks_box }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Gross Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.gross_weight }} kg</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Net Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.net_weight }} kg</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Chicks:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.female_chicks }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Chicks:</span><div class="text-gray-900 dark:text-gray-100">{{ displayInfo.male_chicks }}</div></div>
+                  
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Chicks:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ displayInfo.total_chicks }}</div></div>
+                </div>
+              </div>
+            </transition>
         </div>
       </transition>
       </div>
@@ -672,47 +697,51 @@ function addNewFlock() {
           </div>
         </div>
 
-        <!-- Receiving Company -->
-        <div class="mb-4 space-y-2">
-          <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-            <Building2 class="h-4 w-4" />
-            Receiving Company
-          </Label>
-          <select 
-            v-model="form.receiving_company_id" 
-            class="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-600 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 cursor-not-allowed"
-            disabled
-          >
-          <option value="0">Select Company</option>
-          <option 
-            v-for="company in companies" 
-            :key="company.id" 
-            :value="company.id"
-          >
-            {{ company.name }}
-          </option>
-        </select>
-      </div>
+        <!-- Receiving Company & Project -->
+        <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Receiving Company -->
+          <div class="space-y-2">
+            <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <Building2 class="h-4 w-4" />
+              Receiving Company
+            </Label>
+            <select 
+              v-model="form.receiving_company_id" 
+              class="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-600 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 cursor-not-allowed"
+              disabled
+            >
+            <option value="0">Select Company</option>
+            <option 
+              v-for="company in companies" 
+              :key="company.id" 
+              :value="company.id"
+            >
+              {{ company.name }}
+            </option>
+          </select>
+        </div>
 
-      <div class="mb-4 space-y-2">
-          <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-            <Building2 class="h-4 w-4" />
-            Receiving Project
-          </Label>
-          <select 
-            v-model="form.receiving_project_id" 
-            class="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-600 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
-            
-          >
-          <option value="0">Select Project</option>
-          <option 
-            v-for="project in filteredProjects" 
-            :key="project.id" 
-            :value="project.id"
-          >
-            {{ project.name }}
-          </option>
-        </select>
+        <!-- Receiving Project -->
+        <div class="space-y-2">
+            <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <Building2 class="h-4 w-4" />
+              Receiving Project
+            </Label>
+            <select 
+              v-model="form.receiving_project_id" 
+              class="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-600 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+              
+            >
+            <option value="0">Select Project</option>
+            <option 
+              v-for="project in filteredProjects" 
+              :key="project.id" 
+              :value="project.id"
+            >
+              {{ project.name }}
+            </option>
+          </select>
+        </div>
       </div>
 
             <!-- Main Box Quantities -->
@@ -761,106 +790,107 @@ function addNewFlock() {
           </div>
         </div>
 
-        <!-- Shortage Section -->
-        <div class="rounded-lg border border-red-200 bg-gradient-to-br from-red-50 to-pink-50 p-4 dark:border-red-800 dark:from-red-900/20 dark:to-pink-900/20">
-          <!-- <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-red-800 dark:text-red-200">
-            <AlertCircle class="h-5 w-5" />
-            Shortage Boxes
-          </h3> -->
-          <div class="grid grid-cols-3 gap-4">
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Female Shortage</Label>
-              <Input 
-                type="number" 
-                v-model.number="form.firm_sortage_female_box" 
-                min="0"
-                :readonly="!isEditing"
-                :class="[
-                  'rounded-xl px-4 py-2 focus:outline-none',
-                  !isEditing
-                    ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-red-50 border-red-300 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200'
-                ]"
-              />
-            </div>
-            
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Male Shortage</Label>
-              <Input 
-                type="number" 
-                v-model.number="form.firm_sortage_male_box" 
-                min="0"
-                :readonly="!isEditing"
-                :class="[
-                  'rounded-xl px-4 py-2 focus:outline-none',
-                  !isEditing
-                    ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-red-50 border-red-300 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200'
-                ]"
-              
+        <!-- Shortage and Excess Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- Shortage Section -->
+          <div class="rounded-lg border border-red-200 bg-gradient-to-br from-red-50 to-pink-50 p-4 dark:border-red-800 dark:from-red-900/20 dark:to-pink-900/20">
+            <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-red-800 dark:text-red-200">
+              <AlertCircle class="h-5 w-5" />
+              Shortage Boxes
+            </h3>
+            <div class="grid grid-cols-3 gap-4">
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Female Shortage</Label>
+                <Input 
+                  type="number" 
+                  v-model.number="form.firm_sortage_female_box" 
+                  min="0"
+                  :readonly="!isEditing"
+                  :class="[
+                    'rounded-xl px-4 py-2 focus:outline-none',
+                    !isEditing
+                      ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-red-50 border-red-300 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200'
+                  ]"
                 />
-            </div>
-            
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Total Shortage</Label>
-              <Input 
-                type="number" 
-                v-model.number="form.firm_sortage_box_qty" 
-                readonly 
-                class="rounded-xl border-red-300 bg-gradient-to-r from-red-100 to-red-50 px-4 py-2 font-bold text-red-800 cursor-not-allowed dark:border-red-600 dark:from-red-800/50 dark:to-red-900/50 dark:text-red-200"
-              />
+              </div>
+              
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Male Shortage</Label>
+                <Input 
+                  type="number" 
+                  v-model.number="form.firm_sortage_male_box" 
+                  min="0"
+                  :readonly="!isEditing"
+                  :class="[
+                    'rounded-xl px-4 py-2 focus:outline-none',
+                    !isEditing
+                      ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-red-50 border-red-300 text-red-800 focus:border-red-500 focus:ring-red-500/20 dark:border-red-600 dark:bg-red-900/30 dark:text-red-200'
+                  ]"
+                />
+              </div>
+              
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-red-700 dark:text-red-300">Total Shortage</Label>
+                <Input 
+                  type="number" 
+                  v-model.number="form.firm_sortage_box_qty" 
+                  readonly 
+                  class="rounded-xl border-red-300 bg-gradient-to-r from-red-100 to-red-50 px-4 py-2 font-bold text-red-800 cursor-not-allowed dark:border-red-600 dark:from-red-800/50 dark:to-red-900/50 dark:text-red-200"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Excess Section -->
-        <div class="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 p-4 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-green-900/20">
-          <!-- <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-emerald-800 dark:text-emerald-200">
-            <Plus class="h-5 w-5" />
-            Excess Boxes
-          </h3> -->
-          <div class="grid grid-cols-3 gap-4">
-            
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Female Excess</Label>
-              <Input 
-                type="number" 
-                v-model.number="form.firm_excess_female_box" 
-                min="0"
-                :readonly="!isEditing"
-                :class="[
-                  'rounded-xl px-4 py-2 focus:outline-none',
-                  !isEditing
-                    ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200'
-                ]"
-              />
-            </div>
-            
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Male Excess</Label>
-              <Input 
-                type="number" 
-                v-model.number="form.firm_excess_male_box" 
-                min="0"
-                :readonly="!isEditing"
-                :class="[
-                  'rounded-xl px-4 py-2 focus:outline-none',
-                  !isEditing
-                    ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200'
-                ]"
-              />
-            </div>
-            
-            <div class="space-y-2">
-              <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Total Excess</Label>
-              <Input 
-                type="number" 
-                v-model.number="form.firm_excess_box_qty" 
-                readonly 
-                class="rounded-xl border-emerald-300 bg-gradient-to-r from-emerald-100 to-emerald-50 px-4 py-2 font-bold text-emerald-800 cursor-not-allowed dark:border-emerald-600 dark:from-emerald-800/50 dark:to-emerald-900/50 dark:text-emerald-200"
-              />
+          <!-- Excess Section -->
+          <div class="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 p-4 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-green-900/20">
+            <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-emerald-800 dark:text-emerald-200">
+              <Plus class="h-5 w-5" />
+              Excess Boxes
+            </h3>
+            <div class="grid grid-cols-3 gap-4">
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Female Excess</Label>
+                <Input 
+                  type="number" 
+                  v-model.number="form.firm_excess_female_box" 
+                  min="0"
+                  :readonly="!isEditing"
+                  :class="[
+                    'rounded-xl px-4 py-2 focus:outline-none',
+                    !isEditing
+                      ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200'
+                  ]"
+                />
+              </div>
+              
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Male Excess</Label>
+                <Input 
+                  type="number" 
+                  v-model.number="form.firm_excess_male_box" 
+                  min="0"
+                  :readonly="!isEditing"
+                  :class="[
+                    'rounded-xl px-4 py-2 focus:outline-none',
+                    !isEditing
+                      ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200'
+                  ]"
+                />
+              </div>
+              
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Total Excess</Label>
+                <Input 
+                  type="number" 
+                  v-model.number="form.firm_excess_box_qty" 
+                  readonly 
+                  class="rounded-xl border-emerald-300 bg-gradient-to-r from-emerald-100 to-emerald-50 px-4 py-2 font-bold text-emerald-800 cursor-not-allowed dark:border-emerald-600 dark:from-emerald-800/50 dark:to-emerald-900/50 dark:text-emerald-200"
+                />
+              </div>
             </div>
           </div>
         </div>

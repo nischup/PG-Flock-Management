@@ -42,6 +42,7 @@ const selectedFlockId = ref<number | string>('')
 const selectedShedid = ref<number | string>('')
 
 const showInfo = ref(false)
+const isDetailsExpanded = ref(true)
 
 // Modern dropdown states
 const showFirmReceiveDropdown = ref(false)
@@ -495,18 +496,42 @@ function submit() {
           leave-to-class="opacity-0 scale-95 -translate-y-4"
         >
           <div v-if="showInfo" class="mt-8 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 dark:border-blue-800 dark:from-blue-900/20 dark:to-indigo-900/20">
-            <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-100">
-              <CheckCircle2 class="h-5 w-5" />
-              Firm Receive Details
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Farm Receive Code:</span><div class="text-blue-600 dark:text-blue-400 font-semibold">Rcv-{{ String(selectedFirmReceive?.id || 0).padStart(6, '0') }}-{{ selectedFirmReceive?.company_short_name }}-{{ selectedFirmReceive?.project_name }}-{{ selectedFirmReceive?.flock_code || props.flocks.find(f => f.id === selectedFirmReceive?.flock_id)?.code || selectedFirmReceive?.flock_name }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Flock:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFlock?.code || selectedFirmReceive?.flock_code || selectedFirmReceive?.flock_name }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Company:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.company_name || props.companies.find(c => c.id === form.receiving_company_id)?.name }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Box Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.firm_female_qty }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Box Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.firm_male_qty }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Box Qty:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ selectedFirmReceive?.firm_total_qty }}</div></div>
+            <div class="mb-4 flex items-center justify-between">
+              <h3 class="flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-100">
+                <CheckCircle2 class="h-5 w-5" />
+                Firm Receive Details
+              </h3>
+              <button
+                type="button"
+                @click="isDetailsExpanded = !isDetailsExpanded"
+                class="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-800/30 dark:hover:bg-blue-800/50 transition-colors duration-200 border border-blue-200 dark:border-blue-700"
+              >
+                <ChevronDown 
+                  class="h-3 w-3 transition-transform duration-200" 
+                  :class="{ 'rotate-180': isDetailsExpanded }" 
+                />
+                {{ isDetailsExpanded ? 'Hide' : 'Show' }}
+              </button>
             </div>
+            <transition
+              enter-active-class="transition-all duration-300 ease-out"
+              leave-active-class="transition-all duration-300 ease-in"
+              enter-from-class="opacity-0 max-h-0"
+              enter-to-class="opacity-100 max-h-96"
+              leave-from-class="opacity-100 max-h-96"
+              leave-to-class="opacity-0 max-h-0"
+            >
+              <div v-if="isDetailsExpanded" class="overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Farm Receive Code:</span><div class="text-blue-600 dark:text-blue-400 font-semibold">Rcv-{{ String(selectedFirmReceive?.id || 0).padStart(6, '0') }}-{{ selectedFirmReceive?.company_short_name }}-{{ selectedFirmReceive?.project_name }}-{{ selectedFirmReceive?.flock_code || props.flocks.find(f => f.id === selectedFirmReceive?.flock_id)?.code || selectedFirmReceive?.flock_name }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Flock:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFlock?.code || selectedFirmReceive?.flock_code || selectedFirmReceive?.flock_name }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Company:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.company_name || props.companies.find(c => c.id === form.receiving_company_id)?.name }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Box Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.firm_female_qty }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Box Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.firm_male_qty }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Box Qty:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ selectedFirmReceive?.firm_total_qty }}</div></div>
+                </div>
+              </div>
+            </transition>
           </div>
         </transition>
       </div>

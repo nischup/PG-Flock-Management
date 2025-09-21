@@ -9,6 +9,7 @@ use App\Models\Master\Batch;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Level;
+use App\Models\MovementAdjustment;
 use App\Models\Shed\BatchAssign;
 use App\Models\Shed\ShedReceive;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -16,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Models\MovementAdjustment;
 
 class BatchAssignController extends Controller
 {
@@ -37,7 +37,7 @@ class BatchAssignController extends Controller
                     })
                     ->orWhereHas('flock', function ($fq) use ($request) {
                         $fq->where('name', 'like', '%'.$request->search.'%')
-                           ->orWhere('code', 'like', '%'.$request->search.'%');
+                            ->orWhere('code', 'like', '%'.$request->search.'%');
                     })
                     ->orWhereHas('shed', function ($sq) use ($request) {
                         $sq->where('name', 'like', '%'.$request->search.'%');
@@ -123,7 +123,7 @@ class BatchAssignController extends Controller
     {
 
         // Get all Shed Receives with relations
-        $shedReceives = ShedReceive::with(['flock:id,code,name', 'shed:id,name', 'company:id,name'])
+        $shedReceives = ShedReceive::with(['flock:id,code,name', 'shed:id,name', 'company:id,name,short_name', 'firmReceive.flock:id,code,name', 'firmReceive.company:id,name,short_name', 'firmReceive.project:id,name'])
             ->get()
             ->map(function ($shed) {
                 return [
@@ -131,10 +131,14 @@ class BatchAssignController extends Controller
                     'transaction_no' => $shed->transaction_no,
                     'flock_id' => $shed->flock_id,
                     'flock' => $shed->flock?->code,
+                    'flock_code' => $shed->flock?->code,
                     'shed_id' => $shed->shed_id,
                     'shed' => $shed->shed?->name,
                     'company_id' => $shed->company_id,
                     'company' => $shed->company?->name,
+                    'company_short_name' => $shed->firmReceive?->company?->short_name ?? $shed->company?->short_name ?? $shed->company?->name ?? 'N/A',
+                    'project_id' => $shed->project_id,
+                    'project_name' => $shed->firmReceive?->project?->name ?? 'N/A',
                     'shed_female_qty' => $shed->shed_female_qty ?? 0,
                     'shed_male_qty' => $shed->shed_male_qty ?? 0,
                     'shed_total_qty' => $shed->shed_total_qty ?? 0,
@@ -178,19 +182,15 @@ class BatchAssignController extends Controller
         // check once using the Transaction model
         $exists = BirdTransfer::where('job_no', $shedReceive->job_no)->exists();
 
-
-
-        
-
         foreach ($batches as $batch) {
-           $batchReceive =  BatchAssign::create([
+            $batchReceive = BatchAssign::create([
                 'shed_receive_id' => $shedReceive->id ?? null,
                 'job_no' => $shedReceive->job_no ?? null,
                 'transaction_no' => $shedReceive->transaction_no ?? null,
                 'flock_no' => $shedReceive->flock_no ?? 0,
                 'flock_id' => $shedReceive->flock_id ?? null,
                 'company_id' => $shedReceive->company_id ?? null,
-                'project_id'=> $shedReceive->project_id,
+                'project_id' => $shedReceive->project_id,
                 'shed_id' => $shedReceive->shed_id ?? null,
                 'level' => $batch['level'] ?? null,
                 'batch_no' => $batch['batch_no'] ?? 1,
@@ -209,58 +209,54 @@ class BatchAssignController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
-             $insertId = $batchReceive->id;
+            $insertId = $batchReceive->id;
 
             if (($batch['batch_sortage_female'] ?? 0) + ($batch['batch_sortage_male'] ?? 0) > 0) {
                 MovementAdjustment::create([
-                    'flock_id'   =>  $shedReceive->flock_id,
-                    'flock_no' =>    $shedReceive->flock_no, // fetch from batch or pass from request
-                    'stage'      =>  3,                  // 5 = Bird Transfer stage
-                    'stage_id'   =>  $insertId,
-                    'type'       =>  3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                    'male_qty'   =>  $batch['batch_sortage_male'] ?? 0,
-                    'female_qty' =>  $batch['batch_sortage_female'] ?? 0,
-                    'total_qty'  =>  ($batch['batch_sortage_male'] ?? 0) + ($batch['batch_sortage_female'] ?? 0),
-                    'date'       =>  date('Y-m-d'),
-                    'remarks'    => "Sortage when Batch Assign",
+                    'flock_id' => $shedReceive->flock_id,
+                    'flock_no' => $shedReceive->flock_no, // fetch from batch or pass from request
+                    'stage' => 3,                  // 5 = Bird Transfer stage
+                    'stage_id' => $insertId,
+                    'type' => 3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                    'male_qty' => $batch['batch_sortage_male'] ?? 0,
+                    'female_qty' => $batch['batch_sortage_female'] ?? 0,
+                    'total_qty' => ($batch['batch_sortage_male'] ?? 0) + ($batch['batch_sortage_female'] ?? 0),
+                    'date' => date('Y-m-d'),
+                    'remarks' => 'Sortage when Batch Assign',
                 ]);
             }
 
             if (($batch['batch_excess_female'] ?? 0) + ($batch['batch_excess_male'] ?? 0) > 0) {
                 MovementAdjustment::create([
-                    'flock_id'   =>  $shedReceive->flock_id,
-                    'flock_no'   =>  $shedReceive->flock_no, // fetch from batch or pass from request
-                    'stage'      =>  3,                  // 5 = Bird Transfer stage
-                    'stage_id'   =>  $insertId,
-                    'type'       =>  2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                    'male_qty'   =>  $batch['batch_excess_male'] ?? 0,
-                    'female_qty' =>  $batch['batch_excess_female'] ?? 0,
-                    'total_qty'  =>  ($batch['batch_excess_female'] ?? 0) + ($batch['batch_excess_male'] ?? 0),
-                    'date'       => date('Y-m-d'),
-                    'remarks'    => "Excess when Batch Assign",
+                    'flock_id' => $shedReceive->flock_id,
+                    'flock_no' => $shedReceive->flock_no, // fetch from batch or pass from request
+                    'stage' => 3,                  // 5 = Bird Transfer stage
+                    'stage_id' => $insertId,
+                    'type' => 2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                    'male_qty' => $batch['batch_excess_male'] ?? 0,
+                    'female_qty' => $batch['batch_excess_female'] ?? 0,
+                    'total_qty' => ($batch['batch_excess_female'] ?? 0) + ($batch['batch_excess_male'] ?? 0),
+                    'date' => date('Y-m-d'),
+                    'remarks' => 'Excess when Batch Assign',
                 ]);
             }
 
             if (($batch['batch_female_mortality'] ?? 0) + ($batch['batch_male_mortality'] ?? 0) > 0) {
                 MovementAdjustment::create([
-                    'flock_id'   =>  $shedReceive->flock_id,
-                    'flock_no' =>    $shedReceive->flock_no, // fetch from batch or pass from request
-                    'stage'      =>  3,                  // 5 = Bird Transfer stage
-                    'stage_id'   =>  $insertId,
-                    'type'       =>  1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                    'male_qty'   =>  $batch['batch_male_mortality'] ?? 0,
-                    'female_qty' =>  $batch['batch_female_mortality'] ?? 0,
-                    'total_qty'  =>  ($batch['batch_female_mortality'] ?? 0) + ($batch['batch_male_mortality'] ?? 0),
-                    'date'       => date('Y-m-d'),
-                    'remarks'    => "Mortality when Batch Assign",
+                    'flock_id' => $shedReceive->flock_id,
+                    'flock_no' => $shedReceive->flock_no, // fetch from batch or pass from request
+                    'stage' => 3,                  // 5 = Bird Transfer stage
+                    'stage_id' => $insertId,
+                    'type' => 1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                    'male_qty' => $batch['batch_male_mortality'] ?? 0,
+                    'female_qty' => $batch['batch_female_mortality'] ?? 0,
+                    'total_qty' => ($batch['batch_female_mortality'] ?? 0) + ($batch['batch_male_mortality'] ?? 0),
+                    'date' => date('Y-m-d'),
+                    'remarks' => 'Mortality when Batch Assign',
                 ]);
             }
 
         }
-
-        
-
-
 
         return redirect()
             ->route('batch-assign.index')

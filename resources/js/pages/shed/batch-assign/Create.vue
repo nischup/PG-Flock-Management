@@ -43,6 +43,7 @@ const props = defineProps<{
 const selectedShedReceiveId = ref<number | string>('')
 const shedReceiveInfo = ref<any>(null)
 const showInfo = ref(false)
+const isDetailsExpanded = ref(true)
 
 // Modern dropdown states
 const showShedReceiveDropdown = ref(false)
@@ -51,11 +52,23 @@ const shedReceiveSearchQuery = ref('')
 // Filtered options
 const filteredShedReceives = computed(() => {
     if (!shedReceiveSearchQuery.value) return props.shedReceives
-    return props.shedReceives.filter(sr => 
-        sr.transaction_no?.toLowerCase().includes(shedReceiveSearchQuery.value.toLowerCase()) ||
-        sr.shed?.toLowerCase().includes(shedReceiveSearchQuery.value.toLowerCase()) ||
-        sr.flock?.toLowerCase().includes(shedReceiveSearchQuery.value.toLowerCase())
-    )
+    return props.shedReceives.filter(sr => {
+        const searchTerm = shedReceiveSearchQuery.value.toLowerCase()
+        const formattedId = `rcv-${String(sr.id).padStart(6, '0')}`
+        const flockCode = sr.flock_code || sr.flock
+        const fullFormat = `rcv-${String(sr.id).padStart(6, '0')}-${sr.company_short_name}-${sr.project_name}-${flockCode}`
+        
+        return sr.transaction_no?.toLowerCase().includes(searchTerm) ||
+               sr.shed?.toLowerCase().includes(searchTerm) ||
+               sr.flock?.toLowerCase().includes(searchTerm) ||
+               sr.flock_code?.toLowerCase().includes(searchTerm) ||
+               sr.company?.toLowerCase().includes(searchTerm) ||
+               sr.company_short_name?.toLowerCase().includes(searchTerm) ||
+               sr.project_name?.toLowerCase().includes(searchTerm) ||
+               sr.id.toString().includes(searchTerm) ||
+               formattedId.includes(searchTerm) ||
+               fullFormat.includes(searchTerm)
+    })
 })
 
 // Selected item display
@@ -256,7 +269,10 @@ watch(
             >
               <span class="flex items-center gap-3">
                 <div class="h-2 w-2 rounded-full bg-blue-500"></div>
-                {{ selectedShedReceive ? `${selectedShedReceive.transaction_no} - ${selectedShedReceive.shed}` : 'Select Shed Receive' }}
+                <span v-if="selectedShedReceive" class="text-blue-600 dark:text-blue-400 font-semibold">
+                  Rcv-{{ String(selectedShedReceive.id).padStart(6, '0') }}-{{ selectedShedReceive.company_short_name }}-{{ selectedShedReceive.project_name }}-{{ selectedShedReceive.flock_code || selectedShedReceive.flock }}
+                </span>
+                <span v-else>Select Shed Receive</span>
               </span>
               <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showShedReceiveDropdown }" />
             </button>
@@ -303,9 +319,15 @@ watch(
                   >
                     <div class="h-3 w-3 rounded-full bg-blue-500 flex-shrink-0"></div>
                     <div class="flex-1">
-                      <div class="font-semibold text-gray-900 dark:text-white">{{ sr.transaction_no }}</div>
+                      <div class="font-semibold text-gray-900 dark:text-white">
+                        <span class="text-blue-600 dark:text-blue-400">
+                          Rcv-{{ String(sr.id).padStart(6, '0') }}-{{ sr.company_short_name }}-{{ sr.project_name }}-{{ sr.flock_code || sr.flock }}
+                        </span>
+                      </div>
                       <div class="text-sm text-gray-500 dark:text-gray-400">Shed: {{ sr.shed }}</div>
-                      <div class="text-xs text-gray-400 dark:text-gray-500">Flock: {{ sr.flock }}</div>
+                      <div class="text-xs text-gray-400 dark:text-gray-500">
+                        <span class="font-medium">Total Qty:</span> {{ sr.shed_total_qty }} {{ sr.receive_type === 'pcs' ? 'Pcs' : 'Boxes' }}
+                      </div>
                     </div>
                     <CheckCircle2 v-if="selectedShedReceiveId == sr.id" class="h-4 w-4 text-blue-500 flex-shrink-0" />
                   </button>
@@ -340,19 +362,43 @@ watch(
           leave-to-class="opacity-0 scale-95 -translate-y-4"
         >
           <div v-if="showInfo" class="mt-8 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 dark:border-blue-800 dark:from-blue-900/20 dark:to-indigo-900/20">
-            <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-100">
-              <CheckCircle2 class="h-5 w-5" />
-              Shed Receive Details
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-          
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Flock:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.flock }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Shed:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Company:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.company }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Box Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed_female_qty }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Box Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed_male_qty }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Box Qty:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ shedReceiveInfo?.shed_total_qty }}</div></div>
+            <div class="mb-4 flex items-center justify-between">
+              <h3 class="flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-100">
+                <CheckCircle2 class="h-5 w-5" />
+                Shed Receive Details
+              </h3>
+              <button
+                type="button"
+                @click="isDetailsExpanded = !isDetailsExpanded"
+                class="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-800/30 dark:hover:bg-blue-800/50 transition-colors duration-200 border border-blue-200 dark:border-blue-700"
+              >
+                <ChevronDown 
+                  class="h-3 w-3 transition-transform duration-200" 
+                  :class="{ 'rotate-180': isDetailsExpanded }" 
+                />
+                {{ isDetailsExpanded ? 'Hide' : 'Show' }}
+              </button>
             </div>
+            <transition
+              enter-active-class="transition-all duration-300 ease-out"
+              leave-active-class="transition-all duration-300 ease-in"
+              enter-from-class="opacity-0 max-h-0"
+              enter-to-class="opacity-100 max-h-96"
+              leave-from-class="opacity-100 max-h-96"
+              leave-to-class="opacity-0 max-h-0"
+            >
+              <div v-if="isDetailsExpanded" class="overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Farm Receive Code:</span><div class="text-blue-600 dark:text-blue-400 font-semibold">Rcv-{{ String(shedReceiveInfo?.id || 0).padStart(6, '0') }}-{{ shedReceiveInfo?.company_short_name }}-{{ shedReceiveInfo?.project_name }}-{{ shedReceiveInfo?.flock_code || shedReceiveInfo?.flock }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Flock:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.flock_code || shedReceiveInfo?.flock }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Shed:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Company:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.company }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed_female_qty }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed_male_qty }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Qty:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ shedReceiveInfo?.shed_total_qty }} {{ shedReceiveInfo?.receive_type === 'pcs' ? 'Pcs' : 'Boxes' }}</div></div>
+                </div>
+              </div>
+            </transition>
           </div>
         </transition>
       </div>
