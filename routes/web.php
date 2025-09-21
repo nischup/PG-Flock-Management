@@ -33,7 +33,7 @@ use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\WeatherController;
 use App\Http\Controllers\FirmLabTestController;
-use App\Http\Controllers\OrderPlanningController;
+use App\Http\Controllers\Ps\OrderPlanningController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
