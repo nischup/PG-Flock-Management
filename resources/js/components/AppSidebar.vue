@@ -174,6 +174,13 @@ const mainNavItems: NavItem[] = [
                 icon: FileText,
                 iconClass: 'text-yellow-500',
             },
+ 
+            {
+                title: 'Transfer and Receive Report',
+                href: '/bird-transfer-receive-report',
+                icon: FileText,
+                iconClass: 'text-yellow-500',
+            },
         ],
     },
     {
