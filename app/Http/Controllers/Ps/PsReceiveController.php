@@ -11,6 +11,7 @@ use App\Models\Master\Company;
 use App\Models\Master\Supplier;
 use App\Models\Ps\PsLabTest;
 use App\Models\Ps\PsReceive;
+use App\Services\ApprovalMatrixService;
 use App\Services\AuditLogService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -59,11 +60,11 @@ class PsReceiveController extends Controller
     public function show($id)
     {
         $psReceive = PsReceive::with([
-            'supplier', 
-            'chickCounts', 
-            'company', 
-            'country', 
-            'labTransfers'
+            'supplier',
+            'chickCounts',
+            'company',
+            'country',
+            'labTransfers',
         ])->findOrFail($id);
 
         // Get breed type names
@@ -98,7 +99,7 @@ class PsReceiveController extends Controller
             // Log the incoming request data for debugging
             Log::info('PS Receive Store Request', [
                 'request_data' => $request->all(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             DB::beginTransaction();
@@ -200,6 +201,24 @@ class PsReceiveController extends Controller
             //     }
             // }
 
+            // Initiate approval process for PS Receive
+            try {
+                $approvalService = new ApprovalMatrixService;
+                $approvalData = [
+                    'pi_no' => $psReceive->pi_no,
+                    'supplier' => $psReceive->supplier->name ?? 'N/A',
+                    'total_qty' => $psReceive->chickCounts->ps_total_qty ?? 0,
+                    'created_at' => $psReceive->created_at,
+                ];
+                $approvalService->initiateApproval('ps-receive', $psReceive->id, $approvalData, Auth::user());
+                Log::info('Approval process initiated for PS Receive', ['ps_receive_id' => $psReceive->id]);
+            } catch (\Exception $e) {
+                Log::error('Failed to initiate approval for PS Receive', [
+                    'ps_receive_id' => $psReceive->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             DB::commit();
 
             return redirect()->route('ps-receive.index')
@@ -208,7 +227,7 @@ class PsReceiveController extends Controller
             DB::rollBack();
             Log::error('Parent Stock Receive create failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 
-            return back()->withErrors(['general' => 'Failed to create Parent Stock Receive: ' . $e->getMessage()]);
+            return back()->withErrors(['general' => 'Failed to create Parent Stock Receive: '.$e->getMessage()]);
         }
     }
 
@@ -538,5 +557,95 @@ class PsReceiveController extends Controller
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream("ps-receive-{$psReceive->pi_no}.pdf");
+    }
+
+    /**
+     * Get approval status for a PS Receive record
+     */
+    public function getApprovalStatus($id)
+    {
+        $psReceive = PsReceive::findOrFail($id);
+        $approvalService = new ApprovalMatrixService;
+
+        $approvalStatus = $approvalService->getApprovalStatus('ps-receive', $id);
+
+        // Return JSON response for API
+        return response()->json([
+            'status' => $approvalStatus['status'],
+            'current_layer' => $approvalStatus['current_layer'],
+            'total_layers' => $approvalStatus['total_layers'],
+            'actions' => $approvalStatus['actions'],
+            'can_approve' => $approvalStatus['can_approve'],
+            'can_reject' => $approvalStatus['can_reject'],
+        ]);
+    }
+
+    /**
+     * Approve a PS Receive record
+     */
+    public function approve(Request $request, $id)
+    {
+        $request->validate([
+            'comments' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $approvalService = new ApprovalMatrixService;
+            $result = $approvalService->approve('ps-receive', $id, Auth::id(), $request->comments);
+
+            if ($result['success']) {
+                return redirect()->back()->with('success', $result['message']);
+            } else {
+                return redirect()->back()->with('error', $result['message']);
+            }
+        } catch (\Exception $e) {
+            Log::error('PS Receive approval failed', [
+                'ps_receive_id' => $id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to approve PS Receive: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Reject a PS Receive record
+     */
+    public function reject(Request $request, $id)
+    {
+        $request->validate([
+            'comments' => 'required|string|max:500',
+        ]);
+
+        try {
+            $approvalService = new ApprovalMatrixService;
+            $result = $approvalService->reject('ps-receive', $id, Auth::id(), $request->comments);
+
+            if ($result['success']) {
+                return redirect()->back()->with('success', $result['message']);
+            } else {
+                return redirect()->back()->with('error', $result['message']);
+            }
+        } catch (\Exception $e) {
+            Log::error('PS Receive rejection failed', [
+                'ps_receive_id' => $id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to reject PS Receive: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Get pending approvals for current user
+     */
+    public function getPendingApprovals()
+    {
+        $approvalService = new ApprovalMatrixService;
+        $pendingApprovals = $approvalService->getPendingApprovalsForUser(Auth::id());
+
+        return response()->json($pendingApprovals);
     }
 }

@@ -153,20 +153,20 @@ const handleCancel = () => {
                         <!-- Role Name -->
                         <div>
                             <Label for="role_name">Role *</Label>
-                            <Select v-model="form.role_name">
-                                <SelectTrigger class="mt-1">
-                                    <SelectValue placeholder="Select a role" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem
-                                        v-for="(label, value) in roles"
-                                        :key="value"
-                                        :value="value"
-                                    >
-                                        {{ label }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <select
+                                id="role_name"
+                                v-model="form.role_name"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
+                            >
+                                <option value="">Select a role</option>
+                                <option
+                                    v-for="(label, value) in (roles || {})"
+                                    :key="value"
+                                    :value="value"
+                                >
+                                    {{ label }}
+                                </option>
+                            </select>
                             <p v-if="form.errors.role_name" class="mt-1 text-sm text-red-600">
                                 {{ form.errors.role_name }}
                             </p>

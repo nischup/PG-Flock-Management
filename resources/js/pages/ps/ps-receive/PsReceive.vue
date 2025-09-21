@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import listInfocard from '@/components/ListinfoCard.vue';
 import Pagination from '@/components/Pagination.vue';
+import ApprovalStatusBadge from '@/components/ApprovalStatusBadge.vue';
 import { Button } from '@/components/ui/button';
 import { useListFilters } from '@/composables/useListFilters';
 import { useNotifier } from '@/composables/useNotifier';
@@ -746,6 +747,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Weight (kg)</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Gov Lab Total</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Provita Lab Total</th>
+                            <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Approval Status</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px;">Actions</th>
                         </tr>
                     </thead>
@@ -793,6 +795,9 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     <div>Female: {{ getProvitaLabFemaleQty(item) }}</div>
                                     <div class="font-medium">Total: {{ getProvitaLabTotalQty(item) }}</div>
                                 </div>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <ApprovalStatusBadge :ps-receive-id="item.id" />
                             </td>
                             <td class="relative px-4 py-3">
                                 <Button size="sm" class="action-btn bg-gray-500 text-white hover:bg-gray-600" @click.stop="toggleDropdown(item.id)">
@@ -883,7 +888,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </tr>
 
                         <tr v-if="(props.psReceives?.data ?? []).length === 0">
-                            <td colspan="9" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No PS Receives found.</td>
+                            <td colspan="11" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No PS Receives found.</td>
                         </tr>
                     </tbody>
                 </table>

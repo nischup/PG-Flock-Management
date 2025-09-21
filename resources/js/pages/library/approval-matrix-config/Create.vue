@@ -3,7 +3,7 @@ import HeadingSmall from '@/components/HeadingSmall.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -15,6 +15,8 @@ const props = defineProps<{
     modules: Record<string, string>;
     approvalTypes: Record<string, string>;
 }>();
+
+// Props are received correctly
 
 const { can } = usePermissions();
 const { notify } = useNotifier();
@@ -109,20 +111,20 @@ const handleCancel = () => {
                         <!-- Module -->
                         <div>
                             <Label for="module_name">Module *</Label>
-                            <Select v-model="form.module_name">
-                                <SelectTrigger class="mt-1">
-                                    <SelectValue placeholder="Select a module" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem
-                                        v-for="(label, value) in modules"
-                                        :key="value"
-                                        :value="value"
-                                    >
-                                        {{ label }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <select
+                                id="module_name"
+                                v-model="form.module_name"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
+                            >
+                                <option value="">Select a module</option>
+                                <option
+                                    v-for="(label, value) in (modules || {})"
+                                    :key="value"
+                                    :value="value"
+                                >
+                                    {{ label }}
+                                </option>
+                            </select>
                             <p v-if="form.errors.module_name" class="mt-1 text-sm text-red-600">
                                 {{ form.errors.module_name }}
                             </p>
@@ -131,20 +133,20 @@ const handleCancel = () => {
                         <!-- Approval Type -->
                         <div>
                             <Label for="approval_type">Approval Type *</Label>
-                            <Select v-model="form.approval_type">
-                                <SelectTrigger class="mt-1">
-                                    <SelectValue placeholder="Select approval type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem
-                                        v-for="(label, value) in approvalTypes"
-                                        :key="value"
-                                        :value="value"
-                                    >
-                                        {{ label }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <select
+                                id="approval_type"
+                                v-model="form.approval_type"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
+                            >
+                                <option value="">Select approval type</option>
+                                <option
+                                    v-for="(label, value) in (approvalTypes || {})"
+                                    :key="value"
+                                    :value="value"
+                                >
+                                    {{ label }}
+                                </option>
+                            </select>
                             <p v-if="form.errors.approval_type" class="mt-1 text-sm text-red-600">
                                 {{ form.errors.approval_type }}
                             </p>

@@ -64,6 +64,102 @@ class ApprovalMatrixService
     }
 
     /**
+     * Approve a record
+     */
+    public function approve(string $module, int $recordId, int $userId, ?string $comments = null): array
+    {
+        try {
+            $request = ApprovalRequest::where('module_name', $module)
+                ->where('record_id', $recordId)
+                ->first();
+
+            if (!$request) {
+                return [
+                    'success' => false,
+                    'message' => 'Approval request not found',
+                ];
+            }
+
+            $user = User::find($userId);
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'message' => 'User not found',
+                ];
+            }
+
+            $success = $this->processApproval($request, $user, 'approve', $comments);
+
+            if ($success) {
+                return [
+                    'success' => true,
+                    'message' => 'Record approved successfully',
+                    'status' => $request->fresh()->status,
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to approve record',
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to approve {$module}:{$recordId}: ".$e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'An error occurred while approving the record',
+            ];
+        }
+    }
+
+    /**
+     * Reject a record
+     */
+    public function reject(string $module, int $recordId, int $userId, ?string $comments = null): array
+    {
+        try {
+            $request = ApprovalRequest::where('module_name', $module)
+                ->where('record_id', $recordId)
+                ->first();
+
+            if (!$request) {
+                return [
+                    'success' => false,
+                    'message' => 'Approval request not found',
+                ];
+            }
+
+            $user = User::find($userId);
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'message' => 'User not found',
+                ];
+            }
+
+            $success = $this->processApproval($request, $user, 'reject', $comments);
+
+            if ($success) {
+                return [
+                    'success' => true,
+                    'message' => 'Record rejected successfully',
+                    'status' => $request->fresh()->status,
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to reject record',
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to reject {$module}:{$recordId}: ".$e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'An error occurred while rejecting the record',
+            ];
+        }
+    }
+
+    /**
      * Process an approval action
      */
     public function processApproval(ApprovalRequest $request, User $approver, string $action, ?string $comments = null): bool
@@ -110,6 +206,11 @@ class ApprovalMatrixService
                     $request->update([
                         'status' => 'approved',
                         'completed_at' => now(),
+                    ]);
+                } else {
+                    // Update status to in_progress if not all layers are complete
+                    $request->update([
+                        'status' => 'in_progress',
                     ]);
                 }
             }
@@ -162,6 +263,9 @@ class ApprovalMatrixService
                 ];
             });
 
+            $currentLayer = $request->getCurrentLayer();
+            $currentUser = auth()->user();
+            
             return [
                 'id' => $request->id,
                 'module_name' => $request->module_name,
@@ -171,7 +275,11 @@ class ApprovalMatrixService
                 'initiated_at' => $request->created_at,
                 'completed_at' => $request->completed_at,
                 'layers' => $layers,
-                'current_layer' => $request->getCurrentLayer(),
+                'actions' => $layers->toArray(),
+                'current_layer' => $currentLayer ? $currentLayer->layer_order : 0,
+                'total_layers' => $layers->count(),
+                'can_approve' => $currentUser && $request->canUserApprove($currentUser),
+                'can_reject' => $currentUser && $request->canUserApprove($currentUser),
             ];
         } catch (\Exception $e) {
             Log::error("Failed to get approval status for {$module}:{$recordId}: ".$e->getMessage());

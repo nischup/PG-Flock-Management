@@ -268,6 +268,12 @@
                         <p class="text-sm text-gray-900 dark:text-white">{{ psReceive.remarks }}</p>
                     </div>
 
+                    <!-- Approval Status -->
+                    <div class="rounded-xl bg-white p-6 shadow-md dark:bg-gray-900">
+                        <h2 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white">Approval Status</h2>
+                        <PsReceiveApprovalStatus :ps-receive-id="psReceive.id" />
+                    </div>
+
                     <!-- Created Information -->
                     <div class="rounded-xl bg-white p-6 shadow-md dark:bg-gray-900">
                         <h2 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white">Record Information</h2>
@@ -292,6 +298,7 @@
 import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
+import PsReceiveApprovalStatus from '@/components/PsReceiveApprovalStatus.vue';
 import dayjs from 'dayjs';
 
 interface Props {

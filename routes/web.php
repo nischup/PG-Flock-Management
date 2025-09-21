@@ -160,6 +160,16 @@ Route::get('/bird-transfer-row/{id}/pdf', [BirdTransferController::class, 'downl
 Route::get('/ps-receive/{id}/pdf', [PsReceiveController::class, 'downloadRowPdf'])
     ->name('ps-receive.row-pdf');
 
+// PS Receive Approval Routes
+Route::get('/ps-receive/{id}/approval-status', [PsReceiveController::class, 'getApprovalStatus'])
+    ->name('ps-receive.approval-status');
+Route::post('/ps-receive/{id}/approve', [PsReceiveController::class, 'approve'])
+    ->name('ps-receive.approve');
+Route::post('/ps-receive/{id}/reject', [PsReceiveController::class, 'reject'])
+    ->name('ps-receive.reject');
+Route::get('/ps-receive/pending-approvals', [PsReceiveController::class, 'getPendingApprovals'])
+    ->name('ps-receive.pending-approvals');
+
 Route::get('/ps-firm-receive/{id}/pdf', [PsFirmReceiveController::class, 'downloadRowPdf'])
     ->name('ps-firm-receive-row.row-pdf');
 
