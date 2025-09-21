@@ -8,7 +8,7 @@ import { BabyChick } from '@/icons/BabyChick';
 import { BabyChickMultiple } from '@/icons/BabyChickMultiple';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { Building, Building2, Pipette, TestTubes,EggFried,ClockArrowUp ,Egg, EggOff, LayoutGrid, Package, PencilRuler, Pill, Skull, Syringe, User, Users, FileText,Settings  } from 'lucide-vue-next';
+import { Building, Building2, Pipette, ClockArrowUp ,Egg, EggOff, LayoutGrid, Package, PencilRuler, Pill, Skull, Syringe, User, Users, FileText,Settings, CheckCircle, Layers  } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage();
@@ -252,6 +252,7 @@ const mainNavItems: NavItem[] = [
             { title: 'Supplier', href: '/supplier', icon: Users, iconClass: 'text-yellow-500' },
             { title: 'Chicks Type', href: '/chick-type', icon: BabyChick, iconClass: 'text-yellow-500' },
             { title: 'Breed Type', href: '/breed-type', icon: Package, iconClass: 'text-yellow-500' },
+            { title: 'Approval Matrix', href: '/approval-matrix-config', icon: CheckCircle, iconClass: 'text-yellow-500' },
         ],
     },
 ];

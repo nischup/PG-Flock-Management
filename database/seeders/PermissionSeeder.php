@@ -97,6 +97,15 @@ class PermissionSeeder extends Seeder
             'breed-type.edit',
             'breed-type.delete',
 
+            'approval-matrix-config.view',
+            'approval-matrix-config.create',
+            'approval-matrix-config.edit',
+            'approval-matrix-config.delete',
+
+            'approval-matrix-layer.view',
+            'approval-matrix-layer.create',
+            'approval-matrix-layer.edit',
+            'approval-matrix-layer.delete',
 
         ];
 
