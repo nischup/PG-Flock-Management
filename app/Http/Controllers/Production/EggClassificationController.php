@@ -229,27 +229,29 @@ class EggClassificationController extends Controller
         //
     }
 
-    public function getTotalEggs(Request $request)
-{
-    $validated = $request->validate([
-        'batchassign_id' => 'required|integer|exists:batch_assigns,id',
-        'operation_date' => 'required|date',
-    ]);
+    public function getTotalEggs($batchassign_id, $operation_date)
+    {
+        
+        
+        if (!is_numeric($batchassign_id) || !strtotime($operation_date)) {
+            return response()->json(['total_egg' => 0]);
+        }
 
+        // Fetch the DailyOperation for the batch and date
+        $dailyOperation = DailyOperation::where('batchassign_id', $batchassign_id)
+            ->whereDate('operation_date', $operation_date)
+            ->first();
 
-    
-    $dailyOperation = DailyOperation::where('batchassign_id', $validated['batchassign_id'])
-        ->where('operation_date', $validated['operation_date'])
-        ->first();
+        if (!$dailyOperation) {
+            return response()->json(['total_egg' => 0]);
+        }
 
-    $dailyEgg = $dailyOperation
-        ? DailyEggCollection::where('daily_operation_id', $dailyOperation->id)->first()
-        : null;
+        $dailyEgg = DailyEggCollection::where('daily_operation_id', $dailyOperation->id)->first();
 
-    return response()->json([
-        'total_egg' => $dailyEgg->quantity ?? 0
-    ]);
-}
+        $totalEggs = $dailyEgg ? $dailyEgg->quantity : 0;
+
+        return response()->json(['total_egg' => $totalEggs]);
+    }
 
     /**
      * Get batch data for egg classification statistics
