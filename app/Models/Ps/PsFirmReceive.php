@@ -4,6 +4,7 @@ namespace App\Models\Ps;
 
 use App\Models\Master\Flock;
 use App\Models\Master\Company;
+use App\Models\Master\Project;
 use Illuminate\Database\Eloquent\Model;
 
 class PsFirmReceive extends Model
@@ -42,6 +43,12 @@ class PsFirmReceive extends Model
     public function company()
     {
         return $this->belongsTo(Company::class, 'receiving_company_id');
+    }
+
+    // Project relationship
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
     }
     public function psReceive()
     {

@@ -76,7 +76,8 @@ class ShedReceiveController extends Controller
     public function create()
     {
 
-        $firmReceives = PsFirmReceive::with(['flock', 'company'])
+        $firmReceives = PsFirmReceive::with(['flock', 'company', 'project'])
+        ->where('receive_type', 'box')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($fr) {
@@ -85,7 +86,12 @@ class ShedReceiveController extends Controller
                     'transaction_no' => $fr->transaction_no,
                     'flock_id' => $fr->flock_id,
                     'flock_name' => $fr->flock?->name ?? 'N/A',
+                    'flock_code' => $fr->flock?->code ?? 'N/A',
                     'receiving_company_id' => $fr->receiving_company_id,
+                    'company_name' => $fr->company?->name ?? 'N/A',
+                    'company_short_name' => $fr->company?->short_name ?? $fr->company?->name ?? 'N/A',
+                    'project_id' => $fr->project_id,
+                    'project_name' => $fr->project?->name ?? 'N/A',
                     'firm_female_qty' => $fr->firm_female_qty,
                     'firm_male_qty' => $fr->firm_male_qty,
                     'firm_total_qty' => $fr->firm_total_qty,
@@ -94,7 +100,7 @@ class ShedReceiveController extends Controller
             });
 
         // Fetch all flocks
-        $flocks = Flock::select('id', 'name')->get();
+        $flocks = Flock::select('id', 'code', 'name')->get();
 
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
@@ -243,7 +249,7 @@ class ShedReceiveController extends Controller
             });
 
         // Fetch all flocks
-        $flocks = Flock::select('id', 'name')->get();
+        $flocks = Flock::select('id', 'code', 'name')->get();
 
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();

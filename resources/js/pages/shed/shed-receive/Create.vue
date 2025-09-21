@@ -54,11 +54,23 @@ const shedSearchQuery = ref('')
 // Filtered options
 const filteredFirmReceives = computed(() => {
     if (!firmReceiveSearchQuery.value) return props.firmReceives
-    return props.firmReceives.filter(fr => 
-        fr.transaction_no?.toLowerCase().includes(firmReceiveSearchQuery.value.toLowerCase()) ||
-        fr.job_no?.toLowerCase().includes(firmReceiveSearchQuery.value.toLowerCase()) ||
-        fr.flock_name?.toLowerCase().includes(firmReceiveSearchQuery.value.toLowerCase())
-    )
+    return props.firmReceives.filter(fr => {
+        const searchTerm = firmReceiveSearchQuery.value.toLowerCase()
+        const formattedId = `rcv-${String(fr.id).padStart(6, '0')}`
+        const flockCode = fr.flock_code || props.flocks.find(f => f.id === fr.flock_id)?.code || fr.flock_name
+        const fullFormat = `rcv-${String(fr.id).padStart(6, '0')}-${fr.company_short_name}-${fr.project_name}-${flockCode}`
+        
+        return fr.transaction_no?.toLowerCase().includes(searchTerm) ||
+               fr.job_no?.toLowerCase().includes(searchTerm) ||
+               fr.flock_name?.toLowerCase().includes(searchTerm) ||
+               fr.flock_code?.toLowerCase().includes(searchTerm) ||
+               fr.company_name?.toLowerCase().includes(searchTerm) ||
+               fr.company_short_name?.toLowerCase().includes(searchTerm) ||
+               fr.project_name?.toLowerCase().includes(searchTerm) ||
+               fr.id.toString().includes(searchTerm) ||
+               formattedId.includes(searchTerm) ||
+               fullFormat.includes(searchTerm)
+    })
 })
 
 const filteredFlocks = computed(() => {
@@ -276,7 +288,10 @@ function submit() {
               >
                 <span class="flex items-center gap-2">
                   <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                  {{ selectedFirmReceive ? selectedFirmReceive.transaction_no || selectedFirmReceive.job_no : 'Select Firm Receive Code' }}
+                  <span v-if="selectedFirmReceive" class="text-blue-600 dark:text-blue-400 font-semibold">
+                    Rcv-{{ String(selectedFirmReceive.id).padStart(6, '0') }}-{{ selectedFirmReceive.company_short_name }}-{{ selectedFirmReceive.project_name }}-{{ selectedFirmReceive.flock_code || props.flocks.find(f => f.id === selectedFirmReceive.flock_id)?.code || selectedFirmReceive.flock_name }}
+                  </span>
+                  <span v-else>Select Firm Receive Code</span>
                 </span>
                 <ChevronDown class="h-3 w-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFirmReceiveDropdown }" />
               </button>
@@ -323,9 +338,14 @@ function submit() {
                     >
                       <div class="h-3 w-3 rounded-full bg-blue-500 flex-shrink-0"></div>
                       <div class="flex-1">
-                        <div class="font-semibold text-gray-900 dark:text-white">{{ fr.transaction_no || fr.job_no }}</div>
-                        <div class="text-sm text-gray-500 dark:text-gray-400">Flock: {{ fr.flock_name }}</div>
-                        <div class="text-xs text-gray-400 dark:text-gray-500">Total: {{ fr.firm_total_qty }}</div>
+                        <div class="font-semibold text-gray-900 dark:text-white">
+                          <span class="text-blue-600 dark:text-blue-400">
+                            Rcv-{{ String(fr.id).padStart(6, '0') }}-{{ fr.company_short_name }}-{{ fr.project_name }}-{{ fr.flock_code || props.flocks.find(f => f.id === fr.flock_id)?.code || fr.flock_name }}
+                          </span>
+                        </div>
+                        <div class="text-xs text-gray-400 dark:text-gray-500">
+                          <span class="font-medium">Total Qty:</span> {{ fr.firm_total_qty }} Boxes
+                        </div>
                       </div>
                       <CheckCircle2 v-if="selectTransactionid == fr.id" class="h-4 w-4 text-blue-500 flex-shrink-0" />
                     </button>
@@ -367,7 +387,7 @@ function submit() {
               >
                 <span class="flex items-center gap-2">
                   <div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
-                  {{ selectedFlock ? selectedFlock.name : (selectedFirmReceive ? selectedFirmReceive.flock_name : 'Select Firm Receive First') }}
+                  {{ selectedFlock ? selectedFlock.code : (selectedFirmReceive ? selectedFirmReceive.flock_name : 'Select Firm Receive First') }}
                 </span>
                 <ChevronDown class="h-3 w-3 text-gray-400" />
               </button>
@@ -480,9 +500,9 @@ function submit() {
               Firm Receive Details
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Flock No:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.flock_name }}</div></div>
-              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Company:</span><div class="text-gray-900 dark:text-gray-100">{{ props.companies.find(c => c.id === form.receiving_company_id)?.name }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Farm Receive Code:</span><div class="text-blue-600 dark:text-blue-400 font-semibold">Rcv-{{ String(selectedFirmReceive?.id || 0).padStart(6, '0') }}-{{ selectedFirmReceive?.company_short_name }}-{{ selectedFirmReceive?.project_name }}-{{ selectedFirmReceive?.flock_code || props.flocks.find(f => f.id === selectedFirmReceive?.flock_id)?.code || selectedFirmReceive?.flock_name }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Flock:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFlock?.code || selectedFirmReceive?.flock_code || selectedFirmReceive?.flock_name }}</div></div>
+              <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Company:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.company_name || props.companies.find(c => c.id === form.receiving_company_id)?.name }}</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Box Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.firm_female_qty }}</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Box Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedFirmReceive?.firm_male_qty }}</div></div>
               <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Box Qty:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ selectedFirmReceive?.firm_total_qty }}</div></div>

@@ -119,7 +119,7 @@ class PsFirmReceiveController extends Controller
 
 
 
-        $flocks = Flock::select('id', 'name', 'status')->get();
+        $flocks = Flock::select('id', 'code', 'name', 'status')->get();
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
         $projects = Project::select('id', 'name', 'company_id')->get();    
@@ -300,7 +300,7 @@ class PsFirmReceiveController extends Controller
                 ];
             });
 
-        $flocks = Flock::select('id', 'name', 'status')->get();
+        $flocks = Flock::select('id', 'code', 'name', 'status')->get();
         $companies = Company::select('id', 'name')->get();
 
         return Inertia::render('ps/ps-firm-receive/Edit', [
