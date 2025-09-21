@@ -22,6 +22,13 @@ class EggClassificationController extends Controller
      */
     public function index(Request $request)
     {
+        
+        
+       
+         
+        
+        
+        
         $query = EggClassification::with([
             'batchAssign.shed',
             'batchAssign.batch',
@@ -223,32 +230,26 @@ class EggClassificationController extends Controller
     }
 
     public function getTotalEggs(Request $request)
-    {
-        // Validate request
-        $validated = $request->validate([
-            'batchassign_id' => 'required|integer|exists:batch_assigns,id',
-            'operation_date' => 'required|date',
-        ]);
+{
+    $validated = $request->validate([
+        'batchassign_id' => 'required|integer|exists:batch_assigns,id',
+        'operation_date' => 'required|date',
+    ]);
 
-        // Fetch the DailyOperation ID for the given batch and date
-        $dailyOperation = DailyOperation::where('batchassign_id', $validated['batchassign_id'])
-            ->where('operation_date', $validated['operation_date'])
-            ->first();
 
-        // If no daily operation exists, return 0
-        if (!$dailyOperation) {
-            return response()->json(['total_egg' => 0]);
-        }
+    
+    $dailyOperation = DailyOperation::where('batchassign_id', $validated['batchassign_id'])
+        ->where('operation_date', $validated['operation_date'])
+        ->first();
 
-        // Fetch the DailyEggCollection for that operation
-        $dailyEgg = DailyEggCollection::where('daily_operation_id', $dailyOperation->id)
-            ->first();
+    $dailyEgg = $dailyOperation
+        ? DailyEggCollection::where('daily_operation_id', $dailyOperation->id)->first()
+        : null;
 
-        // Return quantity or 0 if record not found
-        $totalEggs = $dailyEgg ? $dailyEgg->quantity : 0;
-
-        return response()->json(['total_egg' => $totalEggs]);
-    }
+    return response()->json([
+        'total_egg' => $dailyEgg->quantity ?? 0
+    ]);
+}
 
     /**
      * Get batch data for egg classification statistics
