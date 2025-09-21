@@ -1,8 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Ps;
 
-use App\Models\OrderPlan;
+
+use App\Http\Controllers\Controller;
+
+use App\Models\Ps\OrderPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -34,7 +37,7 @@ class OrderPlanningController extends Controller
     {
         
         
-        dd($request->all());
+        
         
         
         $data = $request->validate([
