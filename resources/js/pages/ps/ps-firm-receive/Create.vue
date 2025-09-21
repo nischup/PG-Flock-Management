@@ -107,8 +107,8 @@ const filteredPsReceives = computed(() => {
 const filteredFlocks = computed(() => {
     if (!flockSearchQuery.value) return props.flocks
     return props.flocks.filter(flock => 
-        flock.name.toString().includes(flockSearchQuery.value) ||
-        `Flock No: ${flock.name}`.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+        flock.code.toString().includes(flockSearchQuery.value) ||
+        `Flock No: ${flock.code}`.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
         (flock.status == 1 ? 'Active' : 'Inactive').toLowerCase().includes(flockSearchQuery.value.toLowerCase())
     )
 })
@@ -266,35 +266,35 @@ const showFlockModal = ref(false)
 const flockFormError = ref('')
 
 const flockForm = useForm({
-  name: '',
+  code: '',
   parent_flock_id: null
 })
 
-// Basic validation for flock name (frontend only)
-const validateFlockName = (name) => {
+// Basic validation for flock code (frontend only)
+const validateFlockCode = (code) => {
   // Check if it's a valid integer
-  if (name && !/^\d+$/.test(name)) {
+  if (code && !/^\d+$/.test(code)) {
     return 'Flock No must be a valid integer'
   }
   
   // Check if it's at least 1
-  if (name && parseInt(name) < 1) {
+  if (code && parseInt(code) < 1) {
     return 'Flock No must be at least 1'
   }
   
   return null
 }
 
-// Real-time validation for flock name
-const flockNameError = computed(() => {
-  if (!flockForm.name) return ''
-  return validateFlockName(flockForm.name)
+// Real-time validation for flock code
+const flockCodeError = computed(() => {
+  if (!flockForm.code) return ''
+  return validateFlockCode(flockForm.code)
 })
 
 // Watch for form errors and update display error
 watch(() => flockForm.errors, (errors) => {
-  if (errors.name) {
-    flockFormError.value = errors.name
+  if (errors.code) {
+    flockFormError.value = errors.code
   } else if (errors.parent_flock_id) {
     flockFormError.value = errors.parent_flock_id
   }
@@ -350,9 +350,9 @@ function addNewFlock() {
       console.log('Form errors:', flockForm.errors); // Debug form errors
       
       // Get error message from form errors (Inertia handles this automatically)
-      if (flockForm.errors && flockForm.errors.name) {
-        const nameError = flockForm.errors.name;
-        flockFormError.value = Array.isArray(nameError) ? nameError[0] : nameError;
+      if (flockForm.errors && flockForm.errors.code) {
+        const codeError = flockForm.errors.code;
+        flockFormError.value = Array.isArray(codeError) ? codeError[0] : codeError;
       } else if (flockForm.errors && flockForm.errors.parent_flock_id) {
         const parentError = flockForm.errors.parent_flock_id;
         flockFormError.value = Array.isArray(parentError) ? parentError[0] : parentError;
@@ -512,7 +512,7 @@ function addNewFlock() {
                 >
                   <span class="flex items-center gap-3">
                     <div class="h-2 w-2 rounded-full bg-emerald-500"></div>
-                    {{ selectedFlock ? `Flock No: ${selectedFlock.name}` : 'Select Flock' }}
+                    {{ selectedFlock ? `Flock No: ${selectedFlock.code}` : 'Select Flock' }}
                   </span>
                   <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFlockDropdownList }" />
                 </button>
@@ -559,7 +559,7 @@ function addNewFlock() {
                       >
                         <div class="h-3 w-3 rounded-full bg-emerald-500 flex-shrink-0"></div>
                         <div class="flex-1">
-                          <div class="font-semibold text-gray-900 dark:text-white">Flock No: {{ flock.name }}</div>
+                          <div class="font-semibold text-gray-900 dark:text-white">Flock No: {{ flock.code }}</div>
                           <div class="text-sm text-gray-500 dark:text-gray-400">
                             <span 
                               class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
@@ -1055,12 +1055,12 @@ function addNewFlock() {
               Flock No
             </Label>
             <Input 
-              v-model="flockForm.name" 
+              v-model="flockForm.code" 
               type="number"
               placeholder="Enter flock no..." 
               class="rounded-xl border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700" 
             />
-            <InputError :message="flockNameError || flockFormError || (flockForm.errors.name ? (Array.isArray(flockForm.errors.name) ? flockForm.errors.name[0] : flockForm.errors.name) : '')" />
+            <InputError :message="flockCodeError || flockFormError || (flockForm.errors.code ? (Array.isArray(flockForm.errors.code) ? flockForm.errors.code[0] : flockForm.errors.code) : '')" />
           </div>
           
           <div class="space-y-2">
@@ -1073,7 +1073,7 @@ function addNewFlock() {
               class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="">Select Parent Flock</option>
-              <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">{{ flock.name }}</option>
+              <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">{{ flock.code }}</option>
             </select>
           </div>
         </div>
@@ -1092,7 +1092,7 @@ function addNewFlock() {
           <Button 
             type="button"
             @click="addNewFlock" 
-            :disabled="flockForm.processing || !flockForm.name || flockNameError"
+            :disabled="flockForm.processing || !flockForm.code || flockCodeError"
             class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-2 font-semibold text-white shadow-lg transition-all duration-300 hover:from-emerald-700 hover:to-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
           >
             <span class="relative z-10 flex items-center gap-2">
