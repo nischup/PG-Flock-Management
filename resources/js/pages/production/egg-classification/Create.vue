@@ -11,6 +11,7 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import { type BreadcrumbItem } from '@/types'
 import { useNotifier } from "@/composables/useNotifier"
 import { useDropdownOptions } from '@/composables/dropdownOptions'
+import dayjs from 'dayjs';
 import {
   ChevronLeft,
   ChevronRight,
@@ -229,21 +230,22 @@ watch(
     }
 
     try {
-      // Call Laravel route with batch ID and operation date
+      // Format as YYYY-MM-DD to match DB
+      const formattedDate = dayjs(operationDate).format('YYYY-MM-DD');
+
       const response = await fetch(
-        `/production/egg-classification/total-eggs?batchassign_id=${batchId}&operation_date=${operationDate}`
+        `/production/egg-classification/total-eggs?batchassign_id=${batchId}&operation_date=${formattedDate}`
       );
 
       const data = await response.json();
 
-      // Update reactive form value
       form.total_egg = data.total_egg ?? 0;
     } catch (error) {
       console.error('Error fetching total eggs:', error);
       form.total_egg = 0;
     }
   },
-  { immediate: true } // run immediately if operation_date is already set
+  { immediate: true }
 );
 // Totals
 const rejected_total = computed(() => {
