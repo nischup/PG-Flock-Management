@@ -234,7 +234,8 @@ watch(
       const formattedDate = dayjs(operationDate).format('YYYY-MM-DD');
 
       const response = await fetch(
-        `/production/egg-classification/total-eggs?batchassign_id=${batchId}&operation_date=${formattedDate}`
+        `/production/egg-classification/total-eggs/${batchId}/${formattedDate}`,
+        { credentials: 'same-origin' } // ensures Laravel session is included
       );
 
       const data = await response.json();

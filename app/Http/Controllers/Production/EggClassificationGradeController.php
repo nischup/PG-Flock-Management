@@ -6,12 +6,34 @@ use App\Http\Controllers\Controller;
 use App\Models\EggGrade;
 use App\Models\Production\EggClassification;
 use App\Models\Production\EggClassificationGrade;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class EggClassificationGradeController extends Controller
 {
     public function index()
     {
+        
+        
+        $grades = EggClassificationGrade::with([
+            'grade',                           // Egg grade info
+            'classification.batchAssign',
+            'classification.batchAssign.batch'       // Classification + Batch info
+        ])->latest()->get();
+        
+        return inertia('production/egg-classification/GradeList', [
+            'grades' => $grades, 
+        ]);
+        
+        
+        
+        
+        
+        
+
+    }
+
+    public function create() {
         // First try to get existing egg classifications
         $classifications = EggClassification::with('batchAssign.batch:id,name')
             ->select('id', 'batchassign_id', 'classification_date', 'total_eggs', 'commercial_eggs', 'hatching_eggs')
@@ -58,38 +80,39 @@ class EggClassificationGradeController extends Controller
             'grades' => $grades,
         ]);
 
-    }
 
-    public function create() {}
+
+
+    }
 
     public function store(Request $request)
     {
-        // Check if this is a batch assign (not an existing classification)
-        $batchAssign = \App\Models\Shed\BatchAssign::find($request->classification_id);
+        // // Check if this is a batch assign (not an existing classification)
+        // $batchAssign = \App\Models\Shed\BatchAssign::find($request->classification_id);
         
-        if ($batchAssign) {
-            // Create a new egg classification first
-            $classification = EggClassification::create([
-                'batchassign_id' => $request->classification_id,
-                'classification_date' => now()->format('Y-m-d'),
-                'total_eggs' => array_sum(array_column($request->grades, 'quantity')),
-                'hatching_eggs' => 0, // Will be calculated based on type
-                'commercial_eggs' => 0, // Will be calculated based on type
-                'rejected_eggs' => 0,
-                'technical_eggs' => 0,
-                'created_by' => auth()->id(),
-            ]);
+        // if ($batchAssign) {
+        //     // Create a new egg classification first
+        //     $classification = EggClassification::create([
+        //         'batchassign_id' => $request->classification_id,
+        //         'classification_date' => now()->format('Y-m-d'),
+        //         'total_eggs' => array_sum(array_column($request->grades, 'quantity')),
+        //         'hatching_eggs' => 0, // Will be calculated based on type
+        //         'commercial_eggs' => 0, // Will be calculated based on type
+        //         'rejected_eggs' => 0,
+        //         'technical_eggs' => 0,
+        //         'created_by' => Auth::id(),
+        //     ]);
             
-            $classificationId = $classification->id;
-        } else {
-            $classificationId = $request->classification_id;
-        }
+        //     $classificationId = $classification->id;
+        // } else {
+        //     $classificationId = $request->classification_id;
+        // }
 
         // Save the grades
         foreach ($request->grades as $grade) {
             EggClassificationGrade::updateOrCreate(
                 [
-                    'classification_id' => $classificationId,
+                    'classification_id' => $request->classification_id,
                     'egg_grade_id' => $grade['egg_grade_id'],
                 ],
                 [
@@ -159,4 +182,123 @@ class EggClassificationGradeController extends Controller
             ]
         ]);
     }
+
+    
+    public function edit($classificationId)
+{
+    // Load the specific classification with batch info
+    $classification = EggClassification::with('batchAssign.batch', 'batchAssign.flock', 'batchAssign.shed')
+        ->findOrFail($classificationId);
+
+    // Load all grades of this classification
+    $grades = EggClassificationGrade::with('grade')
+        ->where('classification_id', $classificationId)
+        ->get()
+        ->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'egg_grade_id' => $item->egg_grade_id,
+                'name' => $item->grade->name ?? null,
+                'type' => $item->grade->type ?? null,
+                'min_weight' => $item->grade->min_weight ?? null,
+                'max_weight' => $item->grade->max_weight ?? null,
+                'quantity' => $item->quantity,
+            ];
+        });
+
+    // Fetch all classifications for dropdown (same as create page)
+    $classifications = EggClassification::with('batchAssign.batch:id,name')
+        ->select('id', 'batchassign_id', 'classification_date', 'total_eggs', 'commercial_eggs', 'hatching_eggs')
+        ->orderBy('classification_date', 'desc')
+        ->get()
+        ->map(function ($c) {
+            return [
+                'id' => $c->id,
+                'classification_date' => $c->classification_date,
+                'total_eggs' => $c->total_eggs,
+                'commercial_egg' => $c->commercial_eggs,
+                'hatching_egg' => $c->hatching_eggs,
+                'transaction_no' => $c->batchAssign->transaction_no ?? null,
+                'batch_name' => $c->batchAssign->batch->name ?? null,
+            ];
+        });
+
+    // If no classifications exist, show batch assignments for creating new
+    if ($classifications->isEmpty()) {
+        $classifications = \App\Models\Shed\BatchAssign::with(['batch:id,name', 'flock:id,name', 'shed:id,name'])
+            ->select('id', 'transaction_no', 'batch_no', 'flock_id', 'shed_id', 'batch_total_qty')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($ba) {
+                return [
+                    'id' => $ba->id,
+                    'classification_date' => now()->format('Y-m-d'),
+                    'total_eggs' => 0,
+                    'commercial_egg' => 0,
+                    'hatching_egg' => 0,
+                    'transaction_no' => $ba->transaction_no ?? 'N/A',
+                    'batch_name' => $ba->batch->name ?? 'N/A',
+                    'flock_name' => $ba->flock->name ?? 'N/A',
+                    'shed_name' => $ba->shed->name ?? 'N/A',
+                    'is_batch_assign' => true,
+                ];
+            });
+    }
+
+    // Load all grades (for filtering by type)
+    $allGrades = EggGrade::select('id', 'name', 'type', 'min_weight', 'max_weight')->get();
+
+    return inertia('production/egg-classification/EditGrade', [
+        'classification' => [
+            'id' => $classification->id,
+            'classification_date' => $classification->classification_date,
+            'total_eggs' => $classification->total_eggs,
+            'commercial_egg' => $classification->commercial_eggs,
+            'hatching_egg' => $classification->hatching_eggs,
+            'transaction_no' => $classification->batchAssign->transaction_no ?? null,
+            'batch_name' => $classification->batchAssign->batch->name ?? null,
+            'flock_name' => $classification->batchAssign->flock->name ?? null,
+            'shed_name' => $classification->batchAssign->shed->name ?? null,
+            'batchassign_id' => $classification->batchassign_id,
+        ],
+        'grades' => $grades,
+        'classifications' => $classifications,
+        'allGrades' => $allGrades,
+    ]);
+}
+
+    // Update function
+    public function update(Request $request, $classificationId)
+    {
+        $classification = EggClassification::findOrFail($classificationId);
+
+        // Update all grades quantities
+        foreach ($request->grades as $grade) {
+            EggClassificationGrade::updateOrCreate(
+                [
+                    'classification_id' => $classificationId,
+                    'egg_grade_id' => $grade['egg_grade_id'],
+                ],
+                [
+                    'quantity' => $grade['quantity'],
+                ]
+            );
+        }
+
+        return redirect()->route('egg-classification-grades.index')
+            ->with('success', 'Egg grades updated successfully.');
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

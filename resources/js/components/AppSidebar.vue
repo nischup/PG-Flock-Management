@@ -8,7 +8,7 @@ import { BabyChick } from '@/icons/BabyChick';
 import { BabyChickMultiple } from '@/icons/BabyChickMultiple';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { Building, Building2, Pipette, ClockArrowUp ,Egg, EggOff, LayoutGrid, Package, PencilRuler, Pill, Skull, Syringe, User, Users, FileText,Settings, CheckCircle, Layers  } from 'lucide-vue-next';
+import { Building, Building2, Pipette,TestTubes,EggFried, ClockArrowUp ,Egg, EggOff, LayoutGrid, Package, PencilRuler, Pill, Skull, Syringe, User, Users, FileText,Settings, CheckCircle, Layers  } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage();
@@ -37,12 +37,7 @@ const mainNavItems: NavItem[] = [
                 icon: BabyChick,
                 iconClass: 'text-yellow-500',
             },
-            {
-                title: 'PS Lab Test',
-                href: '/ps-lab-test',
-                icon: BabyChick,
-                iconClass: 'text-yellow-500',
-            },
+            
             {
                 title: 'PS Farm Receive',
                 href: '/ps-firm-receive',
@@ -74,12 +69,7 @@ const mainNavItems: NavItem[] = [
                 icon: Settings ,
                 iconClass: 'text-yellow-500',
             },
-            {
-                title: 'Lab Send',
-                href: '/firm-lab-tests',
-                icon: Pipette ,
-                iconClass: 'text-yellow-500',
-            },
+            
         ],
     },
     {
@@ -136,6 +126,13 @@ const mainNavItems: NavItem[] = [
                 icon: BabyChick,
                 iconClass: 'text-yellow-500',
             },
+        ],
+    },
+    {
+        title: 'Egg',
+        icon: EggFried,
+        iconClass: 'text-yellow-500',
+        children: [
             {
                 title: 'Egg Classification',
                 href: '/production/egg-classification',
@@ -146,6 +143,25 @@ const mainNavItems: NavItem[] = [
                 title: 'Egg Grade',
                 href: '/egg-classification-grades',
                 icon: EggOff,
+                iconClass: 'text-yellow-500',
+            },
+        ],
+    },
+    {
+        title: 'Lab Test',
+        icon: TestTubes,
+        iconClass: 'text-yellow-500',
+        children: [
+            {
+                title: 'PS Lab Test',
+                href: '/ps-lab-test',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+            },
+            {
+                title: 'Firm Lab Transfer',
+                href: '/firm-lab-tests',
+                icon: Pipette ,
                 iconClass: 'text-yellow-500',
             },
         ],

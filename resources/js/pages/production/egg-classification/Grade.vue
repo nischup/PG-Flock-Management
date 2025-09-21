@@ -157,7 +157,7 @@ function submit() {
             v-model="selectedClassification"
                   class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 dark:text-white text-sm"
           >
-                  <option value="" disabled>Choose a batch to grade</option>
+                  <option value=null disabled>Choose a batch to grade</option>
             <option
               v-for="c in props.classifications"
               :key="c.id"
@@ -182,7 +182,7 @@ function submit() {
             v-model="selectedType"
                   class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 dark:text-white text-sm"
           >
-            <option value="" disabled>Select egg category</option>
+            <option value=null disabled>Select egg category</option>
                   <option value="commercial" class="py-2">Commercial Eggs</option>
                   <option value="hatching" class="py-2">Hatching Eggs</option>
           </select>

@@ -58,6 +58,8 @@ const props = defineProps<{
   };
 }>();
 
+
+
 const { confirmDelete, showInfo } = useNotifier();
 const { can } = usePermissions();
 
@@ -401,8 +403,8 @@ function getStatusColor(item: any) {
              <td class="px-6 py-4">
                 <div class="flex flex-col">
                   <div class="text-sm font-medium text-gray-900">{{ formatDate(item.classification_date) }}</div>
-                  <div class="text-xs text-gray-500">{{ item.batchAssign?.transaction_no || 'N/A' }}</div>
-                  <div class="text-xs text-gray-400">{{ item.batchAssign?.shed?.name || 'No Shed' }}</div>
+                  <div class="text-xs text-gray-500">{{ item.batch_assign?.transaction_no || 'N/A' }}</div>
+                  <div class="text-xs text-gray-400">{{ item.batch_assign?.batch?.name || 'No Shed' }}</div>
                 </div>
               </td>
 

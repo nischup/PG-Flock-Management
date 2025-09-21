@@ -100,7 +100,9 @@ Route::get('/details/{flockId}/{tabKey}', [DailyOperationController::class, 'sho
 
 Route::resource('production/egg-classification', EggClassificationController::class);
 
-Route::get('/production/egg-classification/total-eggs', [EggClassificationController::class, 'getTotalEggs'])
+
+
+Route::get('production/egg-classification/total-eggs/{batchassign_id}/{operation_date}', [EggClassificationController::class, 'getTotalEggs'])
     ->name('egg-classification.total-eggs');
 
 Route::get('production/egg-classification/batch/{batchId}/data', [EggClassificationController::class, 'getBatchData'])
