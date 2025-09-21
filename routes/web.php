@@ -4,6 +4,9 @@ use App\Http\Controllers\Api\DashboardRealtimeController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DailyOperation\DailyOperationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FirmLabTestController;
+use App\Http\Controllers\Master\ApprovalMatrixConfigController;
+use App\Http\Controllers\Master\ApprovalMatrixLayerController;
 use App\Http\Controllers\Master\BreedTypeController;
 use App\Http\Controllers\Master\ChickTypeController;
 use App\Http\Controllers\Master\CompanyController;
@@ -22,6 +25,7 @@ use App\Http\Controllers\Production\EggClassificationController;
 use App\Http\Controllers\Production\EggClassificationGradeController;
 use App\Http\Controllers\Production\ProductionFirmReceiveController;
 use App\Http\Controllers\Production\ProductionShedReceiveController;
+use App\Http\Controllers\Ps\OrderPlanningController;
 use App\Http\Controllers\Ps\PsFirmReceiveController;
 use App\Http\Controllers\Ps\PsLabTestController;
 use App\Http\Controllers\Ps\PsReceiveController;
@@ -32,8 +36,6 @@ use App\Http\Controllers\Transfer\BirdTransferController;
 use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\WeatherController;
-use App\Http\Controllers\FirmLabTestController;
-use App\Http\Controllers\Ps\OrderPlanningController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -45,8 +47,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';
 
 Route::resource('chick-type', ChickTypeController::class);
 Route::resource('feed', FeedController::class);
@@ -61,6 +63,8 @@ Route::resource('disease', DiseaseController::class);
 Route::resource('supplier', SupplierController::class);
 Route::resource('breed-type', BreedTypeController::class);
 Route::resource('project', ProjectController::class);
+Route::resource('approval-matrix-config', ApprovalMatrixConfigController::class);
+Route::resource('approval-matrix-layer', ApprovalMatrixLayerController::class);
 
 Route::post('/labtest/getdata', [PsLabTestController::class, 'getData'])->name('labtest.getdata');
 Route::resource('ps-lab-test', PsLabTestController::class);
@@ -147,6 +151,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('production-farm-receive/excel', [ProductionFirmReceiveController::class, 'exportExcel'])->name('production-farm-receive.excel');
     Route::get('batch-assign/pdf', [BatchAssignController::class, 'exportPdf'])->name('batch-assign.pdf');
     Route::get('batch-assign/excel', [BatchAssignController::class, 'exportExcel'])->name('batch-assign.excel');
+    Route::get('approval-matrix-config/pdf', [ApprovalMatrixConfigController::class, 'downloadPdf'])->name('approval-matrix-config.pdf');
+    Route::get('approval-matrix-config/excel', [ApprovalMatrixConfigController::class, 'downloadExcel'])->name('approval-matrix-config.excel');
 });
 Route::get('/bird-transfer-row/{id}/pdf', [BirdTransferController::class, 'downloadRowPdf'])
     ->name('bird-transfer-row.pdf');

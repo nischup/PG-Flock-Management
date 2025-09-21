@@ -40,7 +40,8 @@ class DatabaseSeeder extends Seeder
             VaccineTypeSeeder::class,
             VaccineSeeder::class,
             EggTypesSeeder::class,
-            EggGradeSeeder::class
+            EggGradeSeeder::class,
+            ApprovalMatrixSeeder::class
         ]);
 
         // Create user only if it doesn't exist
