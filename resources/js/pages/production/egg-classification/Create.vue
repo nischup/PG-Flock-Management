@@ -219,31 +219,32 @@ watch(() => form.batchassign_id, async (id) => {
 })
 
 watch(
-  () => [form.batchassign_id, form.operation_date],
-  async ([batchId, operationDate]) => {
+  () => form.operation_date,
+  async (operationDate) => {
+    const batchId = form.batchassign_id;
+
     if (!batchId || !operationDate) {
-      form.total_egg = 0
-      return
+      form.total_egg = 0;
+      return;
     }
 
     try {
-      // Use Inertia GET for AJAX-like behavior
-      const page = await form.get(route('egg-classification.total-eggs'), {
-        preserveState: true,
-        preserveScroll: true,
-        only: ['total_egg'], // only return the total_egg prop
-      })
+      // Call Laravel route with batch ID and operation date
+      const response = await fetch(
+        `/production/egg-classification/total-eggs?batchassign_id=${batchId}&operation_date=${operationDate}`
+      );
 
+      const data = await response.json();
 
-     
       // Update reactive form value
-      form.total_egg = 6000
+      form.total_egg = data.total_egg ?? 0;
     } catch (error) {
-      form.total_egg = 0
+      console.error('Error fetching total eggs:', error);
+      form.total_egg = 0;
     }
   },
-  { immediate: true }
-)
+  { immediate: true } // run immediately if operation_date is already set
+);
 // Totals
 const rejected_total = computed(() => {
   const rejectedTabs = ['double_yolk', 'double_yolk_broken', 'commercial', 'commercial_broken', 'liquid', 'damage']
