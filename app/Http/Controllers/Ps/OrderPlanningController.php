@@ -37,7 +37,7 @@ class OrderPlanningController extends Controller
     {
         
         
-        dd($request->all());
+        
         
         
         $data = $request->validate([
