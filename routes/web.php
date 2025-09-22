@@ -47,8 +47,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
 
 Route::resource('chick-type', ChickTypeController::class);
 Route::resource('feed', FeedController::class);
@@ -181,6 +181,10 @@ Route::get('egg-classification-grades/batch/{batchId}/egg-data', [EggClassificat
     ->name('egg-classification-grades.batch.egg-data');
 Route::get('/batch-assign/{id}/pdf', [BatchAssignController::class, 'downloadRowPdf'])
     ->name('batch-assign.row-pdf');
+
+//transfer & receive//
+Route::get('transfer-receive-report/{id}/pdf', [TransferReceiveReportController::class, 'generateReportPdf'])
+    ->name('transfer-receive-report.pdf');
 
 Route::get('production-farm-receive/receive/{id}/pdf', [ProductionFirmReceiveController::class, 'downloadProductionReceivePdf'])
     ->name('production-farm-receive.receive-pdf');

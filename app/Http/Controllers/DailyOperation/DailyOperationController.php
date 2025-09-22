@@ -112,7 +112,7 @@ class DailyOperationController extends Controller
         $sheds = \App\Models\Master\Shed::select('id', 'name')->orderBy('name')->get();
         $companies = \App\Models\Master\Company::select('id', 'name')->orderBy('name')->get();
 
-        return Inertia::render('dailyoperation/List', [
+        return inertia('dailyoperation/List', [
             'dailyOperations' => $dailyOperations->through(function ($item) {
                 // Calculate totals from related data
                 $totalMortality = $item->mortalities->sum('female_qty') + $item->mortalities->sum('male_qty');
@@ -206,37 +206,7 @@ class DailyOperationController extends Controller
                 ];
             });
 
-        // You can pass dummy tab counts or fetch from DB if needed
-        $tabCounts = [
-            1 => [
-                'daily_mortality' => 10,
-                'feed_consumption' => '200 Kg',
-                'water_consumption' => '500 L',
-                'culling' => 5,
-                'egg_collection' => 10000,
-            ],
-            2 => [
-                'daily_mortality' => 10,
-                'feed_consumption' => '200 Kg',
-                'water_consumption' => '500 L',
-                'culling' => 5,
-                'egg_collection' => 10000,
-            ],
-            3 => [
-                'daily_mortality' => 10,
-                'feed_consumption' => '200 Kg',
-                'water_consumption' => '500 L',
-                'culling' => 5,
-                'egg_collection' => 10000,
-            ],
-        ];
-
-        $waters = [
-            ['id' => 1, 'name' => 'Normal Water'],
-            ['id' => 2, 'name' => 'Mineral Water'],
-            ['id' => 3, 'name' => 'Vitamin Mixed Water'],
-        ];
-
+       
         // Get today's vaccine schedules
         $today = now()->format('Y-m-d');
         $todayVaccineSchedules = VaccineScheduleDetail::with([
@@ -272,12 +242,10 @@ class DailyOperationController extends Controller
         return Inertia::render('dailyoperation/Create', [
             'stage' => $stage,   // ✅ Pass stage here
             'flocks' => $flocks,
-            'tabCounts' => $tabCounts,
             'feeds' => Feed::all(),
             'units' => Unit::all(),
             'medicines' => Medicine::all(),
             'vaccines' => Vaccine::all(),
-            'waters' => $waters,
             'todayVaccineSchedules' => $todayVaccineSchedules,
         ]);
     }
