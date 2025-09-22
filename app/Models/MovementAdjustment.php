@@ -15,7 +15,9 @@ class MovementAdjustment extends Model
         'male_qty',    // Number of male birds affected
         'female_qty',  // Number of female birds affected
         'total_qty',   // Total number of birds affected
-        'date',        // Date of the adjustment
+        'date',  
+        'job_no',
+        'transaction_no',     // Date of the adjustment
         'remarks',     // Optional notes
     ];
 }

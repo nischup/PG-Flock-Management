@@ -137,12 +137,17 @@ class ProductionFirmReceiveController extends Controller
 
 
         $insertId = $firmReceive->id;
+        $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
 
+        // Save the job_no back to the record
+        $firmReceive->update(['transaction_no' => $transactionNo]);
 
         if ($request->total_shortage > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flockInfo->id,
-                'flock_no' =>    $flockInfo->name, // fetch from batch or pass from request
+                'flock_no' =>    $flockInfo->name,
+                'job_no' => $psReceive->job_no,
+                'transaction_no' => $transactionNo,
                 'stage'      =>  1,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $insertId,
                 'type'       =>  3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -157,7 +162,9 @@ class ProductionFirmReceiveController extends Controller
         if ($request->total_excess > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flockInfo->id,
-                'flock_no'   =>  $flockInfo->name, // fetch from batch or pass from request
+                'flock_no'   =>  $flockInfo->name, 
+                'job_no' => $psReceive->job_no,
+                'transaction_no' => $transactionNo,// fetch from batch or pass from request
                 'stage'      =>  1,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $insertId,
                 'type'       =>  2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -172,7 +179,9 @@ class ProductionFirmReceiveController extends Controller
         if ($request->total_mortality > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flockInfo->id,
-                'flock_no' =>    $flockInfo->name, // fetch from batch or pass from request
+                'flock_no' =>    $flockInfo->name,
+                'job_no' => $psReceive->job_no,
+                'transaction_no' => $transactionNo, // fetch from batch or pass from request
                 'stage'      =>  1,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $insertId,
                 'type'       =>  1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -189,10 +198,7 @@ class ProductionFirmReceiveController extends Controller
 
 
 
-        $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
-
-        // Save the job_no back to the record
-        $firmReceive->update(['transaction_no' => $transactionNo]);
+        
 
         return redirect()->route('production-farm-receive.index')->with('success', 'Bird Receive successfully.');
     }

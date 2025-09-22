@@ -176,9 +176,8 @@ class DailyOperationController extends Controller
             ->map(function ($batch) {
                 // Calculate current birds (total - mortality)
                 $totalBirds = $batch->batch_total_qty;
-                $totalMortality = $batch->batch_total_mortality;
-                $currentBirds = $totalBirds - $totalMortality;
-                
+                $batchMortality = $batch->batch_total_mortality;
+                $currentBirds = 0;
                 // Calculate age from shed receive date
                 $startDate = $batch->shedReceive?->created_at ?? $batch->created_at;
                 $age = $startDate ? $startDate->diffInDays(now()) : 0;
@@ -197,6 +196,7 @@ class DailyOperationController extends Controller
                     // Statistics data
                     'total_birds' => $totalBirds,
                     'current_birds' => $currentBirds,
+                    'batch_mortality'=>$batchMortality,
                     'age' => $ageString,
                     'start_date' => $startDate?->format('Y-m-d'),
                     'batch_female_qty' => $batch->batch_female_qty,
