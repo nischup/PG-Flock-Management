@@ -71,7 +71,7 @@ class ProductionShedReceiveController extends Controller
             });
 
         // Fetch all flocks
-        $flocks = Flock::select('id', 'code', 'name')->get();
+        $flocks = Flock::select('id', 'code', 'name')->orderBy('id', 'desc')->get();
 
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
