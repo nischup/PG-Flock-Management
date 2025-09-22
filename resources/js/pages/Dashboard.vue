@@ -1285,7 +1285,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         </div>
 
         <!-- Recent Operations -->
-        <div v-if="modalData.birdsData.recent_operations.length > 0" class="bg-white rounded-lg border border-gray-200">
+        <div v-if="modalData.birdsData?.recent_operations?.length > 0" class="bg-white rounded-lg border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800">Recent Operations</h3>
             <p class="text-sm text-gray-600">Latest operations across all batches</p>
@@ -1486,7 +1486,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         </div>
 
         <!-- Recent Mortality Operations -->
-        <div v-if="modalData.mortalityData.recent_operations.length > 0" class="bg-white rounded-lg border border-gray-200">
+        <div v-if="modalData.mortalityData?.recent_operations?.length > 0" class="bg-white rounded-lg border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800">Recent Mortality Operations</h3>
             <p class="text-sm text-gray-600">Latest mortality-related operations and incidents</p>
@@ -1712,7 +1712,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         </div>
 
         <!-- Recent Egg Classifications -->
-        <div v-if="modalData.eggsData.recent_classifications.length > 0" class="bg-white rounded-lg border border-gray-200">
+        <div v-if="modalData.eggsData?.recent_classifications?.length > 0" class="bg-white rounded-lg border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800">Recent Egg Classifications</h3>
             <p class="text-sm text-gray-600">Latest egg classification records</p>
@@ -1942,7 +1942,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         </div>
 
         <!-- Recent Hatching Classifications -->
-        <div v-if="modalData.hatchableEggsData.recent_classifications.length > 0" class="bg-white rounded-lg border border-gray-200">
+        <div v-if="modalData.hatchableEggsData?.recent_classifications?.length > 0" class="bg-white rounded-lg border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800">Recent Hatching Egg Classifications</h3>
             <p class="text-sm text-gray-600">Latest hatchable egg classification records</p>
@@ -2188,7 +2188,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         </div>
 
         <!-- Recent Operations -->
-        <div v-if="modalData.maleBirdsData.recent_operations.length > 0" class="bg-white rounded-lg border border-gray-200">
+        <div v-if="modalData.maleBirdsData?.recent_operations?.length > 0" class="bg-white rounded-lg border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800">Recent Operations</h3>
             <p class="text-sm text-gray-600">Latest operations related to male birds</p>
@@ -2417,7 +2417,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         </div>
 
         <!-- Recent Operations -->
-        <div v-if="modalData.femaleBirdsData.recent_operations.length > 0" class="bg-white rounded-lg border border-gray-200">
+        <div v-if="modalData.femaleBirdsData?.recent_operations?.length > 0" class="bg-white rounded-lg border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800">Recent Operations</h3>
             <p class="text-sm text-gray-600">Latest operations related to female birds</p>

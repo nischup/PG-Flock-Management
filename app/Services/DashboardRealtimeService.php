@@ -1572,7 +1572,7 @@ class DashboardRealtimeService
                 'flock_details' => $flockEggDetails,
                 'batch_details' => $batchEggDetails,
                 'production_trends' => $productionTrends,
-                'recent_collections' => $recentEggCollections,
+                'recent_classifications' => $recentEggCollections,
                 'timestamp' => time()
             ];
 
