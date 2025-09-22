@@ -35,7 +35,8 @@ const props = defineProps<{
   progressBars: any[],
   circleBars: any[],
   birdStage: any,
-  filters: Record<string,string>
+  filters: Record<string,string>,
+  realtimeData: any
 }>()
 
 // Breadcrumb
@@ -698,7 +699,7 @@ watch(() => filters.shed, () => {
 
 // Computed properties for real-time data
 const dashboardData = computed(() => {
-  return realtimeData.value || {
+  return props.realtimeData || {
     cards: props.cards,
     progressBars: props.progressBars,
     circleBars: props.circleBars,
