@@ -266,7 +266,7 @@ const showFlockModal = ref(false)
 const flockFormError = ref('')
 
 const flockForm = useForm({
-  code: '',
+  name: '',
   parent_flock_id: null
 })
 
@@ -287,14 +287,14 @@ const validateFlockCode = (code) => {
 
 // Real-time validation for flock code
 const flockCodeError = computed(() => {
-  if (!flockForm.code) return ''
-  return validateFlockCode(flockForm.code)
+  if (!flockForm.name) return ''
+  return validateFlockCode(flockForm.name)
 })
 
 // Watch for form errors and update display error
 watch(() => flockForm.errors, (errors) => {
-  if (errors.code) {
-    flockFormError.value = errors.code
+  if (errors.name) {
+    flockFormError.value = errors.name
   } else if (errors.parent_flock_id) {
     flockFormError.value = errors.parent_flock_id
   }
@@ -350,9 +350,9 @@ function addNewFlock() {
       console.log('Form errors:', flockForm.errors); // Debug form errors
       
       // Get error message from form errors (Inertia handles this automatically)
-      if (flockForm.errors && flockForm.errors.code) {
-        const codeError = flockForm.errors.code;
-        flockFormError.value = Array.isArray(codeError) ? codeError[0] : codeError;
+      if (flockForm.errors && flockForm.errors.name) {
+        const nameError = flockForm.errors.name;
+        flockFormError.value = Array.isArray(nameError) ? nameError[0] : nameError;
       } else if (flockForm.errors && flockForm.errors.parent_flock_id) {
         const parentError = flockForm.errors.parent_flock_id;
         flockFormError.value = Array.isArray(parentError) ? parentError[0] : parentError;
@@ -1055,12 +1055,12 @@ function addNewFlock() {
               Flock No
             </Label>
             <Input 
-              v-model="flockForm.code" 
+              v-model="flockForm.name" 
               type="number"
               placeholder="Enter flock no..." 
               class="rounded-xl border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700" 
             />
-            <InputError :message="flockCodeError || flockFormError || (flockForm.errors.code ? (Array.isArray(flockForm.errors.code) ? flockForm.errors.code[0] : flockForm.errors.code) : '')" />
+            <InputError :message="flockCodeError || flockFormError || (flockForm.errors.name ? (Array.isArray(flockForm.errors.name) ? flockForm.errors.name[0] : flockForm.errors.name) : '')" />
           </div>
           
           <div class="space-y-2">
@@ -1092,7 +1092,7 @@ function addNewFlock() {
           <Button 
             type="button"
             @click="addNewFlock" 
-            :disabled="flockForm.processing || !flockForm.code || flockCodeError"
+            :disabled="flockForm.processing || !flockForm.name || flockCodeError"
             class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-2 font-semibold text-white shadow-lg transition-all duration-300 hover:from-emerald-700 hover:to-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
           >
             <span class="relative z-10 flex items-center gap-2">

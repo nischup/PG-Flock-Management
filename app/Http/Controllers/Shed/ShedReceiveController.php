@@ -65,7 +65,7 @@ class ShedReceiveController extends Controller
             ]),
             'filters' => $request->only(['search', 'per_page', 'company_id', 'flock_id', 'shed_id', 'date_from', 'date_to']),
             'companies' => Company::select('id', 'name')->orderBy('name')->get(),
-            'flocks' => Flock::select('id', 'name', 'code')->orderBy('name')->get(),
+            'flocks' => Flock::select('id', 'name', 'code')->orderBy('id', 'desc')->get(),
             'sheds' => Shed::select('id', 'name')->orderBy('name')->get(),
         ]);
     }
@@ -100,7 +100,7 @@ class ShedReceiveController extends Controller
             });
 
         // Fetch all flocks
-        $flocks = Flock::select('id', 'code', 'name')->get();
+        $flocks = Flock::select('id', 'code', 'name')->orderBy('id', 'desc')->get();
 
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
@@ -255,7 +255,7 @@ class ShedReceiveController extends Controller
             });
 
         // Fetch all flocks
-        $flocks = Flock::select('id', 'code', 'name')->get();
+        $flocks = Flock::select('id', 'code', 'name')->orderBy('id', 'desc')->get();
 
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
