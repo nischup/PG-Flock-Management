@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('company_id')->default(0)->nullable(false)->after("id");
-            $table->unsignedBigInteger('shed_id')->default(0)->nullable(false)->after("company_id");;
+            $table->unsignedBigInteger('project_id')->default(0)->comment('0 = access to all projects under company, >0 = specific project');// put it after id, change position if needed
         });
     }
 
@@ -23,12 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-           if (Schema::hasColumn('users', 'company_id')) {
-                $table->dropColumn('company_id');
-            }
-            if (Schema::hasColumn('users', 'shed_id')) {
-                $table->dropColumn('shed_id');
-            }
+            $table->dropColumn('project_id');
         });
     }
 };

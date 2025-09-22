@@ -9,9 +9,11 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use App\Models\Master\Company;
 use App\Models\Master\Shed;
+use App\Models\Master\Project;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class UserRegisterController extends Controller
 {
@@ -50,17 +52,31 @@ class UserRegisterController extends Controller
             'filters' => $request->only(['search', 'per_page', 'company_id', 'shed_id', 'role_id', 'date_from', 'date_to']),
             'companies' => Company::all(['id', 'name']),
             'sheds' => Shed::all(['id', 'name']),
+            'projects' => Project::all(['id', 'name','company_id']),
             'roles' => Role::all(['id', 'name']),
         ]);
     }
 
     public function create()
     {
+        
+        $authUser = Auth::user();
+        // Companies for dropdown
+        $companies = $authUser->company_id > 0
+            ? Company::where('id', $authUser->company_id)->get() // only user's company
+            : Company::all(); // admin sees all companies
+
+        // Projects & sheds
+        $projects = $authUser->company_id > 0
+            ? Project::where('company_id', $authUser->company_id)->get()
+            : Project::all();
+        
         return Inertia::render('user/register/Create', [
             'roles' => Role::all(),
             'permissions' => Permission::all(),
-            'companies' => Company::all(),
+            'companies' => $companies,
             'sheds' => Shed::all(),
+            'projects' => $projects,
         ]);
     }
 
@@ -84,6 +100,7 @@ class UserRegisterController extends Controller
                 'password' => Hash::make($request->password),
                 'company_id' => $request->company_id,
                 'shed_id'    => $request->shed_id,
+                'project_id'    => $request->project_id,
             ]);
 
             $user->syncRoles([$request->role]);

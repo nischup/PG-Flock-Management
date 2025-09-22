@@ -11,10 +11,10 @@ use App\Models\Ps\PsFirmReceive;
 use App\Models\Shed\BatchAssign;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use App\Models\Traits\CompanyShedFilter;
 class BirdTransfer extends Model
 {
-    use HasFactory;
+    use HasFactory,CompanyShedFilter;
 
     protected static $factory = \Database\Factories\BirdTransferFactory::class;
 

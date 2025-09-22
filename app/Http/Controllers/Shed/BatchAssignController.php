@@ -75,6 +75,7 @@ class BatchAssignController extends Controller
         }
 
         $batchAssigns = $query
+            ->visibleFor()
             ->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 10)
             ->withQueryString()

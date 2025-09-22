@@ -24,17 +24,14 @@ class EggClassificationController extends Controller
     {
         
         
-       
-         
-        
-        
-        
         $query = EggClassification::with([
             'batchAssign.shed',
             'batchAssign.batch',
             'technicalEggs.eggType',
             'rejectedEggs.eggType',
-        ]);
+        ])->whereHas('batchAssign', function ($q) {
+            $q->visibleFor(); // Apply scope from BatchAssign model
+        });;
 
         // Search filter
         if ($request->filled('search')) {

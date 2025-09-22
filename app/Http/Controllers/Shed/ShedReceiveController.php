@@ -23,6 +23,7 @@ class ShedReceiveController extends Controller
     {
         // Fetch shed receives with comprehensive filtering
         $shedReceives = ShedReceive::with(['flock:id,name,code', 'shed:id,name', 'company:id,name'])
+            ->visibleFor()
             ->where('receive_type', 'box')
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {

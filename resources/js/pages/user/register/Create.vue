@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { ref, computed } from 'vue';
+import { ref, computed,watch } from 'vue';
 import { type BreadcrumbItem } from '@/types';
 import InputError from '@/components/InputError.vue';
 import { useNotifier } from "@/composables/useNotifier"
@@ -24,6 +24,11 @@ interface Company {
   name: string;
 }
 
+interface Project {
+  id: number;
+  name: string;
+}
+
 interface Shed {
   id: number;
   name: string;
@@ -34,6 +39,7 @@ const props = defineProps<{
   permissions: Permission[];
   companies: Company[];
   sheds: Shed[];
+  projects: Project[];
 }>();
 
 const form = useForm<{
@@ -43,6 +49,7 @@ const form = useForm<{
   password: string;
   permissions: string[];
   company_id: number;
+  project_id:number;
   shed_id: number;
 }>({
   name: '',
@@ -52,6 +59,7 @@ const form = useForm<{
   permissions: [],
   company_id: 0,
   shed_id: 0,
+  project_id:0,
 });
 
 const { showSuccess, showError } = useNotifier(); // auto-shows flash messages
@@ -66,6 +74,18 @@ function submit() {
     },
   });
 }
+
+const filteredProjects = computed(() => {
+  if (!form.company_id) return []; // empty by default
+  return props.projects.filter(p => p.company_id === form.company_id);
+});
+
+watch(
+  () => form.company_id,
+  (newVal, oldVal) => {
+    form.project_id = 0; // Reset project selection
+  }
+);
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Users', href: '/user-register' },
@@ -281,7 +301,7 @@ function toggleSelectAll(group: string) {
               </div>
               <div class="p-6">
                 <div class="space-y-4">
-        <!-- Company -->
+                  <!-- Company -->
                   <div class="space-y-2">
                     <Label for="company" class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                       <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
@@ -295,12 +315,31 @@ function toggleSelectAll(group: string) {
                       >
                         <option value="0">-- Select Company --</option>
                         <option v-for="c in companies" :key="(c as Company).id" :value="(c as Company).id">{{ (c as Company).name }}</option>
-          </select>
+                      </select>
                       <Building2 class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     </div>
-        </div>
+                </div>
 
-        <!-- Shed -->
+                <!-- Project -->
+                  <div class="space-y-2">
+                    <Label for="company" class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                      <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                      Project
+                    </Label>
+                    <div class="relative">
+                      <select 
+                        id="project"
+                        v-model="form.project_id" 
+                        class="flex h-10 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-sm transition-all duration-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="0">-- Select Project --</option>
+                        <option v-for="c in filteredProjects" :key="(c as Project).id" :value="(c as Project).id">{{ (c as Project).name }}</option>
+                      </select>
+                      <Building2 class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    </div>
+                </div>
+
+              <!-- Shed -->
                   <div class="space-y-2">
                     <Label for="shed" class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                       <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>

@@ -25,7 +25,7 @@ class PsFirmReceiveController extends Controller
     public function index(Request $request)
     {
         $psFirmReceives = PsFirmReceive::with(['flock:id,name,code', 'company:id,name', 'psReceive:id,pi_no'])
-            // ->where('source_type', 'psreceive')
+            ->visibleFor('receiving_company_id')
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('job_no', 'like', "%{$search}%")
