@@ -1,43 +1,44 @@
 <?php
 
-use App\Http\Controllers\Api\DashboardRealtimeController;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\WeatherController;
 use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\DailyOperation\DailyOperationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FirmLabTestController;
-use App\Http\Controllers\Master\ApprovalMatrixConfigController;
-use App\Http\Controllers\Master\ApprovalMatrixLayerController;
-use App\Http\Controllers\Master\BreedTypeController;
-use App\Http\Controllers\Master\ChickTypeController;
-use App\Http\Controllers\Master\CompanyController;
-use App\Http\Controllers\Master\DiseaseController;
 use App\Http\Controllers\Master\FeedController;
-use App\Http\Controllers\Master\FeedTypeController;
-use App\Http\Controllers\Master\FlockController;
-use App\Http\Controllers\Master\MedicineController;
-use App\Http\Controllers\Master\ProjectController;
 use App\Http\Controllers\Master\ShedController;
-use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Master\UnitController;
-use App\Http\Controllers\Master\VaccineController;
-use App\Http\Controllers\Master\VaccineTypeController;
-use App\Http\Controllers\Production\EggClassificationController;
-use App\Http\Controllers\Production\EggClassificationGradeController;
-use App\Http\Controllers\Production\ProductionFirmReceiveController;
-use App\Http\Controllers\Production\ProductionShedReceiveController;
-use App\Http\Controllers\Ps\OrderPlanningController;
-use App\Http\Controllers\Ps\PsFirmReceiveController;
+use App\Http\Controllers\Master\FlockController;
 use App\Http\Controllers\Ps\PsLabTestController;
 use App\Http\Controllers\Ps\PsReceiveController;
+use App\Http\Controllers\Master\CompanyController;
+use App\Http\Controllers\Master\DiseaseController;
+use App\Http\Controllers\Master\ProjectController;
+use App\Http\Controllers\Master\VaccineController;
+use App\Http\Controllers\Master\FeedTypeController;
+use App\Http\Controllers\Master\MedicineController;
+use App\Http\Controllers\Master\SupplierController;
+use App\Http\Controllers\Master\BreedTypeController;
+use App\Http\Controllers\Master\ChickTypeController;
+use App\Http\Controllers\Ps\OrderPlanningController;
+use App\Http\Controllers\Ps\PsFirmReceiveController;
 use App\Http\Controllers\Shed\BatchAssignController;
-use App\Http\Controllers\Shed\BatchConfigurationController;
 use App\Http\Controllers\Shed\ShedReceiveController;
+use App\Http\Controllers\Master\VaccineTypeController;
+use App\Http\Controllers\Api\DashboardRealtimeController;
 use App\Http\Controllers\Transfer\BirdTransferController;
+use App\Http\Controllers\Shed\BatchConfigurationController;
+use App\Http\Controllers\Master\ApprovalMatrixLayerController;
+use App\Http\Controllers\Master\ApprovalMatrixConfigController;
+use App\Http\Controllers\Production\EggClassificationController;
+use App\Http\Controllers\Report\TransferReceiveReportController;
+use App\Http\Controllers\DailyOperation\DailyOperationController;
 use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
-use App\Http\Controllers\WeatherController;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+use App\Http\Controllers\Production\ProductionFirmReceiveController;
+use App\Http\Controllers\Production\ProductionShedReceiveController;
+use App\Http\Controllers\Production\EggClassificationGradeController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -182,9 +183,7 @@ Route::get('egg-classification-grades/batch/{batchId}/egg-data', [EggClassificat
 Route::get('/batch-assign/{id}/pdf', [BatchAssignController::class, 'downloadRowPdf'])
     ->name('batch-assign.row-pdf');
 
-//transfer & receive//
-Route::get('transfer-receive-report/{id}/pdf', [TransferReceiveReportController::class, 'generateReportPdf'])
-    ->name('transfer-receive-report.pdf');
+
 
 Route::get('production-farm-receive/receive/{id}/pdf', [ProductionFirmReceiveController::class, 'downloadProductionReceivePdf'])
     ->name('production-farm-receive.receive-pdf');
@@ -216,3 +215,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/dashboard/male-birds-details', [DashboardRealtimeController::class, 'getMaleBirdsDetails'])->name('dashboard.male-birds-details');
     Route::get('/api/dashboard/female-birds-details', [DashboardRealtimeController::class, 'getFemaleBirdsDetails'])->name('dashboard.female-birds-details');
 });
+
+Route::get('/bird-transfer-receive-report', [TransferReceiveReportController::class, 'index'])
+    ->name('bird-transfer-receive-report.index');
+
+// NEW: filter-based PDF & Excel
+Route::get('/bird-transfer-receive-report/pdf', [TransferReceiveReportController::class, 'generateRangePdf'])
+    ->name('bird-transfer-receive-report.pdf');
+
+Route::get('/bird-transfer-receive-report/excel', [TransferReceiveReportController::class, 'exportRangeExcel'])
+    ->name('bird-transfer-receive-report.excel');
