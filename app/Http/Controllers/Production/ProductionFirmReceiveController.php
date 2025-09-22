@@ -42,7 +42,6 @@ class ProductionFirmReceiveController extends Controller
         ])->visibleFor('toCompany')
             ->where('status', 1) // Only fetch transfers with status 1
             ->latest();
-
         // Apply filters
         if ($search) {
             $query->where(function ($q) use ($search) {

@@ -259,7 +259,11 @@ class DailyOperationController extends Controller
                     'display_name' => $detail->vaccine->name.' - '.($detail->disease->name ?? 'General').' ('.$detail->age.')',
                 ];
             });
-
+        $waters = [
+            ['id' => 1, 'name' => 'Normal Water'],
+            ['id' => 2, 'name' => 'Mineral Water'],
+            ['id' => 3, 'name' => 'Vitamin Mixed Water'],
+        ];
         return Inertia::render('dailyoperation/Create', [
             'stage' => $stage,   // ✅ Pass stage here
             'flocks' => $flocks,
@@ -267,6 +271,7 @@ class DailyOperationController extends Controller
             'units' => Unit::all(),
             'medicines' => Medicine::all(),
             'vaccines' => Vaccine::all(),
+            'waters' => $waters,
             'todayVaccineSchedules' => $todayVaccineSchedules,
         ]);
     }

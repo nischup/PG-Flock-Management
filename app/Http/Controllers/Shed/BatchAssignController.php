@@ -124,7 +124,7 @@ class BatchAssignController extends Controller
     {
 
         // Get all Shed Receives with relations
-        $shedReceives = ShedReceive::with(['flock:id,code,name', 'shed:id,name', 'company:id,name,short_name', 'firmReceive.flock:id,code,name', 'firmReceive.company:id,name,short_name', 'firmReceive.project:id,name'])
+        $shedReceives = ShedReceive::with(['flock:id,code,name', 'shed:id,name', 'company:id,name,short_name', 'firmReceive.flock:id,code,name','firmReceive.psReceive.chickCounts:id,ps_receive_id,ps_total_qty','firmReceive.company:id,name,short_name', 'firmReceive.project:id,name'])
             ->get()
             ->map(function ($shed) {
                 return [
@@ -141,6 +141,7 @@ class BatchAssignController extends Controller
                     'project_id' => $shed->project_id,
                     'project_name' => $shed->firmReceive?->project?->name ?? 'N/A',
                     'shed_female_qty' => $shed->shed_female_qty ?? 0,
+                    'total_chicks' => $shed->firmReceive?->psReceive?->chickCounts?->ps_total_qty ?? 0,
                     'shed_male_qty' => $shed->shed_male_qty ?? 0,
                     'shed_total_qty' => $shed->shed_total_qty ?? 0,
                     'receive_type' => $shed->receive_type ?? '',
@@ -159,6 +160,10 @@ class BatchAssignController extends Controller
 
         // Batches from database
         $batches = Batch::where('status', true)->select('id', 'name')->get();
+
+
+
+
 
         return Inertia::render('shed/batch-assign/Create', [
             'shedReceives' => $shedReceives,

@@ -393,8 +393,14 @@ watch(
                   <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Flock:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.flock_code || shedReceiveInfo?.flock }}</div></div>
                   <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Shed:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed }}</div></div>
                   <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Company:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.company }}</div></div>
-                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed_female_qty }}</div></div>
-                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed_male_qty }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed_female_qty }}  {{ shedReceiveInfo?.receive_type === 'pcs' ? 'Pcs' : 'Boxes' }}</div></div>
+                  <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Qty:</span><div class="text-gray-900 dark:text-gray-100">{{ shedReceiveInfo?.shed_male_qty }}  {{ shedReceiveInfo?.receive_type === 'pcs' ? 'Pcs' : 'Boxes' }}</div></div>
+                  <div v-if="shedReceiveInfo?.receive_type !== 'pcs'" class="space-y-1">
+                    <span class="font-semibold text-gray-600 dark:text-gray-300">Challan Chicks Qty:</span>
+                    <div class="font-bold text-blue-900 dark:text-blue-100">
+                      {{ shedReceiveInfo?.total_chicks }}
+                    </div>
+                  </div>
                   <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Qty:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ shedReceiveInfo?.shed_total_qty }} {{ shedReceiveInfo?.receive_type === 'pcs' ? 'Pcs' : 'Boxes' }}</div></div>
                 </div>
               </div>

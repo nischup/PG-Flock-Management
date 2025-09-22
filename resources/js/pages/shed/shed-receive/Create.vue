@@ -548,8 +548,8 @@ function submit() {
             <Users class="h-4 w-4 text-white" />
           </div>
           <div>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Shed Chick Quantities</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Enter chick quantities received by shed</p>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Shed Assign Boxes</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Enter chick boxes received by shed</p>
           </div>
         </div>
 
@@ -733,7 +733,7 @@ function submit() {
       >
         <span class="relative z-10 flex items-center gap-1">
           <Save class="h-3 w-3" />
-          {{ form.processing ? 'Submitting...' : 'Submit' }}
+          {{ form.processing ? 'Submitting...' : 'Assign' }}
         </span>
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-10 group-hover:translate-x-full"></div>
       </Button>
