@@ -9,7 +9,6 @@ use App\Models\Master\Medicine;
 use App\Models\Master\Unit;
 use App\Models\Master\Vaccine;
 use App\Models\Shed\BatchAssign;
-use App\Models\VaccineSchedule;
 use App\Models\VaccineScheduleDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +38,8 @@ class DailyOperationController extends Controller
             'batchAssign.shed',
             'batchAssign.company',
             'batchAssign.batch',
+            'batchAssign.project',
+            'batchAssign.shedReceive',
             'mortalities',
             'feeds.feedType',
             'waters',
@@ -108,7 +109,7 @@ class DailyOperationController extends Controller
         $dailyOperations = $query->paginate($perPage);
 
         // Get filter options
-        $flocks = \App\Models\Master\Flock::select('id', 'name')->orderBy('id', 'desc')->get();
+        $flocks = \App\Models\Master\Flock::select('id', 'code as name')->orderBy('id', 'desc')->get();
         $sheds = \App\Models\Master\Shed::select('id', 'name')->orderBy('name')->get();
         $companies = \App\Models\Master\Company::select('id', 'name')->orderBy('name')->get();
 
@@ -120,13 +121,33 @@ class DailyOperationController extends Controller
                 $totalWater = $item->waters->sum('quantity');
                 $totalEggs = $item->eggCollections->sum('quantity');
 
+                // Map stage number to stage name
+                $stageName = match ($item->batchAssign->stage) {
+                    1 => 'Brooding',
+                    2 => 'Growing',
+                    3 => 'Laying',
+                    4 => 'Closing',
+                    default => 'Unknown'
+                };
+
+                // Calculate age from shed receive date
+                $startDate = $item->batchAssign->shedReceive?->created_at ?? $item->batchAssign->created_at;
+                $age = $startDate ? $startDate->diffInDays(now()) : 0;
+                $weeks = floor($age / 7);
+                $days = $age % 7;
+                $ageString = "{$weeks} weeks {$days} days";
+
                 return [
                     'id' => $item->id,
                     'operation_date' => $item->operation_date,
-                    'flock_name' => $item->batchAssign->flock->name ?? 'N/A',
+                    'flock_name' => $item->batchAssign->flock->code ?? 'N/A',
                     'shed_name' => $item->batchAssign->shed->name ?? 'N/A',
                     'company_name' => $item->batchAssign->company->name ?? 'N/A',
+                    'project_name' => $item->batchAssign->project->name ?? 'N/A',
                     'batch_name' => $item->batchAssign->batch->name ?? 'N/A',
+                    'stage_name' => $stageName,
+                    'stage' => $item->batchAssign->stage,
+                    'age' => $ageString,
                     'job_no' => $item->batchAssign->job_no,
                     'transaction_no' => $item->batchAssign->transaction_no,
                     'male_mortality' => $item->mortalities->sum('male_qty'),
@@ -140,7 +161,7 @@ class DailyOperationController extends Controller
                     'created_at' => $item->created_at,
                     'status' => $item->status,
                     // Include relationship data for filters
-                    'flock' => $item->batchAssign->flock ? ['id' => $item->batchAssign->flock->id, 'name' => $item->batchAssign->flock->name] : null,
+                    'flock' => $item->batchAssign->flock ? ['id' => $item->batchAssign->flock->id, 'name' => $item->batchAssign->flock->code] : null,
                     'shed' => $item->batchAssign->shed ? ['id' => $item->batchAssign->shed->id, 'name' => $item->batchAssign->shed->name] : null,
                     'company' => $item->batchAssign->company ? ['id' => $item->batchAssign->company->id, 'name' => $item->batchAssign->company->name] : null,
                 ];
@@ -184,7 +205,7 @@ class DailyOperationController extends Controller
                 $weeks = floor($age / 7);
                 $days = $age % 7;
                 $ageString = "{$weeks} weeks {$days} days";
-                
+
                 return [
                     'id' => $batch->id,
                     'flock' => $batch->flock?->name ?? 'N/A',
@@ -196,7 +217,7 @@ class DailyOperationController extends Controller
                     // Statistics data
                     'total_birds' => $totalBirds,
                     'current_birds' => $currentBirds,
-                    'batch_mortality'=>$batchMortality,
+                    'batch_mortality' => $batchMortality,
                     'age' => $ageString,
                     'start_date' => $startDate?->format('Y-m-d'),
                     'batch_female_qty' => $batch->batch_female_qty,
@@ -206,7 +227,6 @@ class DailyOperationController extends Controller
                 ];
             });
 
-       
         // Get today's vaccine schedules
         $today = now()->format('Y-m-d');
         $todayVaccineSchedules = VaccineScheduleDetail::with([
@@ -215,29 +235,29 @@ class DailyOperationController extends Controller
             'vaccineSchedule.batch',
             'vaccineSchedule.company',
             'vaccine',
-            'disease'
+            'disease',
         ])
-        ->where('vaccination_date', $today)
-        ->where('status', 'pending')
-        ->get()
-        ->map(function ($detail) {
-            return [
-                'id' => $detail->id,
-                'vaccine_schedule_id' => $detail->vaccine_schedule_id,
-                'vaccine_id' => $detail->vaccine_id,
-                'vaccine_name' => $detail->vaccine->name ?? 'N/A',
-                'disease_name' => $detail->disease->name ?? 'N/A',
-                'age' => $detail->age,
-                'vaccination_date' => $detail->vaccination_date,
-                'next_vaccination_date' => $detail->next_vaccination_date,
-                'notes' => $detail->notes,
-                'flock_name' => $detail->vaccineSchedule->flock->name ?? 'N/A',
-                'shed_name' => $detail->vaccineSchedule->shed->name ?? 'N/A',
-                'batch_name' => $detail->vaccineSchedule->batch->name ?? 'N/A',
-                'company_name' => $detail->vaccineSchedule->company->name ?? 'N/A',
-                'display_name' => $detail->vaccine->name . ' - ' . ($detail->disease->name ?? 'General') . ' (' . $detail->age . ')',
-            ];
-        });
+            ->where('vaccination_date', $today)
+            ->where('status', 'pending')
+            ->get()
+            ->map(function ($detail) {
+                return [
+                    'id' => $detail->id,
+                    'vaccine_schedule_id' => $detail->vaccine_schedule_id,
+                    'vaccine_id' => $detail->vaccine_id,
+                    'vaccine_name' => $detail->vaccine->name ?? 'N/A',
+                    'disease_name' => $detail->disease->name ?? 'N/A',
+                    'age' => $detail->age,
+                    'vaccination_date' => $detail->vaccination_date,
+                    'next_vaccination_date' => $detail->next_vaccination_date,
+                    'notes' => $detail->notes,
+                    'flock_name' => $detail->vaccineSchedule->flock->name ?? 'N/A',
+                    'shed_name' => $detail->vaccineSchedule->shed->name ?? 'N/A',
+                    'batch_name' => $detail->vaccineSchedule->batch->name ?? 'N/A',
+                    'company_name' => $detail->vaccineSchedule->company->name ?? 'N/A',
+                    'display_name' => $detail->vaccine->name.' - '.($detail->disease->name ?? 'General').' ('.$detail->age.')',
+                ];
+            });
 
         return Inertia::render('dailyoperation/Create', [
             'stage' => $stage,   // ✅ Pass stage here
@@ -256,7 +276,7 @@ class DailyOperationController extends Controller
     public function getBatchData($batchId)
     {
         $batch = BatchAssign::with(['flock', 'shed', 'batch'])->findOrFail($batchId);
-        
+
         // Get the latest daily operation for this batch
         $latestOperation = DailyOperation::where('batchassign_id', $batchId)
             ->orderBy('operation_date', 'desc')
@@ -276,7 +296,7 @@ class DailyOperationController extends Controller
             'humidity' => 0,
             'egg_collection' => 0,
             'medicine' => 0,
-            'vaccine' => 0
+            'vaccine' => 0,
         ];
 
         if ($latestOperation) {
@@ -309,25 +329,25 @@ class DailyOperationController extends Controller
             if ($feed) {
                 $unit = Unit::find($feed->unit_id);
                 $unitName = $unit ? $unit->name : 'Kg';
-                $tabData['feed_consumption'] = $feed->quantity . ' ' . $unitName;
+                $tabData['feed_consumption'] = $feed->quantity.' '.$unitName;
             }
 
             // Get water data
             $water = $latestOperation->waters()->first();
             if ($water) {
-                $tabData['water_consumption'] = $water->quantity . ' L';
+                $tabData['water_consumption'] = $water->quantity.' L';
             }
 
             // Get light data
             $light = $latestOperation->lights()->first();
             if ($light) {
-                $tabData['light_hour'] = $light->hour . ' H';
+                $tabData['light_hour'] = $light->hour.' H';
             }
 
             // Get weight data
             $weight = $latestOperation->weights()->first();
             if ($weight) {
-                $tabData['weight'] = ($weight->male_weight + $weight->female_weight) / 2 . ' gm';
+                $tabData['weight'] = ($weight->male_weight + $weight->female_weight) / 2 .' gm';
             }
 
             // Get temperature data
@@ -363,7 +383,7 @@ class DailyOperationController extends Controller
 
         return response()->json([
             'batch' => $batch,
-            'tabData' => $tabData
+            'tabData' => $tabData,
         ]);
     }
 
@@ -373,16 +393,8 @@ class DailyOperationController extends Controller
     public function store(Request $request)
     {
 
-        
-        
-        
-        
-        
-        
-        
-        
         $batch = BatchAssign::findOrFail($request->batchassign_id);
-        
+
         $dailyOperation = DailyOperation::create([
             'batchassign_id' => $request->batchassign_id,
             'operation_date' => $request->operation_date,
@@ -391,11 +403,11 @@ class DailyOperationController extends Controller
             'transaction_no' => $batch->transaction_no,
             'flock_no' => $batch->flock_no,
             'flock_id' => $batch->flock_id,
-            'company_id'=>$batch->company_id,
-            'project_id'=>$batch->project_id,
-            'shed_id'=>$batch->shed_id,
-            'batch_no'=>$batch->batch_no,
-            'stage'=>$batch->stage,
+            'company_id' => $batch->company_id,
+            'project_id' => $batch->project_id,
+            'shed_id' => $batch->shed_id,
+            'batch_no' => $batch->batch_no,
+            'stage' => $batch->stage,
             'status' => 1,
         ]);
 
@@ -556,9 +568,6 @@ class DailyOperationController extends Controller
             $dailyOperation->vaccines()->create($vaccineData);
         }
 
-        
-
-        
         if ($batch->stage == 1) {
             $stageName = 'brooding';
         } elseif ($batch->stage == 2) {
@@ -572,8 +581,8 @@ class DailyOperationController extends Controller
         }
 
         return redirect()
-        ->route('daily-operation.stage', ['stage' => strtolower($stageName)])
-        ->with('success', ucfirst($stageName).  'data saved successfully.');
+            ->route('daily-operation.stage', ['stage' => strtolower($stageName)])
+            ->with('success', ucfirst($stageName).'data saved successfully.');
     }
 
     /**

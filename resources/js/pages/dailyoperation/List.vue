@@ -782,9 +782,9 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
                                     {{ item.shed_name }}
                                 </span>
                             </td>
+                            <td class="px-4 py-3 whitespace-nowrap">{{ item.batch_name }}</td>
                             <td class="px-4 py-3 whitespace-nowrap">{{ item.stage_name }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap">{{ item.stage }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap">{{ item.age }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap">{{ item.age || 'N/A' }}</td>
 
                             <td class="px-4 py-3 text-center whitespace-nowrap text-red-600 font-medium">
                                 {{ item.male_mortality || 0 }}
