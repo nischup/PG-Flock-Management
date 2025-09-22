@@ -19,7 +19,9 @@ class EggClassificationGradeController extends Controller
             'grade',                           // Egg grade info
             'classification.batchAssign',
             'classification.batchAssign.batch'       // Classification + Batch info
-        ])->latest()->get();
+        ])->whereHas('classification.batchAssign', function ($q) {
+            $q->visibleFor(); // Scope from BatchAssign
+        })->latest()->get();
         
         return inertia('production/egg-classification/GradeList', [
             'grades' => $grades, 

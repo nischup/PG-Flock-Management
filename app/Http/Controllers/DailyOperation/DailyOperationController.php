@@ -51,7 +51,7 @@ class DailyOperationController extends Controller
             'creator',
         ])
             ->whereHas('batchAssign', function ($q) use ($stageValue) {
-                $q->where('stage', $stageValue);
+                $q->where('stage', $stageValue)->visibleFor();
             });
 
         // Apply search filter
@@ -170,6 +170,7 @@ class DailyOperationController extends Controller
         }
 
         $flocks = BatchAssign::with(['flock', 'shed', 'batch', 'shedReceive'])
+            ->visibleFor()
             ->where('stage', $st)
             ->orderBy('id', 'desc')
             ->get()

@@ -39,7 +39,7 @@ class ProductionFirmReceiveController extends Controller
             'toProject',
             'fromShed',
             'toShed',
-        ])
+        ])->visibleFor('toCompany')
             ->where('status', 1) // Only fetch transfers with status 1
             ->latest();
 
