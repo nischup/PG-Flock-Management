@@ -109,7 +109,7 @@ class BatchAssignController extends Controller
             'batchAssigns' => $batchAssigns,
             'filters' => $request->only(['search', 'per_page', 'company_id', 'flock_id', 'shed_id', 'level', 'date_from', 'date_to']),
             'companies' => Company::select('id', 'name')->get(),
-            'flocks' => Flock::select('id', 'code', 'name')->get(),
+            'flocks' => Flock::select('id', 'code', 'name')->orderBy('id', 'desc')->get(),
             'sheds' => \App\Models\Shed::select('id', 'name')->get(),
             'levels' => Level::select('id', 'name')->get(),
             'batches' => Batch::select('id', 'name')->get(),
@@ -148,7 +148,7 @@ class BatchAssignController extends Controller
             });
 
         // Flocks (for batch assign form)
-        $flocks = Flock::select('id', 'code', 'name')->get();
+        $flocks = Flock::select('id', 'code', 'name')->orderBy('id', 'desc')->get();
 
         // Companies (if needed in assign)
         $companies = Company::select('id', 'name')->get();
@@ -355,7 +355,7 @@ class BatchAssignController extends Controller
             });
 
         // Flocks (for batch assign form)
-        $flocks = Flock::select('id', 'code', 'name')->get();
+        $flocks = Flock::select('id', 'code', 'name')->orderBy('id', 'desc')->get();
 
         // Companies (if needed in assign)
         $companies = Company::select('id', 'name')->get();

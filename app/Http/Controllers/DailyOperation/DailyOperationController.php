@@ -108,7 +108,7 @@ class DailyOperationController extends Controller
         $dailyOperations = $query->paginate($perPage);
 
         // Get filter options
-        $flocks = \App\Models\Master\Flock::select('id', 'name')->orderBy('name')->get();
+        $flocks = \App\Models\Master\Flock::select('id', 'name')->orderBy('id', 'desc')->get();
         $sheds = \App\Models\Master\Shed::select('id', 'name')->orderBy('name')->get();
         $companies = \App\Models\Master\Company::select('id', 'name')->orderBy('name')->get();
 
