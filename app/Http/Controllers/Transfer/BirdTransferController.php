@@ -140,7 +140,9 @@ class BirdTransferController extends Controller
             if ($request->deviation_total_qty > 0) {
                 MovementAdjustment::create([
                     'flock_id'   =>  $batch->flock_id,
-                    'flock_no' =>    $batch->flock_no, // fetch from batch or pass from request
+                    'flock_no' =>    $batch->flock_no,
+                    'transaction_no' => $batch->transaction_no,
+                    'job_no' => $batch->job_no,  // fetch from batch or pass from request
                     'stage'      => 5,                  // 5 = Bird Transfer stage
                     'stage_id'   =>  $transfer->id,
                     'type'       =>  4,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation

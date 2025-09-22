@@ -163,11 +163,20 @@ class PsFirmReceiveController extends Controller
         ]);
 
         $insertId = $firmReceive->id;
+        $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
 
+        // Save the job_no back to the record
+        $firmReceive->update(['transaction_no' => $transactionNo, 'job_no' => $transactionNo]);
+        
+        
+        
+        
         if ($request->firm_sortage_box_qty > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flockInfo->id,
-                'flock_no' =>    $flockInfo->name, // fetch from batch or pass from request
+                'flock_no' =>    $flockInfo->name,
+                'transaction_no' => $transactionNo,
+                'job_no' => $transactionNo, // fetch from batch or pass from request
                 'stage'      =>  2,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $insertId,
                 'type'       =>  3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -182,7 +191,9 @@ class PsFirmReceiveController extends Controller
         if ($request->firm_excess_box_qty > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flockInfo->id,
-                'flock_no'   =>  $flockInfo->name, // fetch from batch or pass from request
+                'flock_no'   =>  $flockInfo->name,
+                'transaction_no' => $transactionNo,
+                'job_no' => $transactionNo,  // fetch from batch or pass from request
                 'stage'      =>  2,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $insertId,
                 'type'       =>  2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -197,7 +208,9 @@ class PsFirmReceiveController extends Controller
         if ($request->firm_total_mortality > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flockInfo->id,
-                'flock_no' =>    $flockInfo->name, // fetch from batch or pass from request
+                'flock_no' =>    $flockInfo->name,
+                'transaction_no' => $transactionNo,
+                'job_no' => $transactionNo,  // fetch from batch or pass from request
                 'stage'      =>  2,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $insertId,
                 'type'       =>  1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -213,10 +226,7 @@ class PsFirmReceiveController extends Controller
         
 
 
-        $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
-
-        // Save the job_no back to the record
-        $firmReceive->update(['transaction_no' => $transactionNo, 'job_no' => $transactionNo]);
+        
 
         return redirect()
             ->route('ps-firm-receive.index')

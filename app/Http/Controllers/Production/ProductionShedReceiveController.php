@@ -120,7 +120,9 @@ class ProductionShedReceiveController extends Controller
         if ($request->shed_sortage_box_qty > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flock->id,
-                'flock_no' =>    $flock->code, // fetch from batch or pass from request
+                'flock_no' =>    $flock->code,
+                'job_no'           => $firmReceive->job_no,
+                'transaction_no'   => $firmReceive->transaction_no, // fetch from batch or pass from request
                 'stage'      =>  3,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $shedReceive->id,
                 'type'       =>  3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -135,7 +137,9 @@ class ProductionShedReceiveController extends Controller
         if ($request->shed_excess_box_qty > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flock->id,
-                'flock_no'   =>  $flock->name, // fetch from batch or pass from request
+                'flock_no'   =>  $flock->name,
+                'job_no'           => $firmReceive->job_no,
+                'transaction_no'   => $firmReceive->transaction_no, // fetch from batch or pass from request
                 'stage'      =>  3,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $shedReceive->id,
                 'type'       =>  2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -150,7 +154,9 @@ class ProductionShedReceiveController extends Controller
         if ($request->shed_total_mortality > 0) {
             MovementAdjustment::create([
                 'flock_id'   =>  $flock->id,
-                'flock_no' =>    $flock->code, // fetch from batch or pass from request
+                'flock_no' =>    $flock->code,
+                'job_no'           => $firmReceive->job_no,
+                'transaction_no'   => $firmReceive->transaction_no, // fetch from batch or pass from request
                 'stage'      =>  3,                  // 5 = Bird Transfer stage
                 'stage_id'   =>  $shedReceive->id,
                 'type'       =>  1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation

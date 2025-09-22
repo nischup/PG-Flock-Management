@@ -214,7 +214,9 @@ class BatchAssignController extends Controller
             if (($batch['batch_sortage_female'] ?? 0) + ($batch['batch_sortage_male'] ?? 0) > 0) {
                 MovementAdjustment::create([
                     'flock_id' => $shedReceive->flock_id,
-                    'flock_no' => $shedReceive->flock_no, // fetch from batch or pass from request
+                    'flock_no' => $shedReceive->flock_no,
+                    'transaction_no' => $shedReceive->transaction_no,
+                    'job_no' => $shedReceive->job_no,  // fetch from batch or pass from request
                     'stage' => 3,                  // 5 = Bird Transfer stage
                     'stage_id' => $insertId,
                     'type' => 3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -229,7 +231,9 @@ class BatchAssignController extends Controller
             if (($batch['batch_excess_female'] ?? 0) + ($batch['batch_excess_male'] ?? 0) > 0) {
                 MovementAdjustment::create([
                     'flock_id' => $shedReceive->flock_id,
-                    'flock_no' => $shedReceive->flock_no, // fetch from batch or pass from request
+                    'flock_no' => $shedReceive->flock_no,
+                    'transaction_no' => $shedReceive->transaction_no,
+                    'job_no' => $shedReceive->job_no,   // fetch from batch or pass from request
                     'stage' => 3,                  // 5 = Bird Transfer stage
                     'stage_id' => $insertId,
                     'type' => 2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
@@ -244,7 +248,9 @@ class BatchAssignController extends Controller
             if (($batch['batch_female_mortality'] ?? 0) + ($batch['batch_male_mortality'] ?? 0) > 0) {
                 MovementAdjustment::create([
                     'flock_id' => $shedReceive->flock_id,
-                    'flock_no' => $shedReceive->flock_no, // fetch from batch or pass from request
+                    'flock_no' => $shedReceive->flock_no,
+                    'transaction_no' => $shedReceive->transaction_no,
+                    'job_no' => $shedReceive->job_no, // fetch from batch or pass from request
                     'stage' => 3,                  // 5 = Bird Transfer stage
                     'stage_id' => $insertId,
                     'type' => 1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation

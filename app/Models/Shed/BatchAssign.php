@@ -7,6 +7,12 @@ use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
 use App\Models\Master\Batch;
+use App\Models\MovementAdjustment;
+use App\Models\DailyOperation\DailyMortality;
+use App\Models\DailyOperation\DailyDestroy;
+use App\Models\DailyOperation\DailyCulling;
+use App\Models\DailyOperation\DailySexingError;
+use App\Models\DailyOperation\DailyOperation;
 use App\Models\Master\Project;
 use App\Models\Shed\ShedReceive;
 use Illuminate\Database\Eloquent\Builder;
@@ -76,9 +82,85 @@ class BatchAssign extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function dailyOperations()
+    {
+        return $this->hasMany(DailyOperation::class, 'batchassign_id');
+    }
+
+    public function totalMortalities()
+    {
+        return $this->hasManyThrough(
+            DailyMortality::class,
+            DailyOperation::class,
+            'batchassign_id',      // FK on daily_operations
+            'daily_operation_id', // FK on daily_mortalities
+            'id',            // Local key on batch_assigns
+            'id'             // Local key on daily_operations
+        );
+    }
+    public function totalCulling()
+    {
+        return $this->hasManyThrough(
+            DailyCulling::class,
+            DailyOperation::class,
+            'batchassign_id',      // FK on daily_operations
+            'daily_operation_id', // FK on daily_mortalities
+            'id',            // Local key on batch_assigns
+            'id'             // Local key on daily_operations
+        );
+    }
+    public function totalDestroy()
+    {
+        return $this->hasManyThrough(
+            DailyDestroy::class,
+            DailyOperation::class,
+            'batchassign_id',      // FK on daily_operations
+            'daily_operation_id', // FK on daily_mortalities
+            'id',            // Local key on batch_assigns
+            'id'             // Local key on daily_operations
+        );
+    }
+     public function totalSexingerror()
+    {
+        return $this->hasManyThrough(
+            DailySexingError::class,
+            DailyOperation::class,
+            'batchassign_id',      // FK on daily_operations
+            'daily_operation_id', // FK on daily_mortalities
+            'id',            // Local key on batch_assigns
+            'id'             // Local key on daily_operations
+        );
+    }
 
 
-    // --- Filter scope
+    // total mortality (Batch Assign stage )
+    public function getMovementBatchmortality()
+    {
+        return MovementAdjustment::where('stage', 4) // Batch Assign stage
+                ->where('stage_id', $this->id)
+                ->where('type', 1) // Mortality only
+                ->sum('total_qty');
+    }
+
+    // total Excess (Batch Assign stage )
+    public function getMovementBatchexcess()
+    {
+        return MovementAdjustment::where('stage', 4) // Batch Assign stage
+                ->where('stage_id', $this->id)
+                ->where('type', 2) // Mortality only
+                ->sum('total_qty');
+    }
+
+    
+    // total Excess (Batch Shortage stage )
+    public function getMovementBatchshortage()
+    {
+        return MovementAdjustment::where('stage', 4) // Batch Assign stage
+                ->where('stage_id', $this->id)
+                ->where('type',3) // Mortality only
+                ->sum('total_qty');
+    }
+    
     public function scopeApplyFilters($query, $filters)
     {
         return $query

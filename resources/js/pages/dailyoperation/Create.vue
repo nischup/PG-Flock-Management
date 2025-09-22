@@ -84,7 +84,7 @@ const batchWithLabel = computed(() =>
     }
   }) || []
 )
-console.log(batchWithLabel);
+
 // Active Tab + progress
 const activeTabIndex = ref(0)
 const totalTabs = tabs.length
@@ -205,7 +205,7 @@ const form = useForm({
 const errors = ref<Record<string, string>>({})
 
 // Shed & flock info (real data)
-const shedQty = ref({ opening: 0, current: 0 })
+const shedQty = ref({ opening: 0, current: 0,mortality: 0 })
 const flockInfo = ref<{ age: string }>({ age: '0 weeks 0 days' })
 
 // Modern dropdown states
@@ -297,7 +297,7 @@ const counts = ref<Record<string, number | string>>({})
 // Watch flock change (real data)
 watch(() => form.batchassign_id, async (id) => {
   if (!id) {
-    shedQty.value = { opening: 0, current: 0 }
+    shedQty.value = { opening: 0, current: 0,mortality:0, }
     flockInfo.value.age = '0 weeks 0 days'
     counts.value = {}
     return
@@ -308,7 +308,8 @@ watch(() => form.batchassign_id, async (id) => {
   if (selectedFlock) {
     shedQty.value = { 
       opening: selectedFlock.total_birds || 0, 
-      current: selectedFlock.current_birds || 0 
+      current: selectedFlock.current_birds || 0,
+      mortality: selectedFlock.batch_mortality || 0 
     }
     flockInfo.value.age = selectedFlock.age || '0 weeks 0 days'
     
@@ -333,6 +334,16 @@ watch(() => form.batchassign_id, async (id) => {
           medicine: data.tabData.medicine || 0,
           vaccine: data.tabData.vaccine || 0
         }
+
+        // 🐔 Now update shedQty.current
+        const totalBirds = selectedFlock.total_birds || 0
+        const mortality = (Number(data.tabData.daily_mortality) +  Number(selectedFlock.batch_mortality)) || 0
+        const cull = Number(data.tabData.cull) || 0
+        const destroy = Number(data.tabData.destroy) || 0
+        const sexingError = Number(data.tabData.sexing_error) || 0
+
+        shedQty.value.current = totalBirds - (mortality + cull + destroy + sexingError)
+        shedQty.value.mortality = Number(selectedFlock.batch_mortality) || 0
       } else {
         // Fallback to basic counts if no data
         counts.value = {
@@ -771,21 +782,36 @@ function submit() {
                 Flock Statistics
               </h3>
               </div>
-            <div class="grid grid-cols-3 gap-0">
+            <div class="grid grid-cols-4 gap-0">
+              <!-- Total -->
               <div class="p-2 text-center border-r border-gray-200 last:border-r-0">
                 <div class="w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-1">
                   <span class="text-white text-xs">📊</span>
-              </div>
+                </div>
                 <p class="text-gray-600 font-medium text-xs mb-0.5">Total</p>
                 <p class="text-xs font-bold text-gray-900">{{ shedQty.opening.toLocaleString() }}</p>
               </div>
+              <!-- Batch Mortality -->
+              <div class="p-2 text-center border-r border-gray-200 last:border-r-0">
+                <div class="w-6 h-6 bg-gradient-to-br from-red-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span class="text-white text-xs">☠️</span>
+                </div>
+                <p class="text-gray-600 font-medium text-xs mb-0.5">Assign Mortality</p>
+                <p class="text-xs font-bold text-gray-900">{{ shedQty.mortality?.toLocaleString() || 0 }}</p>
+              </div>
+
+              <!-- Current -->
               <div class="p-2 text-center border-r border-gray-200 last:border-r-0">
                 <div class="w-6 h-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-1">
                   <span class="text-white text-xs">🐣</span>
-            </div>
+                </div>
                 <p class="text-gray-600 font-medium text-xs mb-0.5">Current</p>
                 <p class="text-xs font-bold text-gray-900">{{ shedQty.current.toLocaleString() }}</p>
-          </div>
+              </div>
+
+              
+
+              <!-- Age -->
               <div class="p-2 text-center">
                 <div class="w-6 h-6 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-1">
                   <span class="text-white text-xs">⏰</span>
