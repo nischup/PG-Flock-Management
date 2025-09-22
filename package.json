@@ -4,10 +4,14 @@
     "scripts": {
         "build": "vite build",
         "build:ssr": "vite build && vite build --ssr",
+        "build:production": "vite build --mode production",
         "dev": "vite",
+        "dev:host": "vite --host",
+        "preview": "vite preview",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
-        "lint": "eslint . --fix"
+        "lint": "eslint . --fix",
+        "deploy": "npm run build:production && echo 'Build complete! Upload public/build/ to your server.'"
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",

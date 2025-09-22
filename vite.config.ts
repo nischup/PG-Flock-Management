@@ -26,4 +26,20 @@ export default defineConfig({
             '@': path.resolve(__dirname, 'resources/js'), 
         },
     },
+    build: {
+        // Optimize for production
+        minify: 'esbuild',
+        sourcemap: false,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['vue', '@inertiajs/vue3'],
+                    ui: ['@heroicons/vue', 'lucide-vue-next'],
+                    charts: ['apexcharts', 'vue3-apexcharts'],
+                },
+            },
+        },
+        // Increase chunk size warning limit
+        chunkSizeWarningLimit: 1000,
+    },
 });
