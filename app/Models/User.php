@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Traits\CompanyShedFilter;
 use App\Models\Master\Company;
+use App\Models\Master\Project;
 use App\Models\Master\Shed;
 class User extends Authenticatable
 {
@@ -60,5 +61,10 @@ class User extends Authenticatable
     public function shed()
     {
         return $this->belongsTo(Shed::class, 'shed_id');
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
     }
 }

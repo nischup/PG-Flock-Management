@@ -6,11 +6,14 @@ use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
 use App\Models\Ps\PsFirmReceive;
-
+use App\Models\Traits\CompanyShedFilter;
 use Illuminate\Database\Eloquent\Model;
 
 class ShedReceive extends Model
 {
+    
+    use CompanyShedFilter;
+    
     protected $fillable = [
         'receive_id',
         'job_no',
