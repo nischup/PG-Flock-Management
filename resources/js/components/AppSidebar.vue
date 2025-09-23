@@ -25,9 +25,27 @@ const mainNavItems: NavItem[] = [
         icon: BabyChickMultiple,
         iconClass: 'text-yellow-500',
         children: [
-            { title: 'Order Planing', href: '/order-plans', icon: ClockArrowUp, iconClass: 'text-yellow-500', permission: 'order-plans.view' },
-            { title: 'PS Receive', href: '/ps-receive', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'ps-receive.view' },
-            { title: 'PS Farm Receive', href: '/ps-firm-receive', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'ps-farm-receive.view' },
+            {
+                title: 'Order Planing',
+                href: '/order-plans',
+                icon: ClockArrowUp,
+                iconClass: 'text-yellow-500',
+                permission: 'order-plans.view',
+            },
+            {
+                title: 'PS Receive',
+                href: '/ps-receive',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'ps-receive.view',
+            },
+            {
+                title: 'PS Farm Receive',
+                href: '/ps-firm-receive',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'ps-farm-receive.view',
+            },
         ],
     },
     {
@@ -35,9 +53,27 @@ const mainNavItems: NavItem[] = [
         icon: Building,
         iconClass: 'text-yellow-500',
         children: [
-            { title: 'Shed Receive', href: '/shed-receive', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'shed-receive.view' },
-            { title: 'Batch Assign', href: '/batch-assign', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'batch-assign.view' },
-            { title: 'Batch Config', href: '/batch-config', icon: Settings, iconClass: 'text-yellow-500', permission: 'batch-config.view' },
+            {
+                title: 'Shed Receive',
+                href: '/shed-receive',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'shed-receive.view',
+            },
+            {
+                title: 'Batch Assign',
+                href: '/batch-assign',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'batch-assign.view',
+            },
+            {
+                title: 'Batch Config',
+                href: '/batch-config',
+                icon: Settings,
+                iconClass: 'text-yellow-500',
+                permission: 'batch-config.view',
+            },
         ],
     },
     {
@@ -45,9 +81,27 @@ const mainNavItems: NavItem[] = [
         icon: BabyChickMultiple,
         iconClass: 'text-yellow-500',
         children: [
-            { title: 'Brooding', href: '/daily-operation/stage/brooding', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'brooding.view' },
-            { title: 'Growing', href: '/daily-operation/stage/growing', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'growing.view' },
-            { title: 'Bird Transfer', href: '/bird-transfer', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'bird-transfer.view' },
+            {
+                title: 'Brooding',
+                href: '/daily-operation/stage/brooding',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'brooding.view',
+            },
+            {
+                title: 'Growing',
+                href: '/daily-operation/stage/growing',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'growing.view',
+            },
+            {
+                title: 'Bird Transfer',
+                href: '/bird-transfer',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'bird-transfer.view',
+            },
         ],
     },
     {
@@ -55,10 +109,34 @@ const mainNavItems: NavItem[] = [
         icon: Egg,
         iconClass: 'text-yellow-500',
         children: [
-            { title: 'Farm Receive', href: '/production-farm-receive', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'production-farm-receive.view' },
-            { title: 'Shed Receive', href: '/production-shed-receive', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'production-shed-receive.view' },
-            { title: 'Batch Assign', href: '/batch-assign', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'batch-assign.view' },
-            { title: 'Laying', href: '/daily-operation/stage/laying', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'laying.view' },
+            {
+                title: 'Farm Receive',
+                href: '/production-farm-receive',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'production-farm-receive.view',
+            },
+            {
+                title: 'Shed Receive',
+                href: '/production-shed-receive',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'production-shed-receive.view',
+            },
+            {
+                title: 'Batch Assign',
+                href: '/batch-assign',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'batch-assign.view',
+            },
+            {
+                title: 'Laying',
+                href: '/daily-operation/stage/laying',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'laying.view',
+            },
         ],
     },
     {
@@ -66,8 +144,20 @@ const mainNavItems: NavItem[] = [
         icon: EggFried,
         iconClass: 'text-yellow-500',
         children: [
-            { title: 'Egg Classification', href: '/production/egg-classification', icon: EggOff, iconClass: 'text-yellow-500', permission: 'egg-classification.view' },
-            { title: 'Egg Grade', href: '/egg-classification-grades', icon: EggOff, iconClass: 'text-yellow-500', permission: 'egg-grade.view' },
+            {
+                title: 'Egg Classification',
+                href: '/production/egg-classification',
+                icon: EggOff,
+                iconClass: 'text-yellow-500',
+                permission: 'egg-classification.view',
+            },
+            {
+                title: 'Egg Grade',
+                href: '/egg-classification-grades',
+                icon: EggOff,
+                iconClass: 'text-yellow-500',
+                permission: 'egg-grade.view',
+            },
         ],
     },
     {
@@ -75,8 +165,20 @@ const mainNavItems: NavItem[] = [
         icon: TestTubes,
         iconClass: 'text-yellow-500',
         children: [
-            { title: 'PS Lab Test', href: '/ps-lab-test', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'ps-lab-test.view' },
-            { title: 'Firm Lab Transfer', href: '/firm-lab-tests', icon: Pipette, iconClass: 'text-yellow-500', permission: 'firm-lab-tests.view' },
+            {
+                title: 'PS Lab Test',
+                href: '/ps-lab-test',
+                icon: BabyChick,
+                iconClass: 'text-yellow-500',
+                permission: 'ps-lab-test.view',
+            },
+            {
+                title: 'Firm Lab Transfer',
+                href: '/firm-lab-tests',
+                icon: Pipette,
+                iconClass: 'text-yellow-500',
+                permission: 'firm-lab-tests.view',
+            },
         ],
     },
     {
@@ -84,7 +186,48 @@ const mainNavItems: NavItem[] = [
         icon: Syringe,
         iconClass: 'text-yellow-500',
         children: [
-            { title: 'Vaccine Schedule', href: '/vaccine-schedule', icon: Syringe, iconClass: 'text-yellow-500', permission: 'vaccine-schedule.view' },
+            {
+                title: 'Vaccine Schedule',
+                href: '/vaccine-schedule',
+                icon: Syringe,
+                iconClass: 'text-yellow-500',
+                permission: 'vaccine-schedule.view',
+            },
+        ],
+    },
+    {
+        title: 'Report',
+        icon: FileText,
+        iconClass: 'text-yellow-500',
+        children: [
+            {
+                title: 'Daily-Flock-Report',
+                href: '/daily-flock-report',
+                icon: FileText,
+                iconClass: 'text-yellow-500',
+                permission: 'daily-flock-report.view',
+            },
+            {
+                title: 'Transfer and Receive Report',
+                href: '/bird-transfer-receive-report',
+                icon: FileText,
+                iconClass: 'text-yellow-500',
+                permission: 'bird-transfer-receive-report.view',
+            },
+        ],
+    },
+    {
+        title: 'Audit Log',
+        icon: FileText,
+        iconClass: 'text-yellow-500',
+        children: [
+            {
+                title: 'Audit Log',
+                href: '/audit-log',
+                icon: FileText,
+                iconClass: 'text-yellow-500',
+                permission: 'audit-log.view',
+            },
         ],
     },
     {
@@ -92,8 +235,20 @@ const mainNavItems: NavItem[] = [
         icon: Users,
         iconClass: 'text-yellow-500',
         children: [
-            { title: 'User Register', href: '/user-register', icon: User, iconClass: 'text-yellow-500', permission: 'user.view' },
-            { title: 'User Role Management', href: '/user-role', icon: User, iconClass: 'text-yellow-500', permission: 'role.view' },
+            {
+                title: 'User Register',
+                href: '/user-register',
+                icon: User,
+                iconClass: 'text-yellow-500',
+                permission: 'user.view',
+            },
+            {
+                title: 'User Role Management',
+                href: '/user-role',
+                icon: User,
+                iconClass: 'text-yellow-500',
+                permission: 'role.view',
+            },
         ],
     },
     {
@@ -118,6 +273,8 @@ const mainNavItems: NavItem[] = [
         ],
     },
 ];
+
+
 
 // Recursive filtering function
 function filterNavItems(items: NavItem[]): NavItem[] {
