@@ -52,7 +52,7 @@
             display: flex;
             justify-content: space-evenly;
             /* evenly distribute space between items */
-            margin-top: 100px;
+            margin-top: 150px;
             font-size: 10px;
         }
 
@@ -117,30 +117,26 @@
     <div class="section">
         <strong>General Info:</strong>
         <table>
-
             <tr>
                 <th>Supplier</th>
                 <td>{{ $supplier ?? 'N/A' }}</td>
+                <th>Shipment Type</th>
+                <td>{{ $shipment_type ?? 'N/A' }}</td>
             </tr>
+
             @if ($shipment_type == 'Foreign' || $shipment_type == 2)
                 <tr>
                     <th>LC No</th>
                     <td>{{ $lc_no ?? 'N/A' }}</td>
-                </tr>
-                <tr>
                     <th>LC Date</th>
                     <td>{{ $lc_date ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <th>Country of Origin</th>
-                    <td>{{ $country_of_origin ?? 'N/A' }}</td>
+                    <td colspan="3">{{ $country_of_origin ?? 'N/A' }}</td>
                 </tr>
             @endif
 
-            <tr>
-                <th>Shipment Type</th>
-                <td>{{ $shipment_type ?? 'N/A' }}</td>
-            </tr>
             <tr>
                 <th>Breed Types</th>
                 <td>
@@ -150,26 +146,20 @@
                         N/A
                     @endif
                 </td>
-            </tr>
-            <tr>
                 <th>Order No</th>
                 <td>{{ $order_no ?? 'N/A' }}</td>
             </tr>
+
             <tr>
                 <th>Order Date</th>
                 <td>{{ $order_date ?? 'N/A' }}</td>
-            </tr>
-            <tr>
-                <th>Ship to</th>
+                <th>Ship To</th>
                 <td>{{ $company->name ?? 'N/A' }}</td>
             </tr>
+
             <tr>
                 <th>Receive Date</th>
                 <td>{{ $receive_date ?? 'N/A' }}</td>
-            </tr>
-
-
-            <tr>
                 <th>Transport Type</th>
                 <td>
                     @switch($transport_type)
@@ -190,11 +180,10 @@
                     @endswitch
                 </td>
             </tr>
+
             <tr>
                 <th>Vehicle Temp (°C)</th>
                 <td>{{ $vehicle_temp ?? 'N/A' }}°C</td>
-            </tr>
-            <tr>
                 <th>Remarks</th>
                 <td>{{ $remarks ?? '-' }}</td>
             </tr>
@@ -355,9 +344,9 @@
             GM
         </div>
     </div>
-    <div style="margin-top: 20px; text-align: center; font-size: 10px; color: #666;">
+    <div style="margin-top: 60px; text-align: center; font-size: 10px; color: #666;">
         <p>This is a system-generated report from Provita Flock Management System</p>
-        <p style="margin-top: 5px;">Confidential Document - For Internal Use Only</p>
+        <p>Confidential Document - For Internal Use Only</p>
     </div>
 
 </body>

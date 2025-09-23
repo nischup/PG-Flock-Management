@@ -1,11 +1,13 @@
 <?php
+
 namespace Database\Seeders;
+
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class PermissionSeeder extends Seeder
 {
@@ -95,7 +97,7 @@ class PermissionSeeder extends Seeder
             // 'egg-classification-grades.create',
             // 'egg-classification-grades.edit',
             // 'egg-classification-grades.delete',
-            
+
             // Egg grade
             'egg-grade.view',
             'egg-grade.create',
@@ -116,6 +118,14 @@ class PermissionSeeder extends Seeder
             'vaccine-schedule.create',
             'vaccine-schedule.edit',
             'vaccine-schedule.delete',
+            'vaccine-routing.view',
+            'vaccine-routing.create',
+            'vaccine-routing.edit',
+            'vaccine-routing.delete',
+            'upcomming-vaccine.view',
+            'upcomming-vaccine.create',
+            'upcomming-vaccine.edit',
+            'upcomming-vaccine.delete',
 
             // Reports
             'daily-flock-report.view',
@@ -180,8 +190,6 @@ class PermissionSeeder extends Seeder
             'approval-matrix-config.delete',
         ];
 
-
-
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
@@ -194,7 +202,7 @@ class PermissionSeeder extends Seeder
 
         $userExists = User::role('superadmin')->exists();
 
-        if (!$userExists) {
+        if (! $userExists) {
             // Get the first company and shed IDs
             $firstCompanyId = DB::table('companies')->orderBy('id')->value('id');
             $firstShedId = DB::table('sheds')->orderBy('id')->value('id');
@@ -203,18 +211,16 @@ class PermissionSeeder extends Seeder
             if ($firstCompanyId && $firstShedId) {
                 // Create default SuperAdmin user if none exists
                 $user = User::create([
-                    'name'       => 'PG Admin',
-                    'email'      => 'provita@mail.com',
-                    'password'   => Hash::make('12345678'), // ⚠️ change to secure password
+                    'name' => 'PG Admin',
+                    'email' => 'provita@mail.com',
+                    'password' => Hash::make('12345678'), // ⚠️ change to secure password
                     'company_id' => $firstCompanyId,
-                    'shed_id'    => $firstShedId,
+                    'shed_id' => $firstShedId,
                 ]);
 
                 $user->assignRole($superAdminRole);
             }
         }
 
-
     }
 }
-

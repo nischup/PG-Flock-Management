@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Report;
 
-use App\Models\DailyOperation\DailyOperation;
-use Inertia\Inertia;
-use App\Models\Country;
-use App\Models\Master\Company;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\Master\BreedType;
+use App\Exports\DailyFlockReportExport;
 use App\Http\Controllers\Controller;
-use App\Models\BirdTransfer\BirdTransfer;
-use Illuminate\Support\Facades\View;
+use App\Models\DailyOperation\DailyOperation;
+use App\Models\Master\BreedType;
+use App\Models\Master\Company;
+use App\Models\Master\Flock;
+use App\Models\Master\Project;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use \Carbon\Carbon;
+use Illuminate\Support\Facades\View;
+use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DailyFlockReportController extends Controller
 {
@@ -38,7 +40,7 @@ class DailyFlockReportController extends Controller
             ->first(); // Fetch the first operation record for today (if exists)
 
         // If there's no operation for today, return a message or error
-        if (!$dailyOperation) {
+        if (! $dailyOperation) {
             return response()->json(['message' => 'No daily operation found for today'], 404);
         }
 
@@ -77,8 +79,8 @@ class DailyFlockReportController extends Controller
 
         // Return the PDF response (download or stream based on the 'download' query parameter)
         return request()->query('download')
-            ? $pdf->download('daily_flock_report_' . $today->format('Y-m-d') . '.pdf')
-            : $pdf->stream('daily_flock_report_' . $today->format('Y-m-d') . '.pdf');
+            ? $pdf->download('daily_flock_report_'.$today->format('Y-m-d').'.pdf')
+            : $pdf->stream('daily_flock_report_'.$today->format('Y-m-d').'.pdf');
     }
 
     // Helper method to get temperature data
@@ -90,6 +92,7 @@ class DailyFlockReportController extends Controller
         } elseif ($type == 'inside') {
             return ['max' => 31.0, 'min' => 28.0]; // Example values
         }
+
         return [];
     }
 
@@ -133,7 +136,7 @@ class DailyFlockReportController extends Controller
                 'male_act' => 1847,
                 'male_std' => 1780,
                 'male_uni' => 0.0,
-            ]
+            ],
         ];
     }
 
@@ -169,27 +172,269 @@ class DailyFlockReportController extends Controller
         ];
     }
 
-
     public function index(Request $request)
     {
-        //$data = $this->buildReportDataFromFilters($request);
-        $data = [];
+        // Get filter parameters
+        $filters = array_merge([
+            'date_from' => null,
+            'date_to' => null,
+            'company_id' => null,
+            'project_id' => null,
+            'flock_id' => null,
+        ], $request->only(['date_from', 'date_to', 'company_id', 'project_id', 'flock_id']));
+
+        // Get dropdown data
+        $companies = Company::select('id', 'name')->orderBy('name')->get();
+        $projects = Project::select('id', 'name', 'company_id')->orderBy('name')->get();
+        $flocks = Flock::select('id', 'name', 'code')->orderBy('code')->get();
+
+        // Sample data for the report (you can replace this with actual data from your database)
+        $batches = [
+            [
+                'delivery_date' => '2025-01-15',
+                'breed_type' => 'Lohmann Brown',
+                'batch_no' => 'A001',
+                'register_female' => 1000,
+                'register_male' => 100,
+                'erp_female' => 1000,
+                'erp_male' => 100,
+                'challan_female' => 1000,
+                'challan_male' => 100,
+                'medical_female' => 0,
+                'medical_male' => 0,
+                'deviation_female' => 0,
+                'deviation_male' => 0,
+                'received_female' => 1000,
+                'received_male' => 100,
+                'mortality_female' => 5,
+                'mortality_male' => 1,
+                'total_received_female' => 995,
+                'total_received_male' => 99,
+                'actual_deviation_female' => 0,
+                'actual_deviation_male' => 0,
+                'challan_deviation_female' => 0,
+                'challan_deviation_male' => 0,
+            ],
+        ];
+
+        $totals = [
+            'register_female' => 1000,
+            'register_male' => 100,
+            'erp_female' => 1000,
+            'erp_male' => 100,
+            'challan_female' => 1000,
+            'challan_male' => 100,
+            'medical_female' => 0,
+            'medical_male' => 0,
+            'deviation_female' => 0,
+            'deviation_male' => 0,
+            'received_female' => 1000,
+            'received_male' => 100,
+            'mortality_female' => 5,
+            'mortality_male' => 1,
+            'total_received_female' => 995,
+            'total_received_male' => 99,
+            'actual_deviation_female' => 0,
+            'actual_deviation_male' => 0,
+            'challan_deviation_female' => 0,
+            'challan_deviation_male' => 0,
+        ];
+
+        $data = [
+            'from_company' => 'Provita Chicks Limited-01',
+            'to_company' => 'Jahazmara Farm',
+            'batches' => $batches,
+            'totals' => $totals,
+            'companies' => $companies,
+            'projects' => $projects,
+            'flocks' => $flocks,
+            'filters' => $filters,
+        ];
+
         return Inertia::render('report/daily-flock-report', $data);
     }
 
+    public function exportPdf(Request $request)
+    {
+        $filters = array_merge([
+            'date_from' => null,
+            'date_to' => null,
+            'company_id' => null,
+            'project_id' => null,
+            'flock_id' => null,
+        ], $request->only(['date_from', 'date_to', 'company_id', 'project_id', 'flock_id']));
 
+        // Get dropdown data
+        $companies = Company::select('id', 'name')->orderBy('name')->get();
+        $projects = Project::select('id', 'name', 'company_id')->orderBy('name')->get();
+        $flocks = Flock::select('id', 'name', 'code')->orderBy('code')->get();
+
+        // Sample data for the report (you can replace this with actual data from your database)
+        $batches = [
+            [
+                'delivery_date' => '2025-01-15',
+                'breed_type' => 'Lohmann Brown',
+                'batch_no' => 'B001',
+                'qty' => 1000,
+                'age' => 25,
+                'body_weight' => 1.8,
+                'starter_feed' => 50,
+                'grower_feed' => 75,
+                'layer_feed' => 100,
+                'water_consumption' => 200,
+                'water_quality' => 'Good',
+                'eggs_produced' => 850,
+                'grade_a' => 750,
+                'grade_b' => 100,
+                'mortality_count' => 5,
+                'mortality_percentage' => 0.5,
+                'remarks' => 'Normal production',
+            ],
+            [
+                'delivery_date' => '2025-01-16',
+                'breed_type' => 'Hy-Line Brown',
+                'batch_no' => 'B002',
+                'qty' => 1200,
+                'age' => 30,
+                'body_weight' => 1.9,
+                'starter_feed' => 60,
+                'grower_feed' => 90,
+                'layer_feed' => 120,
+                'water_consumption' => 240,
+                'water_quality' => 'Good',
+                'eggs_produced' => 1000,
+                'grade_a' => 900,
+                'grade_b' => 100,
+                'mortality_count' => 3,
+                'mortality_percentage' => 0.25,
+                'remarks' => 'Excellent performance',
+            ],
+        ];
+
+        $totals = [
+            'total_qty' => 2200,
+            'total_starter' => 110,
+            'total_grower' => 165,
+            'total_layer' => 220,
+            'total_water' => 440,
+            'total_eggs' => 1850,
+            'total_grade_a' => 1650,
+            'total_grade_b' => 200,
+            'total_mortality' => 8,
+            'avg_mortality' => 0.36,
+        ];
+
+        $data = [
+            'from_company' => 'Provita Chicks Limited-01',
+            'to_company' => 'Jahazmara Farm',
+            'batches' => $batches,
+            'totals' => $totals,
+            'companies' => $companies,
+            'projects' => $projects,
+            'flocks' => $flocks,
+            'filters' => $filters,
+        ];
+
+        // Generate PDF
+        $pdf = Pdf::loadView('reports.daily-flock-report-pdf', $data);
+        $pdf->setPaper('a4', 'landscape');
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => false,
+            'defaultFont' => 'Arial',
+        ]);
+
+        return $pdf->download('daily-flock-report-'.now()->format('Y-m-d').'.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $filters = array_merge([
+            'date_from' => null,
+            'date_to' => null,
+            'company_id' => null,
+            'project_id' => null,
+            'flock_id' => null,
+        ], $request->only(['date_from', 'date_to', 'company_id', 'project_id', 'flock_id']));
+
+        // Sample data for the report (you can replace this with actual data from your database)
+        $batches = [
+            [
+                'delivery_date' => '2025-01-15',
+                'breed_type' => 'Lohmann Brown',
+                'batch_no' => 'B001',
+                'qty' => 1000,
+                'age' => 25,
+                'body_weight' => 1.8,
+                'starter_feed' => 50,
+                'grower_feed' => 75,
+                'layer_feed' => 100,
+                'water_consumption' => 200,
+                'water_quality' => 'Good',
+                'eggs_produced' => 850,
+                'grade_a' => 750,
+                'grade_b' => 100,
+                'mortality_count' => 5,
+                'mortality_percentage' => 0.5,
+                'remarks' => 'Normal production',
+            ],
+            [
+                'delivery_date' => '2025-01-16',
+                'breed_type' => 'Hy-Line Brown',
+                'batch_no' => 'B002',
+                'qty' => 1200,
+                'age' => 30,
+                'body_weight' => 1.9,
+                'starter_feed' => 60,
+                'grower_feed' => 90,
+                'layer_feed' => 120,
+                'water_consumption' => 240,
+                'water_quality' => 'Good',
+                'eggs_produced' => 1000,
+                'grade_a' => 900,
+                'grade_b' => 100,
+                'mortality_count' => 3,
+                'mortality_percentage' => 0.25,
+                'remarks' => 'Excellent performance',
+            ],
+        ];
+
+        $totals = [
+            'total_qty' => 2200,
+            'total_starter' => 110,
+            'total_grower' => 165,
+            'total_layer' => 220,
+            'total_water' => 440,
+            'total_eggs' => 1850,
+            'total_grade_a' => 1650,
+            'total_grade_b' => 200,
+            'total_mortality' => 8,
+            'avg_mortality' => 0.36,
+        ];
+
+        $data = [
+            'from_company' => 'Provita Chicks Limited-01',
+            'to_company' => 'Jahazmara Farm',
+            'batches' => $batches,
+            'totals' => $totals,
+            'filters' => $filters,
+        ];
+
+        // Generate Excel file
+        return Excel::download(new DailyFlockReportExport($data, $filters), 'daily-flock-report-'.now()->format('Y-m-d').'.xlsx');
+    }
 
     private function buildReportDataFromFilters(Request $request): array
     {
         $validated = $request->validate([
-            'date_from'       => ['nullable', 'date'],
-            'date_to'         => ['nullable', 'date', 'after_or_equal:date_from'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'company_id' => ['nullable', 'integer'],
-            'shed_id'   => ['nullable', 'integer'],
+            'shed_id' => ['nullable', 'integer'],
         ]);
 
         $dateFrom = $validated['date_from'] ?? Carbon::now()->subDays(30)->toDateString();
-        $dateTo   = $validated['date_to']   ?? Carbon::now()->toDateString();
+        $dateTo = $validated['date_to'] ?? Carbon::now()->toDateString();
 
         // Eager load daily operation with relations
         $dailyoperation = DailyOperation::with([
@@ -211,29 +456,29 @@ class DailyFlockReportController extends Controller
             'vaccines.vaccine',
             'vaccines.unit',
         ])->whereBetween('operation_date', [$dateFrom, $dateTo]);
-            
+
         // Map breed_type IDs to names
         $breeds = BreedType::pluck('name', 'id')->toArray();
-        $breedtype = $dailyoperation->breed_type ?? [1,2]; // <-- changed to dynamic
+        $breedtype = $dailyoperation->breed_type ?? [1, 2]; // <-- changed to dynamic
         if (! is_array($breedtype)) {
             $breedtype = is_null($breedtype) ? [] : [$breedtype];
         }
 
-        $breedAll = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
+        $breedAll = array_map(fn ($id) => $breeds[$id] ?? null, $breedtype);
         $breedNames = array_filter($breedAll);
         $breedName = implode(', ', $breedNames);
 
         // Prepare data for Blade view
         $data = [
-            'job_no'        => $dailyoperation->batchAssign->job_no ?? '-',
-            'transaction_no'=> $dailyoperation->batchAssign->transaction_no ?? '-',
-            'flock_name'    => $dailyoperation->batchAssign->flock->name ?? '-',
-            'flock_id'      => $dailyoperation->batchAssign->flock_id ?? '-',
-            'status'        => $dailyoperation->status,
-            'breedName'     => $breedName,
-            'created_at'    => $dailyoperation->created_at->format('Y-m-d H:i:s'),
-            'generatedAt'   => now(),
-            'dailyoperation'=> $dailyoperation, // pass whole model with relations
+            'job_no' => $dailyoperation->batchAssign->job_no ?? '-',
+            'transaction_no' => $dailyoperation->batchAssign->transaction_no ?? '-',
+            'flock_name' => $dailyoperation->batchAssign->flock->name ?? '-',
+            'flock_id' => $dailyoperation->batchAssign->flock_id ?? '-',
+            'status' => $dailyoperation->status,
+            'breedName' => $breedName,
+            'created_at' => $dailyoperation->created_at->format('Y-m-d H:i:s'),
+            'generatedAt' => now(),
+            'dailyoperation' => $dailyoperation, // pass whole model with relations
         ];
 
         // PDF options
@@ -250,6 +495,4 @@ class DailyFlockReportController extends Controller
             ? $pdf->download("daily-operation-{$dailyoperation->id}.pdf")
             : $pdf->stream("daily-operation-{$dailyoperation->id}.pdf");
     }
-
-
 }

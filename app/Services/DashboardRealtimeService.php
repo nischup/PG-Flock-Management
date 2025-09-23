@@ -2,17 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Shed\BatchAssign;
-use App\Models\DailyOperation\DailyOperation;
 use App\Models\DailyOperation\DailyEggCollection;
 use App\Models\DailyOperation\DailyMortality;
-use App\Models\DailyOperation\DailyCulling;
-use App\Models\DailyOperation\DailyFeed;
-use App\Models\DailyOperation\DailyVaccine;
-use App\Models\Production\EggClassification;
-use App\Models\Ps\PsLabTest;
+use App\Models\DailyOperation\DailyOperation;
 use App\Models\Master\Flock;
 use App\Models\MovementAdjustment;
+use App\Models\Shed\BatchAssign;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -26,21 +21,21 @@ class DashboardRealtimeService
         try {
             // Get base query with filters
             $batchQuery = BatchAssign::where('status', 1);
-            
+
             // Apply filters
-            if (!empty($filters['company'])) {
+            if (! empty($filters['company'])) {
                 $batchQuery->where('company_id', $filters['company']);
             }
-            if (!empty($filters['project'])) {
+            if (! empty($filters['project'])) {
                 $batchQuery->where('project_id', $filters['project']);
             }
-            if (!empty($filters['flock'])) {
+            if (! empty($filters['flock'])) {
                 $batchQuery->where('flock_id', $filters['flock']);
             }
-            if (!empty($filters['shed'])) {
+            if (! empty($filters['shed'])) {
                 $batchQuery->where('shed_id', $filters['shed']);
             }
-            if (!empty($filters['batch'])) {
+            if (! empty($filters['batch'])) {
                 $batchQuery->where('batch_no', $filters['batch']);
             }
 
@@ -55,13 +50,14 @@ class DashboardRealtimeService
             $metrics = $this->calculateRealtimeMetrics($batchAssigns, $filters);
 
             // Cache the data for 30 seconds
-            $cacheKey = 'dashboard_realtime_' . md5(serialize($filters));
+            $cacheKey = 'dashboard_realtime_'.md5(serialize($filters));
             Cache::put($cacheKey, $metrics, 30);
 
             return $metrics;
 
         } catch (\Exception $e) {
-            Log::error('Dashboard realtime data error: ' . $e->getMessage());
+            Log::error('Dashboard realtime data error: '.$e->getMessage());
+
             return $this->getEmptyDashboardData();
         }
     }
@@ -106,111 +102,111 @@ class DashboardRealtimeService
                     'value' => number_format($activeFlocksCount),
                     'icon' => 'Users',
                     'extra' => 'Total active flocks',
-                    'trend' => $this->calculateTrend('active_flocks', $activeFlocksCount)
+                    'trend' => $this->calculateTrend('active_flocks', $activeFlocksCount),
                 ],
                 [
                     'title' => 'Total Birds',
                     'value' => number_format($totalBirds),
                     'icon' => 'Drumstick',
                     'extra' => 'All batches',
-                    'trend' => $this->calculateTrend('total_birds', $totalBirds)
+                    'trend' => $this->calculateTrend('total_birds', $totalBirds),
                 ],
                 [
                     'title' => 'Male Birds',
                     'value' => number_format($totalMale),
                     'icon' => 'User',
-                    'extra' => number_format($malePercentage, 1) . '% of total',
-                    'trend' => $this->calculateTrend('male_birds', $totalMale)
+                    'extra' => number_format($malePercentage, 1).'% of total',
+                    'trend' => $this->calculateTrend('male_birds', $totalMale),
                 ],
                 [
                     'title' => 'Female Birds',
                     'value' => number_format($totalFemale),
                     'icon' => 'User',
-                    'extra' => number_format($femalePercentage, 1) . '% of total',
-                    'trend' => $this->calculateTrend('female_birds', $totalFemale)
+                    'extra' => number_format($femalePercentage, 1).'% of total',
+                    'trend' => $this->calculateTrend('female_birds', $totalFemale),
                 ],
                 [
                     'title' => 'Mortality Rate',
-                    'value' => number_format($mortalityPercentage, 2) . '%',
+                    'value' => number_format($mortalityPercentage, 2).'%',
                     'icon' => 'ShieldX',
-                    'extra' => number_format($combinedTotalMortality) . ' birds (Daily: ' . $mortalityData['daily_male'] . 'M/' . $mortalityData['daily_female'] . 'F, Movement: ' . $mortalityData['movement_male'] . 'M/' . $mortalityData['movement_female'] . 'F)',
-                    'trend' => $this->calculateTrend('mortality', $mortalityPercentage)
+                    'extra' => number_format($combinedTotalMortality).' birds (Daily: '.$mortalityData['daily_male'].'M/'.$mortalityData['daily_female'].'F, Movement: '.$mortalityData['movement_male'].'M/'.$mortalityData['movement_female'].'F)',
+                    'trend' => $this->calculateTrend('mortality', $mortalityPercentage),
                 ],
                 [
                     'title' => 'Daily Eggs',
                     'value' => number_format($eggData['total']),
                     'icon' => 'Egg',
                     'extra' => 'Today\'s collection',
-                    'trend' => $this->calculateTrend('daily_eggs', $eggData['total'])
+                    'trend' => $this->calculateTrend('daily_eggs', $eggData['total']),
                 ],
                 [
                     'title' => 'Hatchable Eggs',
                     'value' => number_format($eggData['hatchable']),
                     'icon' => 'FlaskConical',
-                    'extra' => number_format($eggData['hatchable_percentage'], 1) . '% of total',
-                    'trend' => $this->calculateTrend('hatchable_eggs', $eggData['hatchable'])
+                    'extra' => number_format($eggData['hatchable_percentage'], 1).'% of total',
+                    'trend' => $this->calculateTrend('hatchable_eggs', $eggData['hatchable']),
                 ],
                 [
                     'title' => 'Commercial Eggs',
                     'value' => number_format($eggData['commercial']),
                     'icon' => 'PackageSearch',
-                    'extra' => number_format($eggData['commercial_percentage'], 1) . '% of total',
-                    'trend' => $this->calculateTrend('commercial_eggs', $eggData['commercial'])
-                ]
+                    'extra' => number_format($eggData['commercial_percentage'], 1).'% of total',
+                    'trend' => $this->calculateTrend('commercial_eggs', $eggData['commercial']),
+                ],
             ],
             'progressBars' => [
                 [
                     'title' => 'Egg Production Goal',
                     'progress' => $eggData['goal_percentage'],
-                    'extra' => "Goal: {$eggData['goal']} eggs"
+                    'extra' => "Goal: {$eggData['goal']} eggs",
                 ],
                 [
                     'title' => 'Hatchable Eggs Goal',
                     'progress' => $eggData['hatchable_goal_percentage'],
-                    'extra' => "Goal: {$eggData['hatchable_goal']} eggs"
+                    'extra' => "Goal: {$eggData['hatchable_goal']} eggs",
                 ],
                 [
                     'title' => 'Commercial Eggs Goal',
                     'progress' => $eggData['commercial_goal_percentage'],
-                    'extra' => "Goal: {$eggData['commercial_goal']} eggs"
-                ]
+                    'extra' => "Goal: {$eggData['commercial_goal']} eggs",
+                ],
             ],
             'circleBars' => [
                 [
                     'title' => 'Mortality',
                     'value' => round($mortalityPercentage, 2),
-                    'type' => 'rounded'
+                    'type' => 'rounded',
                 ],
                 [
                     'title' => 'Male Chicks',
                     'value' => round($malePercentage, 2),
-                    'type' => 'rounded'
+                    'type' => 'rounded',
                 ],
                 [
                     'title' => 'Female Chicks',
                     'value' => round($femalePercentage, 2),
-                    'type' => 'straight'
+                    'type' => 'straight',
                 ],
                 [
                     'title' => 'Excess Male',
                     'value' => (int) $batchAssigns->sum('batch_excess_male'),
-                    'type' => 'straight'
+                    'type' => 'straight',
                 ],
                 [
                     'title' => 'Excess Female',
                     'value' => (int) $batchAssigns->sum('batch_excess_female'),
-                    'type' => 'straight'
+                    'type' => 'straight',
                 ],
                 [
                     'title' => 'Worker Efficiency',
                     'value' => rand(85, 98),
-                    'type' => 'straight'
-                ]
+                    'type' => 'straight',
+                ],
             ],
             'birdStage' => $birdStages,
             'chartData' => $this->getChartData($filters),
             'lastUpdated' => now()->format('Y-m-d H:i:s'),
-            'timestamp' => now()->timestamp
+            'timestamp' => now()->timestamp,
         ];
     }
 
@@ -220,9 +216,9 @@ class DashboardRealtimeService
     private function getRecentEggData(array $filters): array
     {
         $query = DailyEggCollection::query();
-        
+
         // Apply date filters
-        if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+        if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
             $query->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
         } else {
             // If no specific date filter, show data from the last 7 days to include recent data
@@ -246,7 +242,7 @@ class DashboardRealtimeService
             'commercial_goal' => 700,
             'goal_percentage' => $total > 0 ? min(($total / 2000) * 100, 100) : 0,
             'hatchable_goal_percentage' => $hatchable > 0 ? min(($hatchable / 1200) * 100, 100) : 0,
-            'commercial_goal_percentage' => $commercial > 0 ? min(($commercial / 700) * 100, 100) : 0
+            'commercial_goal_percentage' => $commercial > 0 ? min(($commercial / 700) * 100, 100) : 0,
         ];
     }
 
@@ -257,8 +253,8 @@ class DashboardRealtimeService
     {
         // Get mortality from DailyMortality table - get ALL data, not just recent
         $dailyMortalityQuery = DailyMortality::query();
-        
-        if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+
+        if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
             $dailyMortalityQuery->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
         }
         // If no date filters, get all mortality data from DailyMortality
@@ -268,8 +264,8 @@ class DashboardRealtimeService
 
         // Get mortality from MovementAdjustment table (type = 1 for mortality) - get ALL data
         $movementQuery = MovementAdjustment::where('type', 1);
-        
-        if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+
+        if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
             $movementQuery->whereBetween('date', [$filters['date_from'], $filters['date_to']]);
         }
         // If no date filters, get all mortality data from MovementAdjustment
@@ -288,7 +284,7 @@ class DashboardRealtimeService
             'daily_male' => $dailyMale,
             'daily_female' => $dailyFemale,
             'movement_male' => $movementMale,
-            'movement_female' => $movementFemale
+            'movement_female' => $movementFemale,
         ];
     }
 
@@ -305,7 +301,7 @@ class DashboardRealtimeService
         return [
             'bordingTotal' => $total > 0 ? ($brooding / $total) * 100 : 0,
             'growingTotal' => $total > 0 ? ($growing / $total) * 100 : 0,
-            'productionTotal' => $total > 0 ? ($production / $total) * 100 : 0
+            'productionTotal' => $total > 0 ? ($production / $total) * 100 : 0,
         ];
     }
 
@@ -346,40 +342,40 @@ class DashboardRealtimeService
         return [
             'production' => $eggCollections->map(function ($item, $index) {
                 return [
-                    'label' => 'Day ' . ($index + 1),
+                    'label' => 'Day '.($index + 1),
                     'value' => $item->total,
-                    'color' => '#3b82f6'
+                    'color' => '#3b82f6',
                 ];
             })->toArray(),
             'mortality' => [
                 [
                     'label' => 'Male',
                     'value' => $totalMaleMortality,
-                    'color' => '#ef4444'
+                    'color' => '#ef4444',
                 ],
                 [
                     'label' => 'Female',
                     'value' => $totalFemaleMortality,
-                    'color' => '#f97316'
-                ]
+                    'color' => '#f97316',
+                ],
             ],
             'eggTypes' => [
                 [
                     'label' => 'Hatchable',
                     'value' => 60,
-                    'color' => '#10b981'
+                    'color' => '#10b981',
                 ],
                 [
                     'label' => 'Commercial',
                     'value' => 35,
-                    'color' => '#3b82f6'
+                    'color' => '#3b82f6',
                 ],
                 [
                     'label' => 'Broken',
                     'value' => 5,
-                    'color' => '#ef4444'
-                ]
-            ]
+                    'color' => '#ef4444',
+                ],
+            ],
         ];
     }
 
@@ -399,7 +395,7 @@ class DashboardRealtimeService
             'change' => $change,
             'percentage' => $percentage,
             'direction' => $change > 0 ? 'up' : ($change < 0 ? 'down' : 'stable'),
-            'icon' => $change > 0 ? 'TrendingUp' : ($change < 0 ? 'TrendingDown' : 'Minus')
+            'icon' => $change > 0 ? 'TrendingUp' : ($change < 0 ? 'TrendingDown' : 'Minus'),
         ];
     }
 
@@ -411,42 +407,52 @@ class DashboardRealtimeService
         try {
             // Get base query with filters
             $batchQuery = BatchAssign::where('status', 1);
-            
+
             // Apply filters
-            if (!empty($filters['company'])) {
+            if (! empty($filters['company'])) {
                 $batchQuery->where('company_id', $filters['company']);
             }
-            if (!empty($filters['project'])) {
+            if (! empty($filters['project'])) {
                 $batchQuery->where('project_id', $filters['project']);
             }
-            if (!empty($filters['flock'])) {
+            if (! empty($filters['flock'])) {
                 $batchQuery->where('flock_id', $filters['flock']);
             }
-            if (!empty($filters['shed'])) {
+            if (! empty($filters['shed'])) {
                 $batchQuery->where('shed_id', $filters['shed']);
             }
-            if (!empty($filters['batch'])) {
+            if (! empty($filters['batch'])) {
                 $batchQuery->where('batch_no', $filters['batch']);
             }
 
             // Get batch assignments with relationships
-                $batchAssigns = $batchQuery->with(['flock', 'shed', 'company', 'batch', 'project'])
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+            $batchAssigns = $batchQuery->with(['flock', 'shed', 'company', 'batch', 'project'])
+                ->orderBy('created_at', 'desc')
+                ->get();
 
             // Transform data for table
             $tableData = $batchAssigns->map(function ($batch) {
                 // Calculate mortality percentage
-                $mortalityPercentage = $batch->batch_total_qty > 0 
+                $mortalityPercentage = $batch->batch_total_qty > 0
                     ? round(($batch->batch_total_mortality / $batch->batch_total_qty) * 100, 2)
                     : 0;
 
                 // Get recent egg collection data for this batch through daily operations
-                $recentEggs = DailyEggCollection::whereHas('dailyOperation', function($query) use ($batch) {
-                        $query->where('batchassign_id', $batch->id)
-                              ->whereDate('operation_date', today());
-                    })
+                $recentEggs = DailyEggCollection::whereHas('dailyOperation', function ($query) use ($batch) {
+                    $query->where('batchassign_id', $batch->id)
+                        ->whereDate('operation_date', today());
+                })
                     ->sum('quantity');
+
+                // Calculate age from shed receive date
+                $startDate = $batch->shedReceive?->created_at ?? $batch->created_at;
+                $age = '0 weeks 0 days';
+                if ($startDate) {
+                    $days = $startDate->diffInDays(now());
+                    $weeks = floor($days / 7);
+                    $remainingDays = $days % 7;
+                    $age = "{$weeks} weeks {$remainingDays} days";
+                }
 
                 // Determine status based on stage and data
                 $status = $this->determineBatchStatus($batch);
@@ -458,6 +464,7 @@ class DashboardRealtimeService
                     'batch' => $batch->batch?->name ?? $batch->batch_no,
                     'batch_name' => $batch->batch?->name ?? $batch->batch_no,
                     'batch_no' => $batch->batch_no,
+                    'age' => $age,
                     'flock' => $batch->flock?->code ?? 'N/A',
                     'flock_name' => $batch->flock?->name ?? 'N/A',
                     'flock_code' => $batch->flock?->code ?? 'N/A',
@@ -475,14 +482,15 @@ class DashboardRealtimeService
                     'status' => $status,
                     'date' => $batch->created_at->format('Y-m-d'),
                     'created_at' => $batch->created_at,
-                    'updated_at' => $batch->updated_at
+                    'updated_at' => $batch->updated_at,
                 ];
             });
 
             return $tableData->toArray();
 
         } catch (\Exception $e) {
-            Log::error('Batch performance data error: ' . $e->getMessage());
+            Log::error('Batch performance data error: '.$e->getMessage());
+
             return [];
         }
     }
@@ -496,17 +504,17 @@ class DashboardRealtimeService
         if ($batch->stage == 1) {
             return 'Active';
         }
-        
+
         // If stage is 2 (growing), it's active
         if ($batch->stage == 2) {
             return 'Active';
         }
-        
+
         // If stage is 3 (production), it's active
         if ($batch->stage == 3) {
             return 'Active';
         }
-        
+
         // If no stage or stage 0, it's pending
         return 'Pending';
     }
@@ -516,7 +524,7 @@ class DashboardRealtimeService
      */
     private function getStageName($stage): string
     {
-        return match($stage) {
+        return match ($stage) {
             1 => 'Brooding',
             2 => 'Growing',
             3 => 'Production',
@@ -538,12 +546,12 @@ class DashboardRealtimeService
                 ['title' => 'Daily Eggs', 'value' => '0', 'icon' => 'Egg', 'extra' => 'No data'],
                 ['title' => 'Hatchable Eggs', 'value' => '0', 'icon' => 'FlaskConical', 'extra' => 'No data'],
                 ['title' => 'Commercial Eggs', 'value' => '0', 'icon' => 'PackageSearch', 'extra' => 'No data'],
-                ['title' => 'Active Flocks', 'value' => '0', 'icon' => 'Factory', 'extra' => 'No data']
+                ['title' => 'Active Flocks', 'value' => '0', 'icon' => 'Factory', 'extra' => 'No data'],
             ],
             'progressBars' => [
                 ['title' => 'Egg Production Goal', 'progress' => 0, 'extra' => 'Goal: 0 eggs'],
                 ['title' => 'Hatchable Eggs Goal', 'progress' => 0, 'extra' => 'Goal: 0 eggs'],
-                ['title' => 'Commercial Eggs Goal', 'progress' => 0, 'extra' => 'Goal: 0 eggs']
+                ['title' => 'Commercial Eggs Goal', 'progress' => 0, 'extra' => 'Goal: 0 eggs'],
             ],
             'circleBars' => [
                 ['title' => 'Mortality', 'value' => 0, 'type' => 'rounded'],
@@ -551,20 +559,20 @@ class DashboardRealtimeService
                 ['title' => 'Female Chicks', 'value' => 0, 'type' => 'straight'],
                 ['title' => 'Excess Male', 'value' => 0, 'type' => 'straight'],
                 ['title' => 'Excess Female', 'value' => 0, 'type' => 'straight'],
-                ['title' => 'Worker Efficiency', 'value' => 0, 'type' => 'straight']
+                ['title' => 'Worker Efficiency', 'value' => 0, 'type' => 'straight'],
             ],
             'birdStage' => [
                 'bordingTotal' => 0,
                 'growingTotal' => 0,
-                'productionTotal' => 0
+                'productionTotal' => 0,
             ],
             'chartData' => [
                 'production' => [],
                 'mortality' => [],
-                'eggTypes' => []
+                'eggTypes' => [],
             ],
             'lastUpdated' => now()->format('Y-m-d H:i:s'),
-            'timestamp' => now()->timestamp
+            'timestamp' => now()->timestamp,
         ];
     }
 
@@ -578,49 +586,48 @@ class DashboardRealtimeService
             $flockQuery = Flock::where('status', 1);
 
             // If filters are applied, only get flocks that have active batch assignments
-            if (!empty($filters['company']) || !empty($filters['project']) || 
-                !empty($filters['flock']) || !empty($filters['shed']) || 
-                !empty($filters['batch'])) {
-                
+            if (! empty($filters['company']) || ! empty($filters['project']) ||
+                ! empty($filters['flock']) || ! empty($filters['shed']) ||
+                ! empty($filters['batch'])) {
+
                 $batchQuery = BatchAssign::where('status', 1);
-                
-                if (!empty($filters['company'])) {
+
+                if (! empty($filters['company'])) {
                     $batchQuery->where('company_id', $filters['company']);
                 }
-                if (!empty($filters['project'])) {
+                if (! empty($filters['project'])) {
                     $batchQuery->where('project_id', $filters['project']);
                 }
-                if (!empty($filters['flock'])) {
+                if (! empty($filters['flock'])) {
                     $batchQuery->where('flock_id', $filters['flock']);
                 }
-                if (!empty($filters['shed'])) {
+                if (! empty($filters['shed'])) {
                     $batchQuery->where('shed_id', $filters['shed']);
                 }
-                if (!empty($filters['batch'])) {
+                if (! empty($filters['batch'])) {
                     $batchQuery->where('batch_no', $filters['batch']);
                 }
 
                 // Get unique flock IDs from active batch assignments
                 $activeFlockIds = $batchQuery->distinct()->pluck('flock_id');
-                
+
                 // Get flocks that have active batch assignments
                 $flockQuery->whereIn('id', $activeFlockIds);
             }
 
             // Get flocks with their related data
             $flocks = $flockQuery->with([
-                'batchAssigns' => function($query) {
+                'batchAssigns' => function ($query) {
                     $query->where('status', 1)
-                          ->with(['company', 'shed', 'batch', 'project']);
-                }
+                        ->with(['company', 'shed', 'batch', 'project']);
+                },
             ])->get();
-
 
             // Transform data for detailed view
             $flockDetails = $flocks->map(function ($flock) use ($filters) {
                 // Get all batch assignments for this flock
                 $batchAssigns = $flock->batchAssigns;
-                
+
                 // Calculate statistics
                 $totalBirds = $batchAssigns->sum('batch_total_qty');
                 $totalMale = $batchAssigns->sum('batch_male_qty');
@@ -628,24 +635,24 @@ class DashboardRealtimeService
                 $totalMortality = $batchAssigns->sum('batch_total_mortality');
                 $totalMortalityMale = $batchAssigns->sum('batch_male_mortality');
                 $totalMortalityFemale = $batchAssigns->sum('batch_female_mortality');
-                
+
                 // Get recent daily operations for this flock
                 $recentOperations = $this->getRecentOperationsForFlock($flock->id, $filters);
-                
+
                 // Get egg collection data for this flock
                 $eggData = $this->getEggDataForFlock($flock->id, $filters);
-                
+
                 // Get mortality data for this flock
                 $mortalityData = $this->getMortalityDataForFlock($flock->id, $filters);
-                
+
                 // Calculate mortality percentage
                 $mortalityPercentage = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
-                
+
                 // Get unique companies, projects, and sheds for this flock
                 $companies = $batchAssigns->pluck('company')->unique('id')->filter()->values();
                 $projects = $batchAssigns->pluck('project')->unique('id')->filter()->values();
                 $sheds = $batchAssigns->pluck('shed')->unique('id')->filter()->values();
-                
+
                 return [
                     'id' => $flock->id,
                     'code' => $flock->code,
@@ -653,7 +660,7 @@ class DashboardRealtimeService
                     'status' => $flock->status,
                     'created_at' => $flock->created_at,
                     'updated_at' => $flock->updated_at,
-                    
+
                     // Statistics
                     'total_birds' => $totalBirds,
                     'male_birds' => $totalMale,
@@ -662,26 +669,26 @@ class DashboardRealtimeService
                     'male_mortality' => $totalMortalityMale,
                     'female_mortality' => $totalMortalityFemale,
                     'mortality_percentage' => round($mortalityPercentage, 2),
-                    
+
                     // Related entities
-                    'companies' => $companies->map(function($company) {
+                    'companies' => $companies->map(function ($company) {
                         return [
-                            'name' => $company->name
+                            'name' => $company->name,
                         ];
                     }),
-                    'projects' => $projects->map(function($project) {
+                    'projects' => $projects->map(function ($project) {
                         return [
-                            'name' => $project->name
+                            'name' => $project->name,
                         ];
                     }),
-                    'sheds' => $sheds->map(function($shed) {
+                    'sheds' => $sheds->map(function ($shed) {
                         return [
-                            'name' => $shed->name
+                            'name' => $shed->name,
                         ];
                     }),
-                    
+
                     // Batch assignments
-                    'batch_assignments' => $batchAssigns->map(function($batch) {
+                    'batch_assignments' => $batchAssigns->map(function ($batch) {
                         return [
                             'id' => $batch->id,
                             'batch_no' => $batch->batch_no,
@@ -706,17 +713,17 @@ class DashboardRealtimeService
                             'project' => $batch->project?->name ?? 'N/A',
                             'shed' => $batch->shed?->name ?? 'N/A',
                             'created_at' => $batch->created_at,
-                            'updated_at' => $batch->updated_at
+                            'updated_at' => $batch->updated_at,
                         ];
                     }),
-                    
+
                     // Recent activity
                     'recent_operations' => $recentOperations,
                     'egg_data' => $eggData,
                     'mortality_data' => $mortalityData,
-                    
+
                     // PS Receive information (not available in current schema)
-                    'ps_receive' => null
+                    'ps_receive' => null,
                 ];
             });
 
@@ -729,16 +736,17 @@ class DashboardRealtimeService
                     'total_female' => $flockDetails->sum('female_birds'),
                     'total_mortality' => $flockDetails->sum('total_mortality'),
                     'average_mortality_percentage' => $flockDetails->avg('mortality_percentage'),
-                    'total_batch_assignments' => $flockDetails->sum(function($flock) {
+                    'total_batch_assignments' => $flockDetails->sum(function ($flock) {
                         return count($flock['batch_assignments']);
-                    })
+                    }),
                 ],
                 'last_updated' => now()->format('Y-m-d H:i:s'),
-                'timestamp' => now()->timestamp
+                'timestamp' => now()->timestamp,
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error getting flock details: ' . $e->getMessage());
+            Log::error('Error getting flock details: '.$e->getMessage());
+
             return [
                 'flocks' => [],
                 'total_flocks' => 0,
@@ -748,10 +756,10 @@ class DashboardRealtimeService
                     'total_female' => 0,
                     'total_mortality' => 0,
                     'average_mortality_percentage' => 0,
-                    'total_batch_assignments' => 0
+                    'total_batch_assignments' => 0,
                 ],
                 'last_updated' => now()->format('Y-m-d H:i:s'),
-                'timestamp' => now()->timestamp
+                'timestamp' => now()->timestamp,
             ];
         }
     }
@@ -768,13 +776,13 @@ class DashboardRealtimeService
                 ->limit(10);
 
             // Apply date filters
-            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
                 $query->whereBetween('operation_date', [$filters['date_from'], $filters['date_to']]);
             } else {
                 $query->where('operation_date', '>=', now()->subDays(7));
             }
 
-            return $query->get()->map(function($operation) {
+            return $query->get()->map(function ($operation) {
                 return [
                     'id' => $operation->id,
                     'operation_date' => $operation->operation_date,
@@ -783,12 +791,13 @@ class DashboardRealtimeService
                     'stage' => $this->getStageName($operation->stage),
                     'stage_number' => $operation->stage,
                     'created_by' => $operation->creator?->name ?? 'N/A',
-                    'created_at' => $operation->created_at
+                    'created_at' => $operation->created_at,
                 ];
             })->toArray();
 
         } catch (\Exception $e) {
-            Log::error('Error getting recent operations for flock: ' . $e->getMessage());
+            Log::error('Error getting recent operations for flock: '.$e->getMessage());
+
             return [];
         }
     }
@@ -799,12 +808,12 @@ class DashboardRealtimeService
     private function getEggDataForFlock(int $flockId, array $filters): array
     {
         try {
-            $query = DailyEggCollection::whereHas('dailyOperation', function($q) use ($flockId) {
+            $query = DailyEggCollection::whereHas('dailyOperation', function ($q) use ($flockId) {
                 $q->where('flock_id', $flockId);
             });
 
             // Apply date filters
-            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
                 $query->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
             } else {
                 $query->where('created_at', '>=', now()->subDays(7));
@@ -819,17 +828,18 @@ class DashboardRealtimeService
                 'hatchable' => $hatchable,
                 'commercial' => $commercial,
                 'hatchable_percentage' => $total > 0 ? ($hatchable / $total) * 100 : 0,
-                'commercial_percentage' => $total > 0 ? ($commercial / $total) * 100 : 0
+                'commercial_percentage' => $total > 0 ? ($commercial / $total) * 100 : 0,
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error getting egg data for flock: ' . $e->getMessage());
+            Log::error('Error getting egg data for flock: '.$e->getMessage());
+
             return [
                 'total' => 0,
                 'hatchable' => 0,
                 'commercial' => 0,
                 'hatchable_percentage' => 0,
-                'commercial_percentage' => 0
+                'commercial_percentage' => 0,
             ];
         }
     }
@@ -841,12 +851,12 @@ class DashboardRealtimeService
     {
         try {
             // Get mortality from DailyMortality table for this flock
-            $dailyQuery = DailyMortality::whereHas('dailyOperation', function($q) use ($flockId) {
+            $dailyQuery = DailyMortality::whereHas('dailyOperation', function ($q) use ($flockId) {
                 $q->where('flock_id', $flockId);
             });
 
             // Apply date filters
-            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
                 $dailyQuery->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
             }
             // If no date filters, get all mortality data for this flock
@@ -859,7 +869,7 @@ class DashboardRealtimeService
                 ->where('flock_id', $flockId);
 
             // Apply date filters
-            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
                 $movementQuery->whereBetween('date', [$filters['date_from'], $filters['date_to']]);
             }
             // If no date filters, get all mortality data for this flock
@@ -878,11 +888,12 @@ class DashboardRealtimeService
                 'daily_male' => $dailyMale,
                 'daily_female' => $dailyFemale,
                 'movement_male' => $movementMale,
-                'movement_female' => $movementFemale
+                'movement_female' => $movementFemale,
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error getting mortality data for flock: ' . $e->getMessage());
+            Log::error('Error getting mortality data for flock: '.$e->getMessage());
+
             return [
                 'male' => 0,
                 'female' => 0,
@@ -890,7 +901,7 @@ class DashboardRealtimeService
                 'daily_male' => 0,
                 'daily_female' => 0,
                 'movement_male' => 0,
-                'movement_female' => 0
+                'movement_female' => 0,
             ];
         }
     }
@@ -902,12 +913,12 @@ class DashboardRealtimeService
     {
         try {
             // Get mortality from DailyMortality table for this flock only
-            $dailyQuery = DailyMortality::whereHas('dailyOperation', function($q) use ($flockId) {
+            $dailyQuery = DailyMortality::whereHas('dailyOperation', function ($q) use ($flockId) {
                 $q->where('flock_id', $flockId);
             });
 
             // Apply date filters
-            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
                 $dailyQuery->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
             }
             // If no date filters, get all mortality data for this flock
@@ -922,11 +933,12 @@ class DashboardRealtimeService
                 'daily_male' => $dailyMale,
                 'daily_female' => $dailyFemale,
                 'movement_male' => 0,
-                'movement_female' => 0
+                'movement_female' => 0,
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error getting daily mortality data for flock: ' . $e->getMessage());
+            Log::error('Error getting daily mortality data for flock: '.$e->getMessage());
+
             return [
                 'male' => 0,
                 'female' => 0,
@@ -934,7 +946,7 @@ class DashboardRealtimeService
                 'daily_male' => 0,
                 'daily_female' => 0,
                 'movement_male' => 0,
-                'movement_female' => 0
+                'movement_female' => 0,
             ];
         }
     }
@@ -946,12 +958,12 @@ class DashboardRealtimeService
     {
         try {
             // Get mortality from DailyMortality table for this specific batch assignment
-            $dailyQuery = DailyMortality::whereHas('dailyOperation', function($q) use ($batchAssignId) {
+            $dailyQuery = DailyMortality::whereHas('dailyOperation', function ($q) use ($batchAssignId) {
                 $q->where('batchassign_id', $batchAssignId);
             });
 
             // Apply date filters
-            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
                 $dailyQuery->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
             }
             // If no date filters, get all mortality data for this batch
@@ -966,11 +978,12 @@ class DashboardRealtimeService
                 'daily_male' => $dailyMale,
                 'daily_female' => $dailyFemale,
                 'movement_male' => 0,
-                'movement_female' => 0
+                'movement_female' => 0,
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error getting daily mortality data for batch: ' . $e->getMessage());
+            Log::error('Error getting daily mortality data for batch: '.$e->getMessage());
+
             return [
                 'male' => 0,
                 'female' => 0,
@@ -978,7 +991,7 @@ class DashboardRealtimeService
                 'daily_male' => 0,
                 'daily_female' => 0,
                 'movement_male' => 0,
-                'movement_female' => 0
+                'movement_female' => 0,
             ];
         }
     }
@@ -992,31 +1005,31 @@ class DashboardRealtimeService
             $query = Flock::where('status', 1);
 
             // If filters are applied, only count flocks that have active batch assignments
-            if (!empty($filters['company']) || !empty($filters['project']) || 
-                !empty($filters['flock']) || !empty($filters['shed']) || 
-                !empty($filters['batch'])) {
-                
+            if (! empty($filters['company']) || ! empty($filters['project']) ||
+                ! empty($filters['flock']) || ! empty($filters['shed']) ||
+                ! empty($filters['batch'])) {
+
                 $batchQuery = BatchAssign::where('status', 1);
-                
-                if (!empty($filters['company'])) {
+
+                if (! empty($filters['company'])) {
                     $batchQuery->where('company_id', $filters['company']);
                 }
-                if (!empty($filters['project'])) {
+                if (! empty($filters['project'])) {
                     $batchQuery->where('project_id', $filters['project']);
                 }
-                if (!empty($filters['flock'])) {
+                if (! empty($filters['flock'])) {
                     $batchQuery->where('flock_id', $filters['flock']);
                 }
-                if (!empty($filters['shed'])) {
+                if (! empty($filters['shed'])) {
                     $batchQuery->where('shed_id', $filters['shed']);
                 }
-                if (!empty($filters['batch'])) {
+                if (! empty($filters['batch'])) {
                     $batchQuery->where('batch_no', $filters['batch']);
                 }
 
                 // Get unique flock IDs from active batch assignments
                 $activeFlockIds = $batchQuery->distinct()->pluck('flock_id');
-                
+
                 // Count active flocks that have active batch assignments
                 return $query->whereIn('id', $activeFlockIds)->count();
             }
@@ -1025,7 +1038,8 @@ class DashboardRealtimeService
             return $query->count();
 
         } catch (\Exception $e) {
-            Log::error('Error getting active flocks count: ' . $e->getMessage());
+            Log::error('Error getting active flocks count: '.$e->getMessage());
+
             return 0;
         }
     }
@@ -1041,19 +1055,19 @@ class DashboardRealtimeService
                 ->with(['flock', 'company', 'shed', 'batch', 'project']);
 
             // Apply filters
-            if (!empty($filters['company'])) {
+            if (! empty($filters['company'])) {
                 $batchQuery->where('company_id', $filters['company']);
             }
-            if (!empty($filters['project'])) {
+            if (! empty($filters['project'])) {
                 $batchQuery->where('project_id', $filters['project']);
             }
-            if (!empty($filters['flock'])) {
+            if (! empty($filters['flock'])) {
                 $batchQuery->where('flock_id', $filters['flock']);
             }
-            if (!empty($filters['shed'])) {
+            if (! empty($filters['shed'])) {
                 $batchQuery->where('shed_id', $filters['shed']);
             }
-            if (!empty($filters['batch'])) {
+            if (! empty($filters['batch'])) {
                 $batchQuery->where('batch_id', $filters['batch']);
             }
 
@@ -1063,10 +1077,10 @@ class DashboardRealtimeService
             $totalBirds = $batchAssigns->sum('batch_total_qty');
             $maleBirds = $batchAssigns->sum('batch_male_qty');
             $femaleBirds = $batchAssigns->sum('batch_female_qty');
-            
+
             // Get mortality data from DailyMortality table only (for batch calculations)
             $dailyMortalityData = DailyMortality::query();
-            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
                 $dailyMortalityData->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
             }
             $mortalityCount = $dailyMortalityData->sum('male_qty') + $dailyMortalityData->sum('female_qty');
@@ -1078,12 +1092,22 @@ class DashboardRealtimeService
                 $totalBirds = $batches->sum('batch_total_qty');
                 $maleBirds = $batches->sum('batch_male_qty');
                 $femaleBirds = $batches->sum('batch_female_qty');
-                
+
                 // Get mortality data from DailyMortality table for this specific batch
                 $batchAssignId = $firstBatch->id;
                 $mortalityData = $this->getDailyMortalityDataForBatch($batchAssignId, $filters);
                 $mortalityCount = $mortalityData['total'];
                 $mortalityRate = $totalBirds > 0 ? ($mortalityCount / $totalBirds) * 100 : 0;
+
+                // Calculate age from shed receive date
+                $startDate = $firstBatch->shedReceive?->created_at ?? $firstBatch->created_at;
+                $age = '0 weeks 0 days';
+                if ($startDate) {
+                    $days = $startDate->diffInDays(now());
+                    $weeks = floor($days / 7);
+                    $remainingDays = $days % 7;
+                    $age = "{$weeks} weeks {$remainingDays} days";
+                }
 
                 return [
                     'batch_id' => $batchNo,
@@ -1105,7 +1129,8 @@ class DashboardRealtimeService
                     'assignments_count' => $batches->count(),
                     'start_date' => $batches->min('start_date'),
                     'end_date' => $batches->max('end_date'),
-                    'status' => $firstBatch->status == 1 ? 'Active' : 'Inactive'
+                    'age' => $age,
+                    'status' => $firstBatch->status == 1 ? 'Active' : 'Inactive',
                 ];
             })->values();
 
@@ -1124,7 +1149,7 @@ class DashboardRealtimeService
                         'shed_name' => $operation->batchAssign?->shed?->name ?? 'Unknown',
                         'operation_type' => $operation->operation_type ?? 'Unknown',
                         'description' => $operation->description ?? 'No description',
-                        'birds_affected' => $operation->birds_affected ?? 0
+                        'birds_affected' => $operation->birds_affected ?? 0,
                     ];
                 });
 
@@ -1137,19 +1162,20 @@ class DashboardRealtimeService
                 'mortality_rate' => round($mortalityRate, 2),
                 'total_batches' => $batchDetails->count(),
                 'active_batches' => $batchDetails->where('status', 'Active')->count(),
-                'total_assignments' => $batchAssigns->count()
+                'total_assignments' => $batchAssigns->count(),
             ];
 
             return [
                 'summary' => $summary,
                 'batch_details' => $batchDetails,
                 'recent_operations' => $recentOperations,
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error getting birds details: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Error getting birds details: '.$e->getMessage());
+            Log::error('Stack trace: '.$e->getTraceAsString());
+
             return [
                 'summary' => [
                     'total_birds' => 0,
@@ -1159,11 +1185,11 @@ class DashboardRealtimeService
                     'mortality_rate' => 0,
                     'total_batches' => 0,
                     'active_batches' => 0,
-                    'total_assignments' => 0
+                    'total_assignments' => 0,
                 ],
                 'batch_details' => [],
                 'recent_operations' => [],
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
         }
     }
@@ -1179,19 +1205,19 @@ class DashboardRealtimeService
                 ->with(['flock', 'company', 'shed', 'batch', 'project']);
 
             // Apply filters
-            if (!empty($filters['company'])) {
+            if (! empty($filters['company'])) {
                 $batchQuery->where('company_id', $filters['company']);
             }
-            if (!empty($filters['project'])) {
+            if (! empty($filters['project'])) {
                 $batchQuery->where('project_id', $filters['project']);
             }
-            if (!empty($filters['flock'])) {
+            if (! empty($filters['flock'])) {
                 $batchQuery->where('flock_id', $filters['flock']);
             }
-            if (!empty($filters['shed'])) {
+            if (! empty($filters['shed'])) {
                 $batchQuery->where('shed_id', $filters['shed']);
             }
-            if (!empty($filters['batch'])) {
+            if (! empty($filters['batch'])) {
                 $batchQuery->where('batch_no', $filters['batch']);
             }
 
@@ -1199,7 +1225,7 @@ class DashboardRealtimeService
 
             // Calculate summary statistics
             $totalBirds = $batchAssigns->sum('batch_total_qty');
-            
+
             // Get mortality data from DailyMortality and MovementAdjustment tables
             $mortalityData = $this->getRecentMortalityData($filters);
             $totalMortality = $mortalityData['total'];
@@ -1211,7 +1237,7 @@ class DashboardRealtimeService
             $flockMortalityDetails = $batchAssigns->groupBy('flock_id')->map(function ($batches, $flockId) use ($filters) {
                 $firstBatch = $batches->first();
                 $totalBirds = $batches->sum('batch_total_qty');
-                
+
                 // Get mortality data from both DailyMortality and MovementAdjustment tables for this flock
                 $mortalityData = $this->getMortalityDataForFlock($flockId, $filters);
                 $totalMortality = $mortalityData['total'];
@@ -1233,10 +1259,10 @@ class DashboardRealtimeService
                     'movement_male' => $mortalityData['movement_male'],
                     'movement_female' => $mortalityData['movement_female'],
                     'batches_count' => $batches->count(),
-                    'companies' => $batches->map(fn($b) => $b->company?->name)->unique()->filter()->values(),
-                    'projects' => $batches->map(fn($b) => $b->project?->name)->unique()->filter()->values(),
-                    'sheds' => $batches->map(fn($b) => $b->shed?->name)->unique()->filter()->values(),
-                    'status' => 'Active'
+                    'companies' => $batches->map(fn ($b) => $b->company?->name)->unique()->filter()->values(),
+                    'projects' => $batches->map(fn ($b) => $b->project?->name)->unique()->filter()->values(),
+                    'sheds' => $batches->map(fn ($b) => $b->shed?->name)->unique()->filter()->values(),
+                    'status' => 'Active',
                 ];
             })->values();
 
@@ -1244,7 +1270,7 @@ class DashboardRealtimeService
             $batchMortalityDetails = $batchAssigns->groupBy('batch_no')->map(function ($batches, $batchNo) use ($filters) {
                 $firstBatch = $batches->first();
                 $totalBirds = $batches->sum('batch_total_qty');
-                
+
                 // Get mortality data from DailyMortality table for this specific batch
                 $batchAssignId = $firstBatch->id;
                 $mortalityData = $this->getDailyMortalityDataForBatch($batchAssignId, $filters);
@@ -1273,7 +1299,7 @@ class DashboardRealtimeService
                     'assignments_count' => $batches->count(),
                     'start_date' => $batches->min('growing_start_date'),
                     'transfer_date' => $batches->max('transfer_date'),
-                    'status' => 'Active'
+                    'status' => 'Active',
                 ];
             })->values();
 
@@ -1292,7 +1318,7 @@ class DashboardRealtimeService
                         'batch_name' => $operation->batchAssign?->batch?->name ?? 'Unknown',
                         'shed_name' => $operation->batchAssign?->shed?->name ?? 'Unknown',
                         'description' => 'Daily operation recorded',
-                        'created_by' => $operation->creator?->name ?? 'Unknown'
+                        'created_by' => $operation->creator?->name ?? 'Unknown',
                     ];
                 });
 
@@ -1318,7 +1344,7 @@ class DashboardRealtimeService
                     'flock_name' => $flock['flock_name'],
                     'mortality_rate' => $rate,
                     'trend' => $trend,
-                    'trend_color' => $trendColor
+                    'trend_color' => $trendColor,
                 ];
             });
 
@@ -1334,7 +1360,7 @@ class DashboardRealtimeService
                 'excellent_flocks' => $mortalityTrends->where('trend', 'excellent')->count(),
                 'good_flocks' => $mortalityTrends->where('trend', 'good')->count(),
                 'moderate_flocks' => $mortalityTrends->where('trend', 'moderate')->count(),
-                'high_risk_flocks' => $mortalityTrends->where('trend', 'high')->count()
+                'high_risk_flocks' => $mortalityTrends->where('trend', 'high')->count(),
             ];
 
             return [
@@ -1343,12 +1369,13 @@ class DashboardRealtimeService
                 'batch_details' => $batchMortalityDetails,
                 'mortality_trends' => $mortalityTrends,
                 'recent_operations' => $recentMortalityOperations,
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error getting mortality details: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Error getting mortality details: '.$e->getMessage());
+            Log::error('Stack trace: '.$e->getTraceAsString());
+
             return [
                 'summary' => [
                     'total_birds' => 0,
@@ -1361,13 +1388,13 @@ class DashboardRealtimeService
                     'excellent_flocks' => 0,
                     'good_flocks' => 0,
                     'moderate_flocks' => 0,
-                    'high_risk_flocks' => 0
+                    'high_risk_flocks' => 0,
                 ],
                 'flock_details' => [],
                 'batch_details' => [],
                 'mortality_trends' => [],
                 'recent_operations' => [],
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
         }
     }
@@ -1383,32 +1410,32 @@ class DashboardRealtimeService
                 ->with(['flock', 'company', 'shed', 'batch', 'project']);
 
             // Apply filters
-            if (!empty($filters['company'])) {
+            if (! empty($filters['company'])) {
                 $batchQuery->where('company_id', $filters['company']);
             }
-            if (!empty($filters['project'])) {
+            if (! empty($filters['project'])) {
                 $batchQuery->where('project_id', $filters['project']);
             }
-            if (!empty($filters['flock'])) {
+            if (! empty($filters['flock'])) {
                 $batchQuery->where('flock_id', $filters['flock']);
             }
-            if (!empty($filters['shed'])) {
+            if (! empty($filters['shed'])) {
                 $batchQuery->where('shed_id', $filters['shed']);
             }
-            if (!empty($filters['batch'])) {
+            if (! empty($filters['batch'])) {
                 $batchQuery->where('batch_no', $filters['batch']);
             }
 
             $batchAssigns = $batchQuery->get();
 
             // Get daily egg collections for these batch assignments through daily operations
-            $eggCollectionsQuery = DailyEggCollection::whereHas('dailyOperation', function($query) use ($batchAssigns, $filters) {
+            $eggCollectionsQuery = DailyEggCollection::whereHas('dailyOperation', function ($query) use ($batchAssigns, $filters) {
                 $query->whereIn('batchassign_id', $batchAssigns->pluck('id'));
-                
+
                 // Apply date filters
-                if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+                if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
                     $query->whereBetween('operation_date', [$filters['date_from'], $filters['date_to']]);
-                } elseif (!empty($filters['date'])) {
+                } elseif (! empty($filters['date'])) {
                     if ($filters['date'] === 'Last 7 Days') {
                         $query->where('operation_date', '>=', now()->subDays(7));
                     } elseif ($filters['date'] === 'Last 1 Month') {
@@ -1419,8 +1446,8 @@ class DashboardRealtimeService
                     $query->where('operation_date', '>=', now()->subDays(7));
                 }
             })
-            ->with(['dailyOperation.batchAssign.flock', 'dailyOperation.batchAssign.company', 'dailyOperation.batchAssign.shed', 'dailyOperation.batchAssign.batch', 'dailyOperation.batchAssign.project'])
-            ->orderBy('created_at', 'desc');
+                ->with(['dailyOperation.batchAssign.flock', 'dailyOperation.batchAssign.company', 'dailyOperation.batchAssign.shed', 'dailyOperation.batchAssign.batch', 'dailyOperation.batchAssign.project'])
+                ->orderBy('created_at', 'desc');
 
             $eggCollections = $eggCollectionsQuery->get();
 
@@ -1458,11 +1485,11 @@ class DashboardRealtimeService
                     'commercial_percentage' => round($commercialPercentage, 2),
                     'rejection_rate' => round($rejectionRate, 2),
                     'collections_count' => $collections->count(),
-                    'companies' => $collections->map(fn($c) => $c->dailyOperation?->batchAssign?->company?->name)->unique()->filter()->values(),
-                    'projects' => $collections->map(fn($c) => $c->dailyOperation?->batchAssign?->project?->name)->unique()->filter()->values(),
-                    'sheds' => $collections->map(fn($c) => $c->dailyOperation?->batchAssign?->shed?->name)->unique()->filter()->values(),
+                    'companies' => $collections->map(fn ($c) => $c->dailyOperation?->batchAssign?->company?->name)->unique()->filter()->values(),
+                    'projects' => $collections->map(fn ($c) => $c->dailyOperation?->batchAssign?->project?->name)->unique()->filter()->values(),
+                    'sheds' => $collections->map(fn ($c) => $c->dailyOperation?->batchAssign?->shed?->name)->unique()->filter()->values(),
                     'last_collection_date' => $collections->max('created_at'),
-                    'status' => 'Active'
+                    'status' => 'Active',
                 ];
             })->values();
 
@@ -1494,7 +1521,7 @@ class DashboardRealtimeService
                     'rejection_rate' => round($rejectionRate, 2),
                     'collections_count' => $collections->count(),
                     'last_collection_date' => $collections->max('created_at'),
-                    'status' => 'Active'
+                    'status' => 'Active',
                 ];
             })->values();
 
@@ -1505,7 +1532,7 @@ class DashboardRealtimeService
                 $technicalEggs = $totalEggs * 0.2; // Assume 20% technical
                 $hatchingEggs = $totalEggs * 0.1; // Assume 10% hatching
                 $rejectedEggs = 0; // No rejected eggs in daily collections
-                
+
                 return [
                     'id' => $collection->id,
                     'collection_date' => $collection->created_at->format('Y-m-d'),
@@ -1519,7 +1546,7 @@ class DashboardRealtimeService
                     'rejected_eggs' => $rejectedEggs,
                     'commercial_percentage' => $totalEggs > 0 ? round(($commercialEggs / $totalEggs) * 100, 2) : 0,
                     'remarks' => $collection->note ?? 'No remarks',
-                    'created_by' => 'System' // Daily collections don't have creator field
+                    'created_by' => 'System', // Daily collections don't have creator field
                 ];
             });
 
@@ -1545,7 +1572,7 @@ class DashboardRealtimeService
                     'flock_name' => $flock['flock_name'],
                     'commercial_percentage' => $commercialRate,
                     'trend' => $trend,
-                    'trend_color' => $trendColor
+                    'trend_color' => $trendColor,
                 ];
             });
 
@@ -1564,7 +1591,7 @@ class DashboardRealtimeService
                 'excellent_flocks' => $productionTrends->where('trend', 'excellent')->count(),
                 'good_flocks' => $productionTrends->where('trend', 'good')->count(),
                 'moderate_flocks' => $productionTrends->where('trend', 'moderate')->count(),
-                'poor_flocks' => $productionTrends->where('trend', 'poor')->count()
+                'poor_flocks' => $productionTrends->where('trend', 'poor')->count(),
             ];
 
             return [
@@ -1573,12 +1600,13 @@ class DashboardRealtimeService
                 'batch_details' => $batchEggDetails,
                 'production_trends' => $productionTrends,
                 'recent_classifications' => $recentEggCollections,
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error getting daily eggs details: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Error getting daily eggs details: '.$e->getMessage());
+            Log::error('Stack trace: '.$e->getTraceAsString());
+
             return [
                 'summary' => [
                     'total_eggs' => 0,
@@ -1594,13 +1622,13 @@ class DashboardRealtimeService
                     'excellent_flocks' => 0,
                     'good_flocks' => 0,
                     'moderate_flocks' => 0,
-                    'poor_flocks' => 0
+                    'poor_flocks' => 0,
                 ],
                 'flock_details' => [],
                 'batch_details' => [],
                 'production_trends' => [],
                 'recent_classifications' => [],
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
         }
     }
@@ -1616,19 +1644,19 @@ class DashboardRealtimeService
                 ->with(['flock', 'company', 'shed', 'batch', 'project']);
 
             // Apply filters
-            if (!empty($filters['company'])) {
+            if (! empty($filters['company'])) {
                 $batchQuery->where('company_id', $filters['company']);
             }
-            if (!empty($filters['project'])) {
+            if (! empty($filters['project'])) {
                 $batchQuery->where('project_id', $filters['project']);
             }
-            if (!empty($filters['flock'])) {
+            if (! empty($filters['flock'])) {
                 $batchQuery->where('flock_id', $filters['flock']);
             }
-            if (!empty($filters['shed'])) {
+            if (! empty($filters['shed'])) {
                 $batchQuery->where('shed_id', $filters['shed']);
             }
-            if (!empty($filters['batch'])) {
+            if (! empty($filters['batch'])) {
                 $batchQuery->where('batch_no', $filters['batch']);
             }
 
@@ -1661,11 +1689,11 @@ class DashboardRealtimeService
                     'total_eggs' => $totalEggs,
                     'hatching_percentage' => round($hatchingPercentage, 2),
                     'classifications_count' => $classifications->count(),
-                    'companies' => $classifications->map(fn($c) => $c->batchAssign?->company?->name)->unique()->filter()->values(),
-                    'projects' => $classifications->map(fn($c) => $c->batchAssign?->project?->name)->unique()->filter()->values(),
-                    'sheds' => $classifications->map(fn($c) => $c->batchAssign?->shed?->name)->unique()->filter()->values(),
+                    'companies' => $classifications->map(fn ($c) => $c->batchAssign?->company?->name)->unique()->filter()->values(),
+                    'projects' => $classifications->map(fn ($c) => $c->batchAssign?->project?->name)->unique()->filter()->values(),
+                    'sheds' => $classifications->map(fn ($c) => $c->batchAssign?->shed?->name)->unique()->filter()->values(),
                     'last_classification_date' => $classifications->max('classification_date'),
-                    'status' => 'Active'
+                    'status' => 'Active',
                 ];
             })->values();
 
@@ -1689,7 +1717,7 @@ class DashboardRealtimeService
                     'hatching_percentage' => round($hatchingPercentage, 2),
                     'classifications_count' => $classifications->count(),
                     'last_classification_date' => $classifications->max('classification_date'),
-                    'status' => 'Active'
+                    'status' => 'Active',
                 ];
             })->values();
 
@@ -1705,7 +1733,7 @@ class DashboardRealtimeService
                     'total_eggs' => $classification->total_eggs,
                     'hatching_percentage' => $classification->total_eggs > 0 ? round(($classification->hatching_eggs / $classification->total_eggs) * 100, 2) : 0,
                     'remarks' => $classification->remarks ?? 'No remarks',
-                    'created_by' => $classification->creator?->name ?? 'Unknown'
+                    'created_by' => $classification->creator?->name ?? 'Unknown',
                 ];
             });
 
@@ -1732,7 +1760,7 @@ class DashboardRealtimeService
                     'flock_name' => $flock['flock_name'],
                     'hatching_percentage' => $hatchingRate,
                     'trend' => $trend,
-                    'trend_color' => $trendColor
+                    'trend_color' => $trendColor,
                 ];
             });
 
@@ -1747,7 +1775,7 @@ class DashboardRealtimeService
                 'excellent_flocks' => $hatchingTrends->where('trend', 'excellent')->count(),
                 'good_flocks' => $hatchingTrends->where('trend', 'good')->count(),
                 'moderate_flocks' => $hatchingTrends->where('trend', 'moderate')->count(),
-                'poor_flocks' => $hatchingTrends->where('trend', 'poor')->count()
+                'poor_flocks' => $hatchingTrends->where('trend', 'poor')->count(),
             ];
 
             return [
@@ -1756,12 +1784,13 @@ class DashboardRealtimeService
                 'batch_details' => $batchHatchingDetails,
                 'hatching_trends' => $hatchingTrends,
                 'recent_classifications' => $recentHatchingClassifications,
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error getting hatchable eggs details: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Error getting hatchable eggs details: '.$e->getMessage());
+            Log::error('Stack trace: '.$e->getTraceAsString());
+
             return [
                 'summary' => [
                     'total_hatching_eggs' => 0,
@@ -1773,13 +1802,13 @@ class DashboardRealtimeService
                     'excellent_flocks' => 0,
                     'good_flocks' => 0,
                     'moderate_flocks' => 0,
-                    'poor_flocks' => 0
+                    'poor_flocks' => 0,
                 ],
                 'flock_details' => [],
                 'batch_details' => [],
                 'hatching_trends' => [],
                 'recent_classifications' => [],
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
         }
     }
@@ -1795,19 +1824,19 @@ class DashboardRealtimeService
                 ->with(['flock', 'company', 'shed', 'batch', 'project']);
 
             // Apply filters
-            if (!empty($filters['company'])) {
+            if (! empty($filters['company'])) {
                 $batchQuery->where('company_id', $filters['company']);
             }
-            if (!empty($filters['project'])) {
+            if (! empty($filters['project'])) {
                 $batchQuery->where('project_id', $filters['project']);
             }
-            if (!empty($filters['flock'])) {
+            if (! empty($filters['flock'])) {
                 $batchQuery->where('flock_id', $filters['flock']);
             }
-            if (!empty($filters['shed'])) {
+            if (! empty($filters['shed'])) {
                 $batchQuery->where('shed_id', $filters['shed']);
             }
-            if (!empty($filters['batch'])) {
+            if (! empty($filters['batch'])) {
                 $batchQuery->where('batch_no', $filters['batch']);
             }
 
@@ -1817,10 +1846,10 @@ class DashboardRealtimeService
             $totalMaleBirds = $batchAssigns->sum('batch_male_qty');
             $totalBirds = $batchAssigns->sum('batch_total_qty');
             $totalFemaleBirds = $batchAssigns->sum('batch_female_qty');
-            
+
             // Get mortality data from DailyMortality table only (for batch calculations)
             $dailyMortalityData = DailyMortality::query();
-            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
                 $dailyMortalityData->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
             }
             $maleMortality = $dailyMortalityData->sum('male_qty');
@@ -1833,7 +1862,7 @@ class DashboardRealtimeService
                 $totalMaleBirds = $batches->sum('batch_male_qty');
                 $totalBirds = $batches->sum('batch_total_qty');
                 $totalFemaleBirds = $batches->sum('batch_female_qty');
-                
+
                 // Get mortality data from DailyMortality table only for this flock
                 $mortalityData = $this->getDailyMortalityDataForFlock($flockId, $filters);
                 $maleMortality = $mortalityData['male'];
@@ -1851,11 +1880,11 @@ class DashboardRealtimeService
                     'male_mortality' => $maleMortality,
                     'male_mortality_rate' => round($maleMortalityRate, 2),
                     'batches_count' => $batches->count(),
-                    'companies' => $batches->map(fn($b) => $b->company?->name)->unique()->filter()->values(),
-                    'projects' => $batches->map(fn($b) => $b->project?->name)->unique()->filter()->values(),
-                    'sheds' => $batches->map(fn($b) => $b->shed?->name)->unique()->filter()->values(),
+                    'companies' => $batches->map(fn ($b) => $b->company?->name)->unique()->filter()->values(),
+                    'projects' => $batches->map(fn ($b) => $b->project?->name)->unique()->filter()->values(),
+                    'sheds' => $batches->map(fn ($b) => $b->shed?->name)->unique()->filter()->values(),
                     'last_update' => $batches->max('updated_at'),
-                    'status' => 'Active'
+                    'status' => 'Active',
                 ];
             })->values();
 
@@ -1885,7 +1914,7 @@ class DashboardRealtimeService
                     'male_mortality_rate' => round($maleMortalityRate, 2),
                     'assignments_count' => $batches->count(),
                     'last_update' => $batches->max('updated_at'),
-                    'status' => 'Active'
+                    'status' => 'Active',
                 ];
             })->values();
 
@@ -1904,7 +1933,7 @@ class DashboardRealtimeService
                         'shed_name' => $operation->batchAssign?->shed?->name ?? 'Unknown',
                         'operation_type' => 'Daily Operation',
                         'description' => 'Daily operation recorded',
-                        'created_by' => $operation->creator?->name ?? 'Unknown'
+                        'created_by' => $operation->creator?->name ?? 'Unknown',
                     ];
                 });
 
@@ -1930,7 +1959,7 @@ class DashboardRealtimeService
                     'flock_name' => $flock['flock_name'],
                     'male_percentage' => $maleRate,
                     'trend' => $trend,
-                    'trend_color' => $trendColor
+                    'trend_color' => $trendColor,
                 ];
             });
 
@@ -1948,7 +1977,7 @@ class DashboardRealtimeService
                 'excellent_flocks' => $maleTrends->where('trend', 'excellent')->count(),
                 'good_flocks' => $maleTrends->where('trend', 'good')->count(),
                 'moderate_flocks' => $maleTrends->where('trend', 'moderate')->count(),
-                'poor_flocks' => $maleTrends->where('trend', 'poor')->count()
+                'poor_flocks' => $maleTrends->where('trend', 'poor')->count(),
             ];
 
             return [
@@ -1957,12 +1986,13 @@ class DashboardRealtimeService
                 'batch_details' => $batchMaleDetails,
                 'male_trends' => $maleTrends,
                 'recent_operations' => $recentMaleOperations,
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error getting male birds details: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Error getting male birds details: '.$e->getMessage());
+            Log::error('Stack trace: '.$e->getTraceAsString());
+
             return [
                 'summary' => [
                     'total_male_birds' => 0,
@@ -1977,13 +2007,13 @@ class DashboardRealtimeService
                     'excellent_flocks' => 0,
                     'good_flocks' => 0,
                     'moderate_flocks' => 0,
-                    'poor_flocks' => 0
+                    'poor_flocks' => 0,
                 ],
                 'flock_details' => [],
                 'batch_details' => [],
                 'male_trends' => [],
                 'recent_operations' => [],
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
         }
     }
@@ -1999,19 +2029,19 @@ class DashboardRealtimeService
                 ->with(['flock', 'company', 'shed', 'batch', 'project']);
 
             // Apply filters
-            if (!empty($filters['company'])) {
+            if (! empty($filters['company'])) {
                 $batchQuery->where('company_id', $filters['company']);
             }
-            if (!empty($filters['project'])) {
+            if (! empty($filters['project'])) {
                 $batchQuery->where('project_id', $filters['project']);
             }
-            if (!empty($filters['flock'])) {
+            if (! empty($filters['flock'])) {
                 $batchQuery->where('flock_id', $filters['flock']);
             }
-            if (!empty($filters['shed'])) {
+            if (! empty($filters['shed'])) {
                 $batchQuery->where('shed_id', $filters['shed']);
             }
-            if (!empty($filters['batch'])) {
+            if (! empty($filters['batch'])) {
                 $batchQuery->where('batch_no', $filters['batch']);
             }
 
@@ -2021,10 +2051,10 @@ class DashboardRealtimeService
             $totalFemaleBirds = $batchAssigns->sum('batch_female_qty');
             $totalBirds = $batchAssigns->sum('batch_total_qty');
             $totalMaleBirds = $batchAssigns->sum('batch_male_qty');
-            
+
             // Get mortality data from DailyMortality table only (for batch calculations)
             $dailyMortalityData = DailyMortality::query();
-            if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
                 $dailyMortalityData->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
             }
             $femaleMortality = $dailyMortalityData->sum('female_qty');
@@ -2037,7 +2067,7 @@ class DashboardRealtimeService
                 $totalFemaleBirds = $batches->sum('batch_female_qty');
                 $totalBirds = $batches->sum('batch_total_qty');
                 $totalMaleBirds = $batches->sum('batch_male_qty');
-                
+
                 // Get mortality data from DailyMortality table only for this flock
                 $mortalityData = $this->getDailyMortalityDataForFlock($flockId, $filters);
                 $femaleMortality = $mortalityData['female'];
@@ -2055,11 +2085,11 @@ class DashboardRealtimeService
                     'female_mortality' => $femaleMortality,
                     'female_mortality_rate' => round($femaleMortalityRate, 2),
                     'batches_count' => $batches->count(),
-                    'companies' => $batches->map(fn($b) => $b->company?->name)->unique()->filter()->values(),
-                    'projects' => $batches->map(fn($b) => $b->project?->name)->unique()->filter()->values(),
-                    'sheds' => $batches->map(fn($b) => $b->shed?->name)->unique()->filter()->values(),
+                    'companies' => $batches->map(fn ($b) => $b->company?->name)->unique()->filter()->values(),
+                    'projects' => $batches->map(fn ($b) => $b->project?->name)->unique()->filter()->values(),
+                    'sheds' => $batches->map(fn ($b) => $b->shed?->name)->unique()->filter()->values(),
                     'last_update' => $batches->max('updated_at'),
-                    'status' => 'Active'
+                    'status' => 'Active',
                 ];
             })->values();
 
@@ -2089,7 +2119,7 @@ class DashboardRealtimeService
                     'female_mortality_rate' => round($femaleMortalityRate, 2),
                     'assignments_count' => $batches->count(),
                     'last_update' => $batches->max('updated_at'),
-                    'status' => 'Active'
+                    'status' => 'Active',
                 ];
             })->values();
 
@@ -2108,7 +2138,7 @@ class DashboardRealtimeService
                         'shed_name' => $operation->batchAssign?->shed?->name ?? 'Unknown',
                         'operation_type' => 'Daily Operation',
                         'description' => 'Daily operation recorded',
-                        'created_by' => $operation->creator?->name ?? 'Unknown'
+                        'created_by' => $operation->creator?->name ?? 'Unknown',
                     ];
                 });
 
@@ -2134,7 +2164,7 @@ class DashboardRealtimeService
                     'flock_name' => $flock['flock_name'],
                     'female_percentage' => $femaleRate,
                     'trend' => $trend,
-                    'trend_color' => $trendColor
+                    'trend_color' => $trendColor,
                 ];
             });
 
@@ -2152,7 +2182,7 @@ class DashboardRealtimeService
                 'excellent_flocks' => $femaleTrends->where('trend', 'excellent')->count(),
                 'good_flocks' => $femaleTrends->where('trend', 'good')->count(),
                 'moderate_flocks' => $femaleTrends->where('trend', 'moderate')->count(),
-                'poor_flocks' => $femaleTrends->where('trend', 'poor')->count()
+                'poor_flocks' => $femaleTrends->where('trend', 'poor')->count(),
             ];
 
             return [
@@ -2161,12 +2191,13 @@ class DashboardRealtimeService
                 'batch_details' => $batchFemaleDetails,
                 'female_trends' => $femaleTrends,
                 'recent_operations' => $recentFemaleOperations,
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
 
         } catch (\Exception $e) {
-            Log::error('Error getting female birds details: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Error getting female birds details: '.$e->getMessage());
+            Log::error('Stack trace: '.$e->getTraceAsString());
+
             return [
                 'summary' => [
                     'total_female_birds' => 0,
@@ -2181,13 +2212,13 @@ class DashboardRealtimeService
                     'excellent_flocks' => 0,
                     'good_flocks' => 0,
                     'moderate_flocks' => 0,
-                    'poor_flocks' => 0
+                    'poor_flocks' => 0,
                 ],
                 'flock_details' => [],
                 'batch_details' => [],
                 'female_trends' => [],
                 'recent_operations' => [],
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
         }
     }

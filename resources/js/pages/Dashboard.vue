@@ -147,6 +147,7 @@ const tableColumns = ref([
   { key: 'company', label: 'Company', type: 'text' },
   { key: 'project', label: 'Project', type: 'text' },
   { key: 'batch', label: 'Batch Name', type: 'text' },
+  { key: 'age', label: 'Age', type: 'text' },
   { key: 'flock', label: 'Flock Code', type: 'text' },
   { key: 'shed', label: 'Shed', type: 'text' },
   { key: 'stage', label: 'Stage', type: 'badge' },
@@ -1019,21 +1020,6 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         />
       </div>
 
-      <!-- Progress Bars Section -->
-      <div class="space-y-4">
-        <h3 class="text-lg font-semibold text-gray-800">Performance Metrics</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <ProgressInfoBar
-            v-for="(bar,i) in dashboardData.progressBars"
-            :key="i"
-            v-bind="bar"
-            colorFrom="#fde68a"
-            colorTo="#f59e0b"
-            :width="300"
-            :height="40"
-          />
-        </div>
-      </div>
 
       <!-- Bird Stage Visualization -->
       <div class="bg-white/40 backdrop-blur-md border border-white/50 rounded-xl shadow-lg p-6">
@@ -1234,6 +1220,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Birds</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male/Female</th>
@@ -1248,6 +1235,9 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-gray-900">{{ batch.batch_name }}</div>
                     <div class="text-xs text-gray-500">{{ batch.assignments_count }} assignment(s)</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.age }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ batch.flock_name }}</div>

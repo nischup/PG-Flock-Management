@@ -1,28 +1,31 @@
 <?php
+
 // ============================================
 // author Sabbir Ahmed
 // Provita Group Gulshan 2 HO
 // testing git auto deploy to server on 23-Sep-2025
 // ============================================
+
 namespace App\Http\Controllers\VaccineSchedule;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Http\Requests\StoreVaccineRoutingRequest;
 use App\Models\VaccineRouting;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class VaccineRoutingController extends Controller
 {
-      /**
+    /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $routings = VaccineRouting::latest()->get();
 
         return Inertia::render('VaccineRouting/Index', [
             'routings' => $routings,
+            'filters' => $request->only(['search', 'per_page', 'page']),
         ]);
     }
 
@@ -44,6 +47,16 @@ class VaccineRoutingController extends Controller
         return Inertia::render('VaccineRouting/Show', [
             'routing' => $vaccineRouting,
         ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(StoreVaccineRoutingRequest $request, VaccineRouting $vaccineRouting)
+    {
+        $vaccineRouting->update($request->validated());
+
+        return redirect()->back()->with('success', 'Vaccine routing updated successfully.');
     }
 
     /**
