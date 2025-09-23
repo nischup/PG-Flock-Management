@@ -472,7 +472,7 @@ function validateTab(index: number) {
                                 class="relative flex-1 cursor-pointer rounded-lg px-6 py-4 text-center font-medium transition-all duration-200"
                             :class="[
                                 activeTab === index
-                                        ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-2xl ring-2 ring-gray-200/60 backdrop-blur-sm'
+                                        ? 'glossy-purple-tab text-white shadow-2xl ring-2 ring-purple-200/60 backdrop-blur-sm'
                                     : completedTabs.includes(index)
                                           ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md'
                                           : 'bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-md hover:from-gray-700 hover:to-gray-800',
@@ -480,13 +480,13 @@ function validateTab(index: number) {
                         >
                                 <div class="flex items-center justify-center gap-2">
                                     <div class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold"
-                                         :class="activeTab === index ? 'bg-gray-900/30' : completedTabs.includes(index) ? 'bg-white/20' : 'bg-white/20'">
+                                         :class="activeTab === index ? 'bg-white/30' : completedTabs.includes(index) ? 'bg-white/20' : 'bg-white/20'">
                                         {{ index + 1 }}
                                     </div>
                             {{ tab.label }}
                         </div>
                                 <!-- Progress indicator -->
-                                <div v-if="activeTab === index" class="absolute bottom-0 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-gray-900/60"></div>
+                                <div v-if="activeTab === index" class="absolute bottom-0 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-white/60"></div>
                     </div>
                         </div>
                 </div>
@@ -494,16 +494,16 @@ function validateTab(index: number) {
                 <!-- Master Info Tab -->
                     <div v-if="activeTab === 0" class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-gray-200">
                         <!-- Tab Header -->
-                        <div class="bg-gradient-to-r from-gray-400 to-gray-500 px-8 py-6 shadow-2xl ring-2 ring-gray-200/60 backdrop-blur-sm">
+                        <div class="glossy-purple-tab px-8 py-6 shadow-2xl ring-2 ring-purple-200/60 backdrop-blur-sm">
                             <div class="flex items-center gap-3">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-900/20">
-                                    <svg class="h-5 w-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                                    <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <h2 class="text-2xl font-bold text-gray-900">Shipment Information</h2>
-                                    <p class="text-gray-700">Enter the basic shipment details and supplier information</p>
+                                    <h2 class="text-2xl font-bold text-white">Shipment Information</h2>
+                                    <p class="text-purple-100">Enter the basic shipment details and supplier information</p>
                                 </div>
                             </div>
                     </div>
@@ -1238,5 +1238,31 @@ function validateTab(index: number) {
 
 .multiselect-modern :deep(.multiselect__spinner:after) {
     border-color: #2563eb;
+}
+
+/* Glossy Purple Tab Styling */
+.glossy-purple-tab {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+    box-shadow: 
+        0 4px 15px rgba(139, 92, 246, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.glossy-purple-tab::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.glossy-purple-tab:hover::before {
+    left: 100%;
 }
 </style>

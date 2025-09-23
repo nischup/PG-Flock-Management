@@ -67,4 +67,19 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Project::class);
     }
+
+    public function notifications()
+    {
+        return $this->hasMany(UserNotification::class);
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->notifications()->unread()->notExpired();
+    }
+
+    public function readNotifications()
+    {
+        return $this->notifications()->read();
+    }
 }

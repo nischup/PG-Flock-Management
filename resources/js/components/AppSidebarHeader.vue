@@ -2,7 +2,7 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import Clock from '@/components/Clock.vue' // reusable clock component
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import type { BreadcrumbItemType } from '@/types';
 import WeatherWidget from '../components/WehatherWidget.vue';
 import NotificationBell from '../components/NotificationBell.vue';
@@ -16,29 +16,47 @@ withDefaults(
     },
 );
 
-const userNotifications = ref([
-  {
-    id: 1,
-    userId: 101,
-    userName: 'John Doe',
-    message: 'Sent you a message',
-    avatar: 'https://i.pravatar.cc/40?img=1'
-  },
-  {
-    id: 2,
-    userId: 102,
-    userName: 'Sarah Lee',
-    message: 'Commented on your post',
-    avatar: 'https://i.pravatar.cc/40?img=2'
-  },
-  {
-    id: 3,
-    userId: 103,
-    userName: 'Mike',
-    message: 'Liked your photo',
-    avatar: null
+interface Notification {
+  id: number
+  type: string
+  title: string
+  message: string
+  icon?: string
+  priority: string
+  is_read: boolean
+  action_url?: string
+  created_at: string
+  data?: any
+}
+
+const userNotifications = ref<Notification[]>([])
+
+// Fetch recent notifications
+const fetchNotifications = async () => {
+  try {
+    const response = await fetch('/api/notifications/recent', {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+      },
+    })
+    
+    if (response.ok) {
+      const data = await response.json()
+      userNotifications.value = data
+    }
+  } catch (error) {
+    console.error('Failed to fetch notifications:', error)
   }
-])
+}
+
+// Fetch notifications on component mount
+onMounted(() => {
+  fetchNotifications()
+  
+  // Refresh notifications every 30 seconds
+  setInterval(fetchNotifications, 30000)
+})
 </script>
 
 <template>

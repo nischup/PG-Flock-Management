@@ -13,6 +13,7 @@ use App\Models\Ps\PsLabTest;
 use App\Models\Ps\PsReceive;
 use App\Services\ApprovalMatrixService;
 use App\Services\AuditLogService;
+use App\Services\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -203,11 +204,11 @@ class PsReceiveController extends Controller
 
             // Initiate approval process for PS Receive
             try {
-                $approvalService = new ApprovalMatrixService;
+                $approvalService = app(ApprovalMatrixService::class);
                 $approvalData = [
                     'pi_no' => $psReceive->pi_no,
                     'supplier' => $psReceive->supplier->name ?? 'N/A',
-                    'total_qty' => $psReceive->chickCounts->ps_total_qty ?? 0,
+                    'total_qty' => $psReceive->chickCounts->first() ? $psReceive->chickCounts->first()->ps_total_qty : 0,
                     'created_at' => $psReceive->created_at,
                 ];
                 $approvalService->initiateApproval('ps-receive', $psReceive->id, $approvalData, Auth::user());
@@ -220,6 +221,19 @@ class PsReceiveController extends Controller
             }
 
             DB::commit();
+
+            // Send notification for new PS Receive record
+            $notificationService = app(NotificationService::class);
+            $totalQty = $psReceive->chickCounts->first() ? $psReceive->chickCounts->first()->ps_total_qty : 0;
+            $notificationService->send(
+                user: Auth::user(),
+                type: 'flock',
+                title: 'New PS Receive Created',
+                message: "PS Receive #{$psReceive->pi_no} has been created successfully. Total quantity: {$totalQty}",
+                priority: 'normal',
+                icon: 'package',
+                actionUrl: "/ps-receive/{$psReceive->id}"
+            );
 
             return redirect()->route('ps-receive.index')
                 ->with('success', 'Parent Stock Receive Successfully.');
@@ -565,7 +579,7 @@ class PsReceiveController extends Controller
     public function getApprovalStatus($id)
     {
         $psReceive = PsReceive::findOrFail($id);
-        $approvalService = new ApprovalMatrixService;
+        $approvalService = app(ApprovalMatrixService::class);
 
         $approvalStatus = $approvalService->getApprovalStatus('ps-receive', $id);
 
@@ -590,7 +604,7 @@ class PsReceiveController extends Controller
         ]);
 
         try {
-            $approvalService = new ApprovalMatrixService;
+            $approvalService = app(ApprovalMatrixService::class);
             $result = $approvalService->approve('ps-receive', $id, Auth::id(), $request->comments);
 
             if ($result['success']) {
@@ -619,7 +633,7 @@ class PsReceiveController extends Controller
         ]);
 
         try {
-            $approvalService = new ApprovalMatrixService;
+            $approvalService = app(ApprovalMatrixService::class);
             $result = $approvalService->reject('ps-receive', $id, Auth::id(), $request->comments);
 
             if ($result['success']) {
@@ -643,7 +657,7 @@ class PsReceiveController extends Controller
      */
     public function getPendingApprovals()
     {
-        $approvalService = new ApprovalMatrixService;
+        $approvalService = app(ApprovalMatrixService::class);
         $pendingApprovals = $approvalService->getPendingApprovalsForUser(Auth::id());
 
         return response()->json($pendingApprovals);

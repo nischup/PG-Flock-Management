@@ -333,7 +333,10 @@ const breadcrumbs: BreadcrumbItem[] = [
         <div class="m-5 w-full max-w-sm">
             <select
                 v-model="selectedPI"
-                class="block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 sm:text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                class="block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-500 sm:text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 transition-all duration-200"
+                :class="{
+                    'ps-receive-select-active': selectedPI
+                }"
             >
                 <option :value="null" disabled>Select Parent Stock Receive</option>
                 <option 
@@ -755,7 +758,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <tr
                             v-for="(item, index) in props.psReceives?.data ?? []"
                             :key="item.id"
-                            class="odd:bg-white even:bg-gray-50 hover:bg-gray-100 dark:odd:bg-gray-900 dark:even:bg-gray-800"
+                            class="odd:bg-white even:bg-gray-50 hover:bg-gray-100 dark:odd:bg-gray-900 dark:even:bg-gray-800 transition-all duration-200"
+                            :class="{
+                                'ps-receive-row-active': selectedPI === item.id,
+                                'hover:from-red-50 hover:to-red-100 hover:border-red-300 dark:hover:from-red-900/30 dark:hover:to-red-800/30': selectedPI !== item.id
+                            }"
+                            @click="selectedPI = item.id"
+                            style="cursor: pointer;"
                         >
                             <td class="px-4 py-3 text-center text-gray-500 dark:text-gray-400 whitespace-nowrap font-medium">
                                 {{ ((props.psReceives?.meta?.current_page || 1) - 1) * (props.psReceives?.meta?.per_page || 10) + index + 1 }}
@@ -940,5 +949,75 @@ const breadcrumbs: BreadcrumbItem[] = [
 /* Smooth scrolling */
 .overflow-x-auto {
     scroll-behavior: smooth;
+}
+
+/* Glossy red active state for PS Receive rows */
+.ps-receive-row-active {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 50%, #fecaca 100%);
+    border-left: 4px solid #dc2626;
+    box-shadow: 
+        0 4px 6px -1px rgba(220, 38, 38, 0.1),
+        0 2px 4px -1px rgba(220, 38, 38, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.ps-receive-row-active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+}
+
+.ps-receive-row-active:hover {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 50%, #fecaca 100%);
+    box-shadow: 
+        0 8px 15px -3px rgba(220, 38, 38, 0.2),
+        0 4px 6px -2px rgba(220, 38, 38, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Dark mode glossy red */
+.dark .ps-receive-row-active {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(185, 28, 28, 0.15) 50%, rgba(153, 27, 27, 0.2) 100%);
+    border-left: 4px solid #f87171;
+    box-shadow: 
+        0 4px 6px -1px rgba(248, 113, 113, 0.2),
+        0 2px 4px -1px rgba(248, 113, 113, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.dark .ps-receive-row-active::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.dark .ps-receive-row-active:hover {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(185, 28, 28, 0.2) 50%, rgba(153, 27, 27, 0.25) 100%);
+    box-shadow: 
+        0 8px 15px -3px rgba(248, 113, 113, 0.3),
+        0 4px 6px -2px rgba(248, 113, 113, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Glossy red select dropdown when item is selected */
+.ps-receive-select-active {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
+    border-color: #dc2626 !important;
+    box-shadow: 
+        0 0 0 3px rgba(220, 38, 38, 0.1),
+        0 2px 4px -1px rgba(220, 38, 38, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .ps-receive-select-active {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(185, 28, 28, 0.15) 100%) !important;
+    border-color: #f87171 !important;
+    box-shadow: 
+        0 0 0 3px rgba(248, 113, 113, 0.2),
+        0 2px 4px -1px rgba(248, 113, 113, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 </style>

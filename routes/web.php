@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\DashboardRealtimeController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\DailyOperation\DailyOperationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FirmLabTestController;
@@ -213,6 +214,28 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/dashboard/hatchable-eggs-details', [DashboardRealtimeController::class, 'getHatchableEggsDetails'])->name('dashboard.hatchable-eggs-details');
     Route::get('/api/dashboard/male-birds-details', [DashboardRealtimeController::class, 'getMaleBirdsDetails'])->name('dashboard.male-birds-details');
     Route::get('/api/dashboard/female-birds-details', [DashboardRealtimeController::class, 'getFemaleBirdsDetails'])->name('dashboard.female-birds-details');
+    
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/api/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::get('/api/notifications/recent', [NotificationController::class, 'recent'])->name('notifications.recent');
+    Route::post('/api/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/api/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/api/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::get('/api/notifications/stats', [NotificationController::class, 'stats'])->name('notifications.stats');
+    
+    // Test route for notifications
+    Route::get('/test-notifications', function() {
+        $user = \App\Models\User::find(2);
+        if (!$user) return 'User not found';
+        
+        $notifications = $user->notifications()->notExpired()->orderBy('created_at', 'desc')->limit(10)->get();
+        return response()->json([
+            'user' => $user->name,
+            'notifications_count' => $notifications->count(),
+            'notifications' => $notifications
+        ]);
+    });
 });
 
 Route::get('/bird-transfer-receive-report', [TransferReceiveReportController::class, 'index'])

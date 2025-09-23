@@ -6,11 +6,15 @@ use App\Models\ApprovalAction;
 use App\Models\ApprovalRequest;
 use App\Models\Master\ApprovalMatrixConfig;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ApprovalMatrixService
 {
+    public function __construct(
+        private NotificationService $notificationService
+    ) {}
     /**
      * Initiate an approval request for a record
      */
@@ -385,9 +389,17 @@ class ApprovalMatrixService
             $users = User::role($currentLayer->role_name)->get();
 
             foreach ($users as $user) {
-                // Send notification (implement your notification logic here)
-                // This could be email, SMS, in-app notification, etc.
-                Log::info("Sending approval notification to user {$user->id} for request {$request->id}");
+                $this->notificationService->sendApprovalNotification(
+                    user: $user,
+                    action: 'pending',
+                    module: $request->module_name,
+                    recordId: $request->record_id,
+                    additionalData: [
+                        'approval_request_id' => $request->id,
+                        'layer_name' => $currentLayer->name,
+                        'initiated_by' => $request->initiated_by,
+                    ]
+                );
             }
         } catch (\Exception $e) {
             Log::error("Failed to send layer notifications for request {$request->id}: ".$e->getMessage());
