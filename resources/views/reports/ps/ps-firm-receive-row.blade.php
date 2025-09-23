@@ -287,12 +287,12 @@
                             <td class="details-td">{{ $source_id }}</td> --}}
                         </tr>
                         <tr>
-                            <td class="bold">Flock origin :</td>
-                            <td class="details-td">{{ $source_type }}</td>
-                            <td class="bold">Breed :</td>
-                            <td class="details-td">{{ $breed_type ?? '-' }}</td>
-                            <td class="bold">Invoice / Gate pass :</td>
-                            <td class="details-td">
+                            <td class="bold" style="background-color: #f1f5f9;">Flock origin :</td>
+                            <td class="details-td" style="background-color: #f1f5f9;">{{ $source_type }}</td>
+                            <td class="bold" style="background-color: #f1f5f9;">Breed :</td>
+                            <td class="details-td" style="background-color: #f1f5f9;">{{ $breed_type ?? '-' }}</td>
+                            <td class="bold" style="background-color: #f1f5f9;">Invoice / Gate pass :</td>
+                            <td class="details-td" style="background-color: #f1f5f9;">
                                 @foreach ($batches as $batch)
                                     <span class="chip details-td">{{ $batch['batch_no'] }}</span>
                                 @endforeach
