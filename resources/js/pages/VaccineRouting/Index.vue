@@ -60,17 +60,33 @@ const form = useForm({
 
 // Draggable modal
 const modalRef = ref<HTMLElement | null>(null);
+const modalHeaderRef = ref<HTMLElement | null>(null);
 let offsetX = 0,
     offsetY = 0,
     isDragging = false;
+
 const startDrag = (event: MouseEvent) => {
-    if (!modalRef.value) return;
+    // Only allow dragging from the header, not form inputs
+    if (!modalRef.value || !modalHeaderRef.value) return;
+    
+    // Check if the click is on the header or its children (but not form inputs or buttons)
+    const target = event.target as HTMLElement;
+    if (!modalHeaderRef.value.contains(target) || 
+        target.tagName === 'INPUT' || 
+        target.tagName === 'TEXTAREA' || 
+        target.tagName === 'SELECT' ||
+        target.tagName === 'BUTTON' ||
+        target.closest('button')) {
+        return;
+    }
+    
     isDragging = true;
     const rect = modalRef.value.getBoundingClientRect();
     offsetX = event.clientX - rect.left;
     offsetY = event.clientY - rect.top;
     document.addEventListener('mousemove', drag);
     document.addEventListener('mouseup', stopDrag);
+    event.preventDefault();
 };
 
 const drag = (event: MouseEvent) => {
@@ -79,6 +95,7 @@ const drag = (event: MouseEvent) => {
     const y = event.clientY - offsetY;
     modalRef.value.style.left = `${x}px`;
     modalRef.value.style.top = `${y}px`;
+    event.preventDefault();
 };
 
 const stopDrag = () => {
@@ -360,20 +377,24 @@ onBeforeUnmount(() => {
         <!-- Create/Edit Modal -->
         <div
             v-if="showModal"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            class="fixed inset-0 bg-transparent flex items-center justify-center z-50"
             @click.self="closeModal"
         >
             <div
                 ref="modalRef"
                 class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 relative"
-                @mousedown="startDrag"
             >
-                <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <div 
+                    ref="modalHeaderRef"
+                    class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 cursor-move"
+                    @mousedown="startDrag"
+                >
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                         {{ editingRouting ? 'Edit Vaccine Routing' : 'Create Vaccine Routing' }}
                     </h3>
                     <button
                         @click="closeModal"
+                        @mousedown.stop
                         class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -426,7 +426,7 @@ class DashboardRealtimeService
             }
 
             // Get batch assignments with relationships
-            $batchAssigns = $batchQuery->with(['flock', 'shed', 'company', 'batch', 'project'])
+            $batchAssigns = $batchQuery->with(['flock', 'shed', 'company', 'batch', 'project', 'shedReceive'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -1052,7 +1052,7 @@ class DashboardRealtimeService
         try {
             // Get all active batch assignments with their related data
             $batchQuery = BatchAssign::where('status', 1)
-                ->with(['flock', 'company', 'shed', 'batch', 'project']);
+                ->with(['flock', 'company', 'shed', 'batch', 'project', 'shedReceive']);
 
             // Apply filters
             if (! empty($filters['company'])) {
