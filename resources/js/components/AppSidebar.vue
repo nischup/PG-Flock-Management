@@ -6,7 +6,7 @@ import { BabyChick } from '@/icons/BabyChick';
 import { BabyChickMultiple } from '@/icons/BabyChickMultiple';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { usePermissions } from '@/composables/usePermissions';
-import { Building, Building2, Pipette, TestTubes, EggFried, ClockArrowUp, Egg, EggOff, LayoutGrid, Package, PencilRuler, Pill, Skull, Syringe, User, Users, FileText, Settings, CheckCircle } from 'lucide-vue-next';
+import { Building, Building2, Pipette, TestTubes, EggFried, ClockArrowUp, Egg, EggOff, LayoutGrid, Package, PencilRuler, Pill, Route, Skull, Syringe, User, Users, FileText, Settings, CheckCircle } from 'lucide-vue-next';
 import { Link } from '@inertiajs/vue3';
 import { type NavItem } from '@/types';
 import AppLogo from './AppLogo.vue';
@@ -193,8 +193,37 @@ const mainNavItems: NavItem[] = [
                 iconClass: 'text-yellow-500',
                 permission: 'vaccine-schedule.view',
             },
+            {
+                title: 'Upcomming Vaccine',
+                href: '/upcomming-vaccine',
+                icon: Syringe,
+                iconClass: 'text-yellow-500',
+                permission: 'upcomming-vaccine.view',
+            },
+          {
+                title: 'Vaccine Routing',
+                href: '/vaccine-routing',
+                icon: Syringe,
+                iconClass: 'text-yellow-500',
+                permission: 'vaccine-routing.view',
+            },
+          {
+                title: 'Vaccine ',
+                href: '/vaccine',
+                icon: Syringe,
+                iconClass: 'text-yellow-500',
+                permission: 'vaccine.view',
+            },
+          {
+                title: 'Vaccine Type ',
+                href: '/vaccine-type',
+                icon: Syringe,
+                iconClass: 'text-yellow-500',
+                permission: 'vaccine-type.view',
+            },
         ],
     },
+
     {
         title: 'Report',
         icon: FileText,
@@ -262,8 +291,6 @@ const mainNavItems: NavItem[] = [
             { title: 'Shed', href: '/shed', icon: Building, iconClass: 'text-yellow-500', permission: 'shed.view' },
             { title: 'Disease', href: '/disease', icon: Skull, iconClass: 'text-yellow-500', permission: 'disease.view' },
             { title: 'Medicine', href: '/medicine', icon: Pill, iconClass: 'text-yellow-500', permission: 'medicine.view' },
-            { title: 'Vaccine', href: '/vaccine', icon: Syringe, iconClass: 'text-yellow-500', permission: 'vaccine.view' },
-            { title: 'Vaccine Type', href: '/vaccine-type', icon: Syringe, iconClass: 'text-yellow-500', permission: 'vaccine-type.view' },
             { title: 'Company', href: '/company', icon: Building2, iconClass: 'text-yellow-500', permission: 'company.view' },
             { title: 'Project', href: '/project', icon: Building2, iconClass: 'text-yellow-500', permission: 'project.view' },
             { title: 'Supplier', href: '/supplier', icon: Users, iconClass: 'text-yellow-500', permission: 'supplier.view' },

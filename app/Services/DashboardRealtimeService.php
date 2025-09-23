@@ -444,6 +444,16 @@ class DashboardRealtimeService
                 })
                     ->sum('quantity');
 
+                // Calculate age from shed receive date
+                $startDate = $batch->shedReceive?->created_at ?? $batch->created_at;
+                $age = '0 weeks 0 days';
+                if ($startDate) {
+                    $days = $startDate->diffInDays(now());
+                    $weeks = floor($days / 7);
+                    $remainingDays = $days % 7;
+                    $age = "{$weeks} weeks {$remainingDays} days";
+                }
+
                 // Determine status based on stage and data
                 $status = $this->determineBatchStatus($batch);
 
@@ -454,6 +464,7 @@ class DashboardRealtimeService
                     'batch' => $batch->batch?->name ?? $batch->batch_no,
                     'batch_name' => $batch->batch?->name ?? $batch->batch_no,
                     'batch_no' => $batch->batch_no,
+                    'age' => $age,
                     'flock' => $batch->flock?->code ?? 'N/A',
                     'flock_name' => $batch->flock?->name ?? 'N/A',
                     'flock_code' => $batch->flock?->code ?? 'N/A',

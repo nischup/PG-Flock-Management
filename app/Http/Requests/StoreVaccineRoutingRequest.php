@@ -21,11 +21,20 @@ class StoreVaccineRoutingRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'name' => 'required|string|max:255|unique:vaccine_routings,name',
+        $rules = [
+            'name' => 'required|string|max:255',
             'status' => 'required|in:1,0',
             'description' => 'nullable|string|max:1000',
         ];
+
+        // For updates, ignore unique rule for the current record
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+            $rules['name'] .= '|unique:vaccine_routings,name,'.$this->route('vaccine_routing')->id;
+        } else {
+            $rules['name'] .= '|unique:vaccine_routings,name';
+        }
+
+        return $rules;
     }
 
     /**

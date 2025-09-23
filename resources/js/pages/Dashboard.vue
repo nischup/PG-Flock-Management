@@ -147,6 +147,7 @@ const tableColumns = ref([
   { key: 'company', label: 'Company', type: 'text' },
   { key: 'project', label: 'Project', type: 'text' },
   { key: 'batch', label: 'Batch Name', type: 'text' },
+  { key: 'age', label: 'Age', type: 'text' },
   { key: 'flock', label: 'Flock Code', type: 'text' },
   { key: 'shed', label: 'Shed', type: 'text' },
   { key: 'stage', label: 'Stage', type: 'badge' },
@@ -1019,21 +1020,6 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         />
       </div>
 
-      <!-- Progress Bars Section -->
-      <div class="space-y-4">
-        <h3 class="text-lg font-semibold text-gray-800">Performance Metrics</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <ProgressInfoBar
-            v-for="(bar,i) in dashboardData.progressBars"
-            :key="i"
-            v-bind="bar"
-            colorFrom="#fde68a"
-            colorTo="#f59e0b"
-            :width="300"
-            :height="40"
-          />
-        </div>
-      </div>
 
       <!-- Bird Stage Visualization -->
       <div class="bg-white/40 backdrop-blur-md border border-white/50 rounded-xl shadow-lg p-6">

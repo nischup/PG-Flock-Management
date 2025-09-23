@@ -35,6 +35,7 @@ use App\Http\Controllers\Shed\BatchAssignController;
 use App\Http\Controllers\Shed\BatchConfigurationController;
 use App\Http\Controllers\Shed\ShedReceiveController;
 use App\Http\Controllers\Transfer\BirdTransferController;
+use App\Http\Controllers\VaccineSchedule\UpcomingVaccineController;
 use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\WeatherController;
@@ -77,6 +78,7 @@ Route::put('/batch-assign/{batchAssign}/next-stage', [BatchAssignController::cla
 Route::resource('production-farm-receive', ProductionFirmReceiveController::class);
 Route::resource('production-shed-receive', ProductionShedReceiveController::class);
 Route::resource('vaccine-schedule', VaccineScheduleController::class);
+Route::get('upcomming-vaccine', [UpcomingVaccineController::class, 'index'])->name('upcomming-vaccine.index');
 Route::resource('bird-transfer', BirdTransferController::class);
 Route::resource('vaccine-routing', VaccineRoutingController::class);
 
