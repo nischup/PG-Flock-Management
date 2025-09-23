@@ -3,10 +3,16 @@
 namespace App\Http\Controllers\Report;
 
 use App\Models\DailyOperation\DailyOperation;
+use Inertia\Inertia;
+use App\Models\Country;
+use App\Models\Master\Company;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
+use App\Models\Master\BreedType;
 use App\Http\Controllers\Controller;
-use Carbon\Carbon;
+use App\Models\BirdTransfer\BirdTransfer;
+use Illuminate\Support\Facades\View;
+use Illuminate\Http\Request;
+use \Carbon\Carbon;
 
 class DailyFlockReportController extends Controller
 {
@@ -162,4 +168,88 @@ class DailyFlockReportController extends Controller
             // Repeat for other flocks (B, C, D, etc.)
         ];
     }
+
+
+    public function index(Request $request)
+    {
+        //$data = $this->buildReportDataFromFilters($request);
+        $data = [];
+        return Inertia::render('report/daily-flock-report', $data);
+    }
+
+
+
+    private function buildReportDataFromFilters(Request $request): array
+    {
+        $validated = $request->validate([
+            'date_from'       => ['nullable', 'date'],
+            'date_to'         => ['nullable', 'date', 'after_or_equal:date_from'],
+            'company_id' => ['nullable', 'integer'],
+            'shed_id'   => ['nullable', 'integer'],
+        ]);
+
+        $dateFrom = $validated['date_from'] ?? Carbon::now()->subDays(30)->toDateString();
+        $dateTo   = $validated['date_to']   ?? Carbon::now()->toDateString();
+
+        // Eager load daily operation with relations
+        $dailyoperation = DailyOperation::with([
+            'batchAssign.flock',
+            // Grouped relations
+            'mortalities',
+            'cullings',
+            'destroys',       // add destroy
+            'sexingErrors',
+            'lights',
+            'weights',
+            'temperatures',
+            'feedingPrograms',
+            'feedFinishings',
+            'humidities',
+            'eggCollections',
+            'medicines.medicine',
+            'medicines.unit',
+            'vaccines.vaccine',
+            'vaccines.unit',
+        ])->whereBetween('operation_date', [$dateFrom, $dateTo]);
+            
+        // Map breed_type IDs to names
+        $breeds = BreedType::pluck('name', 'id')->toArray();
+        $breedtype = $dailyoperation->breed_type ?? [1,2]; // <-- changed to dynamic
+        if (! is_array($breedtype)) {
+            $breedtype = is_null($breedtype) ? [] : [$breedtype];
+        }
+
+        $breedAll = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
+        $breedNames = array_filter($breedAll);
+        $breedName = implode(', ', $breedNames);
+
+        // Prepare data for Blade view
+        $data = [
+            'job_no'        => $dailyoperation->batchAssign->job_no ?? '-',
+            'transaction_no'=> $dailyoperation->batchAssign->transaction_no ?? '-',
+            'flock_name'    => $dailyoperation->batchAssign->flock->name ?? '-',
+            'flock_id'      => $dailyoperation->batchAssign->flock_id ?? '-',
+            'status'        => $dailyoperation->status,
+            'breedName'     => $breedName,
+            'created_at'    => $dailyoperation->created_at->format('Y-m-d H:i:s'),
+            'generatedAt'   => now(),
+            'dailyoperation'=> $dailyoperation, // pass whole model with relations
+        ];
+
+        // PDF options
+        Pdf::setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'DejaVu Sans',
+        ]);
+
+        $pdf = Pdf::loadView('reports.daily-report.daily-report', $data)
+            ->setPaper('a4', 'landscape');
+
+        return request()->query('download')
+            ? $pdf->download("daily-operation-{$dailyoperation->id}.pdf")
+            : $pdf->stream("daily-operation-{$dailyoperation->id}.pdf");
+    }
+
+
 }

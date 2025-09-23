@@ -39,6 +39,8 @@ use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\Production\ProductionFirmReceiveController;
 use App\Http\Controllers\Production\ProductionShedReceiveController;
 use App\Http\Controllers\Production\EggClassificationGradeController;
+use App\Http\Controllers\Report\DailyFlockReportController;
+use App\Models\DailyOperation\DailyOperation;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -218,6 +220,9 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('/bird-transfer-receive-report', [TransferReceiveReportController::class, 'index'])
     ->name('bird-transfer-receive-report.index');
+
+ Route::get('/daily-flock-report', [DailyFlockReportController::class, 'index'])
+    ->name('daily-flock-report.index');
 
 // NEW: filter-based PDF & Excel
 Route::get('/bird-transfer-receive-report/pdf', [TransferReceiveReportController::class, 'generateRangePdf'])
