@@ -619,7 +619,7 @@ function submit() {
             <div class="space-y-1">
               <Label class="text-xs font-semibold text-gray-700 flex items-center">
                 <div class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5"></div>
-                Select Flock
+                Select Batch
               </Label>
               <div class="flock-dropdown relative">
                 <button
@@ -629,7 +629,7 @@ function submit() {
                 >
                   <span class="flex items-center gap-2">
                     <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                    {{ selectedFlock ? selectedFlock.display_label : 'Select Flock' }}
+                    {{ selectedFlock ? selectedFlock.display_label : 'Select Batch' }}
                   </span>
                   <ChevronDown class="h-3 w-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFlockDropdown }" />
                 </button>

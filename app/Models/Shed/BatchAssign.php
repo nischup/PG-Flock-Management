@@ -16,8 +16,12 @@ use App\Models\DailyOperation\DailyOperation;
 use App\Models\Master\Project;
 use App\Models\Shed\ShedReceive;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\Traits\CompanyShedFilter;
 class BatchAssign extends Model
 {
+    
+    use CompanyShedFilter;
+    
     protected $fillable = [
         'shed_receive_id',
         'job_no',
@@ -160,7 +164,7 @@ class BatchAssign extends Model
                 ->where('type',3) // Mortality only
                 ->sum('total_qty');
     }
-    
+
     public function scopeApplyFilters($query, $filters)
     {
         return $query
