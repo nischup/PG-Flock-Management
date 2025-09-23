@@ -1,46 +1,45 @@
 <?php
 
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\WeatherController;
+use App\Http\Controllers\Api\DashboardRealtimeController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\DailyOperation\DailyOperationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FirmLabTestController;
-use App\Http\Controllers\Master\FeedController;
-use App\Http\Controllers\Master\ShedController;
-use App\Http\Controllers\Master\UnitController;
-use App\Http\Controllers\Master\FlockController;
-use App\Http\Controllers\Ps\PsLabTestController;
-use App\Http\Controllers\Ps\PsReceiveController;
-use App\Http\Controllers\Master\CompanyController;
-use App\Http\Controllers\Master\DiseaseController;
-use App\Http\Controllers\Master\ProjectController;
-use App\Http\Controllers\Master\VaccineController;
-use App\Http\Controllers\Master\FeedTypeController;
-use App\Http\Controllers\Master\MedicineController;
-use App\Http\Controllers\Master\SupplierController;
+use App\Http\Controllers\Master\ApprovalMatrixConfigController;
+use App\Http\Controllers\Master\ApprovalMatrixLayerController;
 use App\Http\Controllers\Master\BreedTypeController;
 use App\Http\Controllers\Master\ChickTypeController;
-use App\Http\Controllers\Ps\OrderPlanningController;
-use App\Http\Controllers\Ps\PsFirmReceiveController;
-use App\Http\Controllers\Shed\BatchAssignController;
-use App\Http\Controllers\Shed\ShedReceiveController;
+use App\Http\Controllers\Master\CompanyController;
+use App\Http\Controllers\Master\DiseaseController;
+use App\Http\Controllers\Master\FeedController;
+use App\Http\Controllers\Master\FeedTypeController;
+use App\Http\Controllers\Master\FlockController;
+use App\Http\Controllers\Master\MedicineController;
+use App\Http\Controllers\Master\ProjectController;
+use App\Http\Controllers\Master\ShedController;
+use App\Http\Controllers\Master\SupplierController;
+use App\Http\Controllers\Master\UnitController;
+use App\Http\Controllers\Master\VaccineController;
 use App\Http\Controllers\Master\VaccineTypeController;
-use App\Http\Controllers\Api\DashboardRealtimeController;
-use App\Http\Controllers\Transfer\BirdTransferController;
-use App\Http\Controllers\Shed\BatchConfigurationController;
-use App\Http\Controllers\Master\ApprovalMatrixLayerController;
-use App\Http\Controllers\Master\ApprovalMatrixConfigController;
 use App\Http\Controllers\Production\EggClassificationController;
-use App\Http\Controllers\Report\TransferReceiveReportController;
-use App\Http\Controllers\DailyOperation\DailyOperationController;
-use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
-use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
+use App\Http\Controllers\Production\EggClassificationGradeController;
 use App\Http\Controllers\Production\ProductionFirmReceiveController;
 use App\Http\Controllers\Production\ProductionShedReceiveController;
-use App\Http\Controllers\Production\EggClassificationGradeController;
+use App\Http\Controllers\Ps\OrderPlanningController;
+use App\Http\Controllers\Ps\PsFirmReceiveController;
+use App\Http\Controllers\Ps\PsLabTestController;
+use App\Http\Controllers\Ps\PsReceiveController;
 use App\Http\Controllers\Report\DailyFlockReportController;
-use App\Models\DailyOperation\DailyOperation;
+use App\Http\Controllers\Report\TransferReceiveReportController;
+use App\Http\Controllers\Shed\BatchAssignController;
+use App\Http\Controllers\Shed\BatchConfigurationController;
+use App\Http\Controllers\Shed\ShedReceiveController;
+use App\Http\Controllers\Transfer\BirdTransferController;
+use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
+use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
+use App\Http\Controllers\WeatherController;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -50,8 +49,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';
 
 Route::resource('chick-type', ChickTypeController::class);
 Route::resource('feed', FeedController::class);
@@ -102,8 +101,6 @@ Route::get('/overview', [DailyOperationController::class, 'overview']);
 Route::get('/details/{flockId}/{tabKey}', [DailyOperationController::class, 'show']);
 
 Route::resource('production/egg-classification', EggClassificationController::class);
-
-
 
 Route::get('production/egg-classification/total-eggs/{batchassign_id}/{operation_date}', [EggClassificationController::class, 'getTotalEggs'])
     ->name('egg-classification.total-eggs');
@@ -185,8 +182,6 @@ Route::get('egg-classification-grades/batch/{batchId}/egg-data', [EggClassificat
 Route::get('/batch-assign/{id}/pdf', [BatchAssignController::class, 'downloadRowPdf'])
     ->name('batch-assign.row-pdf');
 
-
-
 Route::get('production-farm-receive/receive/{id}/pdf', [ProductionFirmReceiveController::class, 'downloadProductionReceivePdf'])
     ->name('production-farm-receive.receive-pdf');
 
@@ -221,7 +216,7 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/bird-transfer-receive-report', [TransferReceiveReportController::class, 'index'])
     ->name('bird-transfer-receive-report.index');
 
- Route::get('/daily-flock-report', [DailyFlockReportController::class, 'index'])
+Route::get('/daily-flock-report', [DailyFlockReportController::class, 'index'])
     ->name('daily-flock-report.index');
 
 // NEW: filter-based PDF & Excel
@@ -230,3 +225,10 @@ Route::get('/bird-transfer-receive-report/pdf', [TransferReceiveReportController
 
 Route::get('/bird-transfer-receive-report/excel', [TransferReceiveReportController::class, 'exportRangeExcel'])
     ->name('bird-transfer-receive-report.excel');
+
+// Daily Flock Report PDF & Excel exports
+Route::get('/daily-flock-report/pdf', [DailyFlockReportController::class, 'exportPdf'])
+    ->name('daily-flock-report.pdf');
+
+Route::get('/daily-flock-report/excel', [DailyFlockReportController::class, 'exportExcel'])
+    ->name('daily-flock-report.excel');

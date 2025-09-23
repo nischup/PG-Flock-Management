@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { reactive } from 'vue';
+import { reactive, onMounted, onUnmounted } from 'vue';
 
 type Batch = {
     delivery_date?: string;
@@ -55,6 +55,7 @@ const state = reactive({
     from_company_id: props.filters?.from_company_id ?? '',
     to_company_id: props.filters?.to_company_id ?? '',
     flock_id: props.filters?.flock_id ?? '',
+    showExportDropdown: false,
 });
 
 const applyFilters = () => {
@@ -71,18 +72,6 @@ const applyFilters = () => {
     );
 };
 
-const clearFilters = () => {
-    state.date_from = '';
-    state.date_to = '';
-    state.from_company_id = '';
-    state.to_company_id = '';
-    state.flock_id = '';
-    applyFilters();
-};
-
-const refresh = () => {
-    router.reload({ preserveScroll: true, preserveState: true });
-};
 const buildQuery = () => {
     const q = new URLSearchParams();
     if (state.date_from) q.set('date_from', state.date_from as string);
@@ -104,6 +93,22 @@ const exportExcel = () => {
     // triggers file download (CSV/Excel)
     window.location.href = `/bird-transfer-receive-report/excel${qs ? `?${qs}` : ''}`;
 };
+
+// Close dropdown when clicking outside
+const handleClickOutside = (event: Event) => {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.export-dropdown')) {
+        state.showExportDropdown = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <template>
@@ -119,96 +124,79 @@ const exportExcel = () => {
             <!-- Page Header -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Transfer &amp; Receive Report</h1>
-
-                <div class="flex items-center gap-2">
-                    <button
-                        type="button"
-                        class="rounded-md bg-black px-4 py-2 text-sm font-semibold text-white shadow hover:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                        @click="refresh"
-                    >
-                        Refresh
-                    </button>
-
-                    <!-- NEW: Export PDF -->
-                    <button
-                        type="button"
-                        class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        @click="exportPdf"
-                    >
-                        Export PDF
-                    </button>
-
-                    <!-- NEW: Export Excel -->
-                    <button
-                        type="button"
-                        class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                        @click="exportExcel"
-                    >
-                        Export Excel
-                    </button>
-                </div>
             </div>
 
-            <!-- Filters -->
+            <!-- Filters and Export Options -->
             <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-                    <!-- Date From -->
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"> From </label>
-                        <input
-                            v-model="state.date_from"
-                            type="date"
-                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-                        />
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <!-- Date Filters -->
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+                        <!-- Date From -->
+                        <div class="flex-1">
+                            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">From</label>
+                            <input
+                                v-model="state.date_from"
+                                type="date"
+                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                            />
+                        </div>
+
+                        <!-- Date To -->
+                        <div class="flex-1">
+                            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">To</label>
+                            <input
+                                v-model="state.date_to"
+                                type="date"
+                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                            />
+                        </div>
+
+                        <!-- Filter Button -->
+                        <div class="flex gap-2">
+                            <button
+                                type="button"
+                                class="rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+                                @click="applyFilters"
+                            >
+                                Apply
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Date To -->
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"> To </label>
-                        <input
-                            v-model="state.date_to"
-                            type="date"
-                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-                        />
+                    <!-- Export Dropdown -->
+                    <div class="relative export-dropdown">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-2 rounded-md bg-gradient-to-r from-gray-800 to-black px-4 py-2 text-sm font-semibold text-white shadow-lg hover:from-gray-700 hover:to-gray-900 focus:ring-2 focus:ring-gray-500 focus:outline-none transition-all duration-200"
+                            @click="state.showExportDropdown = !state.showExportDropdown"
+                        >
+                            Export
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div
+                            v-if="state.showExportDropdown"
+                            class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-700"
+                        >
+                            <button
+                                type="button"
+                                class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600"
+                                @click="exportPdf(); state.showExportDropdown = false"
+                            >
+                                Export PDF
+                            </button>
+                            <button
+                                type="button"
+                                class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600"
+                                @click="exportExcel(); state.showExportDropdown = false"
+                            >
+                                Export Excel
+                            </button>
+                        </div>
                     </div>
-
-                    <!-- Company & Flock placeholders -->
-                    <!-- <div>
-                        <label class="mb-1 block text-sm font-medium">From Company ID</label>
-                        <input
-                            v-model="state.from_company_id"
-                            type="text"
-                            placeholder="ID"
-                            class="block w-full rounded-md border px-3 py-2 text-sm"
-                        />
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium">To Company ID</label>
-                        <input v-model="state.to_company_id" type="text" placeholder="ID" class="block w-full rounded-md border px-3 py-2 text-sm" />
-                    </div> -->
-
-                    <!-- <div>
-                        <label class="mb-1 block text-sm font-medium">Flock ID</label>
-                        <input v-model="state.flock_id" type="text" placeholder="ID" class="block w-full rounded-md border px-3 py-2 text-sm" />
-                    </div> -->
-                </div>
-
-                <div class="mt-3 flex gap-2">
-                    <button
-                        type="button"
-                        class="rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:outline-none"
-                        @click="applyFilters"
-                    >
-                        Apply
-                    </button>
-                    <button
-                        type="button"
-                        class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-gray-300 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
-                        @click="clearFilters"
-                    >
-                        Clear
-                    </button>
                 </div>
             </div>
 

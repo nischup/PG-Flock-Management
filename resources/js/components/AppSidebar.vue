@@ -44,7 +44,7 @@ const mainNavItems: NavItem[] = [
                 href: '/ps-firm-receive',
                 icon: BabyChick,
                 iconClass: 'text-yellow-500',
-                permission: 'ps-farm-receive.view',
+                permission: 'ps-firm-receive.view',
             },
         ],
     },
