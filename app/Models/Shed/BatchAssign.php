@@ -2,26 +2,25 @@
 
 namespace App\Models\Shed;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\DailyOperation\DailyCulling;
+use App\Models\DailyOperation\DailyDestroy;
+use App\Models\DailyOperation\DailyMortality;
+use App\Models\DailyOperation\DailyOperation;
+use App\Models\DailyOperation\DailySexingError;
+use App\Models\Master\Batch;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
-use App\Models\Master\Shed;
-use App\Models\Master\Batch;
-use App\Models\MovementAdjustment;
-use App\Models\DailyOperation\DailyMortality;
-use App\Models\DailyOperation\DailyDestroy;
-use App\Models\DailyOperation\DailyCulling;
-use App\Models\DailyOperation\DailySexingError;
-use App\Models\DailyOperation\DailyOperation;
 use App\Models\Master\Project;
-use App\Models\Shed\ShedReceive;
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\Master\Shed;
+use App\Models\MovementAdjustment;
 use App\Models\Traits\CompanyShedFilter;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 class BatchAssign extends Model
 {
-    
-    use CompanyShedFilter;
-    
+    use CompanyShedFilter, HasFactory;
+
     protected $fillable = [
         'shed_receive_id',
         'job_no',
@@ -76,9 +75,10 @@ class BatchAssign extends Model
     {
         return $this->belongsTo(Shed::class);
     }
+
     public function batch()
     {
-         return $this->belongsTo(Batch::class, 'batch_no', 'id');
+        return $this->belongsTo(Batch::class, 'batch_no', 'id');
     }
 
     public function project()
@@ -102,6 +102,7 @@ class BatchAssign extends Model
             'id'             // Local key on daily_operations
         );
     }
+
     public function totalCulling()
     {
         return $this->hasManyThrough(
@@ -113,6 +114,7 @@ class BatchAssign extends Model
             'id'             // Local key on daily_operations
         );
     }
+
     public function totalDestroy()
     {
         return $this->hasManyThrough(
@@ -124,7 +126,8 @@ class BatchAssign extends Model
             'id'             // Local key on daily_operations
         );
     }
-     public function totalSexingerror()
+
+    public function totalSexingerror()
     {
         return $this->hasManyThrough(
             DailySexingError::class,
@@ -136,44 +139,42 @@ class BatchAssign extends Model
         );
     }
 
-
     // total mortality (Batch Assign stage )
     public function getMovementBatchmortality()
     {
         return MovementAdjustment::where('stage', 4) // Batch Assign stage
-                ->where('stage_id', $this->id)
-                ->where('type', 1) // Mortality only
-                ->sum('total_qty');
+            ->where('stage_id', $this->id)
+            ->where('type', 1) // Mortality only
+            ->sum('total_qty');
     }
 
     // total Excess (Batch Assign stage )
     public function getMovementBatchexcess()
     {
         return MovementAdjustment::where('stage', 4) // Batch Assign stage
-                ->where('stage_id', $this->id)
-                ->where('type', 2) // Mortality only
-                ->sum('total_qty');
+            ->where('stage_id', $this->id)
+            ->where('type', 2) // Mortality only
+            ->sum('total_qty');
     }
 
-    
     // total Excess (Batch Shortage stage )
     public function getMovementBatchshortage()
     {
         return MovementAdjustment::where('stage', 4) // Batch Assign stage
-                ->where('stage_id', $this->id)
-                ->where('type',3) // Mortality only
-                ->sum('total_qty');
+            ->where('stage_id', $this->id)
+            ->where('type', 3) // Mortality only
+            ->sum('total_qty');
     }
 
     public function scopeApplyFilters($query, $filters)
     {
         return $query
-            ->when($filters['company'], fn($q, $company) => $q->where('company_id', $company))
-            ->when($filters['project'], fn($q, $project) => $q->whereHas('flock.project', fn($sub) => $sub->where('id', $project)))
-            ->when($filters['flock'], fn($q, $flock) => $q->where('flock_id', $flock))
-            ->when($filters['shed'], fn($q, $shed) => $q->where('shed_id', $shed))
-            ->when($filters['batch'], fn($q, $batch) => $q->where('id', $batch))
-            ->when($filters['date'], function($q, $date) use ($filters) {
+            ->when($filters['company'], fn ($q, $company) => $q->where('company_id', $company))
+            ->when($filters['project'], fn ($q, $project) => $q->whereHas('flock.project', fn ($sub) => $sub->where('id', $project)))
+            ->when($filters['flock'], fn ($q, $flock) => $q->where('flock_id', $flock))
+            ->when($filters['shed'], fn ($q, $shed) => $q->where('shed_id', $shed))
+            ->when($filters['batch'], fn ($q, $batch) => $q->where('id', $batch))
+            ->when($filters['date'], function ($q, $date) use ($filters) {
                 if ($date === 'Last 7 Days') {
                     $q->where('created_at', '>=', now()->subDays(7));
                 } elseif ($date === 'Last 1 Month') {
