@@ -607,7 +607,7 @@ function getTechnicalPct(technicalEggs: any[], typeId: number, totalEggs: number
                                 <template v-for="batch in props.batches" :key="batch.id">
                                     <!-- Loop over each weight inside batch -->
                                     <tr v-for="w in batch.weights" :key="w.id">
-                                    <td>{{ batch.batch_no }}</td>
+                                    <td>{{ batch.batch_assign?.batch?.name || 'N/A' }}</td>
                                     <td>{{ useReportAgeCalculator(batch.batch_assign?.created_at) }}</td> <!-- compute age -->
                                     <td>{{ w.female_weight }}</td>
                                     <td>0</td> <!-- placeholder Std -->
@@ -655,6 +655,7 @@ function getTechnicalPct(technicalEggs: any[], typeId: number, totalEggs: number
                                 <th>Cum (F)</th>
                                 <th>Daily (M)</th>
                                 <th>Cum (M)</th>
+                                 <th>Cum (M)</th>
                             <th>Female</th>
                             <th>Male</th>
                                 <th>Qty</th>
@@ -706,98 +707,98 @@ function getTechnicalPct(technicalEggs: any[], typeId: number, totalEggs: number
                                 <td></td>
                             </tr>
                             <tr v-for="batch in props.batches" :key="batch.id">
-          <!-- Breed / Batch / Age -->
-          <td>{{ batch.batch_no }}</td>
-          <td>{{ useReportAgeCalculator(batch.batch_assign?.created_at) }}</td>
-          <td>{{ batch.flock_no }}</td>
-          <td>{{ batch.shed_id }}</td>
-          <td>{{ new Date(batch.operation_date).toLocaleDateString() }}</td>
+                                <!-- Breed / Batch / Age -->
+                                <td>{{ batch.batch_assign?.batch?.name || 'N/A' }}</td>
+                                <td>{{ useReportAgeCalculator(batch.batch_assign?.created_at) }}</td>
+                                <td>{{ batch.flock_id }}</td>
+                                <td>{{ batch.batch_assign?.shed?.name }}</td>
+                                <td>{{ new Date(batch.operation_date).toLocaleDateString() }}</td>
 
-          <!-- Mortality -->
-          <td>{{ (batch.batch_assign?.batch_female_qty ?? 0) + (batch.batch_assign?.batch_male_qty ?? 0) }}</td>
-          <td>{{ sumField(batch.mortalities, 'female_qty') }}</td>
-          <td>{{ sumField(batch.mortalities, 'female_qty') }}</td>
-          <td>{{ sumField(batch.mortalities, 'male_qty') }}</td>
-          <td>{{ sumField(batch.mortalities, 'male_qty') }}</td>
+                                <!-- Mortality -->
+                                <td>{{ (batch.batch_assign?.batch_female_qty ?? 0) + (batch.batch_assign?.batch_male_qty ?? 0) }}</td>
+                                <td>{{ sumField(batch.mortalities, 'female_qty') }}</td>
+                                <td>{{ sumField(batch.mortalities, 'female_qty') }}</td>
+                                <td>{{ sumField(batch.mortalities, 'male_qty') }}</td>
+                                <td>{{ sumField(batch.mortalities, 'male_qty') }}</td>
 
-          <!-- Sold / Cull -->
-          <td>{{ sumField(batch.cullings, 'female_qty') }}</td>
-          <td>{{ sumField(batch.cullings, 'female_qty') }}</td>
-          <td>{{ sumField(batch.cullings, 'male_qty') }}</td>
-          <td>{{ sumField(batch.cullings, 'male_qty') }}</td>
+                                <!-- Sold / Cull -->
+                                <td>{{ sumField(batch.cullings, 'female_qty') }}</td>
+                                <td>{{ sumField(batch.cullings, 'female_qty') }}</td>
+                                <td>{{ sumField(batch.cullings, 'male_qty') }}</td>
+                                <td>{{ sumField(batch.cullings, 'male_qty') }}</td>
+                                <td></td>
+                                <!-- Closing birds -->
+                                <td>{{ closingBirds(batch) }}</td>
+                                <td>{{ closingBirds(batch) }}</td>
 
-          <!-- Closing birds -->
-          <td>{{ closingBirds(batch) }}</td>
-          <td>{{ closingBirds(batch) }}</td>
+                                <!-- Production Eggs -->
+                                <td>{{ sumField(batch.egg_collections, 'qty') }}</td>
+                                <td>{{ sumField(batch.egg_collections, 'actual_percent') }}</td>
+                                <td>{{ sumField(batch.egg_collections, 'std_percent') }}</td>
 
-          <!-- Production Eggs -->
-          <td>{{ sumField(batch.egg_collections, 'qty') }}</td>
-          <td>{{ sumField(batch.egg_collections, 'actual_percent') }}</td>
-          <td>{{ sumField(batch.egg_collections, 'std_percent') }}</td>
+                                <!-- Hatching Eggs -->
+                                <td>{{ sumField(batch.hatching_eggs ?? [], 'qty') }}</td>
+                                <td>{{ sumField(batch.hatching_eggs ?? [], 'actual_percent') }}</td>
+                                <td>{{ sumField(batch.hatching_eggs ?? [], 'std_percent') }}</td>
 
-          <!-- Hatching Eggs -->
-          <td>{{ sumField(batch.hatching_eggs ?? [], 'qty') }}</td>
-          <td>{{ sumField(batch.hatching_eggs ?? [], 'actual_percent') }}</td>
-          <td>{{ sumField(batch.hatching_eggs ?? [], 'std_percent') }}</td>
+                                <!-- Egg weight -->
+                                <td>{{ batch.weights?.[0]?.female_weight ?? 0 }}</td>
+                                <td>{{ batch.weights?.[0]?.male_weight ?? 0 }}</td>
 
-          <!-- Egg weight -->
-          <td>{{ batch.weights?.[0]?.female_weight ?? 0 }}</td>
-          <td>{{ batch.weights?.[0]?.male_weight ?? 0 }}</td>
+                                <!-- Feed Consumption -->
+                                <td>{{ sumField(batch.feed_finishings, 'female_kg') }}</td>
+                                <td>{{ sumField(batch.feed_finishings, 'male_kg') }}</td>
+                                <td>{{ sumField(batch.feeding_programs, 'female_kg') }}</td>
+                                <td>{{ sumField(batch.feeding_programs, 'male_kg') }}</td>
 
-          <!-- Feed Consumption -->
-          <td>{{ sumField(batch.feed_finishings, 'female_kg') }}</td>
-          <td>{{ sumField(batch.feed_finishings, 'male_kg') }}</td>
-          <td>{{ sumField(batch.feeding_programs, 'female_kg') }}</td>
-          <td>{{ sumField(batch.feeding_programs, 'male_kg') }}</td>
+                                <!-- Light / Water -->
+                                <td>{{ batch.lights?.[0]?.hours ?? 0 }}</td>
+                                <td>{{ batch.water_intake ?? 0 }}</td>
 
-          <!-- Light / Water -->
-          <td>{{ batch.lights?.[0]?.hours ?? 0 }}</td>
-          <td>{{ batch.water_intake ?? 0 }}</td>
+                                <!-- FFT -->
+                                <td>{{ batch.feed_finishings?.[0]?.fft_f ?? 0 }}</td>
+                                <td>{{ batch.feed_finishings?.[0]?.fft_m ?? 0 }}</td>
 
-          <!-- FFT -->
-          <td>{{ batch.feed_finishings?.[0]?.fft_f ?? 0 }}</td>
-          <td>{{ batch.feed_finishings?.[0]?.fft_m ?? 0 }}</td>
+                                <!-- Type of Feed -->
+                                <td>{{ batch.feeding_programs?.[0]?.feed_type ?? '-' }}</td>
+                                </tr>
 
-          <!-- Type of Feed -->
-          <td>{{ batch.feeding_programs?.[0]?.feed_type ?? '-' }}</td>
-        </tr>
-
-        <!-- Total / Average row -->
-        <tr class="total-row">
-          <td>AVG/Total</td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td>{{ props.batches.reduce((sum, b) => sum + (b.opening_birds ?? 0), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'female_qty'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'female_qty'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'male_qty'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'male_qty'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'female_qty'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'female_qty'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'male_qty'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'male_qty'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + closingBirds(b), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + closingBirds(b), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.egg_collections, 'qty'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.egg_collections, 'actual_percent'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.egg_collections, 'std_percent'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.hatching_eggs ?? [], 'qty'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.hatching_eggs ?? [], 'actual_percent'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.hatching_eggs ?? [], 'std_percent'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + (b.weights?.[0]?.female_weight ?? 0), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + (b.weights?.[0]?.male_weight ?? 0), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feed_finishings, 'female_kg'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feed_finishings, 'male_kg'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feeding_programs, 'female_kg'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feeding_programs, 'male_kg'), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + (b.lights?.[0]?.hours ?? 0), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + (b.water_intake ?? 0), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + (b.feed_finishings?.[0]?.fft_f ?? 0), 0) }}</td>
-          <td>{{ props.batches.reduce((sum, b) => sum + (b.feed_finishings?.[0]?.fft_m ?? 0), 0) }}</td>
-          <td>-</td>
-        </tr>
+                            <!-- Total / Average row -->
+                            <tr class="total-row">
+                            <td>AVG/Total</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + (b.opening_birds ?? 0), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'female_qty'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'female_qty'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'male_qty'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'male_qty'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'female_qty'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'female_qty'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'male_qty'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'male_qty'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + closingBirds(b), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + closingBirds(b), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.egg_collections, 'qty'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.egg_collections, 'actual_percent'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.egg_collections, 'std_percent'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.hatching_eggs ?? [], 'qty'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.hatching_eggs ?? [], 'actual_percent'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.hatching_eggs ?? [], 'std_percent'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + (b.weights?.[0]?.female_weight ?? 0), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + (b.weights?.[0]?.male_weight ?? 0), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feed_finishings, 'female_kg'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feed_finishings, 'male_kg'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feeding_programs, 'female_kg'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feeding_programs, 'male_kg'), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + (b.lights?.[0]?.hours ?? 0), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + (b.water_intake ?? 0), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + (b.feed_finishings?.[0]?.fft_f ?? 0), 0) }}</td>
+                            <td>{{ props.batches.reduce((sum, b) => sum + (b.feed_finishings?.[0]?.fft_m ?? 0), 0) }}</td>
+                            <td>-</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

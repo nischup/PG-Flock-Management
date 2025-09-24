@@ -198,6 +198,7 @@ class DailyFlockReportController extends Controller
         ->with([
             'batchAssign.flock',
             'batchAssign.batch',
+            'batchAssign.shed',
             'mortalities',
             'cullings',
             'destroys',
