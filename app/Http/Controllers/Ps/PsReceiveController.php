@@ -583,14 +583,26 @@ class PsReceiveController extends Controller
 
         $approvalStatus = $approvalService->getApprovalStatus('ps-receive', $id);
 
+        // Check if approval status is null and handle gracefully
+        if (! $approvalStatus) {
+            return response()->json([
+                'status' => 'no_approval',
+                'current_layer' => 0,
+                'total_layers' => 0,
+                'actions' => [],
+                'can_approve' => false,
+                'can_reject' => false,
+            ]);
+        }
+
         // Return JSON response for API
         return response()->json([
-            'status' => $approvalStatus['status'],
-            'current_layer' => $approvalStatus['current_layer'],
-            'total_layers' => $approvalStatus['total_layers'],
-            'actions' => $approvalStatus['actions'],
-            'can_approve' => $approvalStatus['can_approve'],
-            'can_reject' => $approvalStatus['can_reject'],
+            'status' => $approvalStatus['status'] ?? 'unknown',
+            'current_layer' => $approvalStatus['current_layer'] ?? 0,
+            'total_layers' => $approvalStatus['total_layers'] ?? 0,
+            'actions' => $approvalStatus['actions'] ?? [],
+            'can_approve' => $approvalStatus['can_approve'] ?? false,
+            'can_reject' => $approvalStatus['can_reject'] ?? false,
         ]);
     }
 

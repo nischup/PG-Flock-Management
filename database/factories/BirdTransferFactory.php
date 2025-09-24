@@ -46,6 +46,7 @@ class BirdTransferFactory extends Factory
             'deviation_female_qty' => 0,
             'deviation_male_qty' => 0,
             'deviation_total_qty' => 0,
+            'shipment_type_id' => 1,
             'created_by' => 1,
             'updated_by' => null,
             'status' => 1,

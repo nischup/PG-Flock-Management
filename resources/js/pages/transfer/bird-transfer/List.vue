@@ -27,6 +27,7 @@ const props = defineProps<{
             flock: {
                 id: number;
                 name: string;
+                code: string;
             };
             from_company: {
                 id: number;
@@ -46,6 +47,27 @@ const props = defineProps<{
                 id: number;
                 name: string;
             };
+            from_project?: {
+                id: number;
+                name: string;
+            };
+            to_project?: {
+                id: number;
+                name: string;
+            };
+            breed_type?: number[];
+            country_of_origin?: number;
+            batchAssign?: {
+                id: number;
+                shed?: {
+                    id: number;
+                    name: string;
+                };
+                batch?: {
+                    id: number;
+                    name: string;
+                };
+            };
             created_at: string;
         }>;
         meta: { current_page: number; last_page: number; per_page: number; total: number };
@@ -60,8 +82,10 @@ const props = defineProps<{
         date_to?: string;
     };
     companies?: Array<{ id: number; name: string; short_name?: string; code?: string }>;
-    flocks?: Array<{ id: number; name: string }>;
+    flocks?: Array<{ id: number; name: string; code: string }>;
     sheds?: Array<{ id: number; name: string }>;
+    breedTypes?: Array<{ id: number; name: string }>;
+    countries?: Array<{ id: number; name: string }>;
 }>();
 
 useListFilters({ routeName: '/bird-transfer', filters: props.filters });
@@ -162,7 +186,22 @@ const getCompanyName = (companyId: string | number) => {
 
 const getFlockName = (flockId: string | number) => {
     const flock = props.flocks?.find((f) => f.id === Number(flockId));
-    return flock?.name || 'Unknown';
+    return flock?.code || 'Unknown';
+};
+
+const getBreedNames = (breedTypeIds: number[] | null) => {
+    if (!breedTypeIds || !Array.isArray(breedTypeIds)) return 'N/A';
+    const breedNames = breedTypeIds.map(id => {
+        const breed = props.breedTypes?.find(b => b.id === id);
+        return breed?.name || `Breed-${id}`;
+    });
+    return breedNames.join(', ');
+};
+
+const getCountryName = (countryId: number | null) => {
+    if (!countryId) return 'N/A';
+    const country = props.countries?.find(c => c.id === countryId);
+    return country?.name || `Country-${countryId}`;
 };
 
 // Date picker helper functions
@@ -248,7 +287,7 @@ const clearToCompanyFilter = () => {
 const getSelectedFlockName = () => {
     if (!filters.value.flock_id) return '';
     const flock = props.flocks?.find((f) => f.id === Number(filters.value.flock_id));
-    return flock?.name || '';
+    return flock?.code || '';
 };
 
 const selectFlock = (flockId: string | number) => {
@@ -339,7 +378,7 @@ const cardData = computed(() => {
         },
         {
             title: 'Flock',
-            value: selectedItem.flock?.name || 'N/A',
+            value: selectedItem.flock?.code || 'N/A',
             title1: '',
             value1: '',
             title2: '',
@@ -391,7 +430,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 >
                     <option :value="null" disabled>Select Transfer Record</option>
                     <option v-for="item in props.birdTransfers?.data ?? []" :key="item.id" :value="item.id">
-                        {{ item.flock?.name || item.flock_no }} - {{ item.from_company?.short_name }} to {{ item.to_company?.short_name }} :
+                        {{ item.flock?.code || item.flock_no }} - {{ item.from_company?.short_name }} to {{ item.to_company?.short_name }} :
                         {{ dayjs(item.transfer_date).format('YYYY-MM-DD') }}
                     </option>
                 </select>
@@ -718,7 +757,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                                     'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': filters.flock_id == flock.id,
                                                 }"
                                             >
-                                                <span>{{ flock.name }}</span>
+                                                <span>{{ flock.code }}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -876,11 +915,12 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <thead class="bg-gray-100 dark:bg-gray-700">
                             <tr>
                                 <th class="border-b px-4 py-2">#SL</th>
-                                <th class="border-b px-4 py-2">Flock No</th>
-                                <th class="border-b px-4 py-2">Shed</th>
-                                <th class="border-b px-4 py-2">Batch No</th>
-                                <th class="border-b px-4 py-2">From</th>
-                                <th class="border-b px-4 py-2">To</th>
+                                <th class="border-b px-4 py-2">From Company</th>
+                                <th class="border-b px-4 py-2">From Project</th>
+                                <th class="border-b px-4 py-2">To Company</th>
+                                <th class="border-b px-4 py-2">To Project</th>
+                                <th class="border-b px-4 py-2">Flock</th>
+                                <th class="border-b px-4 py-2">Batch</th>
                                 <th class="border-b px-4 py-2">Breed</th>
                                 <th class="border-b px-4 py-2">Origin</th>
                                 <th class="border-b px-4 py-2">Total Qty</th>
@@ -890,14 +930,14 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <tbody>
                             <tr v-for="(transfer, index) in birdTransfers.data" :key="transfer.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <td class="border-b px-4 py-2">{{ (birdTransfers.current_page - 1) * birdTransfers.per_page + index + 1 }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.flock?.name || 'Flock-' + transfer.flock_no }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.shed?.name || 'Shed-' + transfer.shed_no }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.batch?.name || 'Batch-' + transfer.batch_no }}</td>
-                                <!-- Using optional chaining and default values -->
                                 <td class="border-b px-4 py-2">{{ transfer.from_company?.short_name || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ transfer.from_project?.name || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.to_company?.short_name || 'N/A' }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.job_no || 'N/A' }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.transaction_no || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ transfer.to_project?.name || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ transfer.flock?.code || 'Flock-' + transfer.flock_no }}</td>
+                                <td class="border-b px-4 py-2">{{ transfer.batchAssign?.batch?.name || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ getBreedNames(transfer.breed_type) || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ getCountryName(transfer.country_of_origin) || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.transfer_total_qty || 0 }}</td>
                                 <td class="relative border-b px-4 py-2">
                                     <Button

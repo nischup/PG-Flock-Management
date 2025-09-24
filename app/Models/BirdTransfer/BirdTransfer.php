@@ -2,19 +2,20 @@
 
 namespace App\Models\BirdTransfer;
 
-use App\Models\Master\Shed;
-use App\Models\Master\Project;
-use App\Models\Master\Flock;
-use App\Models\Master\Company;
 use App\Models\Master\BreedType;
+use App\Models\Master\Company;
+use App\Models\Master\Flock;
+use App\Models\Master\Project;
+use App\Models\Master\Shed;
 use App\Models\Ps\PsFirmReceive;
 use App\Models\Shed\BatchAssign;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Traits\CompanyShedFilter;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 class BirdTransfer extends Model
 {
-    use HasFactory,CompanyShedFilter;
+    use CompanyShedFilter,HasFactory;
 
     protected static $factory = \Database\Factories\BirdTransferFactory::class;
 
@@ -54,7 +55,6 @@ class BirdTransfer extends Model
         'transport_type',
     ];
 
-
     protected $casts = [
         'transfer_date' => 'date',
         'breed_type' => 'array',
@@ -75,7 +75,12 @@ class BirdTransfer extends Model
         return $this->belongsTo(Company::class, 'to_company_id');
     }
 
-        public function toProject()
+    public function fromProject()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    public function toProject()
     {
         return $this->belongsTo(Project::class, 'to_project_id');
     }
@@ -89,14 +94,17 @@ class BirdTransfer extends Model
     {
         return $this->belongsTo(Shed::class, 'to_shed_id');
     }
+
     public function batchAssign()
     {
-        return $this->hasOne(BatchAssign::class, 'flock_id', 'flock_id');
+        return $this->belongsTo(BatchAssign::class, 'batch_assign_id');
     }
+
     public function breed()
     {
         return $this->belongsTo(BreedType::class, 'breed_type');
     }
+
     public function firmReceive()
     {
         return $this->hasOne(PsFirmReceive::class, 'source_id')
