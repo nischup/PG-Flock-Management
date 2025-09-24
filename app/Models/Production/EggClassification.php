@@ -50,4 +50,9 @@ class EggClassification extends Model
     {
         return $this->hasMany(EggClassificationTechnical::class, 'classification_id');
     }
+
+    public function grades()
+    {
+        return $this->hasMany(EggClassificationGrade::class, 'classification_id')->with('grade');
+    }
 }

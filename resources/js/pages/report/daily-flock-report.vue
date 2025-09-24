@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { reactive, computed, watch, onMounted, onUnmounted } from 'vue';
-
+import { useReportAgeCalculator } from '@/composables/useReportAgeCalculator'
 type Batch = {
     delivery_date?: string;
     breed_type?: string;
@@ -63,6 +63,8 @@ const state = reactive({
     show_date_from_picker: false,
     show_date_to_picker: false,
 });
+
+
 
 // Computed property to filter projects based on selected company
 const filteredProjects = computed(() => {
@@ -245,7 +247,7 @@ const handleExportChange = (event: Event) => {
     target.value = '';
 };
 
-
+console.log(props.batches);
 // Get global max/min for each temperature type
 const maxInside = computed(() => 
   Math.max(...props.batches.flatMap(b => b.temperatures.map(t => Number(t.inside_temp))))
@@ -271,7 +273,46 @@ const minHumidity = computed(() =>
   Math.min(...props.batches.flatMap(b => b.humidities.map(t => Number(t.today_humidity))))
 )
 
+
+// Helper: sum a numeric field in an array
+function sumField(array: any[], field: string) {
+  return array?.reduce((total, item) => total + (item[field] ?? 0), 0) ?? 0
+}
+
+// Helper: cumulative sum for female + male
+function sumFM(array: any[], femaleField: string, maleField: string) {
+  return sumField(array, femaleField) + sumField(array, maleField)
+}
+// Compute closing birds
+function closingBirds(batch: any) {
+  const openingFemale = batch.batch_assign?.batch_female_qty ?? 0
+  const openingMale = batch.batch_assign?.batch_male_qty ?? 0
+  const totalOpening = openingFemale + openingMale
+  const totalMortality = sumFM(batch.mortalities, 'female_qty', 'male_qty')
+  const totalCull = sumFM(batch.cullings, 'female_qty', 'male_qty')
+  return totalOpening - totalMortality - totalCull
+}
 console.log(props.batches);
+
+function getRejectedQty(rejectedEggs: any[], typeId: number) {
+  const egg = rejectedEggs.find(e => e.egg_type_id === typeId)
+  return egg ? egg.quantity : 0
+}
+
+function getRejectedPct(rejectedEggs: any[], typeId: number, totalEggs: number) {
+  const qty = getRejectedQty(rejectedEggs, typeId)
+  return totalEggs > 0 ? ((qty / totalEggs) * 100).toFixed(2) : 0
+}
+
+function getTechnicalQty(technicalEggs: any[], typeId: number) {
+  const egg = technicalEggs.find(e => e.egg_type_id === typeId)
+  return egg ? egg.quantity : 0
+}
+
+function getTechnicalPct(technicalEggs: any[], typeId: number, totalEggs: number) {
+  const qty = getTechnicalQty(technicalEggs, typeId)
+  return totalEggs > 0 ? ((qty / totalEggs) * 100).toFixed(2) : 0
+}
 </script>
 
 <template>
@@ -548,6 +589,7 @@ console.log(props.batches);
                                     <th colspan="3">Female</th>
                                     <th colspan="3">Male</th>
                         </tr>
+                        
                         <tr>
                                     <th></th>
                                     <th></th>
@@ -560,56 +602,22 @@ console.log(props.batches);
                         </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>A</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                </tr>
-                                <tr>
-                                    <td>B</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                </tr>
-                                <tr>
-                                    <td>C</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                        </tr>
-                        <tr>
-                                    <td>D</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                                    <td>0</td>
-                        </tr>
-                        <tr>
-                                    <td>E</td>
-                                    <td>30+7</td>
-                                    <td>1185</td>
-                                    <td>1200</td>
-                                    <td>66</td>
-                                    <td>1847</td>
-                                    <td>1780</td>
-                                    <td>0.0</td>
-                                </tr>
+                                
+                                
+                                <template v-for="batch in props.batches" :key="batch.id">
+                                    <!-- Loop over each weight inside batch -->
+                                    <tr v-for="w in batch.weights" :key="w.id">
+                                    <td>{{ batch.batch_no }}</td>
+                                    <td>{{ useReportAgeCalculator(batch.batch_assign?.created_at) }}</td> <!-- compute age -->
+                                    <td>{{ w.female_weight }}</td>
+                                    <td>0</td> <!-- placeholder Std -->
+                                    <td>0</td> <!-- placeholder Uni (%) -->
+                                    <td>{{ w.male_weight }}</td>
+                                    <td>0</td> <!-- placeholder Std -->
+                                    <td>0</td> <!-- placeholder Uni (%) -->
+                                    </tr>
+                                </template>
+                        
                             </tbody>
                         </table>
                     </div>
@@ -697,193 +705,99 @@ console.log(props.batches);
                                 <td></td>
                                 <td></td>
                             </tr>
-                            <tr>
-                                <td>A</td>
-                                <td>36+2</td>
-                                <td>10,200</td>
-                                <td>5</td>
-                                <td>80</td>
-                                <td>2</td>
-                                <td>35</td>
-                                <td>3</td>
-                                <td>40</td>
-                                <td>1</td>
-                                <td>10,195</td>
-                                <td>3,560</td>
-                                <td>2,500</td>
-                                <td>85.0</td>
-                                <td>86.0</td>
-                                <td>2,300</td>
-                                <td>78.0</td>
-                                <td>80.0</td>
-                                <td>65</td>
-                                <td>70</td>
-                                <td>720</td>
-                                <td>115</td>
-                                <td>16</td>
-                                <td>1800</td>
-                                <td>27</td>
-                                <td>B</td>
-                                <td>29</td>
-                                <td>28</td>
-                                <td>16</td>
-                                <td>IR Developer +IR Grower</td>
-                            </tr>
-                            <tr>
-                                <td>B</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                            </tr>
-                            <tr>
-                                <td>C</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                            </tr>
-                            <tr>
-                                <td>D</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                            </tr>
-                            <tr>
-                                <td>E</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
-                            </tr>
-                            <tr class="total-row">
-                                <td>AVG/Total</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
+                            <tr v-for="batch in props.batches" :key="batch.id">
+          <!-- Breed / Batch / Age -->
+          <td>{{ batch.batch_no }}</td>
+          <td>{{ useReportAgeCalculator(batch.batch_assign?.created_at) }}</td>
+          <td>{{ batch.flock_no }}</td>
+          <td>{{ batch.shed_id }}</td>
+          <td>{{ new Date(batch.operation_date).toLocaleDateString() }}</td>
+
+          <!-- Mortality -->
+          <td>{{ (batch.batch_assign?.batch_female_qty ?? 0) + (batch.batch_assign?.batch_male_qty ?? 0) }}</td>
+          <td>{{ sumField(batch.mortalities, 'female_qty') }}</td>
+          <td>{{ sumField(batch.mortalities, 'female_qty') }}</td>
+          <td>{{ sumField(batch.mortalities, 'male_qty') }}</td>
+          <td>{{ sumField(batch.mortalities, 'male_qty') }}</td>
+
+          <!-- Sold / Cull -->
+          <td>{{ sumField(batch.cullings, 'female_qty') }}</td>
+          <td>{{ sumField(batch.cullings, 'female_qty') }}</td>
+          <td>{{ sumField(batch.cullings, 'male_qty') }}</td>
+          <td>{{ sumField(batch.cullings, 'male_qty') }}</td>
+
+          <!-- Closing birds -->
+          <td>{{ closingBirds(batch) }}</td>
+          <td>{{ closingBirds(batch) }}</td>
+
+          <!-- Production Eggs -->
+          <td>{{ sumField(batch.egg_collections, 'qty') }}</td>
+          <td>{{ sumField(batch.egg_collections, 'actual_percent') }}</td>
+          <td>{{ sumField(batch.egg_collections, 'std_percent') }}</td>
+
+          <!-- Hatching Eggs -->
+          <td>{{ sumField(batch.hatching_eggs ?? [], 'qty') }}</td>
+          <td>{{ sumField(batch.hatching_eggs ?? [], 'actual_percent') }}</td>
+          <td>{{ sumField(batch.hatching_eggs ?? [], 'std_percent') }}</td>
+
+          <!-- Egg weight -->
+          <td>{{ batch.weights?.[0]?.female_weight ?? 0 }}</td>
+          <td>{{ batch.weights?.[0]?.male_weight ?? 0 }}</td>
+
+          <!-- Feed Consumption -->
+          <td>{{ sumField(batch.feed_finishings, 'female_kg') }}</td>
+          <td>{{ sumField(batch.feed_finishings, 'male_kg') }}</td>
+          <td>{{ sumField(batch.feeding_programs, 'female_kg') }}</td>
+          <td>{{ sumField(batch.feeding_programs, 'male_kg') }}</td>
+
+          <!-- Light / Water -->
+          <td>{{ batch.lights?.[0]?.hours ?? 0 }}</td>
+          <td>{{ batch.water_intake ?? 0 }}</td>
+
+          <!-- FFT -->
+          <td>{{ batch.feed_finishings?.[0]?.fft_f ?? 0 }}</td>
+          <td>{{ batch.feed_finishings?.[0]?.fft_m ?? 0 }}</td>
+
+          <!-- Type of Feed -->
+          <td>{{ batch.feeding_programs?.[0]?.feed_type ?? '-' }}</td>
+        </tr>
+
+        <!-- Total / Average row -->
+        <tr class="total-row">
+          <td>AVG/Total</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td>{{ props.batches.reduce((sum, b) => sum + (b.opening_birds ?? 0), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'female_qty'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'female_qty'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'male_qty'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.mortalities, 'male_qty'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'female_qty'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'female_qty'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'male_qty'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.cullings, 'male_qty'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + closingBirds(b), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + closingBirds(b), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.egg_collections, 'qty'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.egg_collections, 'actual_percent'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.egg_collections, 'std_percent'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.hatching_eggs ?? [], 'qty'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.hatching_eggs ?? [], 'actual_percent'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.hatching_eggs ?? [], 'std_percent'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + (b.weights?.[0]?.female_weight ?? 0), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + (b.weights?.[0]?.male_weight ?? 0), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feed_finishings, 'female_kg'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feed_finishings, 'male_kg'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feeding_programs, 'female_kg'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + sumField(b.feeding_programs, 'male_kg'), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + (b.lights?.[0]?.hours ?? 0), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + (b.water_intake ?? 0), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + (b.feed_finishings?.[0]?.fft_f ?? 0), 0) }}</td>
+          <td>{{ props.batches.reduce((sum, b) => sum + (b.feed_finishings?.[0]?.fft_m ?? 0), 0) }}</td>
+          <td>-</td>
+        </tr>
                         </tbody>
                     </table>
                 </div>
@@ -896,250 +810,263 @@ console.log(props.batches);
                             <div class="table-title">Medicine & Vaccine</div>
                             <table>
                                 <thead>
-                                    <tr>
-                                        <th>Batch</th>
-                                        <th>Name</th>
-                                        <th>Qty</th>
-                                        <th>Name</th>
-                                        <th>Qty</th>
-                        </tr>
-                    </thead>
+                                <tr>
+                                    <th>Batch</th>
+                                    <th colspan="2">Medicine</th>
+                                    <th colspan="2">Vaccine</th>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>Name</td>
+                                    <td>Qty</td>
+                                    <td>Name</td>
+                                    <td>Qty</td>
+                                </tr>
+                                </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>A</td>
-                                        <td>Tablet-1</td>
-                                        <td>1000 ml</td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>B</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>C</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>D</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>E</td>
-                                        <td>Liquid Medication</td>
-                                        <td>50 gm</td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Total/Avg</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
+                                <tr v-for="(batch, index) in batches" :key="batch.id">
+                                    <!-- Batch Name -->
+                                    <td>{{ String.fromCharCode(65 + index) }}</td>
+
+                                    <!-- Medicine -->
+                                    <td>
+                                    <span v-if="batch.medicines && batch.medicines.length">
+                                        {{ batch.medicines[0].medicine.name }}
+                                    </span>
+                                    </td>
+                                    <td>
+                                    <span v-if="batch.medicines && batch.medicines.length">
+                                        {{ batch.medicines[0].quantity }} {{ batch.medicines[0].unit.name }}
+                                    </span>
+                                    </td>
+
+                                    <!-- Vaccine -->
+                                    <td>
+                                    <span v-if="batch.vaccines && batch.vaccines.length">
+                                        {{ batch.vaccines[0].vaccine.name }}
+                                    </span>
+                                    </td>
+                                    <td>
+                                    <span v-if="batch.vaccines && batch.vaccines.length">
+                                        {{ batch.vaccines[0].quantity }} {{ batch.vaccines[0].unit.name }}
+                                    </span>
+                                    </td>
+                                </tr>
+
+                                <!-- Total/Avg row -->
+                                <tr>
+                                    <td>Total/Avg</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
 
-                        <div class="egg-quality-table">
-                            <div class="table-title">Egg Quality/Defect</div>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Double Yolk</th>
-                                        <th>Double Yolk Broken</th>
-                                        <th>Commercial A (wt Above 54)</th>
-                                        <th>Commercial B (wt 45-54gm)</th>
-                                        <th>Commercial C (wt 33-44gm)</th>
-                                        <th>Commercial Broken</th>
-                                        <th>Liquid</th>
-                                        <th>Damage</th>
-                                        <th>Total</th>
-                                    </tr>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                                    <tr>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                        </tr>
-                                </tbody>
-                            </table>
+                    <div class="egg-quality-table">
+                        <div class="table-title">Egg Quality/Defect</div>
+
+                        <table>
+                            <thead>
+                            <tr>
+                                <th colspan="2">Double Yolk</th>
+                                <th colspan="2">Double Yolk Broken</th>
+                                <th colspan="2">Commercial</th>
+                                <th colspan="2">Commercial Broken</th>
+                                <th colspan="2">Liquid</th>
+                                <th colspan="2">Damage</th>
+                                <th colspan="2">Total</th>
+                            </tr>
+                            <tr>
+                                <th>No</th><th>%</th>
+                                <th>No</th><th>%</th>
+                                <th>No</th><th>%</th>
+                                <th>No</th><th>%</th>
+                                <th>No</th><th>%</th>
+                                <th>No</th><th>%</th>
+                                <th>No</th><th>%</th>
+                            </tr>
+                            </thead>
+
+                            <tbody v-for="batch in batches" :key="batch.id">
+                            <tr v-for="classification in batch.batch_assign.egg_classifications || []" :key="classification.id">
+                                <!-- Map rejected eggs by ID -->
+                                <td>{{ getRejectedQty(classification.rejected_eggs, 6) }}</td>
+                                <td>{{ getRejectedPct(classification.rejected_eggs, 6, classification.total_eggs) }}</td>
+
+                                <td>{{ getRejectedQty(classification.rejected_eggs, 7) }}</td>
+                                <td>{{ getRejectedPct(classification.rejected_eggs, 7, classification.total_eggs) }}</td>
+
+                                <td>{{ getRejectedQty(classification.rejected_eggs, 8) }}</td>
+                                <td>{{ getRejectedPct(classification.rejected_eggs, 8, classification.total_eggs) }}</td>
+
+                                <td>{{ getRejectedQty(classification.rejected_eggs, 9) }}</td>
+                                <td>{{ getRejectedPct(classification.rejected_eggs, 9, classification.total_eggs) }}</td>
+
+                                <td>{{ getRejectedQty(classification.rejected_eggs, 10) }}</td>
+                                <td>{{ getRejectedPct(classification.rejected_eggs, 10, classification.total_eggs) }}</td>
+
+                                <td>{{ getRejectedQty(classification.rejected_eggs, 11) }}</td>
+                                <td>{{ getRejectedPct(classification.rejected_eggs, 11, classification.total_eggs) }}</td>
+
+                                <td>{{ classification.rejected_eggs.reduce((sum, r) => sum + r.quantity, 0) }}</td>
+                                <td>{{ classification.total_eggs > 0 ? (classification.rejected_eggs.reduce((sum, r) => sum + r.quantity, 0) / classification.total_eggs * 100).toFixed(2) : 0 }}</td>
+                            </tr>
+                            </tbody>
+                        </table>
                         </div>
                     </div>
-
                     <!-- Mortality Details and Technical Information -->
                     <div class="mortality-tech-section">
                         <div class="mortality-details">
-                            <div class="table-title">Mortality Details</div>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Batch</th>
-                                        <th colspan="2">Destroy</th>
-                                        <th colspan="2">Cull (Slaughter)</th>
-                                        <th colspan="2">Non Laying</th>
-                                        <th colspan="2">Medical</th>
-                                        <th colspan="2">Rejects Birds</th>
-                                        <th colspan="2">Sexing Error</th>
-                                        <th colspan="2">Final Sold</th>
-                                        <th colspan="2">Shortage</th>
-                                        <th colspan="2">Excess</th>
-                        </tr>
-                                    <tr>
-                                        <th></th>
-                                        <th>F</th>
-                                        <th>M</th>
-                                        <th>F</th>
-                                        <th>M</th>
-                                        <th>F</th>
-                                        <th>M</th>
-                                        <th>F</th>
-                                        <th>M</th>
-                                        <th>F</th>
-                                        <th>M</th>
-                                        <th>F</th>
-                                        <th>M</th>
-                                        <th>F</th>
-                                        <th>M</th>
-                                        <th>F</th>
-                                        <th>M</th>
-                                        <th>F</th>
-                                        <th>M</th>
-                                    </tr>
-                                </thead>
-                    <tbody>
-                                    <tr v-for="i in 5" :key="i">
-                                        <td>A</td>
-                                        <td>1</td>
-                                        <td>2</td>
-                                        <td>1</td>
-                                        <td>2</td>
-                                        <td>1</td>
-                                        <td>2</td>
-                                        <td>1</td>
-                                        <td>2</td>
-                                        <td>1</td>
-                                        <td>2</td>
-                                        <td>1</td>
-                                        <td>2</td>
-                                        <td>1</td>
-                                        <td>2</td>
-                                        <td>1</td>
-                                        <td>2</td>
-                                        <td>1</td>
-                                        <td>2</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Total</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td>10</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                        </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                            <div class="mortality-details">
+                                <div class="table-title">Mortality Details</div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Batch</th>
+                                            <th colspan="2">Mortality</th>
+                                            <th colspan="2">Cull (Slaughter)</th>
+                                            <th colspan="2">Destroy</th>
+                                            <th colspan="2">Sexing Error</th>
+                                            <th colspan="2">Medical</th>
+                                            <th colspan="2">Total</th>
+                                            <th colspan="2">Final Sold</th>
+                                            <th colspan="2">Shortage</th>
+                                            <th colspan="2">Excess</th>
+                                        </tr>
+                                        <tr>
+                                            <th></th>
+                                            <th>F</th><th>M</th>
+                                            <th>F</th><th>M</th>
+                                            <th>F</th><th>M</th>
+                                            <th>F</th><th>M</th>
+                                            <th>F</th><th>M</th>
+                                            <th>F</th><th>M</th>
+                                            <th>F</th><th>M</th>
+                                            <th>F</th><th>M</th>
+                                            <th>F</th><th>M</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="batch in batches" :key="batch.id">
+                                            <td>{{ batch.batch_assign?.batch?.name || 'N/A' }}</td>
 
+                                            <!-- Mortality -->
+                                            <td>{{ (batch.mortalities || []).reduce((sum, m) => sum + (m.female_qty || 0), 0) }}</td>
+                                            <td>{{ (batch.mortalities || []).reduce((sum, m) => sum + (m.male_qty || 0), 0) }}</td>
+
+                                            <!-- Cull -->
+                                            <td>{{ (batch.cullings || []).reduce((sum, c) => sum + (c.female_qty || 0), 0) }}</td>
+                                            <td>{{ (batch.cullings || []).reduce((sum, c) => sum + (c.male_qty || 0), 0) }}</td>
+
+                                            <!-- Destroy -->
+                                            <td>{{ (batch.destroys || []).reduce((sum, d) => sum + (d.female_qty || 0), 0) }}</td>
+                                            <td>{{ (batch.destroys || []).reduce((sum, d) => sum + (d.male_qty || 0), 0) }}</td>
+
+                                            <!-- Sexing Error -->
+                                            <td>{{ (batch.sexing_errors || []).reduce((sum, s) => sum + (s.female_qty || 0), 0) }}</td>
+                                            <td>{{ (batch.sexing_errors || []).reduce((sum, s) => sum + (s.male_qty || 0), 0) }}</td>
+
+                                            <!-- Medical / Firm Lab -->
+                                            <td>{{ (batch.batch_assign?.firm_lab_tests || []).reduce((sum, m) => sum + (m.firm_lab_send_female_qty || 0), 0) }}</td>
+                                            <td>{{ (batch.batch_assign?.firm_lab_tests || []).reduce((sum, m) => sum + (m.firm_lab_send_male_qty || 0), 0) }}</td>
+
+                                            <!-- Total -->
+                                            <td>
+                                                {{
+                                                    (batch.mortalities || []).reduce((sum, m) => sum + (m.female_qty || 0), 0) +
+                                                    (batch.cullings || []).reduce((sum, c) => sum + (c.female_qty || 0), 0) +
+                                                    (batch.destroys || []).reduce((sum, d) => sum + (d.female_qty || 0), 0) +
+                                                    (batch.sexing_errors || []).reduce((sum, s) => sum + (s.female_qty || 0), 0) +
+                                                    (batch.batch_assign?.firm_lab_tests || []).reduce((sum, m) => sum + (m.firm_lab_send_female_qty || 0), 0)
+                                                }}
+                                            </td>
+                                            <td>
+                                                {{
+                                                    (batch.mortalities || []).reduce((sum, m) => sum + (m.male_qty || 0), 0) +
+                                                    (batch.cullings || []).reduce((sum, c) => sum + (c.male_qty || 0), 0) +
+                                                    (batch.destroys || []).reduce((sum, d) => sum + (d.male_qty || 0), 0) +
+                                                    (batch.sexing_errors || []).reduce((sum, s) => sum + (s.male_qty || 0), 0) +
+                                                    (batch.batch_assign?.firm_lab_tests || []).reduce((sum, m) => sum + (m.firm_lab_send_male_qty || 0), 0)
+                                                }}
+                                            </td>
+
+                                            <!-- Final Sold -->
+                                            <td>
+                                                {{ (batch.batch_assign?.batch_female_qty || 0) - (
+                                                    (batch.mortalities || []).reduce((sum, m) => sum + (m.female_qty || 0), 0) +
+                                                    (batch.cullings || []).reduce((sum, c) => sum + (c.female_qty || 0), 0) +
+                                                    (batch.destroys || []).reduce((sum, d) => sum + (d.female_qty || 0), 0) +
+                                                    (batch.sexing_errors || []).reduce((sum, s) => sum + (s.female_qty || 0), 0) +
+                                                    (batch.batch_assign?.firm_lab_tests || []).reduce((sum, m) => sum + (m.firm_lab_send_female_qty || 0), 0)
+                                                ) }}
+                                            </td>
+                                            <td>
+                                                {{ (batch.batch_assign?.batch_male_qty || 0) - (
+                                                    (batch.mortalities || []).reduce((sum, m) => sum + (m.male_qty || 0), 0) +
+                                                    (batch.cullings || []).reduce((sum, c) => sum + (c.male_qty || 0), 0) +
+                                                    (batch.destroys || []).reduce((sum, d) => sum + (d.male_qty || 0), 0) +
+                                                    (batch.sexing_errors || []).reduce((sum, s) => sum + (s.male_qty || 0), 0) +
+                                                    (batch.batch_assign?.firm_lab_tests || []).reduce((sum, m) => sum + (m.firm_lab_send_male_qty || 0), 0)
+                                                ) }}
+                                            </td>
+
+                                            <!-- Shortage -->
+                                            <td>{{ batch.batch_sortage_female || 0 }}</td>
+                                            <td>{{ batch.batch_sortage_male || 0 }}</td>
+
+                                            <!-- Excess -->
+                                            <td>{{ batch.batch_excess_female || 0 }}</td>
+                                            <td>{{ batch.batch_excess_male || 0 }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            </div>
                         <div class="technical-info">
                             <div class="table-title">Technical Information About Reject Egg</div>
+
                             <table>
                                 <thead>
-                                    <tr>
-                                        <th>Floor Egg</th>
-                                        <th>Thin</th>
-                                        <th>Misshape</th>
-                                        <th>White Egg</th>
-                                        <th>Dirty</th>
-                                    </tr>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                                        <th>No</th>
-                                        <th>%</th>
-                        </tr>
+                                <tr>
+                                    <th colspan="2">Floor Egg</th>
+                                    <th colspan="2">Thin</th>
+                                    <th colspan="2">Misshape</th>
+                                    <th colspan="2">White Egg</th>
+                                    <th colspan="2">Dirty</th>
+                                </tr>
+                                <tr>
+                                    <th>No</th><th>%</th>
+                                    <th>No</th><th>%</th>
+                                    <th>No</th><th>%</th>
+                                    <th>No</th><th>%</th>
+                                    <th>No</th><th>%</th>
+                                </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                                        <td>0</td>
-                                        <td>0.0</td>
-                        </tr>
-                    </tbody>
-                </table>
-                        </div>
+
+                                <tbody v-for="batch in batches" :key="batch.id">
+                                    <tr v-for="classification in batch.batch_assign.egg_classifications || []" :key="classification.id">
+                                        <td>{{ getTechnicalQty(classification.technical_eggs, 1) }}</td>
+                                        <td>{{ getTechnicalPct(classification.technical_eggs, 1, classification.total_eggs) }}</td>
+
+                                        <td>{{ getTechnicalQty(classification.technical_eggs, 2) }}</td>
+                                        <td>{{ getTechnicalPct(classification.technical_eggs, 2, classification.total_eggs) }}</td>
+
+                                        <td>{{ getTechnicalQty(classification.technical_eggs, 3) }}</td>
+                                        <td>{{ getTechnicalPct(classification.technical_eggs, 3, classification.total_eggs) }}</td>
+
+                                        <td>{{ getTechnicalQty(classification.technical_eggs, 4) }}</td>
+                                        <td>{{ getTechnicalPct(classification.technical_eggs, 4, classification.total_eggs) }}</td>
+
+                                        <td>{{ getTechnicalQty(classification.technical_eggs, 5) }}</td>
+                                        <td>{{ getTechnicalPct(classification.technical_eggs, 5, classification.total_eggs) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            </div>
                     </div>
 
                     <!-- Total Feed Summary -->

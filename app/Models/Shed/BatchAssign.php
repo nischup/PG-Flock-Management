@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
+use App\Models\Production\EggClassification;
+use App\Models\FirmLabTest;
 use App\Models\Master\Batch;
 use App\Models\MovementAdjustment;
 use App\Models\DailyOperation\DailyMortality;
@@ -165,6 +167,15 @@ class BatchAssign extends Model
                 ->sum('total_qty');
     }
 
+    public function eggClassifications()
+    {
+        return $this->hasMany(EggClassification::class, 'batchassign_id');
+    }
+
+    public function firmLabTests()
+    {
+        return $this->hasMany(FirmLabTest::class, 'batch_assign_id');
+    }
     public function scopeApplyFilters($query, $filters)
     {
         return $query
