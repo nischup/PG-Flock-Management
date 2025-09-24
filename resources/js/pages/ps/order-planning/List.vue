@@ -45,7 +45,7 @@ const props = defineProps<{
     };
 }>();
 
-useListFilters({ routeName: '/ps/order-planning', filters: props.filters });
+useListFilters({ routeName: '/order-plans', filters: props.filters });
 const { confirmDelete } = useNotifier();
 const { can } = usePermissions();
 
@@ -78,7 +78,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
 // ✅ Delete action
 const deleteOrderPlan = (id: number) => {
     confirmDelete({
-        url: `/ps/order-planning/${id}`,
+        url: `/order-plans/${id}`,
         text: 'This will permanently delete the order plan record.',
         successMessage: 'Order Plan deleted successfully.',
     });
@@ -107,7 +107,7 @@ const applyFilters = () => {
     if (filters.value.order_from) params.set('order_from', filters.value.order_from);
     if (filters.value.order_to) params.set('order_to', filters.value.order_to);
     
-    window.location.href = `/ps/order-planning?${params.toString()}`;
+    window.location.href = `/order-plans?${params.toString()}`;
 };
 
 const clearFilters = () => {
@@ -207,7 +207,7 @@ const exportExcel = () => {
 };
 
 const exportRowPdf = (id: number) => {
-    const url = `/ps/order-planning/${id}/pdf`;
+    const url = `/order-plans/${id}/pdf`;
     window.open(url, '_blank');
 };
 
@@ -215,7 +215,7 @@ const exportRowPdf = (id: number) => {
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Production System', href: '/ps' },
-    { title: 'Order Planning', href: '/ps/order-planning' },
+    { title: 'Order Planning', href: '/order-plans' },
 ];
 </script>
 
@@ -229,7 +229,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <div class="flex items-center gap-2">
                     <Link
                         v-if="can('order-plans.create')"
-                        href="/ps/order-planning/create"
+                        href="/order-plans/create"
                         class="group relative overflow-hidden rounded-md px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500"
                         style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);"
                     >
@@ -457,7 +457,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <td class="px-6 py-4 flex gap-4">
                                 <Link
                                     v-if="can('order-plans.edit')"
-                                    :href="`/ps/order-planning/${orderPlan.id}/edit`"
+                                    :href="`/order-plans/${orderPlan.id}/edit`"
                                     class="text-indigo-600 hover:underline font-medium flex items-center gap-1"
                                 >
                                     <Pencil class="h-4 w-4" />

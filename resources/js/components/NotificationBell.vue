@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { Bell, User, CheckCircle, XCircle, Clock, AlertCircle, Feather } from 'lucide-vue-next'
 // import { router } from '@inertiajs/vue3' // Not needed for this component
 
@@ -32,6 +32,11 @@ const updateUnreadCount = () => {
 onMounted(() => {
   updateUnreadCount()
 })
+
+// Watch for changes in notifications prop
+watch(() => props.notifications, () => {
+  updateUnreadCount()
+}, { deep: true })
 
 // Get icon component based on icon name
 const getIcon = (iconName?: string) => {
@@ -125,12 +130,12 @@ const formatTime = (dateString: string) => {
       class="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
     >
       <Bell class="w-6 h-6" />
-      <!-- Red notification dot -->
+      <!-- Notification badge -->
       <span
         v-if="unreadCount > 0"
-        class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center"
+        class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full text-xs text-white flex items-center justify-center px-1 font-medium"
       >
-        {{ unreadCount > 9 ? '9+' : unreadCount }}
+        {{ unreadCount > 99 ? '99+' : unreadCount }}
       </span>
     </button>
 
