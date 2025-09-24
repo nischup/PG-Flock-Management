@@ -177,46 +177,55 @@ class DailyFlockReportController extends Controller
         // Get filter parameters
         $filters = array_merge([
             'date_from' => null,
-            'date_to' => null,
             'company_id' => null,
             'project_id' => null,
             'flock_id' => null,
-        ], $request->only(['date_from', 'date_to', 'company_id', 'project_id', 'flock_id']));
-
+        ], $request->only(['date_from','company_id', 'project_id', 'flock_id']));
+       
         // Get dropdown data
         $companies = Company::select('id', 'name')->orderBy('name')->get();
         $projects = Project::select('id', 'name', 'company_id')->orderBy('name')->get();
         $flocks = Flock::select('id', 'name', 'code')->orderBy('code')->get();
+        
+        // // Sample data for the report (you can replace this with actual data from your database)
+        // $batches = [
+        //     [
+        //         'delivery_date' => '2025-01-15',
+        //         'breed_type' => 'Lohmann Brown',
+        //         'batch_no' => 'A001',
+        //         'register_female' => 1000,
+        //         'register_male' => 100,
+        //         'erp_female' => 1000,
+        //         'erp_male' => 100,
+        //         'challan_female' => 1000,
+        //         'challan_male' => 100,
+        //         'medical_female' => 0,
+        //         'medical_male' => 0,
+        //         'deviation_female' => 0,
+        //         'deviation_male' => 0,
+        //         'received_female' => 1000,
+        //         'received_male' => 100,
+        //         'mortality_female' => 5,
+        //         'mortality_male' => 1,
+        //         'total_received_female' => 995,
+        //         'total_received_male' => 99,
+        //         'actual_deviation_female' => 0,
+        //         'actual_deviation_male' => 0,
+        //         'challan_deviation_female' => 0,
+        //         'challan_deviation_male' => 0,
+        //     ],
+        // ];
 
-        // Sample data for the report (you can replace this with actual data from your database)
-        $batches = [
-            [
-                'delivery_date' => '2025-01-15',
-                'breed_type' => 'Lohmann Brown',
-                'batch_no' => 'A001',
-                'register_female' => 1000,
-                'register_male' => 100,
-                'erp_female' => 1000,
-                'erp_male' => 100,
-                'challan_female' => 1000,
-                'challan_male' => 100,
-                'medical_female' => 0,
-                'medical_male' => 0,
-                'deviation_female' => 0,
-                'deviation_male' => 0,
-                'received_female' => 1000,
-                'received_male' => 100,
-                'mortality_female' => 5,
-                'mortality_male' => 1,
-                'total_received_female' => 995,
-                'total_received_male' => 99,
-                'actual_deviation_female' => 0,
-                'actual_deviation_male' => 0,
-                'challan_deviation_female' => 0,
-                'challan_deviation_male' => 0,
-            ],
-        ];
-
+        // $insideTemp = [];
+        // $outsideTemp = [];
+        // $humidity = [];
+        // $batchweight = [];
+        // $batDailyoperation = [];
+        // $batchVaccineMedicine = [];
+        
+        // $eggGrade = [];
+        // $eggClassification = [];
+        // $batchTechnicalinfo = [];
         $totals = [
             'register_female' => 1000,
             'register_male' => 100,
@@ -240,15 +249,71 @@ class DailyFlockReportController extends Controller
             'challan_deviation_male' => 0,
         ];
 
+        $dateFrom = $validated['date_from'] ?? Carbon::now()->subDays(30)->toDateString();
+        $dateTo = $validated['date_to'] ?? Carbon::now()->toDateString();
+
+        $dailyOperations = DailyOperation::query()
+        ->when($filters['date_from'], fn($q) => $q->whereDate('operation_date', $filters['date_from']))
+        ->when($filters['company_id'], fn($q) => $q->where('company_id', $filters['company_id']))
+        ->when($filters['project_id'], fn($q) => $q->where('project_id', $filters['project_id']))
+        ->when($filters['flock_id'], fn($q) => $q->where('flock_id', $filters['flock_id']))
+        ->with([
+            'batchAssign.flock',
+            // Grouped relations
+            'mortalities',
+            'cullings',
+            'destroys',       // add destroy
+            'sexingErrors',
+            'lights',
+            'weights',
+            'temperatures',
+            'feedingPrograms',
+            'feedFinishings',
+            'humidities',
+            'eggCollections',
+            'medicines.medicine',
+            'medicines.unit',
+            'vaccines.vaccine',
+            'vaccines.unit',
+        ])->get();
+
+        // // Map breed_type IDs to names
+        // $breeds = BreedType::pluck('name', 'id')->toArray();
+        // $breedtype =  [1, 2]; // <-- changed to dynamic
+        // if (! is_array($breedtype)) {
+        //     $breedtype = is_null($breedtype) ? [] : [$breedtype];
+        // }
+
+        // $breedAll = array_map(fn ($id) => $breeds[$id] ?? null, $breedtype);
+        // $breedNames = array_filter($breedAll);
+        // $breedName = implode(', ', $breedNames);
+
+        // // Prepare data for Blade view
+        // $data = [
+        //     'job_no' => $dailyoperation->batchAssign->job_no ?? '-',
+        //     'transaction_no' => $dailyoperation->batchAssign->transaction_no ?? '-',
+        //     'flock_name' => $dailyoperation->batchAssign->flock->name ?? '-',
+        //     'flock_id' => $dailyoperation->batchAssign->flock_id ?? '-',
+        //     'status' => $dailyoperation->status,
+        //     'breedName' => $breedName,
+        //     'created_at' => $dailyoperation->created_at->format('Y-m-d H:i:s'),
+        //     'generatedAt' => now(),
+        //     'dailyoperation' => $dailyoperation, // pass whole model with relations
+        // ];
+
+
+
+
+
+
+
+
         $data = [
-            'from_company' => 'Provita Chicks Limited-01',
-            'to_company' => 'Jahazmara Farm',
-            'batches' => $batches,
-            'totals' => $totals,
             'companies' => $companies,
             'projects' => $projects,
             'flocks' => $flocks,
             'filters' => $filters,
+            'batches' => $dailyOperations,
         ];
 
         return Inertia::render('report/daily-flock-report', $data);
@@ -491,8 +556,6 @@ class DailyFlockReportController extends Controller
         $pdf = Pdf::loadView('reports.daily-report.daily-report', $data)
             ->setPaper('a4', 'landscape');
 
-        return request()->query('download')
-            ? $pdf->download("daily-operation-{$dailyoperation->id}.pdf")
-            : $pdf->stream("daily-operation-{$dailyoperation->id}.pdf");
+        
     }
 }

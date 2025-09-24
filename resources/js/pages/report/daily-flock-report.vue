@@ -38,7 +38,7 @@ type Batch = {
 const props = defineProps<{
     from_company: string;
     to_company: string;
-    batches: Batch[];
+    batches: any[];
     totals: Record<string, number | string>;
     companies: Array<{ id: number; name: string }>;
     projects: Array<{ id: number; name: string; company_id: number }>;
@@ -244,6 +244,34 @@ const handleExportChange = (event: Event) => {
     // Reset dropdown to default option
     target.value = '';
 };
+
+
+// Get global max/min for each temperature type
+const maxInside = computed(() => 
+  Math.max(...props.batches.flatMap(b => b.temperatures.map(t => Number(t.inside_temp))))
+)
+
+const minInside = computed(() => 
+  Math.min(...props.batches.flatMap(b => b.temperatures.map(t => Number(t.inside_temp ?? Infinity))))
+)
+
+const maxOutside = computed(() => 
+  Math.max(...props.batches.flatMap(b => b.temperatures.map(t => Number(t.outside_temp))))
+)
+
+const minOutside = computed(() => 
+  Math.min(...props.batches.flatMap(b => b.temperatures.map(t => Number(t.outside_temp))))
+)
+
+const maxHumidity = computed(() => 
+  Math.max(...props.batches.flatMap(b => b.humidities.map(t => Number(t.today_humidity))))
+)
+
+const minHumidity = computed(() => 
+  Math.min(...props.batches.flatMap(b => b.humidities.map(t => Number(t.today_humidity))))
+)
+
+console.log(props.batches);
 </script>
 
 <template>
@@ -345,7 +373,7 @@ const handleExportChange = (event: Event) => {
 
                     <!-- Date From -->
                         <div class="min-w-[150px] relative date-picker-container">
-                            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">From</label>
+                            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
                             <div class="relative">
                         <input
                                     :value="formatDate(state.date_from)"
@@ -388,10 +416,10 @@ const handleExportChange = (event: Event) => {
                     </div>
 
                         <!-- Date To -->
-                        <div class="min-w-[150px] relative date-picker-container">
+                        <!-- <div class="min-w-[150px] relative date-picker-container">
                             <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">To</label>
                             <div class="relative">
-                        <input
+                            <input
                                     :value="formatDate(state.date_to)"
                                     @click="toggleDateToPicker"
                                     readonly
@@ -408,10 +436,10 @@ const handleExportChange = (event: Event) => {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                     </svg>
                                 </button>
-                    </div>
+                    </div> -->
 
                             <!-- Date To Picker -->
-                            <div
+                            <!-- <div
                                 v-if="state.show_date_to_picker"
                                 class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
                             >
@@ -428,8 +456,8 @@ const handleExportChange = (event: Event) => {
                                         <span v-if="option.isToday" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Today</span>
                                     </div>
                                 </div>
-                            </div>
-                </div>
+                            </div> 
+                </div>-->
 
                         <!-- Action Button -->
                         <div class="flex gap-2">
@@ -480,22 +508,29 @@ const handleExportChange = (event: Event) => {
                         <div class="env-table">
                             <div class="env-header">Outside Tem (°C)</div>
                             <div class="env-data">
-                                <div>Max: 0.0</div>
-                                <div>Min: 0.0</div>
+                                
+                                
+                                
+                                <div>Max:{{ maxOutside }}</div>
+                                <div>Min: {{ minOutside }}</div>
+
+
+
+
                             </div>
                         </div>
                         <div class="env-table">
                             <div class="env-header">Inside Tem (°C)</div>
                             <div class="env-data">
-                                <div>Max: 31.0</div>
-                                <div>Min: 29.0</div>
+                                <div>Max:  {{ maxInside }}</div>
+                                <div>Min: {{ minInside }}</div>
                             </div>
                         </div>
                         <div class="env-table">
                             <div class="env-header">Humidity %</div>
                             <div class="env-data">
-                                <div>Max: 0</div>
-                                <div>Min: 0</div>
+                                <div>Max: {{ maxHumidity }}</div>
+                                <div>Min: {{ minHumidity }}</div>
                             </div>
                         </div>
                     </div>
