@@ -187,71 +187,9 @@ class DailyFlockReportController extends Controller
         $projects = Project::select('id', 'name', 'company_id')->orderBy('name')->get();
         $flocks = Flock::select('id', 'name', 'code')->orderBy('code')->get();
         
-        // // Sample data for the report (you can replace this with actual data from your database)
-        // $batches = [
-        //     [
-        //         'delivery_date' => '2025-01-15',
-        //         'breed_type' => 'Lohmann Brown',
-        //         'batch_no' => 'A001',
-        //         'register_female' => 1000,
-        //         'register_male' => 100,
-        //         'erp_female' => 1000,
-        //         'erp_male' => 100,
-        //         'challan_female' => 1000,
-        //         'challan_male' => 100,
-        //         'medical_female' => 0,
-        //         'medical_male' => 0,
-        //         'deviation_female' => 0,
-        //         'deviation_male' => 0,
-        //         'received_female' => 1000,
-        //         'received_male' => 100,
-        //         'mortality_female' => 5,
-        //         'mortality_male' => 1,
-        //         'total_received_female' => 995,
-        //         'total_received_male' => 99,
-        //         'actual_deviation_female' => 0,
-        //         'actual_deviation_male' => 0,
-        //         'challan_deviation_female' => 0,
-        //         'challan_deviation_male' => 0,
-        //     ],
-        // ];
-
-        // $insideTemp = [];
-        // $outsideTemp = [];
-        // $humidity = [];
-        // $batchweight = [];
-        // $batDailyoperation = [];
-        // $batchVaccineMedicine = [];
         
-        // $eggGrade = [];
-        // $eggClassification = [];
-        // $batchTechnicalinfo = [];
-        $totals = [
-            'register_female' => 1000,
-            'register_male' => 100,
-            'erp_female' => 1000,
-            'erp_male' => 100,
-            'challan_female' => 1000,
-            'challan_male' => 100,
-            'medical_female' => 0,
-            'medical_male' => 0,
-            'deviation_female' => 0,
-            'deviation_male' => 0,
-            'received_female' => 1000,
-            'received_male' => 100,
-            'mortality_female' => 5,
-            'mortality_male' => 1,
-            'total_received_female' => 995,
-            'total_received_male' => 99,
-            'actual_deviation_female' => 0,
-            'actual_deviation_male' => 0,
-            'challan_deviation_female' => 0,
-            'challan_deviation_male' => 0,
-        ];
 
-        $dateFrom = $validated['date_from'] ?? Carbon::now()->subDays(30)->toDateString();
-        $dateTo = $validated['date_to'] ?? Carbon::now()->toDateString();
-
+        // Query DailyOperations with related data
         $dailyOperations = DailyOperation::query()
         ->when($filters['date_from'], fn($q) => $q->whereDate('operation_date', $filters['date_from']))
         ->when($filters['company_id'], fn($q) => $q->where('company_id', $filters['company_id']))
@@ -259,10 +197,11 @@ class DailyFlockReportController extends Controller
         ->when($filters['flock_id'], fn($q) => $q->where('flock_id', $filters['flock_id']))
         ->with([
             'batchAssign.flock',
-            // Grouped relations
+            'batchAssign.batch',
+            'batchAssign.shed',
             'mortalities',
             'cullings',
-            'destroys',       // add destroy
+            'destroys',
             'sexingErrors',
             'lights',
             'weights',
@@ -275,7 +214,26 @@ class DailyFlockReportController extends Controller
             'medicines.unit',
             'vaccines.vaccine',
             'vaccines.unit',
+            'batchAssign.firmLabTests' => function($q) use ($filters) {
+                if ($filters['date_from']) {
+                    $q->whereDate('created_at', $filters['date_from']);
+                }
+            },
+            // Load egg classifications for the batch
+            'batchAssign.eggClassifications' => function($q) use ($filters) {
+                if ($filters['date_from']) {
+                    $q->whereDate('classification_date', $filters['date_from']);
+                }
+                $q->with([
+                    'grades.grade',          // Egg grades
+                    'rejectedEggs.eggType', // Rejected eggs
+                    'technicalEggs.eggType' // Technical eggs
+                ]);
+            },
         ])->get();
+
+
+        
 
         // // Map breed_type IDs to names
         // $breeds = BreedType::pluck('name', 'id')->toArray();
@@ -300,12 +258,6 @@ class DailyFlockReportController extends Controller
         //     'generatedAt' => now(),
         //     'dailyoperation' => $dailyoperation, // pass whole model with relations
         // ];
-
-
-
-
-
-
 
 
         $data = [
