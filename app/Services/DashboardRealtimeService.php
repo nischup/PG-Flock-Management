@@ -73,7 +73,8 @@ class DashboardRealtimeService
         $totalMortality = $batchAssigns->sum('batch_total_mortality');
         $totalMortalityMale = $batchAssigns->sum('batch_male_mortality');
         $totalMortalityFemale = $batchAssigns->sum('batch_female_mortality');
-
+        $femaleExcessBirds = $batchAssigns->sum('batch_excess_female');
+        $maleSortageBirds = $batchAssigns->sum('batch_sortage_male');
         // Get recent egg collection data
         $eggData = $this->getRecentEggData($filters);
         $mortalityData = $this->getRecentMortalityData($filters);
@@ -88,7 +89,8 @@ class DashboardRealtimeService
         $mortalityPercentage = $totalBirds > 0 ? ($combinedTotalMortality / $totalBirds) * 100 : 0;
         $malePercentage = $totalBirds > 0 ? ($totalMale / $totalBirds) * 100 : 0;
         $femalePercentage = $totalBirds > 0 ? ($totalFemale / $totalBirds) * 100 : 0;
-
+        $femaleExcessPercentage = $totalBirds > 0 ? ($femaleExcessBirds / $totalBirds) * 100 : 0;
+        $maleSortagePercentage = $totalBirds > 0 ? ($maleSortageBirds / $totalBirds) * 100 : 0;
         // Get bird stage distribution
         $birdStages = $this->getBirdStageDistribution($batchAssigns);
 
@@ -188,13 +190,13 @@ class DashboardRealtimeService
                     'type' => 'straight',
                 ],
                 [
-                    'title' => 'Excess Male',
-                    'value' => (int) $batchAssigns->sum('batch_excess_male'),
+                    'title' => 'Sortage Male',
+                    'value' => round($maleSortagePercentage,2),
                     'type' => 'straight',
                 ],
                 [
                     'title' => 'Excess Female',
-                    'value' => (int) $batchAssigns->sum('batch_excess_female'),
+                    'value' => round($femaleExcessPercentage,2),
                     'type' => 'straight',
                 ],
                 [

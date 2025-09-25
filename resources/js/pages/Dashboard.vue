@@ -709,6 +709,8 @@ const dashboardData = computed(() => {
   }
 })
 
+console.log(dashboardData);
+
 const isLoading = computed(() => isRealtimeLoading.value || isRefreshing.value)
 
 // Tab configuration

@@ -159,14 +159,14 @@ class DashboardController extends Controller
         $female = ($femaleChicks/$denominator)*100;
         $cullingTotal = ($totalCulling/$denominator)*100;
 
-        $circleBars = [
-            ['title'=>'Mortality','value'=>number_format($mortalityPercentage,2),'type'=>'rounded'],
-            ['title'=>'Culling','value'=>number_format($cullingTotal,2),'type'=>'rounded'],
-            ['title'=>'Male Chicks','value'=>number_format($male,2),'type'=>'rounded'],
-            ['title'=>'Female Chicks','value'=>number_format($female,2),'type'=>'straight'],
-            ['title'=>'Excess','value'=>rand(1,50),'type'=>'straight'],
-            ['title'=>'Worker','value'=>rand(50,100),'type'=>'straight'],
-        ];
+        // $circleBars = [
+        //     ['title'=>'Mortality','value'=>number_format($mortalityPercentage,2),'type'=>'rounded'],
+        //     ['title'=>'Culling','value'=>number_format($cullingTotal,2),'type'=>'rounded'],
+        //     ['title'=>'Male Chicks','value'=>number_format($male,2),'type'=>'rounded'],
+        //     ['title'=>'Female Chicks','value'=>number_format($female,2),'type'=>'straight'],
+        //     ['title'=>'Excess','value'=>rand(1,50),'type'=>'straight'],
+        //     ['title'=>'Worker','value'=>rand(50,100),'type'=>'straight'],
+        // ];
 
         // --- Bird stage percentages
         $birdStage = [
