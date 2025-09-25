@@ -329,6 +329,33 @@ function closingMale(batch: any) {
 
   return openingMale - mortality - cull - destroy - sexingError - medicalBirds;
 }
+
+
+function openingFemale(batch: any) {
+  const closingFemale = batch.batch_assign?.closing_female ?? 0;
+
+  // Sum of different reductions
+  const mortality = sumFM(batch.mortalities || [], 'female_qty', 'male_qty').female;
+  const cull = sumFM(batch.cullings || [], 'female_qty', 'male_qty').female;
+  const destroy = sumFM(batch.destroys || [], 'female_qty', 'male_qty').female;
+  const sexingError = sumFM(batch.sexingErrors || [], 'female_qty', 'male_qty').female;
+  const medicalBirds = sumFM(batch.batch_assign.firmLabTests || [], 'firm_lab_send_female_qty', 'firm_lab_send_male_qty').female;
+
+  // Opening female calculation
+  return closingFemale + mortality + cull + destroy + sexingError + medicalBirds;
+}
+
+function openingMale(batch: any) {
+  const closingMale = batch.batch_assign?.closing_male ?? 0;
+
+  const mortality = sumFM(batch.mortalities || [], 'female_qty', 'male_qty').male;
+  const cull = sumFM(batch.cullings || [], 'female_qty', 'male_qty').male;
+  const destroy = sumFM(batch.destroys || [], 'female_qty', 'male_qty').male;
+  const sexingError = sumFM(batch.sexingErrors || [], 'female_qty', 'male_qty').male;
+  const medicalBirds = sumFM(batch.batch_assign.firmLabTests || [], 'firm_lab_send_female_qty', 'firm_lab_send_male_qty').male;
+
+  return closingMale + mortality + cull + destroy + sexingError + medicalBirds;
+}
 console.log(props.batches);
 
 function getRejectedQty(rejectedEggs: any[], typeId: number) {
@@ -666,9 +693,9 @@ function getTechnicalPct(technicalEggs: any[], typeId: number, totalEggs: number
     <thead>
       <tr>
         <th rowspan="2">Breed</th>
-        <th rowspan="2">IR</th>
-        <th rowspan="2">Mail Flock No</th>
-        <th rowspan="2">Shed No:01</th>
+        <th rowspan="2">Age</th>
+        <th rowspan="2">Flock No</th>
+        <th rowspan="2">Shed No</th>
         <th rowspan="2">Date</th>
         <th colspan="5">Mortality</th>
         <th colspan="5">Sold/Cull</th>
@@ -683,7 +710,7 @@ function getTechnicalPct(technicalEggs: any[], typeId: number, totalEggs: number
         <th rowspan="2">Type of Feed</th>
       </tr>
       <tr>
-        <th>Opening Birds No.</th>
+        <th>Opening Birds</th>
         <th>Daily (F)</th>
         <th>Cum (F)</th>
         <th>Daily (M)</th>
@@ -721,7 +748,7 @@ function getTechnicalPct(technicalEggs: any[], typeId: number, totalEggs: number
         <td>{{ new Date(batch.operation_date).toLocaleDateString() }}</td>
 
         <!-- Mortality -->
-        <td>{{ (batch.batch_assign?.batch_female_qty ?? 0) + (batch.batch_assign?.batch_male_qty ?? 0) }}</td>
+        <td>{{ openingFemale(batch) + openingMale(batch)}}</td>
         <td>{{ sumField(batch.mortalities, 'female_qty') }}</td>
         <td>{{ sumField(batch.mortalities, 'female_qty') }}</td>
         <td>{{ sumField(batch.mortalities, 'male_qty') }}</td>
@@ -735,8 +762,8 @@ function getTechnicalPct(technicalEggs: any[], typeId: number, totalEggs: number
         <td></td>
 
         <!-- Closing Birds -->
-        <td>{{ closingFemale(batch) }}</td>
-        <td>{{ closingMale(batch) }}</td>
+        <td>{{ batch?.batch_assign?.closing_female }}</td>
+        <td>{{ batch?.batch_assign?.closing_male }}</td>
 
         <!-- Production Eggs -->
 <td>

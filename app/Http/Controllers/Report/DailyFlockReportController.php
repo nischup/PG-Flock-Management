@@ -13,6 +13,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
+use App\Services\BatchBirdService;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -190,85 +191,69 @@ class DailyFlockReportController extends Controller
         
 
         // Query DailyOperations with related data
-        $dailyOperations = DailyOperation::query()
-        ->when($filters['date_from'], fn($q) => $q->whereDate('operation_date', $filters['date_from']))
-        ->when($filters['company_id'], fn($q) => $q->where('company_id', $filters['company_id']))
-        ->when($filters['project_id'], fn($q) => $q->where('project_id', $filters['project_id']))
-        ->when($filters['flock_id'], fn($q) => $q->where('flock_id', $filters['flock_id']))
-        ->with([
-            'batchAssign.flock',
-            'batchAssign.batch',
-            'batchAssign.shed',
-            'mortalities',
-            'cullings',
-            'destroys',
-            'sexingErrors',
-            'lights',
-            'waters.unit',
-            'weights',
-            'temperatures',
-            'feeds.feedType',
-            'feedingPrograms',
-            'feedFinishings',
-            'humidities',
-            'eggCollections',
-            'medicines.medicine',
-            'medicines.unit',
-            'vaccines.vaccine',
-            'vaccines.unit',
-            'batchAssign.firmLabTests' => function($q) use ($filters) {
-                if ($filters['date_from']) {
-                    $q->whereDate('created_at', $filters['date_from']);
+            $dailyOperations = DailyOperation::query()
+            ->when($filters['date_from'], fn($q) => $q->whereDate('operation_date', $filters['date_from']))
+            ->when($filters['company_id'], fn($q) => $q->where('company_id', $filters['company_id']))
+            ->when($filters['project_id'], fn($q) => $q->where('project_id', $filters['project_id']))
+            ->when($filters['flock_id'], fn($q) => $q->where('flock_id', $filters['flock_id']))
+            ->with([
+                'batchAssign.flock',
+                'batchAssign.batch',
+                'batchAssign.shed',
+                'mortalities',
+                'cullings',
+                'destroys',
+                'sexingErrors',
+                'lights',
+                'waters.unit',
+                'weights',
+                'temperatures',
+                'feeds.feedType',
+                'feedingPrograms',
+                'feedFinishings',
+                'humidities',
+                'eggCollections',
+                'medicines.medicine',
+                'medicines.unit',
+                'vaccines.vaccine',
+                'vaccines.unit',
+                'batchAssign.firmLabTests' => function($q) use ($filters) {
+                    if ($filters['date_from']) {
+                        $q->whereDate('created_at', $filters['date_from']);
+                    }
+                },
+                // Load egg classifications for the batch
+                'batchAssign.eggClassifications' => function($q) use ($filters) {
+                    if ($filters['date_from']) {
+                        $q->whereDate('classification_date', $filters['date_from']);
+                    }
+                    $q->with([
+                        'grades.grade',          // Egg grades
+                        'rejectedEggs.eggType', // Rejected eggs
+                        'technicalEggs.eggType' // Technical eggs
+                    ]);
+                },
+            ])->get();
+
+            // Map closing birds for each batch
+            $dailyOperations->each(function($op) use ($filters) {
+                if ($op->batchAssign) {
+                    $reportDate = $filters['date_from'] ?? null;
+                    $closing = BatchBirdService::getClosingBirds($op->batchAssign, $reportDate);
+
+                    // Attach closing birds to daily operation for Vue table
+                    $op->batchAssign->closing_female = $closing['closing_female'];
+                    $op->batchAssign->closing_male   = $closing['closing_male'];
                 }
-            },
-            // Load egg classifications for the batch
-            'batchAssign.eggClassifications' => function($q) use ($filters) {
-                if ($filters['date_from']) {
-                    $q->whereDate('classification_date', $filters['date_from']);
-                }
-                $q->with([
-                    'grades.grade',          // Egg grades
-                    'rejectedEggs.eggType', // Rejected eggs
-                    'technicalEggs.eggType' // Technical eggs
-                ]);
-            },
-        ])->get();
+            });
 
-
-        
-
-        // // Map breed_type IDs to names
-        // $breeds = BreedType::pluck('name', 'id')->toArray();
-        // $breedtype =  [1, 2]; // <-- changed to dynamic
-        // if (! is_array($breedtype)) {
-        //     $breedtype = is_null($breedtype) ? [] : [$breedtype];
-        // }
-
-        // $breedAll = array_map(fn ($id) => $breeds[$id] ?? null, $breedtype);
-        // $breedNames = array_filter($breedAll);
-        // $breedName = implode(', ', $breedNames);
-
-        // // Prepare data for Blade view
-        // $data = [
-        //     'job_no' => $dailyoperation->batchAssign->job_no ?? '-',
-        //     'transaction_no' => $dailyoperation->batchAssign->transaction_no ?? '-',
-        //     'flock_name' => $dailyoperation->batchAssign->flock->name ?? '-',
-        //     'flock_id' => $dailyoperation->batchAssign->flock_id ?? '-',
-        //     'status' => $dailyoperation->status,
-        //     'breedName' => $breedName,
-        //     'created_at' => $dailyoperation->created_at->format('Y-m-d H:i:s'),
-        //     'generatedAt' => now(),
-        //     'dailyoperation' => $dailyoperation, // pass whole model with relations
-        // ];
-
-
-        $data = [
-            'companies' => $companies,
-            'projects' => $projects,
-            'flocks' => $flocks,
-            'filters' => $filters,
-            'batches' => $dailyOperations,
-        ];
+            $data = [
+                'companies' => $companies,
+                'projects' => $projects,
+                'flocks' => $flocks,
+                'filters' => $filters,
+                'batches' => $dailyOperations,
+            ];
 
         return Inertia::render('report/daily-flock-report', $data);
     }
