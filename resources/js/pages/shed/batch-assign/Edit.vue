@@ -46,6 +46,9 @@ const props = defineProps<{
     batch_female_qty: number;
     batch_male_qty: number;
     batch_total_qty: number;
+    batch_received_female_qty: number;
+    batch_received_male_qty: number;
+    batch_received_total_qty: number;
     batch_female_mortality: number;
     batch_male_mortality: number;
     batch_total_mortality: number;
@@ -129,6 +132,11 @@ const form = useForm({
   batch_female_qty: props.batchAssign.batch_female_qty,
   batch_male_qty: props.batchAssign.batch_male_qty,
   batch_total_qty: props.batchAssign.batch_total_qty,
+
+  batch_received_female_qty: props.batchAssign.batch_received_female_qty,
+  batch_received_male_qty: props.batchAssign.batch_received_male_qty,
+  batch_received_total_qty: props.batchAssign.batch_received_total_qty,
+  
   batch_female_mortality: props.batchAssign.batch_female_mortality,
   batch_male_mortality: props.batchAssign.batch_male_mortality,
   batch_total_mortality: props.batchAssign.batch_total_mortality,
@@ -465,30 +473,30 @@ watch(
             <h4 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Main Quantities</h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div class="space-y-2">
-                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Female Qty</Label>
+                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Received Female Qty</Label>
                 <Input 
-                  v-model.number="form.batch_female_qty" 
+                  v-model.number="form.batch_received_female_qty" 
                   type="number" 
                   min="0"
                   class="rounded-xl border-pink-300 bg-pink-50 px-4 py-3 shadow-sm focus:border-pink-500 focus:ring-pink-500/20 dark:border-pink-600 dark:bg-pink-900/20" 
                 />
-                <InputError :message="form.errors.batch_female_qty" />
+                <InputError :message="form.errors.batch_received_female_qty" />
               </div>
               <div class="space-y-2">
-                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Male Qty</Label>
+                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Received Male Qty</Label>
                 <Input 
-                  v-model.number="form.batch_male_qty" 
+                  v-model.number="form.batch_received_male_qty" 
                   type="number" 
                   min="0"
                   class="rounded-xl border-blue-300 bg-blue-50 px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-blue-500/20 dark:border-blue-600 dark:bg-blue-900/20" 
                 />
-                <InputError :message="form.errors.batch_male_qty" />
+                <InputError :message="form.errors.batch_received_male_qty" />
               </div>
               <div class="space-y-2">
                 <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Qty</Label>
                 <Input 
                   type="number" 
-                  :value="form.batch_total_qty" 
+                  :value="form.batch_received_total_qty" 
                   readonly 
                   class="rounded-xl border-gray-300 bg-gradient-to-r from-gray-100 to-gray-50 px-4 py-3 font-bold text-gray-700 shadow-sm cursor-not-allowed dark:border-gray-600 dark:from-gray-700 dark:to-gray-800 dark:text-gray-300" 
                 />
@@ -614,7 +622,7 @@ watch(
           </div>
 
           <!-- Percentage Section -->
-          <div class="mb-4 rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-6 dark:border-amber-800 dark:from-amber-900/20 dark:to-yellow-900/20">
+          <!-- <div class="mb-4 rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-6 dark:border-amber-800 dark:from-amber-900/20 dark:to-yellow-900/20">
             <h4 class="mb-4 flex items-center gap-2 text-lg font-semibold text-amber-800 dark:text-amber-200">
               <Info class="h-5 w-5" />
               Percentage
@@ -630,6 +638,41 @@ watch(
                 class="rounded-xl border-amber-300 bg-amber-50 px-4 py-3 shadow-sm focus:border-amber-500 focus:ring-amber-500/20 dark:border-amber-600 dark:bg-amber-900/20" 
               />
               <InputError :message="form.errors.percentage" />
+            </div>
+          </div> -->
+
+          <div class="mb-6">
+            <h4 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Assign Quantities</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Female Qty</Label>
+                <Input 
+                  v-model.number="form.batch_female_qty" 
+                  type="number" 
+                  min="0"
+                  class="rounded-xl border-pink-300 bg-pink-50 px-4 py-3 shadow-sm focus:border-pink-500 focus:ring-pink-500/20 dark:border-pink-600 dark:bg-pink-900/20" 
+                />
+                <InputError :message="form.errors.batch_female_qty" />
+              </div>
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Male Qty</Label>
+                <Input 
+                  v-model.number="form.batch_male_qty" 
+                  type="number" 
+                  min="0"
+                  class="rounded-xl border-blue-300 bg-blue-50 px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-blue-500/20 dark:border-blue-600 dark:bg-blue-900/20" 
+                />
+                <InputError :message="form.errors.batch_male_qty" />
+              </div>
+              <div class="space-y-2">
+                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Qty</Label>
+                <Input 
+                  type="number" 
+                  :value="form.batch_total_qty" 
+                  readonly 
+                  class="rounded-xl border-gray-300 bg-gradient-to-r from-gray-100 to-gray-50 px-4 py-3 font-bold text-gray-700 shadow-sm cursor-not-allowed dark:border-gray-600 dark:from-gray-700 dark:to-gray-800 dark:text-gray-300" 
+                />
+              </div>
             </div>
           </div>
         </div>

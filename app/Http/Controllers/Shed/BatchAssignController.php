@@ -200,9 +200,16 @@ class BatchAssignController extends Controller
                 'shed_id' => $shedReceive->shed_id ?? null,
                 'level' => $batch['level'] ?? null,
                 'batch_no' => $batch['batch_no'] ?? 1,
+
+                'batch_received_female_qty' => $batch['batch_received_female_qty'] ?? 0,
+                'batch_received_male_qty' => $batch['batch_received_male_qty'] ?? 0,
+                'batch_received_total_qty' => ($batch['batch_received_female_qty'] ?? 0) + ($batch['batch_received_male_qty'] ?? 0),
+
+
                 'batch_female_qty' => $batch['batch_female_qty'] ?? 0,
                 'batch_male_qty' => $batch['batch_male_qty'] ?? 0,
                 'batch_total_qty' => ($batch['batch_female_qty'] ?? 0) + ($batch['batch_male_qty'] ?? 0),
+                
                 'batch_female_mortality' => $batch['batch_female_mortality'] ?? 0,
                 'batch_male_mortality' => $batch['batch_male_mortality'] ?? 0,
                 'batch_total_mortality' => ($batch['batch_female_mortality'] ?? 0) + ($batch['batch_male_mortality'] ?? 0),
@@ -387,6 +394,12 @@ class BatchAssignController extends Controller
             'batch_female_qty' => $batchAssign->batch_female_qty,
             'batch_male_qty' => $batchAssign->batch_male_qty,
             'batch_total_qty' => $batchAssign->batch_total_qty,
+
+            'batch_received_female_qty' => $batchAssign->batch_received_female_qty,
+            'batch_received_male_qty' => $batchAssign->batch_received_male_qty,
+            'batch_received_total_qty' => $batchAssign->batch_total_qty,
+
+
             'batch_female_mortality' => $batchAssign->batch_female_mortality,
             'batch_male_mortality' => $batchAssign->batch_male_mortality,
             'batch_total_mortality' => $batchAssign->batch_total_mortality,
