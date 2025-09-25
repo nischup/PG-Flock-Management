@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\DailyOperation\DailyEggCollection;
 use App\Models\DailyOperation\DailyMortality;
 use App\Models\DailyOperation\DailyOperation;
+use App\Models\Production\EggClassification;
 use App\Models\Master\Flock;
 use App\Models\MovementAdjustment;
 use App\Models\Shed\BatchAssign;
@@ -1430,127 +1431,144 @@ class DashboardRealtimeService
 
             $batchAssigns = $batchQuery->get();
 
-            // Get daily egg collections for these batch assignments through daily operations
-            $eggCollectionsQuery = DailyEggCollection::whereHas('dailyOperation', function ($query) use ($batchAssigns, $filters) {
-                $query->whereIn('batchassign_id', $batchAssigns->pluck('id'));
+            
 
-                // Apply date filters
-                if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
-                    $query->whereBetween('operation_date', [$filters['date_from'], $filters['date_to']]);
-                } elseif (! empty($filters['date'])) {
-                    if ($filters['date'] === 'Last 7 Days') {
-                        $query->where('operation_date', '>=', now()->subDays(7));
-                    } elseif ($filters['date'] === 'Last 1 Month') {
-                        $query->where('operation_date', '>=', now()->subMonth());
-                    }
-                } else {
-                    // If no specific date filter, show data from the last 7 days to include recent data
-                    $query->where('operation_date', '>=', now()->subDays(7));
-                }
-            })
-                ->with(['dailyOperation.batchAssign.flock', 'dailyOperation.batchAssign.company', 'dailyOperation.batchAssign.shed', 'dailyOperation.batchAssign.batch', 'dailyOperation.batchAssign.project'])
-                ->orderBy('created_at', 'desc');
+    // 1. Query collections with dailyOperation + batchAssign
+    $eggCollectionsQuery = DailyEggCollection::whereHas('dailyOperation', function ($query) use ($batchAssigns, $filters) {
+        $query->whereIn('batchassign_id', $batchAssigns->pluck('id'));
 
-            $eggCollections = $eggCollectionsQuery->get();
+        // Apply date filters
+        if (! empty($filters['date_from']) && ! empty($filters['date_to'])) {
+            $query->whereBetween('operation_date', [$filters['date_from'], $filters['date_to']]);
+        } elseif (! empty($filters['date'])) {
+            if ($filters['date'] === 'Last 7 Days') {
+                $query->where('operation_date', '>=', now()->subDays(7));
+            } elseif ($filters['date'] === 'Last 1 Month') {
+                $query->where('operation_date', '>=', now()->subMonth());
+            }
+        } else {
+            $query->where('operation_date', '>=', now()->subDays(7));
+        }
+    })
+    ->with([
+        'dailyOperation.batchAssign.flock',
+        'dailyOperation.batchAssign.company',
+        'dailyOperation.batchAssign.shed',
+        'dailyOperation.batchAssign.batch',
+        'dailyOperation.batchAssign.project',
+    ])
+    ->orderBy('created_at', 'desc');
 
-            // Calculate summary statistics
-            $totalEggs = $eggCollections->sum('quantity');
-            // For now, we'll use simple calculations since we don't have classification data in daily_egg_collections
-            // In a real scenario, you might want to join with egg_classifications table or add classification fields to daily_egg_collections
-            $commercialEggs = $totalEggs * 0.7; // Assume 70% commercial
-            $technicalEggs = $totalEggs * 0.2; // Assume 20% technical
-            $hatchingEggs = $totalEggs * 0.1; // Assume 10% hatching
-            $rejectedEggs = 0; // No rejected eggs in daily collections
-            $commercialPercentage = $totalEggs > 0 ? ($commercialEggs / $totalEggs) * 100 : 0;
-            $rejectionRate = 0; // No rejection rate for daily collections
+$eggCollections = $eggCollectionsQuery->get();
 
-            // Group by flock for detailed breakdown
-            $flockEggDetails = $eggCollections->groupBy('dailyOperation.batchAssign.flock_id')->map(function ($collections, $flockId) {
-                $firstCollection = $collections->first();
-                $totalEggs = $collections->sum('quantity');
-                $commercialEggs = $totalEggs * 0.7; // Assume 70% commercial
-                $technicalEggs = $totalEggs * 0.2; // Assume 20% technical
-                $hatchingEggs = $totalEggs * 0.1; // Assume 10% hatching
-                $rejectedEggs = 0; // No rejected eggs in daily collections
-                $commercialPercentage = $totalEggs > 0 ? ($commercialEggs / $totalEggs) * 100 : 0;
-                $rejectionRate = 0; // No rejection rate for daily collections
+// 2. Collect batch/date pairs
+$batchDatePairs = $eggCollections->map(fn($c) => [
+    'batchassign_id' => $c->dailyOperation->batchassign_id,
+    'date'           => $c->dailyOperation->operation_date->toDateString(),
+]);
 
-                return [
-                    'flock_id' => $flockId,
-                    'flock_name' => $firstCollection->dailyOperation?->batchAssign?->flock?->name ?? 'Unknown Flock',
-                    'flock_code' => $firstCollection->dailyOperation?->batchAssign?->flock?->code ?? 'N/A',
-                    'total_eggs' => $totalEggs,
-                    'commercial_eggs' => $commercialEggs,
-                    'technical_eggs' => $technicalEggs,
-                    'hatching_eggs' => $hatchingEggs,
-                    'rejected_eggs' => $rejectedEggs,
-                    'commercial_percentage' => round($commercialPercentage, 2),
-                    'rejection_rate' => round($rejectionRate, 2),
-                    'collections_count' => $collections->count(),
-                    'companies' => $collections->map(fn ($c) => $c->dailyOperation?->batchAssign?->company?->name)->unique()->filter()->values(),
-                    'projects' => $collections->map(fn ($c) => $c->dailyOperation?->batchAssign?->project?->name)->unique()->filter()->values(),
-                    'sheds' => $collections->map(fn ($c) => $c->dailyOperation?->batchAssign?->shed?->name)->unique()->filter()->values(),
-                    'last_collection_date' => $collections->max('created_at'),
-                    'status' => 'Active',
-                ];
-            })->values();
+// 3. Fetch EggClassifications
+$eggClassifications = EggClassification::whereIn('batchassign_id', $batchAssigns->pluck('id'))
+    ->whereIn('classification_date', $batchDatePairs->pluck('date')->unique())
+    ->get()
+    ->groupBy(fn($item) => $item->batchassign_id.'_'.$item->classification_date);
 
-            // Group by batch for batch-level details
-            $batchEggDetails = $eggCollections->groupBy('dailyOperation.batchAssign.batch_no')->map(function ($collections, $batchNo) {
-                $firstCollection = $collections->first();
-                $totalEggs = $collections->sum('quantity');
-                $commercialEggs = $totalEggs * 0.7; // Assume 70% commercial
-                $technicalEggs = $totalEggs * 0.2; // Assume 20% technical
-                $hatchingEggs = $totalEggs * 0.1; // Assume 10% hatching
-                $rejectedEggs = 0; // No rejected eggs in daily collections
-                $commercialPercentage = $totalEggs > 0 ? ($commercialEggs / $totalEggs) * 100 : 0;
-                $rejectionRate = 0; // No rejection rate for daily collections
+// 4. Attach classification values to each collection
+$eggCollections->each(function ($collection) use ($eggClassifications) {
+    $key = $collection->dailyOperation->batchassign_id.'_'.$collection->dailyOperation->operation_date->toDateString();
+    $classification = $eggClassifications->get($key)?->first();
 
-                return [
-                    'batch_no' => $batchNo,
-                    'batch_name' => $firstCollection->dailyOperation?->batchAssign?->batch?->name ?? "Batch {$batchNo}",
-                    'flock_name' => $firstCollection->dailyOperation?->batchAssign?->flock?->code ?? 'Unknown Flock',
-                    'flock_code' => $firstCollection->dailyOperation?->batchAssign?->flock?->code ?? 'N/A',
-                    'company_name' => $firstCollection->dailyOperation?->batchAssign?->company?->name ?? 'Unknown Company',
-                    'project_name' => $firstCollection->dailyOperation?->batchAssign?->project?->name ?? 'Unknown Project',
-                    'shed_name' => $firstCollection->dailyOperation?->batchAssign?->shed?->name ?? 'Unknown Shed',
-                    'total_eggs' => $totalEggs,
-                    'commercial_eggs' => $commercialEggs,
-                    'technical_eggs' => $technicalEggs,
-                    'hatching_eggs' => $hatchingEggs,
-                    'rejected_eggs' => $rejectedEggs,
-                    'commercial_percentage' => round($commercialPercentage, 2),
-                    'rejection_rate' => round($rejectionRate, 2),
-                    'collections_count' => $collections->count(),
-                    'last_collection_date' => $collections->max('created_at'),
-                    'status' => 'Active',
-                ];
-            })->values();
+    $collection->commercial_eggs = $classification->commercial_eggs ?? 0;
+    $collection->hatching_eggs   = $classification->hatching_eggs ?? 0;
+    $collection->rejected_eggs   = $classification->rejected_eggs ?? 0;
+});
 
-            // Get recent egg collections
-            $recentEggCollections = $eggCollections->take(10)->map(function ($collection) {
-                $totalEggs = $collection->quantity;
-                $commercialEggs = $totalEggs * 0.7; // Assume 70% commercial
-                $technicalEggs = $totalEggs * 0.2; // Assume 20% technical
-                $hatchingEggs = $totalEggs * 0.1; // Assume 10% hatching
-                $rejectedEggs = 0; // No rejected eggs in daily collections
+// 5. Summary
+$totalCommercialEggs = $eggCollections->sum('commercial_eggs');
+$totalHatchingEggs   = $eggCollections->sum('hatching_eggs');
+$totalRejectedEggs   = $eggCollections->sum('rejected_eggs');
+$totalEggs           = $totalCommercialEggs + $totalHatchingEggs + $totalRejectedEggs;
 
-                return [
-                    'id' => $collection->id,
-                    'collection_date' => $collection->created_at->format('Y-m-d'),
-                    'flock_name' => $collection->dailyOperation?->batchAssign?->flock?->name ?? 'Unknown',
-                    'batch_name' => $collection->dailyOperation?->batchAssign?->batch?->name ?? 'Unknown',
-                    'shed_name' => $collection->dailyOperation?->batchAssign?->shed?->name ?? 'Unknown',
-                    'total_eggs' => $totalEggs,
-                    'commercial_eggs' => $commercialEggs,
-                    'technical_eggs' => $technicalEggs,
-                    'hatching_eggs' => $hatchingEggs,
-                    'rejected_eggs' => $rejectedEggs,
-                    'commercial_percentage' => $totalEggs > 0 ? round(($commercialEggs / $totalEggs) * 100, 2) : 0,
-                    'remarks' => $collection->note ?? 'No remarks',
-                    'created_by' => 'System', // Daily collections don't have creator field
-                ];
-            });
+$commercialPercentage = $totalEggs > 0 ? ($totalCommercialEggs / $totalEggs) * 100 : 0;
+$hatchingPercentage   = $totalEggs > 0 ? ($totalHatchingEggs / $totalEggs) * 100 : 0;
+$rejectionRate        = $totalEggs > 0 ? ($totalRejectedEggs / $totalEggs) * 100 : 0;
+
+// 6. Group by flock
+$flockEggDetails = $eggCollections->groupBy('dailyOperation.batchAssign.flock_id')->map(function ($collections, $flockId) {
+    $first = $collections->first();
+    $commercial = $collections->sum('commercial_eggs');
+    $hatching   = $collections->sum('hatching_eggs');
+    $rejected   = $collections->sum('rejected_eggs');
+    $total      = $commercial + $hatching + $rejected;
+
+    return [
+        'flock_id'    => $flockId,
+        'flock_name'  => $first->dailyOperation?->batchAssign?->flock?->name ?? 'Unknown Flock',
+        'flock_code'  => $first->dailyOperation?->batchAssign?->flock?->code ?? 'N/A',
+        'total_eggs'  => $total,
+        'commercial_eggs' => $commercial,
+        'hatching_eggs'   => $hatching,
+        'rejected_eggs'   => $rejected,
+        'commercial_percentage' => $total > 0 ? round(($commercial / $total) * 100, 2) : 0,
+        'hatching_percentage'   => $total > 0 ? round(($hatching / $total) * 100, 2) : 0,
+        'rejection_rate'        => $total > 0 ? round(($rejected / $total) * 100, 2) : 0,
+        'collections_count'     => $collections->count(),
+        'companies' => $collections->map(fn ($c) => $c->dailyOperation?->batchAssign?->company?->name)->unique()->filter()->values(),
+        'projects'  => $collections->map(fn ($c) => $c->dailyOperation?->batchAssign?->project?->name)->unique()->filter()->values(),
+        'sheds'     => $collections->map(fn ($c) => $c->dailyOperation?->batchAssign?->shed?->name)->unique()->filter()->values(),
+        'last_collection_date' => $collections->max('created_at'),
+        'status' => 'Active',
+    ];
+})->values();
+
+// 7. Group by batch
+$batchEggDetails = $eggCollections->groupBy('dailyOperation.batchAssign.batch_no')->map(function ($collections, $batchNo) {
+    $first = $collections->first();
+    $commercial = $collections->sum('commercial_eggs');
+    $hatching   = $collections->sum('hatching_eggs');
+    $rejected   = $collections->sum('rejected_eggs');
+    $total      = $commercial + $hatching + $rejected;
+
+    return [
+        'batch_no'   => $batchNo,
+        'batch_name' => $first->dailyOperation?->batchAssign?->batch?->name ?? "Batch {$batchNo}",
+        'flock_name' => $first->dailyOperation?->batchAssign?->flock?->name ?? 'Unknown Flock',
+        'flock_code' => $first->dailyOperation?->batchAssign?->flock?->code ?? 'N/A',
+        'company_name' => $first->dailyOperation?->batchAssign?->company?->name ?? 'Unknown Company',
+        'project_name' => $first->dailyOperation?->batchAssign?->project?->name ?? 'Unknown Project',
+        'shed_name'    => $first->dailyOperation?->batchAssign?->shed?->name ?? 'Unknown Shed',
+        'total_eggs'   => $total,
+        'commercial_eggs' => $commercial,
+        'hatching_eggs'   => $hatching,
+        'rejected_eggs'   => $rejected,
+        'commercial_percentage' => $total > 0 ? round(($commercial / $total) * 100, 2) : 0,
+        'hatching_percentage'   => $total > 0 ? round(($hatching / $total) * 100, 2) : 0,
+        'rejection_rate'        => $total > 0 ? round(($rejected / $total) * 100, 2) : 0,
+        'collections_count'     => $collections->count(),
+        'last_collection_date'  => $collections->max('created_at'),
+        'status' => 'Active',
+    ];
+})->values();
+
+// 8. Recent collections
+$recentEggCollections = $eggCollections->take(10)->map(function ($c) {
+    $total = $c->commercial_eggs + $c->hatching_eggs + $c->rejected_eggs;
+
+    return [
+        'id'             => $c->id,
+        'collection_date'=> $c->created_at->format('Y-m-d'),
+        'flock_name'     => $c->dailyOperation?->batchAssign?->flock?->name ?? 'Unknown',
+        'batch_name'     => $c->dailyOperation?->batchAssign?->batch?->name ?? 'Unknown',
+        'shed_name'      => $c->dailyOperation?->batchAssign?->shed?->name ?? 'Unknown',
+        'total_eggs'     => $total,
+        'commercial_eggs'=> $c->commercial_eggs,
+        'hatching_eggs'  => $c->hatching_eggs,
+        'rejected_eggs'  => $c->rejected_eggs,
+        'commercial_percentage' => $total > 0 ? round(($c->commercial_eggs / $total) * 100, 2) : 0,
+        'remarks'        => $c->note ?? 'No remarks',
+        'created_by'     => 'System',
+    ];
+});
 
             // Calculate production trends by flock
             $productionTrends = $flockEggDetails->map(function ($flock) {
