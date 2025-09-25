@@ -232,8 +232,11 @@ const filteredFlocks = computed(() => {
   if (!flockSearchQuery.value) return batchWithLabel.value
   return batchWithLabel.value.filter(flock => 
     flock.label?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
-    flock.batch_label?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
-    flock.display_label?.toLowerCase().includes(flockSearchQuery.value.toLowerCase())
+    flock.company?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+    flock.project?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+    flock.flock?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+    flock.shed?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+    flock.batch?.toLowerCase().includes(flockSearchQuery.value.toLowerCase())
   )
 })
 
@@ -646,13 +649,13 @@ function submit() {
                   >
                     <!-- Header -->
                     <div class="border-b border-gray-200 p-3">
-                      <h3 class="font-semibold text-gray-900 text-sm">Select Flock</h3>
+                      <h3 class="font-semibold text-gray-900 text-sm">Select Batch</h3>
                       <div class="relative mt-2">
                         <Search class="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
                         <input
                           v-model="flockSearchQuery"
                           type="text"
-                          placeholder="Search flocks..."
+                          placeholder="Search batches..."
                           class="w-full rounded border border-gray-300 bg-gray-50 pl-7 pr-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                           @click.stop
                         />
@@ -663,8 +666,8 @@ function submit() {
                     <div class="max-h-80 overflow-y-auto">
                       <div v-if="(batchWithLabel?.length || 0) === 0" class="px-4 py-6 text-center">
                         <AlertCircle class="mx-auto h-6 w-6 text-red-500" />
-                        <div class="mt-2 font-medium text-red-600 text-sm">No Flocks Available</div>
-                        <div class="text-xs text-gray-500">Please create flocks first</div>
+                        <div class="mt-2 font-medium text-red-600 text-sm">No Batches Available</div>
+                        <div class="text-xs text-gray-500">Please create batches first</div>
                       </div>
                       <button
                         v-for="flock in filteredFlocks"
@@ -677,7 +680,7 @@ function submit() {
                         <div class="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0"></div>
                         <div class="flex-1">
                           <div class="font-semibold text-gray-900 text-sm">{{ flock.label }}</div>
-                          <div class="text-xs text-gray-500">Batch: {{ flock.batch_label }}</div>
+                          <div class="text-xs text-gray-500">{{ flock.company }} • {{ flock.project }}</div>
                         </div>
                         <CheckCircle2 v-if="form.batchassign_id == flock.id" class="h-3 w-3 text-blue-500 flex-shrink-0" />
                       </button>

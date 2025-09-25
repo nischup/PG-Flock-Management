@@ -8,12 +8,10 @@ use App\Models\Master\Feed;
 use App\Models\Master\Medicine;
 use App\Models\Master\Unit;
 use App\Models\Master\Vaccine;
-use App\Models\Master\BreedType;
 use App\Models\Shed\BatchAssign;
 use App\Models\VaccineScheduleDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Inertia\Inertia;
 
 class DailyOperationController extends Controller
@@ -192,7 +190,7 @@ class DailyOperationController extends Controller
             $st = 3;
         }
 
-        $flocks = BatchAssign::with(['flock', 'shed', 'batch', 'shedReceive'])
+        $flocks = BatchAssign::with(['flock', 'shed', 'batch', 'shedReceive', 'company', 'project'])
             ->visibleFor()
             ->where('stage', $st)
             ->orderBy('id', 'desc')
@@ -216,7 +214,16 @@ class DailyOperationController extends Controller
                     'batch' => $batch->batch?->name ?? 'N/A',
                     'shed_id' => $batch->shed_id,
                     'shed' => $batch->shed?->name ?? 'N/A',
-                    'label' => "{$batch->transaction_no}-{$batch->shed?->name}-{$batch->batch?->name}",
+                    'company' => $batch->company?->name ?? 'N/A',
+                    'project' => $batch->project?->name ?? 'N/A',
+                    'label' => sprintf(
+                        '%s-%s-%s-%s-%s',
+                        $batch->company?->short_name ?? substr($batch->company?->name ?? 'Unknown', 0, 8),
+                        $batch->project?->name ?? 'Proj',
+                        $batch->flock?->name ?? 'Flock',
+                        $batch->shed?->name ?? 'Shed',
+                        $batch->batch?->name ?? 'Batch'
+                    ),
                     // Statistics data
                     'total_birds' => $totalBirds,
                     'current_birds' => $currentBirds,
@@ -266,6 +273,7 @@ class DailyOperationController extends Controller
             ['id' => 2, 'name' => 'Mineral Water'],
             ['id' => 3, 'name' => 'Vitamin Mixed Water'],
         ];
+
         return Inertia::render('dailyoperation/Create', [
             'stage' => $stage,   // ✅ Pass stage here
             'flocks' => $flocks,
@@ -689,7 +697,4 @@ class DailyOperationController extends Controller
             'dummySummary' => $dummySummary,
         ]);
     }
-
-
-    
 }
