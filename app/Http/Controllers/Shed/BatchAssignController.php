@@ -76,7 +76,7 @@ class BatchAssignController extends Controller
 
         $batchAssigns = $query
             ->visibleFor()
-            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate($request->per_page ?? 10)
             ->withQueryString()
             ->through(function ($batch) {
@@ -286,10 +286,9 @@ class BatchAssignController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(BatchAssign $batchAssign)
     {
-        $batchAssign = BatchAssign::with(['shedReceive.flock', 'shedReceive.shed', 'shedReceive.company'])
-            ->findOrFail($id);
+        $batchAssign->load(['shedReceive.flock', 'shedReceive.shed', 'shedReceive.company']);
 
         // Format the batch assign data for display
         $formattedBatchAssign = [
@@ -341,13 +340,12 @@ class BatchAssignController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(BatchAssign $batchAssign)
     {
-        $batchAssign = BatchAssign::with(['shedReceive.flock', 'shedReceive.shed', 'shedReceive.company'])
-            ->findOrFail($id);
+        $batchAssign->load(['shedReceive.flock', 'shedReceive.shed', 'shedReceive.company', 'shedReceive.firmReceive.flock', 'shedReceive.firmReceive.psReceive.chickCounts', 'shedReceive.firmReceive.company', 'shedReceive.firmReceive.project']);
 
         // Get all Shed Receives with relations
-        $shedReceives = ShedReceive::with(['flock:id,code,name', 'shed:id,name', 'company:id,name'])
+        $shedReceives = ShedReceive::with(['flock:id,code,name', 'shed:id,name', 'company:id,name,short_name', 'firmReceive.flock:id,code,name','firmReceive.psReceive.chickCounts:id,ps_receive_id,ps_total_qty','firmReceive.company:id,name,short_name', 'firmReceive.project:id,name'])
             ->get()
             ->map(function ($shed) {
                 return [
@@ -355,11 +353,16 @@ class BatchAssignController extends Controller
                     'transaction_no' => $shed->transaction_no,
                     'flock_id' => $shed->flock_id,
                     'flock' => $shed->flock?->code,
+                    'flock_code' => $shed->flock?->code,
                     'shed_id' => $shed->shed_id,
                     'shed' => $shed->shed?->name,
                     'company_id' => $shed->company_id,
                     'company' => $shed->company?->name,
+                    'company_short_name' => $shed->firmReceive?->company?->short_name ?? $shed->company?->short_name ?? $shed->company?->name ?? 'N/A',
+                    'project_id' => $shed->project_id,
+                    'project_name' => $shed->firmReceive?->project?->name ?? 'N/A',
                     'shed_female_qty' => $shed->shed_female_qty ?? 0,
+                    'total_chicks' => $shed->firmReceive?->psReceive?->chickCounts?->ps_total_qty ?? 0,
                     'shed_male_qty' => $shed->shed_male_qty ?? 0,
                     'shed_total_qty' => $shed->shed_total_qty ?? 0,
                     'receive_type' => $shed->receive_type ?? '',
@@ -397,7 +400,7 @@ class BatchAssignController extends Controller
 
             'batch_received_female_qty' => $batchAssign->batch_received_female_qty,
             'batch_received_male_qty' => $batchAssign->batch_received_male_qty,
-            'batch_received_total_qty' => $batchAssign->batch_total_qty,
+            'batch_received_total_qty' => $batchAssign->batch_received_total_qty,
 
 
             'batch_female_mortality' => $batchAssign->batch_female_mortality,
@@ -416,14 +419,20 @@ class BatchAssignController extends Controller
                 'id' => $batchAssign->shedReceive->id,
                 'transaction_no' => $batchAssign->shedReceive->transaction_no,
                 'flock_id' => $batchAssign->shedReceive->flock_id,
-                'flock' => $batchAssign->shedReceive->flock?->name,
+                'flock' => $batchAssign->shedReceive->flock?->code,
+                'flock_code' => $batchAssign->shedReceive->flock?->code,
                 'shed_id' => $batchAssign->shedReceive->shed_id,
                 'shed' => $batchAssign->shedReceive->shed?->name,
                 'company_id' => $batchAssign->shedReceive->company_id,
                 'company' => $batchAssign->shedReceive->company?->name,
+                'company_short_name' => $batchAssign->shedReceive->firmReceive?->company?->short_name ?? $batchAssign->shedReceive->company?->short_name ?? $batchAssign->shedReceive->company?->name ?? 'N/A',
+                'project_id' => $batchAssign->shedReceive->project_id,
+                'project_name' => $batchAssign->shedReceive->firmReceive?->project?->name ?? 'N/A',
                 'shed_female_qty' => $batchAssign->shedReceive->shed_female_qty ?? 0,
+                'total_chicks' => $batchAssign->shedReceive->firmReceive?->psReceive?->chickCounts?->ps_total_qty ?? 0,
                 'shed_male_qty' => $batchAssign->shedReceive->shed_male_qty ?? 0,
                 'shed_total_qty' => $batchAssign->shedReceive->shed_total_qty ?? 0,
+                'receive_type' => $batchAssign->shedReceive->receive_type ?? '',
             ] : null,
         ];
 
@@ -440,34 +449,110 @@ class BatchAssignController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, BatchAssign $batchAssign)
     {
-        $batchAssign = BatchAssign::findOrFail($id);
-
         $shedReceive = ShedReceive::findOrFail($request->shed_receive_id);
+
+        // Delete existing movement adjustments for this batch assign
+        MovementAdjustment::where('stage_id', $batchAssign->id)
+            ->where('stage', 3)
+            ->delete();
+
+        // Calculate correct values
+        $batch_received_female_qty = $request->batch_received_female_qty ?? 0;
+        $batch_received_male_qty = $request->batch_received_male_qty ?? 0;
+        $batch_female_mortality = $request->batch_female_mortality ?? 0;
+        $batch_male_mortality = $request->batch_male_mortality ?? 0;
+        $batch_excess_female = $request->batch_excess_female ?? 0;
+        $batch_excess_male = $request->batch_excess_male ?? 0;
+        $batch_sortage_female = $request->batch_sortage_female ?? 0;
+        $batch_sortage_male = $request->batch_sortage_male ?? 0;
+
+        // Calculate derived values
+        $batch_received_total_qty = $batch_received_female_qty + $batch_received_male_qty;
+        $batch_total_mortality = $batch_female_mortality + $batch_male_mortality;
+        $batch_female_qty = $batch_received_female_qty + $batch_excess_female - $batch_female_mortality - $batch_sortage_female;
+        $batch_male_qty = $batch_received_male_qty + $batch_excess_male - $batch_male_mortality - $batch_sortage_male;
+        $batch_total_qty = $batch_female_qty + $batch_male_qty;
+        $percentage = $batch_received_female_qty > 0 ? ($batch_excess_female / $batch_received_female_qty) * 100 : 0;
 
         $batchAssign->update([
             'shed_receive_id' => $shedReceive->id ?? null,
             'job_no' => $shedReceive->job_no ?? null,
             'transaction_no' => $shedReceive->transaction_no ?? null,
-            'flock_no' => $shedReceive->flock_name ?? 0,
+            'flock_no' => $shedReceive->flock_no ?? 0,
             'flock_id' => $shedReceive->flock_id ?? null,
             'company_id' => $shedReceive->company_id ?? null,
             'shed_id' => $shedReceive->shed_id ?? null,
             'level' => $request->level ?? null,
             'batch_no' => $request->batch_no ?? 1,
-            'batch_female_qty' => $request->batch_female_qty ?? 0,
-            'batch_male_qty' => $request->batch_male_qty ?? 0,
-            'batch_total_qty' => ($request->batch_female_qty ?? 0) + ($request->batch_male_qty ?? 0),
-            'batch_female_mortality' => $request->batch_female_mortality ?? 0,
-            'batch_male_mortality' => $request->batch_male_mortality ?? 0,
-            'batch_total_mortality' => ($request->batch_female_mortality ?? 0) + ($request->batch_male_mortality ?? 0),
-            'batch_excess_male' => $request->batch_excess_male ?? null,
-            'batch_excess_female' => $request->batch_excess_female ?? 0,
-            'batch_sortage_male' => $request->batch_sortage_male ?? null,
-            'batch_sortage_female' => $request->batch_sortage_female ?? 0,
-            'percentage' => $request->percentage ?? 0,
+            'batch_received_female_qty' => $batch_received_female_qty,
+            'batch_received_male_qty' => $batch_received_male_qty,
+            'batch_received_total_qty' => $batch_received_total_qty,
+            'batch_female_qty' => $batch_female_qty,
+            'batch_male_qty' => $batch_male_qty,
+            'batch_total_qty' => $batch_total_qty,
+            'batch_female_mortality' => $batch_female_mortality,
+            'batch_male_mortality' => $batch_male_mortality,
+            'batch_total_mortality' => $batch_total_mortality,
+            'batch_excess_male' => $batch_excess_male,
+            'batch_excess_female' => $batch_excess_female,
+            'batch_sortage_male' => $batch_sortage_male,
+            'batch_sortage_female' => $batch_sortage_female,
+            'percentage' => $percentage,
         ]);
+
+        // Create movement adjustments for this single batch
+        if (($request->batch_sortage_female ?? 0) + ($request->batch_sortage_male ?? 0) > 0) {
+            MovementAdjustment::create([
+                'flock_id' => $shedReceive->flock_id,
+                'flock_no' => $shedReceive->flock_no,
+                'transaction_no' => $shedReceive->transaction_no,
+                'job_no' => $shedReceive->job_no,
+                'stage' => 3,
+                'stage_id' => $batchAssign->id,
+                'type' => 3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->batch_sortage_male ?? 0,
+                'female_qty' => $request->batch_sortage_female ?? 0,
+                'total_qty' => ($request->batch_sortage_male ?? 0) + ($request->batch_sortage_female ?? 0),
+                'date' => date('Y-m-d'),
+                'remarks' => 'Sortage when Batch Assign',
+            ]);
+        }
+
+        if (($request->batch_excess_female ?? 0) + ($request->batch_excess_male ?? 0) > 0) {
+            MovementAdjustment::create([
+                'flock_id' => $shedReceive->flock_id,
+                'flock_no' => $shedReceive->flock_no,
+                'transaction_no' => $shedReceive->transaction_no,
+                'job_no' => $shedReceive->job_no,
+                'stage' => 3,
+                'stage_id' => $batchAssign->id,
+                'type' => 2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->batch_excess_male ?? 0,
+                'female_qty' => $request->batch_excess_female ?? 0,
+                'total_qty' => ($request->batch_excess_female ?? 0) + ($request->batch_excess_male ?? 0),
+                'date' => date('Y-m-d'),
+                'remarks' => 'Excess when Batch Assign',
+            ]);
+        }
+
+        if (($request->batch_female_mortality ?? 0) + ($request->batch_male_mortality ?? 0) > 0) {
+            MovementAdjustment::create([
+                'flock_id' => $shedReceive->flock_id,
+                'flock_no' => $shedReceive->flock_no,
+                'transaction_no' => $shedReceive->transaction_no,
+                'job_no' => $shedReceive->job_no,
+                'stage' => 3,
+                'stage_id' => $batchAssign->id,
+                'type' => 1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->batch_male_mortality ?? 0,
+                'female_qty' => $request->batch_female_mortality ?? 0,
+                'total_qty' => ($request->batch_female_mortality ?? 0) + ($request->batch_male_mortality ?? 0),
+                'date' => date('Y-m-d'),
+                'remarks' => 'Mortality when Batch Assign',
+            ]);
+        }
 
         return redirect()
             ->route('batch-assign.index')
