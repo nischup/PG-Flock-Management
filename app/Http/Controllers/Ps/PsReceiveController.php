@@ -250,6 +250,7 @@ class PsReceiveController extends Controller
 
         // Load the PsReceive entry with relationships
         $psReceive = PsReceive::with([
+            'supplier',
             'chickCounts',
             'labTransfers',
             'attachments',
@@ -259,8 +260,14 @@ class PsReceiveController extends Controller
         $suppliers = Supplier::select('id', 'name')->get();
         $breedTypes = BreedType::select('id', 'name')->get();
         $companies = Company::select('id', 'name')->get();
+        $countries = Country::select('id', 'name')->get();
 
         $psReceive->labTransfers = $psReceive->labTransfers->toArray();
+        
+        // Ensure chickCounts is properly serialized for Vue component
+        if ($psReceive->chickCounts) {
+            $psReceive->chickCounts = $psReceive->chickCounts->toArray();
+        }
 
         // Return Inertia response instead of JSON
         return Inertia::render('ps/ps-receive/Edit', [
@@ -268,70 +275,194 @@ class PsReceiveController extends Controller
             'suppliers' => $suppliers,
             'breedTypes' => $breedTypes,
             'companies' => $companies,
+            'countries' => $countries,
         ]);
     }
 
     public function update(Request $request, PsReceive $psReceive)
     {
-        // 1️⃣ Update main PS Receive
-        $psReceive->update([
-            'shipment_type_id' => (int) $request->shipment_type_id,
-            'pi_no' => $request->pi_no,
-            'pi_date' => $request->pi_date,
-            'order_no' => $request->order_no,
-            'order_date' => $request->order_date,
-            'lc_no' => $request->lc_no,
-            'lc_date' => $request->lc_date,
-            'supplier_id' => (int) ($request->supplier_id ?? 0),
-            'breed_type' => $request->breed_type ?? [],
-            'country_of_origin' => (int) ($request->country_of_origin ?? 0),
-            'transport_type' => (int) ($request->transport_type ?? 0),
-            'remarks' => $request->remarks,
-            'updated_by' => Auth::id(),
-        ]);
-
-        // 2️⃣ Update or create chick counts
-        if ($psReceive->chickCounts) {
-            // Update existing
-            $psReceive->chickCounts->update([
-                'ps_male_rec_box' => (float) $request->ps_male_rec_box,
-                'ps_male_qty' => (float) $request->ps_male_qty,
-                'ps_female_rec_box' => (float) $request->ps_female_rec_box,
-                'ps_female_qty' => (float) $request->ps_female_qty,
-                'ps_total_qty' => (float) $request->ps_total_qty,
-                'ps_total_re_box_qty' => (float) $request->ps_total_re_box_qty,
-                'ps_challan_box_qty' => (float) $request->ps_challan_box_qty,
-                'ps_gross_weight' => (float) $request->ps_gross_weight,
-                'ps_net_weight' => (float) $request->ps_net_weight,
+        try {
+            // Debug: Log the incoming request data
+            Log::info('PS Receive Update Request', [
+                'ps_receive_id' => $psReceive->id,
+                'request_data' => $request->all(),
+                'user_id' => Auth::id()
             ]);
-        } else {
-            // Create if not exists
-            $psReceive->chickCounts()->create([
-                'ps_male_rec_box' => (float) $request->ps_male_rec_box,
-                'ps_male_qty' => (float) $request->ps_male_qty,
-                'ps_female_rec_box' => (float) $request->ps_female_rec_box,
-                'ps_female_qty' => (float) $request->ps_female_qty,
-                'ps_total_qty' => (float) $request->ps_total_qty,
-                'ps_total_re_box_qty' => (float) $request->ps_total_re_box_qty,
-                'ps_challan_box_qty' => (float) $request->ps_challan_box_qty,
-                'ps_gross_weight' => (float) $request->ps_gross_weight,
-                'ps_net_weight' => (float) $request->ps_net_weight,
-            ]);
-        }
+            
+            DB::beginTransaction();
 
-        // 3️⃣ Handle file uploads
+            // 1️⃣ Update main PS Receive - only changed fields
+            $updateData = [];
+            $fieldsToCheck = [
+                'shipment_type_id' => 'int',
+                'pi_no' => 'string',
+                'pi_date' => 'date',
+                'order_no' => 'string',
+                'order_date' => 'date',
+                'lc_no' => 'string',
+                'lc_date' => 'date',
+                'supplier_id' => 'int',
+                'breed_type' => 'array',
+                'country_of_origin' => 'int',
+                'transport_type' => 'int',
+                'remarks' => 'string',
+            ];
+
+            foreach ($fieldsToCheck as $field => $type) {
+                $newValue = $request->input($field);
+                
+                // Handle different data types
+                switch ($type) {
+                    case 'int':
+                        $newValue = (int) ($newValue ?? 0);
+                        break;
+                    case 'array':
+                        $newValue = $newValue ?? [];
+                        break;
+                    case 'date':
+                        // Keep as is for date comparison
+                        break;
+                    default:
+                        $newValue = (string) $newValue;
+                }
+
+                // Only update if value has changed
+                if ($psReceive->$field != $newValue) {
+                    $updateData[$field] = $newValue;
+                }
+            }
+
+            // Always update the updated_by field
+            $updateData['updated_by'] = Auth::id();
+
+            // Only perform update if there are changes
+            if (count($updateData) > 1) { // More than just updated_by
+                $psReceive->update($updateData);
+                Log::info('PS Receive main data updated', [
+                    'ps_receive_id' => $psReceive->id,
+                    'updated_fields' => array_keys($updateData)
+                ]);
+            }
+
+            // 2️⃣ Update or create chick counts - only changed fields
+            $chickCount = $psReceive->chickCounts;
+            $chickCountData = [];
+            $chickCountFields = [
+                'ps_male_rec_box' => 'float',
+                'ps_male_qty' => 'float',
+                'ps_female_rec_box' => 'float',
+                'ps_female_qty' => 'float',
+                'ps_total_qty' => 'float',
+                'ps_total_re_box_qty' => 'float',
+                'ps_challan_box_qty' => 'float',
+                'ps_gross_weight' => 'float',
+                'ps_net_weight' => 'float',
+            ];
+
+            foreach ($chickCountFields as $field => $type) {
+                $newValue = (float) $request->input($field, 0);
+                
+                if ($chickCount && $chickCount->$field != $newValue) {
+                    $chickCountData[$field] = $newValue;
+                } elseif (!$chickCount) {
+                    $chickCountData[$field] = $newValue;
+                }
+            }
+
+            if ($chickCount && count($chickCountData) > 0) {
+                // Update existing chick count
+                $chickCount->update($chickCountData);
+                Log::info('PS Chick Count updated', [
+                    'chick_count_id' => $chickCount->id,
+                    'updated_fields' => array_keys($chickCountData)
+                ]);
+            } elseif (!$chickCount && count($chickCountData) > 0) {
+                // Create new chick count
+                $chickCount = $psReceive->chickCounts()->create($chickCountData);
+                Log::info('PS Chick Count created', [
+                    'chick_count_id' => $chickCount->id
+                ]);
+            }
+
+            // 3️⃣ Update lab transfers - only changed fields
+            $labTransferFields = [
+                'gov_lab_send_female_qty' => ['lab_type' => 1, 'field' => 'lab_send_female_qty'],
+                'gov_lab_send_male_qty' => ['lab_type' => 1, 'field' => 'lab_send_male_qty'],
+                'gov_lab_send_total_qty' => ['lab_type' => 1, 'field' => 'lab_send_total_qty'],
+                'provita_lab_send_female_qty' => ['lab_type' => 2, 'field' => 'lab_send_female_qty'],
+                'provita_lab_send_male_qty' => ['lab_type' => 2, 'field' => 'lab_send_male_qty'],
+                'provita_lab_send_total_qty' => ['lab_type' => 2, 'field' => 'lab_send_total_qty'],
+            ];
+
+            foreach ($labTransferFields as $formField => $config) {
+                $newValue = $request->input($formField);
+                $labType = $config['lab_type'];
+                $dbField = $config['field'];
+                
+                // Find the lab transfer for this type
+                $labTransfer = $psReceive->labTransfers()->where('lab_type', $labType)->first();
+                
+                if ($labTransfer) {
+                    $newValue = (int) ($newValue ?? 0);
+                    
+                    // Only update if value has changed
+                    if ($labTransfer->$dbField != $newValue) {
+                        $labTransfer->update([$dbField => $newValue]);
+                        Log::info('Lab Transfer updated', [
+                            'lab_transfer_id' => $labTransfer->id,
+                            'lab_type' => $labType,
+                            'field' => $dbField,
+                            'new_value' => $newValue
+                        ]);
+                    }
+                }
+            }
+
+            // 3️⃣.1 Update lab notes (shared between both lab types)
+            $labNotes = (string) $request->input('lab_notes', '');
+            $labTransfers = $psReceive->labTransfers;
+            
+            foreach ($labTransfers as $labTransfer) {
+                if ($labTransfer->notes != $labNotes) {
+                    $labTransfer->update(['notes' => $labNotes]);
+                    Log::info('Lab Transfer notes updated', [
+                        'lab_transfer_id' => $labTransfer->id,
+                        'lab_type' => $labTransfer->lab_type,
+                        'new_notes' => $labNotes
+                    ]);
+                }
+            }
+
+            // 4️⃣ Handle file uploads - only if new files are provided
         if ($request->hasFile('file')) {
             foreach ($request->file('file') as $uploadedFile) {
-                $path = $uploadedFile->store('ps_receive_files'); // storage/app/ps_receive_files
-                $psReceive->attachments()->create([
+                    $path = $uploadedFile->store('ps_receive_files');
+                    $attachment = $psReceive->attachments()->create([
                     'file_path' => $path,
                     'file_type' => $uploadedFile->getClientOriginalExtension(),
                 ]);
+                    Log::info('PS Receive file uploaded', [
+                        'attachment_id' => $attachment->id,
+                        'file_path' => $path
+                    ]);
+                }
             }
-        }
+
+            DB::commit();
 
         return redirect()->route('ps-receive.index')
             ->with('success', 'PS Receive updated successfully.');
+                
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('PS Receive update failed', [
+                'ps_receive_id' => $psReceive->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors(['general' => 'Failed to update PS Receive: ' . $e->getMessage()]);
+        }
     }
 
     public function destroy(PsReceive $psReceive)

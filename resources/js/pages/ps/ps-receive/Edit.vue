@@ -32,36 +32,68 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Edit Receive', href: `/ps-receive/${props.psReceive.id}/edit` },
 ];
 
+// Debug: Log the psReceive data
+console.log('psReceive data:', props.psReceive);
+console.log('chickCounts data:', props.psReceive.chickCounts);
+
 // Map saved breed_type IDs to objects from props.breedTypes
-const selectedBreeds = props.breedTypes.filter((breed) => (props.psReceive.breed_type ?? []).includes(breed.id));
+console.log('psReceive.breed_type:', props.psReceive.breed_type);
+console.log('props.breedTypes:', props.breedTypes);
+
+// Handle both array of IDs and array of objects
+let breedTypeIds = [];
+if (Array.isArray(props.psReceive.breed_type)) {
+    if (props.psReceive.breed_type.length > 0 && typeof props.psReceive.breed_type[0] === 'object') {
+        // Array of objects: [{"id": 2, "name": "Rainbow"}]
+        breedTypeIds = props.psReceive.breed_type.map(breed => breed.id);
+    } else {
+        // Array of IDs: [2, 3]
+        breedTypeIds = props.psReceive.breed_type;
+    }
+}
+
+const selectedBreeds = props.breedTypes.filter((breed) => breedTypeIds.includes(breed.id));
+console.log('breedTypeIds:', breedTypeIds);
+console.log('selectedBreeds:', selectedBreeds);
 // Form prefilled with existing data
 const form = useForm({
-    shipment_type_id: Number(props.psReceive.shipment_type_id),
-    pi_no: props.psReceive.pi_no,
-    pi_date: props.psReceive.pi_date,
-    order_no: props.psReceive.order_no,
-    order_date: props.psReceive.order_date,
-    lc_no: props.psReceive.lc_no,
-    lc_date: props.psReceive.lc_date,
-    supplier_id: String(props.psReceive.supplier_id),
-    breed_type: selectedBreeds,
-    country_of_origin: Number(props.psReceive.country_of_origin),
-    transport_type: String(props.psReceive.transport_type),
-    vehicle_inside_temp: props.psReceive.transport_inside_temp,
-    remarks: props.psReceive.remarks,
-    company_id: Number(props.psReceive.company_id),
+    shipment_type_id: Number(props.psReceive.shipment_type_id || 0),
+    pi_no: props.psReceive.pi_no || '',
+    pi_date: props.psReceive.pi_date || null,
+    order_no: props.psReceive.order_no || '',
+    order_date: props.psReceive.order_date || null,
+    lc_no: props.psReceive.lc_no || '',
+    lc_date: props.psReceive.lc_date || null,
+    supplier_id: props.psReceive.supplier_id !== null && props.psReceive.supplier_id !== undefined ? String(props.psReceive.supplier_id) : '',
+    breed_type: (() => {
+        console.log('Setting breed_type in form:', selectedBreeds);
+        return selectedBreeds;
+    })(),
+    country_of_origin: Number(props.psReceive.country_of_origin || 0),
+    transport_type: String(props.psReceive.transport_type || ''),
+    vehicle_inside_temp: props.psReceive.transport_inside_temp || '',
+    remarks: props.psReceive.remarks || '',
+    company_id: Number(props.psReceive.company_id || 0),
     ps_bonus_qty: props.psReceive.ps_bonus_qty ?? 0,
 
     // Chick Counts
-    ps_male_rec_box: props.psReceive.chick_counts?.ps_male_rec_box ?? 0,
-    ps_male_qty: props.psReceive.chick_counts?.ps_male_qty ?? 0,
-    ps_female_rec_box: props.psReceive.chick_counts?.ps_female_rec_box ?? 0,
-    ps_female_qty: props.psReceive.chick_counts?.ps_female_qty ?? 0,
-    ps_total_qty: props.psReceive.chick_counts?.ps_total_qty ?? 0,
-    ps_total_re_box_qty: props.psReceive.chick_counts?.ps_total_re_box_qty ?? 0,
-    ps_challan_box_qty: props.psReceive.chick_counts?.ps_challan_box_qty ?? 0,
-    ps_gross_weight: props.psReceive.chick_counts?.ps_gross_weight ?? 0,
-    ps_net_weight: props.psReceive.chick_counts?.ps_net_weight ?? 0,
+    ps_male_rec_box: (() => {
+        const value = props.psReceive.chickCounts?.ps_male_rec_box ?? 0;
+        console.log('ps_male_rec_box:', value, 'from chickCounts:', props.psReceive.chickCounts?.ps_male_rec_box);
+        return value;
+    })(),
+    ps_male_qty: (() => {
+        const value = props.psReceive.chickCounts?.ps_male_qty ?? 0;
+        console.log('ps_male_qty:', value, 'from chickCounts:', props.psReceive.chickCounts?.ps_male_qty);
+        return value;
+    })(),
+    ps_female_rec_box: props.psReceive.chickCounts?.ps_female_rec_box ?? 0,
+    ps_female_qty: props.psReceive.chickCounts?.ps_female_qty ?? 0,
+    ps_total_qty: props.psReceive.chickCounts?.ps_total_qty ?? 0,
+    ps_total_re_box_qty: props.psReceive.chickCounts?.ps_total_re_box_qty ?? 0,
+    ps_challan_box_qty: props.psReceive.chickCounts?.ps_challan_box_qty ?? 0,
+    ps_gross_weight: props.psReceive.chickCounts?.ps_gross_weight ?? 0,
+    ps_net_weight: props.psReceive.chickCounts?.ps_net_weight ?? 0,
 
     gov_lab_send_female_qty: props.psReceive.labTransfers?.find((l: any) => Number(l.lab_type) === 1)?.lab_send_female_qty ?? 0,
     gov_lab_send_male_qty: props.psReceive.labTransfers?.find((l: any) => Number(l.lab_type) === 1)?.lab_send_male_qty ?? 0,
@@ -70,10 +102,18 @@ const form = useForm({
     provita_lab_send_female_qty: props.psReceive.labTransfers?.find((l: any) => Number(l.lab_type) === 2)?.lab_send_female_qty ?? 0,
     provita_lab_send_male_qty: props.psReceive.labTransfers?.find((l: any) => Number(l.lab_type) === 2)?.lab_send_male_qty ?? 0,
     provita_lab_send_total_qty: props.psReceive.labTransfers?.find((l: any) => Number(l.lab_type) === 2)?.lab_send_total_qty ?? 0,
+    
+    // Lab Notes (shared between both lab types)
+    lab_notes: props.psReceive.labTransfers?.find((l: any) => Number(l.lab_type) === 1)?.notes ?? 
+               props.psReceive.labTransfers?.find((l: any) => Number(l.lab_type) === 2)?.notes ?? '',
+    
     // Files
     file: [],
     labfile: [],
 });
+
+// Debug: Log the form data after initialization
+console.log('Form data after initialization:', form.data());
 
 // Reactive suppliers list that will be filtered
 const filteredSuppliers = ref<Array<{ id: number; name: string }>>(props.suppliers);
@@ -91,16 +131,42 @@ const selectedCountry = ref<{ id: number; name: string } | null>(null);
 const highlightedCountryIndex = ref(-1);
 
 // Function to fetch suppliers by shipment type
-const fetchSuppliersByShipmentType = async (shipmentTypeId: number) => {
+const fetchSuppliersByShipmentType = async (shipmentTypeId: number, preserveSelection = false) => {
+    console.log('fetchSuppliersByShipmentType called with:', { shipmentTypeId, preserveSelection });
+    console.log('Current selectedSupplier before fetch:', selectedSupplier.value);
+    
     try {
         const response = await axios.get('/ps-receive/suppliers-by-shipment-type', {
             params: { shipment_type_id: shipmentTypeId }
         });
         filteredSuppliers.value = response.data;
-        // Reset supplier selection when shipment type changes
-        form.supplier_id = '';
-        selectedSupplier.value = null;
-        supplierSearchQuery.value = '';
+        console.log('Filtered suppliers:', filteredSuppliers.value);
+        
+        // Only reset supplier selection if not preserving selection
+        if (!preserveSelection) {
+            console.log('Resetting supplier selection (preserveSelection = false)');
+            form.supplier_id = '';
+            selectedSupplier.value = null;
+            supplierSearchQuery.value = '';
+        } else {
+            console.log('Preserving supplier selection (preserveSelection = true)');
+            // Check if current supplier is still valid for this shipment type
+            if (selectedSupplier.value) {
+                const isValidSupplier = filteredSuppliers.value.some(s => s.id === selectedSupplier.value.id);
+                console.log('Is current supplier valid?', isValidSupplier);
+                if (!isValidSupplier) {
+                    console.log('Current supplier is not valid for this shipment type, resetting');
+                    // Current supplier is not valid for this shipment type, reset selection
+                    form.supplier_id = '';
+                    selectedSupplier.value = null;
+                    supplierSearchQuery.value = '';
+                } else {
+                    console.log('Current supplier is valid, keeping selection');
+                }
+            } else {
+                console.log('No current supplier to validate');
+            }
+        }
     } catch (error) {
         console.error('Error fetching suppliers:', error);
         // Fallback to all suppliers on error
@@ -251,16 +317,25 @@ onMounted(() => {
         }
     }
     // Initialize selected supplier if exists
-    if (form.supplier_id) {
-        const supplier = props.suppliers.find(s => String(s.id) === form.supplier_id);
+    console.log('Form supplier_id:', form.supplier_id, 'Type:', typeof form.supplier_id);
+    console.log('Available suppliers:', props.suppliers);
+    
+    if (form.supplier_id && form.supplier_id !== '') {
+        const supplier = props.suppliers.find(s => String(s.id) === String(form.supplier_id));
+        console.log('Found supplier:', supplier);
         if (supplier) {
             selectedSupplier.value = supplier;
             supplierSearchQuery.value = supplier.name;
+            console.log('Supplier initialized:', supplier.name);
+        } else {
+            console.log('No supplier found for ID:', form.supplier_id);
         }
+    } else {
+        console.log('No valid supplier_id found');
     }
-    // Fetch suppliers for the current shipment type
+    // Fetch suppliers for the current shipment type, preserving current selection
     if (form.shipment_type_id) {
-        fetchSuppliersByShipmentType(form.shipment_type_id);
+        fetchSuppliersByShipmentType(form.shipment_type_id, true);
     }
 });
 
@@ -269,11 +344,11 @@ onUnmounted(() => {
 });
 
 // Watch for shipment type changes
-watch(() => form.shipment_type_id, (newShipmentTypeId) => {
+watch(() => form.shipment_type_id, (newShipmentTypeId, oldShipmentTypeId) => {
     if (newShipmentTypeId) {
-        fetchSuppliersByShipmentType(newShipmentTypeId);
-        // Reset supplier selection when shipment type changes
-        clearSupplierSelection();
+        // Only preserve selection if this is the initial load (no old value)
+        const preserveSelection = !oldShipmentTypeId;
+        fetchSuppliersByShipmentType(newShipmentTypeId, preserveSelection);
     }
 }, { immediate: true });
 
@@ -334,19 +409,19 @@ function validateTab(index: number) {
 }
 
 function submit() {
-    const formData = new FormData();
-    for (const key in form) {
-        const value = form[key as keyof typeof form];
-        if (key === 'file' || key === 'labfile') {
-            (value as File[]).forEach((f) => formData.append(key + '[]', f));
-        } else {
-            formData.append(key, value != null ? String(value) : '');
+    // Debug: Log the form data before submission
+    console.log('Form data before submission:', form.data());
+    console.log('Form errors:', form.errors);
+    
+    // Use Inertia's built-in form submission with proper data handling
+    form.put(route('ps-receive.update', props.psReceive.id), {
+        onSuccess: () => {
+            console.log('Form submitted successfully');
+        },
+        onError: (errors) => {
+            console.log('Form submission errors:', errors);
         }
-    }
-    form.post(route('ps-receive.update', props.psReceive.id), {
-        data: formData,
-        headers: { 'Content-Type': 'multipart/form-data' },
-    } as any);
+    });
 }
 </script>
 
@@ -381,7 +456,7 @@ function submit() {
                                 class="relative flex-1 cursor-pointer rounded-lg px-6 py-4 text-center font-medium transition-all duration-200"
                                 :class="[
                                     activeTab === index
-                                        ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-gray-900 shadow-lg'
+                                        ? 'glossy-purple-tab text-white shadow-2xl ring-2 ring-purple-200/60 backdrop-blur-sm'
                                         : completedTabs.includes(index)
                                           ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md'
                                           : 'bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-md hover:from-gray-700 hover:to-gray-800',
@@ -389,7 +464,7 @@ function submit() {
                             >
                                 <div class="flex items-center justify-center gap-2">
                                     <div class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold"
-                                         :class="activeTab === index ? 'bg-gray-900/20' : completedTabs.includes(index) ? 'bg-white/20' : 'bg-white/20'">
+                                         :class="activeTab === index ? 'bg-white/30' : completedTabs.includes(index) ? 'bg-white/20' : 'bg-white/20'">
                                         {{ index + 1 }}
                                     </div>
                                     {{ tab.label }}
@@ -403,16 +478,16 @@ function submit() {
                 <!-- Master Info Tab -->
                     <div v-if="activeTab === 0" class="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-gray-200">
                         <!-- Tab Header -->
-                        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 px-8 py-6">
+                        <div class="glossy-purple-tab px-8 py-6 shadow-2xl ring-2 ring-purple-200/60 backdrop-blur-sm">
                             <div class="flex items-center gap-3">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-900/20">
-                                    <svg class="h-5 w-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                                    <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <h2 class="text-2xl font-bold text-gray-900">Shipment Information</h2>
-                                    <p class="text-gray-700">Enter the basic shipment details and supplier information</p>
+                                    <h2 class="text-2xl font-bold text-white">Shipment Information</h2>
+                                    <p class="text-purple-100">Enter the basic shipment details and supplier information</p>
                                 </div>
                             </div>
                         </div>
@@ -976,14 +1051,16 @@ function submit() {
 
                             <!-- Additional Information -->
                             <div class="space-y-6">
+                                <!-- Lab Notes (shared between Government and Provita labs) -->
                                 <div class="space-y-2">
-                                    <Label class="text-sm font-semibold text-gray-700">Lab Remarks</Label>
+                                    <Label class="text-sm font-semibold text-gray-700">Lab Notes</Label>
                                     <textarea 
-                                        v-model="form.remarks" 
+                                        v-model="form.lab_notes" 
                                         class="w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-purple-500" 
-                                        placeholder="Enter any additional notes for lab testing"
+                                        placeholder="Enter notes for lab testing (applies to both Government and Provita labs)"
                                         rows="3"
                                     ></textarea>
+                                </div>
                         </div>
 
                                 <div class="space-y-2">
@@ -995,7 +1072,6 @@ function submit() {
                                         wrapper-class="flex flex-col"
                             />
                                 </div>
-                        </div>
                     </div>
                 </div>
 
@@ -1147,5 +1223,31 @@ function submit() {
 
 .multiselect-modern :deep(.multiselect__spinner:after) {
     border-color: #2563eb;
+}
+
+/* Glossy Purple Tab Styling */
+.glossy-purple-tab {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+    box-shadow: 
+        0 10px 25px -5px rgba(139, 92, 246, 0.3),
+        0 4px 6px -2px rgba(139, 92, 246, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.glossy-purple-tab::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.glossy-purple-tab:hover::before {
+    left: 100%;
 }
 </style>
