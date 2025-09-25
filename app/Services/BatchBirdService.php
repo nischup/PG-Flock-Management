@@ -41,7 +41,7 @@ class BatchBirdService
         // Movement Adjustments
         $movementTotals = MovementAdjustment::where('stage', 4)
             ->where('stage_id', $batchAssign->id)
-            ->when($reportDate, fn($q) => $q->whereDate('movement_date', '<=', $reportDate))
+            ->when($reportDate, fn($q) => $q->whereDate('created_at', '<=', $reportDate))
             ->selectRaw("
                 SUM(CASE WHEN type = 1 THEN female_qty ELSE 0 END) as mortality_adjust_female,
                 SUM(CASE WHEN type = 1 THEN male_qty ELSE 0 END) as mortality_adjust_male,

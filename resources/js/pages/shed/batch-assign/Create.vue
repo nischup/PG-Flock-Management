@@ -104,6 +104,9 @@ const form = useForm({
       batch_no: '',
       batch_female_qty: 0,
       batch_male_qty: 0,
+      batch_received_male_qty: 0,
+      batch_received_female_qty: 0,
+      batch_received_total_qty:0,
       batch_total_qty: 0,
       batch_female_mortality: 0,
       batch_male_mortality: 0,
@@ -168,6 +171,9 @@ const addBatch = () => {
     batch_female_qty: 0,
     batch_male_qty: 0,
     batch_total_qty: 0,
+    batch_received_male_qty: 0,
+    batch_received_female_qty: 0,
+    batch_received_total_qty:0,
     batch_female_mortality: 0,
     batch_male_mortality: 0,
     batch_total_mortality: 0,
@@ -202,10 +208,18 @@ watch(
   () => {
     form.batches.forEach(batch => {
       // Auto-calculate totals
-      batch.batch_total_qty = (batch.batch_female_qty || 0) + (batch.batch_male_qty || 0)
+      batch.batch_received_total_qty = (batch.batch_received_female_qty || 0) + (batch.batch_received_male_qty || 0)
       batch.batch_total_mortality = (batch.batch_female_mortality || 0) + (batch.batch_male_mortality || 0)
       batch.batch_total_excess = (batch.batch_excess_female || 0) + (batch.batch_excess_male || 0)
       batch.batch_total_sortage = (batch.batch_sortage_female || 0) + (batch.batch_sortage_male || 0)
+      
+      batch.batch_female_qty = (batch.batch_received_female_qty || 0) + (batch.batch_excess_female || 0) -  (batch.batch_female_mortality || 0)-(batch.batch_sortage_female || 0)
+      batch.batch_male_qty = (batch.batch_received_male_qty || 0) + (batch.batch_excess_male || 0) -  (batch.batch_male_mortality || 0)-(batch.batch_sortage_male || 0)
+      
+      
+      batch.batch_total_qty = (batch.batch_female_qty || 0) + (batch.batch_male_qty || 0)
+
+      batch.percentage = (batch.batch_excess_female / batch.batch_received_female_qty)*100
     })
   },
   { deep: true, immediate: true }
@@ -472,34 +486,36 @@ watch(
             <h4 class="mb-2 text-sm font-medium text-gray-900 dark:text-white">Main Quantities</h4>
             <div class="grid grid-cols-3 gap-3">
               <div class="space-y-1">
-                <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Female</Label>
+                <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Received Female Qty</Label>
                 <Input 
-                  v-model.number="batch.batch_female_qty" 
+                  v-model.number="batch.batch_received_female_qty" 
                   type="number" 
                   min="0"
                   class="rounded-md border-pink-300 bg-pink-50 px-2 py-1 text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500 dark:border-pink-600 dark:bg-pink-900/20" 
                 />
               </div>
               <div class="space-y-1">
-                <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Male</Label>
+                <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Received Male Qty</Label>
                 <Input 
-                  v-model.number="batch.batch_male_qty" 
+                  v-model.number="batch.batch_received_male_qty" 
                   type="number" 
                   min="0"
                   class="rounded-md border-blue-300 bg-blue-50 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-blue-600 dark:bg-blue-900/20" 
                 />
               </div>
               <div class="space-y-1">
-                <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Total</Label>
+                <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Received Total Qty</Label>
                 <Input 
                   type="number" 
-                  :value="batch.batch_total_qty" 
+                  :value="batch.batch_received_total_qty" 
                   readonly 
                   class="rounded-md border-gray-300 bg-gray-100 px-2 py-1 text-sm font-medium text-gray-700 cursor-not-allowed dark:border-gray-600 dark:bg-gray-600 dark:text-gray-300" 
                 />
               </div>
             </div>
           </div>
+
+          
 
           <!-- Combined Metrics Section -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -572,6 +588,18 @@ watch(
                     class="rounded border-emerald-300 bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-800 cursor-not-allowed dark:border-emerald-600 dark:bg-emerald-800/30 dark:text-emerald-200"
                   />
                 </div>
+                <!-- Percentage -->
+              <div class="rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+                <Label class="text-xs font-medium text-amber-700 dark:text-amber-300">Female Excess Percentage (%)</Label>
+                <Input 
+                  v-model.number="batch.percentage" 
+                  type="number" 
+                  min="0" 
+                  max="100" 
+                  step="0.01"
+                  class="mt-1 rounded border-amber-300 bg-amber-100 px-2 py-1 text-xs text-amber-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-amber-600 dark:bg-amber-800/30 dark:text-amber-200" 
+                />
+              </div>
               </div>
             </div>
 
@@ -613,16 +641,37 @@ watch(
                 </div>
               </div>
 
-              <!-- Percentage -->
-              <div class="rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
-                <Label class="text-xs font-medium text-amber-700 dark:text-amber-300">Percentage (%)</Label>
+              
+            </div>
+          </div>
+          <div class="mb-4 mt-5">
+            <h4 class="mb-2 text-sm font-medium text-gray-900 dark:text-white">Assign Quantities</h4>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="space-y-1">
+                <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Female</Label>
                 <Input 
-                  v-model.number="batch.percentage" 
+                  v-model.number="batch.batch_female_qty" 
                   type="number" 
-                  min="0" 
-                  max="100" 
-                  step="0.01"
-                  class="mt-1 rounded border-amber-300 bg-amber-100 px-2 py-1 text-xs text-amber-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-amber-600 dark:bg-amber-800/30 dark:text-amber-200" 
+                  min="0"
+                  class="rounded-md border-pink-300 bg-pink-50 px-2 py-1 text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500 dark:border-pink-600 dark:bg-pink-900/20" 
+                />
+              </div>
+              <div class="space-y-1">
+                <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Male</Label>
+                <Input 
+                  v-model.number="batch.batch_male_qty" 
+                  type="number" 
+                  min="0"
+                  class="rounded-md border-blue-300 bg-blue-50 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-blue-600 dark:bg-blue-900/20" 
+                />
+              </div>
+              <div class="space-y-1">
+                <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Total</Label>
+                <Input 
+                  type="number" 
+                  :value="batch.batch_total_qty" 
+                  readonly 
+                  class="rounded-md border-gray-300 bg-gray-100 px-2 py-1 text-sm font-medium text-gray-700 cursor-not-allowed dark:border-gray-600 dark:bg-gray-600 dark:text-gray-300" 
                 />
               </div>
             </div>
@@ -659,7 +708,7 @@ watch(
       >
         <span class="relative z-10 flex items-center gap-2">
           <Save class="h-4 w-4" />
-          {{ form.processing ? 'Saving...' : 'Save & Submit' }}
+          {{ form.processing ? 'Saving...' : 'Assign' }}
         </span>
         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-10 group-hover:translate-x-full"></div>
       </Button>
