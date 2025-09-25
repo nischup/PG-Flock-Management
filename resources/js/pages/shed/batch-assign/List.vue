@@ -114,8 +114,8 @@ const transferStage = (item) => {
   confirmUpdate({
     url: `/batch-assign/${item.id}/next-stage`,
     title: 'Are you sure?',
-    text: `Do you want to transfer it to ${nextStage}?`,
-    confirmButtonText: `Yes, transfer to ${nextStage}`,
+    text: `You want to move ${nextStage} stage?`,
+    confirmButtonText: `Yes, Move to ${nextStage}`,
     successMessage: `Stage updated to ${nextStage}!`,
   });
 };
@@ -1014,7 +1014,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                                     class="flex w-full items-center gap-2 px-4 py-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
                                                     >
                                                     <ArrowsUpFromLine class="h-4 w-4" />
-                                                   <span>Brooding</span>
+                                                   <span>Move to Growing</span>
                                                   </button>
                                                 <!-- Report -->
                                                 <button
@@ -1033,7 +1033,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                                                     </svg>
-                                                    <span>Transfer</span>
+                                                    <span>Batch Transfer</span>
                                                 </Link>
 
                                                 <!-- Delete -->
