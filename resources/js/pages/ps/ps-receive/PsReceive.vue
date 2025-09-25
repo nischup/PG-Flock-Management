@@ -743,6 +743,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Company</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Shipment Type</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">PI No</th>
+                            <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">PI Date</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">LC No</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px;">Order No</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px;">Supplier</th>
@@ -759,12 +760,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             v-for="(item, index) in props.psReceives?.data ?? []"
                             :key="item.id"
                             class="odd:bg-white even:bg-gray-50 hover:bg-gray-100 dark:odd:bg-gray-900 dark:even:bg-gray-800 transition-all duration-200"
-                            :class="{
-                                'ps-receive-row-active': selectedPI === item.id,
-                                'hover:from-red-50 hover:to-red-100 hover:border-red-300 dark:hover:from-red-900/30 dark:hover:to-red-800/30': selectedPI !== item.id
-                            }"
-                            @click="selectedPI = item.id"
-                            style="cursor: pointer;"
+              
                         >
                             <td class="px-4 py-3 text-center text-gray-500 dark:text-gray-400 whitespace-nowrap font-medium">
                                 {{ ((props.psReceives?.meta?.current_page || 1) - 1) * (props.psReceives?.meta?.per_page || 10) + index + 1 }}
@@ -781,6 +777,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 </span>
                             </td>
                             <td class="px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">{{ item.pi_no }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap">{{ item.pi_date ? dayjs(item.pi_date).format('YYYY-MM-DD') : '-' }}</td>
                             <td class="px-4 py-3 whitespace-nowrap">{{ item.lc_no ?? '-' }}</td>
                             <td class="px-4 py-3 whitespace-nowrap">{{ item.order_no ?? '-' }}</td>
                             <td class="px-4 py-3 whitespace-nowrap">{{ item.supplier?.name ?? 'N/A' }}</td>
@@ -897,7 +894,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </tr>
 
                         <tr v-if="(props.psReceives?.data ?? []).length === 0">
-                            <td colspan="11" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No PS Receives found.</td>
+                            <td colspan="14" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No PS Receives found.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -951,14 +948,14 @@ const breadcrumbs: BreadcrumbItem[] = [
     scroll-behavior: smooth;
 }
 
-/* Glossy red active state for PS Receive rows */
+/* Glossy green active state for PS Receive rows */
 .ps-receive-row-active {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 50%, #fecaca 100%);
-    border-left: 4px solid #dc2626;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
     box-shadow: 
-        0 4px 6px -1px rgba(220, 38, 38, 0.1),
-        0 2px 4px -1px rgba(220, 38, 38, 0.06),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 4px 6px -1px rgba(22, 163, 74, 0.1),
+        0 2px 4px -1px rgba(22, 163, 74, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        inset 4px 0 0 #16a34a;
     position: relative;
 }
 
@@ -973,21 +970,21 @@ const breadcrumbs: BreadcrumbItem[] = [
 }
 
 .ps-receive-row-active:hover {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 50%, #fecaca 100%);
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
     box-shadow: 
-        0 8px 15px -3px rgba(220, 38, 38, 0.2),
-        0 4px 6px -2px rgba(220, 38, 38, 0.1),
+        0 8px 15px -3px rgba(22, 163, 74, 0.2),
+        0 4px 6px -2px rgba(22, 163, 74, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-/* Dark mode glossy red */
+/* Dark mode glossy green */
 .dark .ps-receive-row-active {
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(185, 28, 28, 0.15) 50%, rgba(153, 27, 27, 0.2) 100%);
-    border-left: 4px solid #f87171;
+    background: linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(21, 128, 61, 0.15) 50%, rgba(20, 83, 45, 0.2) 100%);
     box-shadow: 
-        0 4px 6px -1px rgba(248, 113, 113, 0.2),
-        0 2px 4px -1px rgba(248, 113, 113, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        0 4px 6px -1px rgba(74, 222, 128, 0.2),
+        0 2px 4px -1px rgba(74, 222, 128, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        inset 4px 0 0 #4ade80;
 }
 
 .dark .ps-receive-row-active::before {
@@ -995,29 +992,29 @@ const breadcrumbs: BreadcrumbItem[] = [
 }
 
 .dark .ps-receive-row-active:hover {
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(185, 28, 28, 0.2) 50%, rgba(153, 27, 27, 0.25) 100%);
+    background: linear-gradient(135deg, rgba(22, 163, 74, 0.15) 0%, rgba(21, 128, 61, 0.2) 50%, rgba(20, 83, 45, 0.25) 100%);
     box-shadow: 
-        0 8px 15px -3px rgba(248, 113, 113, 0.3),
-        0 4px 6px -2px rgba(248, 113, 113, 0.2),
+        0 8px 15px -3px rgba(74, 222, 128, 0.3),
+        0 4px 6px -2px rgba(74, 222, 128, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Glossy red select dropdown when item is selected */
+/* Glossy green select dropdown when item is selected */
 .ps-receive-select-active {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
-    border-color: #dc2626 !important;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+    border-color: #16a34a !important;
     box-shadow: 
-        0 0 0 3px rgba(220, 38, 38, 0.1),
-        0 2px 4px -1px rgba(220, 38, 38, 0.06),
+        0 0 0 3px rgba(22, 163, 74, 0.1),
+        0 2px 4px -1px rgba(22, 163, 74, 0.06),
         inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
 .dark .ps-receive-select-active {
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(185, 28, 28, 0.15) 100%) !important;
-    border-color: #f87171 !important;
+    background: linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(21, 128, 61, 0.15) 100%) !important;
+    border-color: #4ade80 !important;
     box-shadow: 
-        0 0 0 3px rgba(248, 113, 113, 0.2),
-        0 2px 4px -1px rgba(248, 113, 113, 0.1),
+        0 0 0 3px rgba(74, 222, 128, 0.2),
+        0 2px 4px -1px rgba(74, 222, 128, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 </style>

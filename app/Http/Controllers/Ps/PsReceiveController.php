@@ -70,6 +70,18 @@ class PsReceiveController extends Controller
 
         // Get breed type names
         $breedTypeIds = is_array($psReceive->breed_type) ? $psReceive->breed_type : json_decode($psReceive->breed_type, true);
+        
+        // Handle both array of IDs and array of objects
+        if (is_array($breedTypeIds) && count($breedTypeIds) > 0) {
+            if (is_array($breedTypeIds[0])) {
+                // Array of objects: [{"id": 2, "name": "Rainbow"}]
+                $breedTypeIds = array_column($breedTypeIds, 'id');
+            }
+            // If it's already an array of IDs, use as is
+        } else {
+            $breedTypeIds = [];
+        }
+        
         $breedTypes = BreedType::whereIn('id', $breedTypeIds)->get();
         $breedTypeNames = $breedTypes->pluck('name')->toArray();
 
@@ -666,7 +678,15 @@ class PsReceiveController extends Controller
         // Map breed_type IDs to names
         $breedTypes = [];
         if (! empty($psReceive->breed_type) && is_array($psReceive->breed_type)) {
-            $breedTypes = BreedType::whereIn('id', $psReceive->breed_type)
+            $breedTypeIds = $psReceive->breed_type;
+            
+            // Handle both array of IDs and array of objects
+            if (count($breedTypeIds) > 0 && is_array($breedTypeIds[0])) {
+                // Array of objects: [{"id": 2, "name": "Rainbow"}]
+                $breedTypeIds = array_column($breedTypeIds, 'id');
+            }
+            
+            $breedTypes = BreedType::whereIn('id', $breedTypeIds)
                 ->pluck('name')
                 ->toArray();
         }
