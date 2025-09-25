@@ -1027,6 +1027,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
                                                 <!-- Transfer -->
                                                 <Link
+                                                    v-if="item.stage == 2"
                                                     :href="`/bird-transfer/create/${item.id}`"
                                                     class="flex items-center gap-2 px-4 py-2 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
                                                 >
