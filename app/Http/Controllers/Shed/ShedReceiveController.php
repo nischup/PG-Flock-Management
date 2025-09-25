@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Shed;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreShedReceiveRequest;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
@@ -78,7 +77,7 @@ class ShedReceiveController extends Controller
     {
 
         $firmReceives = PsFirmReceive::with(['flock', 'company', 'project'])
-        ->where('receive_type', 'box')
+            ->where('receive_type', 'box')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($fr) {
@@ -124,15 +123,11 @@ class ShedReceiveController extends Controller
 
         $firmReceive = PsFirmReceive::findOrFail($request->transaction_id);
 
-        
-        
-        
-        
         $shedReceive = ShedReceive::create([
             'receive_id' => $request->transaction_id,   // firm receive reference
             'job_no' => $firmReceive->job_no,
             'company_id' => $firmReceive->receiving_company_id,
-            'project_id'=> $firmReceive->project_id,
+            'project_id' => $firmReceive->project_id,
             'transaction_no' => $firmReceive->transaction_no,
             'flock_id' => $firmReceive->flock_id,
             'flock_no' => $firmReceive->flock_no,
@@ -146,59 +141,56 @@ class ShedReceiveController extends Controller
             'status' => $request->status ?? 1,
         ]);
 
-
-
         if ($request->shed_sortage_box_qty > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $firmReceive->flock_id,
-                'flock_no' =>    $firmReceive->flock_no, 
+                'flock_id' => $firmReceive->flock_id,
+                'flock_no' => $firmReceive->flock_no,
                 'transaction_no' => $firmReceive->transaction_no,
                 'job_no' => $firmReceive->job_no, // fetch from batch or pass from request
-                'stage'      =>  3,                  // 5 = Bird Transfer stage
-                'stage_id'   =>  $shedReceive->id,
-                'type'       =>  3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                'male_qty'   =>  $request->shed_sortage_male_box ?? 0,
-                'female_qty' =>  $request->shed_sortage_female_box ?? 0,
-                'total_qty'  =>  $request->shed_sortage_box_qty ?? 0,
-                'date'       =>  date('Y-m-d'),
-                'remarks'    => "Sortage when shed receive",
+                'stage' => 3,                  // 5 = Bird Transfer stage
+                'stage_id' => $shedReceive->id,
+                'type' => 3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->shed_sortage_male_box ?? 0,
+                'female_qty' => $request->shed_sortage_female_box ?? 0,
+                'total_qty' => $request->shed_sortage_box_qty ?? 0,
+                'date' => date('Y-m-d'),
+                'remarks' => 'Sortage when shed receive',
             ]);
         }
 
         if ($request->shed_excess_box_qty > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $firmReceive->flock_id,
-                'flock_no'   =>  $firmReceive->flock_no,
+                'flock_id' => $firmReceive->flock_id,
+                'flock_no' => $firmReceive->flock_no,
                 'transaction_no' => $firmReceive->transaction_no,
                 'job_no' => $firmReceive->job_no,  // fetch from batch or pass from request
-                'stage'      =>  3,                  // 5 = Bird Transfer stage
-                'stage_id'   =>  $shedReceive->id,
-                'type'       =>  2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                'male_qty'   =>  $request->shed_excess_male_box ?? 0,
-                'female_qty' =>  $request->shed_excess_female_box ?? 0,
-                'total_qty'  =>  $request->shed_excess_box_qty ?? 0,
-                'date'       => date('Y-m-d'),
-                'remarks'    => "Excess when shed receive",
+                'stage' => 3,                  // 5 = Bird Transfer stage
+                'stage_id' => $shedReceive->id,
+                'type' => 2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->shed_excess_male_box ?? 0,
+                'female_qty' => $request->shed_excess_female_box ?? 0,
+                'total_qty' => $request->shed_excess_box_qty ?? 0,
+                'date' => date('Y-m-d'),
+                'remarks' => 'Excess when shed receive',
             ]);
         }
 
         if ($request->shed_total_mortality > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $firmReceive->flock_id,
-                'flock_no' =>    $firmReceive->flock_no,
+                'flock_id' => $firmReceive->flock_id,
+                'flock_no' => $firmReceive->flock_no,
                 'transaction_no' => $firmReceive->transaction_no,
                 'job_no' => $firmReceive->job_no,  // fetch from batch or pass from request
-                'stage'      =>  3,                  // 5 = Bird Transfer stage
-                'stage_id'   =>  $shedReceive->id,
-                'type'       =>  1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                'male_qty'   =>  $request->shed_male_mortality ?? 0,
-                'female_qty' =>  $request->shed_female_mortality ?? 0,
-                'total_qty'  =>  $request->shed_total_mortality ?? 0,
-                'date'       => date('Y-m-d'),
-                'remarks'    => "Mortality when shed receive",
+                'stage' => 3,                  // 5 = Bird Transfer stage
+                'stage_id' => $shedReceive->id,
+                'type' => 1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->shed_male_mortality ?? 0,
+                'female_qty' => $request->shed_female_mortality ?? 0,
+                'total_qty' => $request->shed_total_mortality ?? 0,
+                'date' => date('Y-m-d'),
+                'remarks' => 'Mortality when shed receive',
             ]);
         }
-
 
         return redirect()
             ->route('shed-receive.index')
@@ -237,7 +229,8 @@ class ShedReceiveController extends Controller
         $shedReceive = ShedReceive::with(['flock', 'company', 'shed'])->findOrFail($shedReceive->id);
 
         // Fetch firm receives for dropdown
-        $firmReceives = PsFirmReceive::with(['flock', 'company'])
+        $firmReceives = PsFirmReceive::with(['flock', 'company', 'project'])
+            ->where('receive_type', 'box')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($fr) {
@@ -247,7 +240,12 @@ class ShedReceiveController extends Controller
                     'transaction_no' => $fr->transaction_no,
                     'flock_id' => $fr->flock_id,
                     'flock_name' => $fr->flock?->name ?? 'N/A',
+                    'flock_code' => $fr->flock?->code ?? 'N/A',
                     'receiving_company_id' => $fr->receiving_company_id,
+                    'company_name' => $fr->company?->name ?? 'N/A',
+                    'company_short_name' => $fr->company?->short_name ?? $fr->company?->name ?? 'N/A',
+                    'project_id' => $fr->project_id,
+                    'project_name' => $fr->project?->name ?? 'N/A',
                     'firm_female_qty' => $fr->firm_female_qty,
                     'firm_male_qty' => $fr->firm_male_qty,
                     'firm_total_qty' => $fr->firm_total_qty,
@@ -276,7 +274,95 @@ class ShedReceiveController extends Controller
      */
     public function update(Request $request, ShedReceive $shedReceive)
     {
-        //
+        try {
+            // Get the firm receive data
+            $firmReceive = PsFirmReceive::findOrFail($request->transaction_id);
+
+            // Update the shed receive record
+            $shedReceive->update([
+                'receive_id' => $request->transaction_id,
+                'job_no' => $firmReceive->job_no,
+                'company_id' => $firmReceive->receiving_company_id,
+                'project_id' => $firmReceive->project_id,
+                'transaction_no' => $firmReceive->transaction_no,
+                'flock_id' => $firmReceive->flock_id,
+                'flock_no' => $firmReceive->flock_no,
+                'shed_id' => $request->shed_id,
+                'shed_female_qty' => $request->shed_female_qty,
+                'shed_male_qty' => $request->shed_male_qty,
+                'shed_total_qty' => $request->shed_total_qty,
+                'remarks' => $request->remarks,
+                'updated_by' => Auth::id(),
+                'status' => $request->status ?? 1,
+            ]);
+
+            // Delete existing movement adjustments for this shed receive
+            MovementAdjustment::where('stage_id', $shedReceive->id)
+                ->where('stage', 3)
+                ->delete();
+
+            // Create new movement adjustments if quantities are greater than 0
+            if ($request->shed_sortage_box_qty > 0) {
+                MovementAdjustment::create([
+                    'flock_id' => $firmReceive->flock_id,
+                    'flock_no' => $firmReceive->flock_no,
+                    'transaction_no' => $firmReceive->transaction_no,
+                    'job_no' => $firmReceive->job_no,
+                    'stage' => 3,
+                    'stage_id' => $shedReceive->id,
+                    'type' => 3, // Shortage
+                    'male_qty' => $request->shed_sortage_male_box ?? 0,
+                    'female_qty' => $request->shed_sortage_female_box ?? 0,
+                    'total_qty' => $request->shed_sortage_box_qty ?? 0,
+                    'date' => date('Y-m-d'),
+                    'remarks' => 'Shortage when shed receive',
+                ]);
+            }
+
+            if ($request->shed_excess_box_qty > 0) {
+                MovementAdjustment::create([
+                    'flock_id' => $firmReceive->flock_id,
+                    'flock_no' => $firmReceive->flock_no,
+                    'transaction_no' => $firmReceive->transaction_no,
+                    'job_no' => $firmReceive->job_no,
+                    'stage' => 3,
+                    'stage_id' => $shedReceive->id,
+                    'type' => 2, // Excess
+                    'male_qty' => $request->shed_excess_male_box ?? 0,
+                    'female_qty' => $request->shed_excess_female_box ?? 0,
+                    'total_qty' => $request->shed_excess_box_qty ?? 0,
+                    'date' => date('Y-m-d'),
+                    'remarks' => 'Excess when shed receive',
+                ]);
+            }
+
+            if ($request->shed_total_mortality > 0) {
+                MovementAdjustment::create([
+                    'flock_id' => $firmReceive->flock_id,
+                    'flock_no' => $firmReceive->flock_no,
+                    'transaction_no' => $firmReceive->transaction_no,
+                    'job_no' => $firmReceive->job_no,
+                    'stage' => 3,
+                    'stage_id' => $shedReceive->id,
+                    'type' => 1, // Mortality
+                    'male_qty' => $request->shed_male_mortality ?? 0,
+                    'female_qty' => $request->shed_female_mortality ?? 0,
+                    'total_qty' => $request->shed_total_mortality ?? 0,
+                    'date' => date('Y-m-d'),
+                    'remarks' => 'Mortality when shed receive',
+                ]);
+            }
+
+            return redirect()
+                ->route('shed-receive.index')
+                ->with('success', 'Shed Receive updated successfully!');
+
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to update shed receive: '.$e->getMessage()]);
+        }
     }
 
     /**

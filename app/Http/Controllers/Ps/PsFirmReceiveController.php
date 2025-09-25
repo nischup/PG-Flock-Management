@@ -8,9 +8,9 @@ use App\Models\Master\BreedType;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Project;
+use App\Models\MovementAdjustment;
 use App\Models\Ps\PsFirmReceive;
 use App\Models\Ps\PsReceive;
-use App\Models\MovementAdjustment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -99,7 +99,7 @@ class PsFirmReceiveController extends Controller
                     'company_id' => $ps->company_id,
                     'remarks' => $ps->remarks,
                     'created_at' => $ps->created_at->format('Y-m-d'),
-                    'receive_type' => "box",
+                    'receive_type' => 'box',
                     // Chick counts
                     'total_chicks_qty' => $ps->chickCounts->ps_total_qty ?? 0,
                     'total_box_qty' => $ps->chickCounts->ps_total_re_box_qty ?? 0,
@@ -115,14 +115,10 @@ class PsFirmReceiveController extends Controller
                 ];
             });
 
-
-
-
-
         $flocks = Flock::select('id', 'code', 'name', 'status')->orderBy('id', 'desc')->get();
         // Fetch all companies
         $companies = Company::select('id', 'name')->get();
-        $projects = Project::select('id', 'name', 'company_id')->get();    
+        $projects = Project::select('id', 'name', 'company_id')->get();
 
         return Inertia::render('ps/ps-firm-receive/Create', [
             'psReceives' => $psReceives,
@@ -139,9 +135,6 @@ class PsFirmReceiveController extends Controller
     public function store(Request $request)
     {
 
-        
-       
-        
         $companyInfo = Company::findOrFail($request->receiving_company_id);
         $flockInfo = Flock::findOrFail($request->flock_id);
 
@@ -163,70 +156,63 @@ class PsFirmReceiveController extends Controller
         ]);
 
         $insertId = $firmReceive->id;
-        $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
+        $timestamp = now()->format('YmdHis'); // YearMonthDayHourMinuteSecond
+        $jobNo = "PG{$timestamp}";
+        $transactionNo = "TRN{$timestamp}";
 
-        // Save the job_no back to the record
-        $firmReceive->update(['transaction_no' => $transactionNo, 'job_no' => $transactionNo]);
-        
-        
-        
-        
+        // Save the job_no and transaction_no back to the record
+        $firmReceive->update(['transaction_no' => $transactionNo, 'job_no' => $jobNo]);
+
         if ($request->firm_sortage_box_qty > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $flockInfo->id,
-                'flock_no' =>    $flockInfo->name,
+                'flock_id' => $flockInfo->id,
+                'flock_no' => $flockInfo->name,
                 'transaction_no' => $transactionNo,
-                'job_no' => $transactionNo, // fetch from batch or pass from request
-                'stage'      =>  2,                  // 5 = Bird Transfer stage
-                'stage_id'   =>  $insertId,
-                'type'       =>  3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                'male_qty'   =>  $request->firm_sortage_male_box ?? 0,
-                'female_qty' =>  $request->firm_sortage_female_box ?? 0,
-                'total_qty'  =>  $request->firm_sortage_box_qty ?? 0,
-                'date'       =>  date('Y-m-d'),
-                'remarks'    => "Sortage when firm receive",
+                'job_no' => $jobNo, // Use the new job number format
+                'stage' => 2,                  // 5 = Bird Transfer stage
+                'stage_id' => $insertId,
+                'type' => 3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->firm_sortage_male_box ?? 0,
+                'female_qty' => $request->firm_sortage_female_box ?? 0,
+                'total_qty' => $request->firm_sortage_box_qty ?? 0,
+                'date' => date('Y-m-d'),
+                'remarks' => 'Sortage when firm receive',
             ]);
         }
 
         if ($request->firm_excess_box_qty > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $flockInfo->id,
-                'flock_no'   =>  $flockInfo->name,
+                'flock_id' => $flockInfo->id,
+                'flock_no' => $flockInfo->name,
                 'transaction_no' => $transactionNo,
-                'job_no' => $transactionNo,  // fetch from batch or pass from request
-                'stage'      =>  2,                  // 5 = Bird Transfer stage
-                'stage_id'   =>  $insertId,
-                'type'       =>  2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                'male_qty'   =>  $request->firm_excess_male_box ?? 0,
-                'female_qty' =>  $request->firm_excess_female_box ?? 0,
-                'total_qty'  =>  $request->firm_excess_box_qty ?? 0,
-                'date'       => date('Y-m-d'),
-                'remarks'    => "Excess when firm receive",
+                'job_no' => $jobNo,  // Use the new job number format
+                'stage' => 2,                  // 5 = Bird Transfer stage
+                'stage_id' => $insertId,
+                'type' => 2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->firm_excess_male_box ?? 0,
+                'female_qty' => $request->firm_excess_female_box ?? 0,
+                'total_qty' => $request->firm_excess_box_qty ?? 0,
+                'date' => date('Y-m-d'),
+                'remarks' => 'Excess when firm receive',
             ]);
         }
 
         if ($request->firm_total_mortality > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $flockInfo->id,
-                'flock_no' =>    $flockInfo->name,
+                'flock_id' => $flockInfo->id,
+                'flock_no' => $flockInfo->name,
                 'transaction_no' => $transactionNo,
-                'job_no' => $transactionNo,  // fetch from batch or pass from request
-                'stage'      =>  2,                  // 5 = Bird Transfer stage
-                'stage_id'   =>  $insertId,
-                'type'       =>  1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                'male_qty'   =>  $request->firm_mortality_male ?? 0,
-                'female_qty' =>  $request->firm_mortality_female ?? 0,
-                'total_qty'  =>  $request->firm_total_mortality ?? 0,
-                'date'       => date('Y-m-d'),
-                'remarks'    => "Mortality when firm receive",
+                'job_no' => $jobNo,  // Use the new job number format
+                'stage' => 2,                  // 5 = Bird Transfer stage
+                'stage_id' => $insertId,
+                'type' => 1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->firm_mortality_male ?? 0,
+                'female_qty' => $request->firm_mortality_female ?? 0,
+                'total_qty' => $request->firm_total_mortality ?? 0,
+                'date' => date('Y-m-d'),
+                'remarks' => 'Mortality when firm receive',
             ]);
         }
-
-
-        
-
-
-        
 
         return redirect()
             ->route('ps-firm-receive.index')
@@ -312,6 +298,7 @@ class PsFirmReceiveController extends Controller
 
         $flocks = Flock::select('id', 'code', 'name', 'status')->orderBy('id', 'desc')->get();
         $companies = Company::select('id', 'name')->get();
+        $breeds = BreedType::pluck('name', 'id')->toArray();
 
         return Inertia::render('ps/ps-firm-receive/Edit', [
             'psFirmReceive' => [
@@ -336,6 +323,7 @@ class PsFirmReceiveController extends Controller
             'psReceives' => $psReceives,
             'companies' => $companies,
             'flocks' => $flocks,
+            'breeds' => $breeds,
         ]);
     }
 
@@ -361,8 +349,10 @@ class PsFirmReceiveController extends Controller
             'status' => $request->status ?? 1,
         ]);
 
-        $transactionNo = "{$psFirmReceive->id}-{$companyInfo->short_name}-{$flockInfo->name}";
-        $psFirmReceive->update(['transaction_no' => $transactionNo, 'job_no' => $transactionNo]);
+        $timestamp = now()->format('YmdHis'); // YearMonthDayHourMinuteSecond
+        $jobNo = "PG{$timestamp}";
+        $transactionNo = "TRN{$timestamp}";
+        $psFirmReceive->update(['transaction_no' => $transactionNo, 'job_no' => $jobNo]);
 
         return redirect()
             ->route('ps-firm-receive.index')
@@ -524,25 +514,22 @@ class PsFirmReceiveController extends Controller
 
         // Get breed type from psReceive
 
-            
         $breeds = BreedType::pluck('name', 'id')->toArray(); // [1 => 'Rhode Island', 2 => 'Leghorn', ...]
         $breedtype = $item->psReceive?->breed_type ?? [];
         // Map IDs to names
-        $breedAll = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
+        $breedAll = array_map(fn ($id) => $breeds[$id] ?? null, $breedtype);
 
         // Remove nulls (optional)
         $breedNames = array_filter($breedAll);
 
         // Convert to comma-separated string if needed
         $breedName = implode(', ', $breedNames);
-        
-        
 
         $psChickCounts = $item->psReceive?->chickCounts;
 
         // Do calculations first
         $physical_female = $item->firm_female_qty;
-        $physical_male   = $item->firm_male_qty;
+        $physical_male = $item->firm_male_qty;
 
         $box_f = ($psChickCounts->ps_female_rec_box ?? 0) - $physical_female;
         $box_m = ($psChickCounts->ps_male_rec_box ?? 0) - $physical_male;
@@ -554,47 +541,47 @@ class PsFirmReceiveController extends Controller
 
         // Prepare data for Blade view
         $data = [
-            'job_no'         => $item->job_no,
+            'job_no' => $item->job_no,
             'transaction_no' => $item->transaction_no,
-            'pi_no'          => $item->psReceive->pi_no ?? '-',
-            'pi_date'        => optional($item->psReceive->pi_date)->format('Y-m-d') ?? '-',
-            'flock_name'     => $item->flock->name ?? '-',
-            'flock_id'       => $item->flock_id,
-            'company_name'   => $item->company->name ?? '-',
-            'company_id'     => $item->receiving_company_id,
-            'firm_male_qty'  => $item->firm_male_qty,
+            'pi_no' => $item->psReceive->pi_no ?? '-',
+            'pi_date' => optional($item->psReceive->pi_date)->format('Y-m-d') ?? '-',
+            'flock_name' => $item->flock->name ?? '-',
+            'flock_id' => $item->flock_id,
+            'company_name' => $item->company->name ?? '-',
+            'company_id' => $item->receiving_company_id,
+            'firm_male_qty' => $item->firm_male_qty,
             'firm_female_qty' => $item->firm_female_qty,
             'firm_total_qty' => $item->firm_total_qty,
-            'remarks'        => $item->remarks ?? '-',
-            'receive_date'   => $item->created_at->format('Y-m-d'),
-            'created_by'     => $item->created_by,
-            'status'         => $item->status,
-            'receive_type'   => $item->receive_type,
-            'breed_type'     => $breedName,
-            'source_type'    => $item->source_type ?? '-',
-            'source_id'      => $item->source_id ?? '-',
+            'remarks' => $item->remarks ?? '-',
+            'receive_date' => $item->created_at->format('Y-m-d'),
+            'created_by' => $item->created_by,
+            'status' => $item->status,
+            'receive_type' => $item->receive_type,
+            'breed_type' => $breedName,
+            'source_type' => $item->source_type ?? '-',
+            'source_id' => $item->source_id ?? '-',
 
             // batches section
             'batches' => [
                 [
-                    'batch_no'        => 'A1',
-                    'challan_female'  => $psChickCounts->ps_female_rec_box ?? 0,
-                    'challan_male'    => $psChickCounts->ps_male_rec_box ?? 0,
-                    'challan_total'   => $psChickCounts->ps_total_re_box_qty ?? 0,
+                    'batch_no' => 'A1',
+                    'challan_female' => $psChickCounts->ps_female_rec_box ?? 0,
+                    'challan_male' => $psChickCounts->ps_male_rec_box ?? 0,
+                    'challan_total' => $psChickCounts->ps_total_re_box_qty ?? 0,
 
                     'physical_female' => $physical_female,
-                    'box_f'           => $box_f,
-                    'total_female'    => $physical_female + $box_f,
+                    'box_f' => $box_f,
+                    'total_female' => $physical_female + $box_f,
 
-                    'physical_male'   => $physical_male,
-                    'box_m'           => $box_m,
-                    'total_male'      => $physical_male + $box_m,
+                    'physical_male' => $physical_male,
+                    'box_m' => $box_m,
+                    'total_male' => $physical_male + $box_m,
 
-                    'box_shortage'    => $box_shortage,
-                    'total'           => $item->firm_total_qty,
+                    'box_shortage' => $box_shortage,
+                    'total' => $item->firm_total_qty,
 
                     'deviation_female' => $deviation_female,
-                    'deviation_male'  => $deviation_male,
+                    'deviation_male' => $deviation_male,
                     'deviation_total' => $deviation_female + $deviation_male,
 
                     'remarks' => $item->remarks ?? 'OK',

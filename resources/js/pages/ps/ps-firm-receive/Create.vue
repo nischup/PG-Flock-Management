@@ -108,7 +108,6 @@ const filteredFlocks = computed(() => {
     if (!flockSearchQuery.value) return props.flocks
     return props.flocks.filter(flock => 
         flock.code.toString().includes(flockSearchQuery.value) ||
-        `Flock No: ${flock.code}`.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
         (flock.status == 1 ? 'Active' : 'Inactive').toLowerCase().includes(flockSearchQuery.value.toLowerCase())
     )
 })
@@ -512,7 +511,7 @@ function addNewFlock() {
                 >
                   <span class="flex items-center gap-3">
                     <div class="h-2 w-2 rounded-full bg-emerald-500"></div>
-                    {{ selectedFlock ? `Flock No: ${selectedFlock.code}` : 'Select Flock' }}
+                    {{ selectedFlock ? selectedFlock.code : 'Select Flock' }}
                   </span>
                   <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFlockDropdownList }" />
                 </button>
@@ -535,7 +534,7 @@ function addNewFlock() {
                         <input
                           v-model="flockSearchQuery"
                           type="text"
-                          placeholder="Search flock numbers or status..."
+                          placeholder="Search codes or status..."
                           class="w-full rounded-lg border border-gray-300 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           @click.stop
                         />
@@ -559,7 +558,7 @@ function addNewFlock() {
                       >
                         <div class="h-3 w-3 rounded-full bg-emerald-500 flex-shrink-0"></div>
                         <div class="flex-1">
-                          <div class="font-semibold text-gray-900 dark:text-white">Flock No: {{ flock.code }}</div>
+                          <div class="font-semibold text-gray-900 dark:text-white">{{ flock.code }}</div>
                           <div class="text-sm text-gray-500 dark:text-gray-400">
                             <span 
                               class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"

@@ -33,7 +33,13 @@ const props = defineProps<{
   psReceives: Array<any>
   flocks: Array<any>
   companies: Array<any>
+  breeds: Object
 }>()
+
+function getBreedNames(ids) {
+  if (!ids || ids.length === 0) return ''
+  return ids.map(id => props.breeds[id] || '').filter(Boolean).join(', ')
+}
 
 // Main form state
 const selectedPsId = ref<number | string>(props.psFirmReceive.ps_receive_id || '')
@@ -92,7 +98,8 @@ const filteredPsReceives = computed(() => {
 const filteredFlocks = computed(() => {
     if (!flockSearchQuery.value) return props.flocks
     return props.flocks.filter(flock => 
-        flock.name.toLowerCase().includes(flockSearchQuery.value.toLowerCase())
+        flock.code.toString().includes(flockSearchQuery.value) ||
+        (flock.status == 1 ? 'Active' : 'Inactive').toLowerCase().includes(flockSearchQuery.value.toLowerCase())
     )
 })
 
@@ -234,7 +241,7 @@ const submit = () => {
                 >
                   <span class="flex items-center gap-3">
                     <div class="h-2 w-2 rounded-full bg-blue-500"></div>
-                    {{ selectedPs ? `PI-${selectedPs.pi_no}` : 'Select PS Receive Number' }}
+                    {{ selectedPs ? (selectedPs.shipment_type_id === 1 ? ( "Invoice No - " + (selectedPs.order_no || 'N/A')) : ( "LC NO - " + (selectedPs.lc_no || 'N/A'))) + ' - ' + (selectedPs.shipment_type_id === 1 ? 'Local' : 'Foreign') : 'Select PS Receive Number' }}
                   </span>
                   <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showPsDropdown }" />
                 </button>
@@ -281,9 +288,15 @@ const submit = () => {
                       >
                         <div class="h-3 w-3 rounded-full bg-blue-500 flex-shrink-0"></div>
                         <div class="flex-1">
-                          <div class="font-semibold text-gray-900 dark:text-white">PI-{{ ps.pi_no }}</div>
-                          <div class="text-sm text-gray-500 dark:text-gray-400">Date: {{ ps.pi_date || 'N/A' }}</div>
-                          <div class="text-xs text-gray-400 dark:text-gray-500">Order: {{ ps.order_no || 'N/A' }}</div>
+                          <div class="font-semibold text-gray-900 dark:text-white">
+                            {{ ps.shipment_type_id === 1 ? ( "Invoice No - " + (ps.order_no || 'N/A')) : ( "LC NO - " + (ps.lc_no || 'N/A')) }} - {{ ps.shipment_type_id === 1 ? 'Local' : 'Foreign' }}
+                          </div>
+                          <div class="text-sm text-gray-500 dark:text-gray-400">
+                            <span class="font-medium">PI No:</span> {{ ps.pi_no }}
+                          </div>
+                          <div class="text-xs text-gray-400 dark:text-gray-500">
+                            <span class="font-medium">Total Qty:</span> {{ ps.total_chicks_qty || 0 }} Pcs
+                          </div>
                         </div>
                         <CheckCircle2 v-if="selectedPsId == ps.id" class="h-4 w-4 text-blue-500 flex-shrink-0" />
                       </button>
@@ -323,7 +336,7 @@ const submit = () => {
                 >
                   <span class="flex items-center gap-3">
                     <div class="h-2 w-2 rounded-full bg-emerald-500"></div>
-                    {{ selectedFlock ? selectedFlock.name : 'Select Flock' }}
+                    {{ selectedFlock ? selectedFlock.code : 'Select Flock' }}
                   </span>
                   <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFlockDropdownList }" />
                 </button>
@@ -346,7 +359,7 @@ const submit = () => {
                         <input
                           v-model="flockSearchQuery"
                           type="text"
-                          placeholder="Search flocks..."
+                          placeholder="Search codes or status..."
                           class="w-full rounded-lg border border-gray-300 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           @click.stop
                         />
@@ -370,8 +383,17 @@ const submit = () => {
                       >
                         <div class="h-3 w-3 rounded-full bg-emerald-500 flex-shrink-0"></div>
                         <div class="flex-1">
-                          <div class="font-semibold text-gray-900 dark:text-white">{{ flock.name }}</div>
-                          <div class="text-sm text-gray-500 dark:text-gray-400">ID: {{ flock.id }}</div>
+                          <div class="font-semibold text-gray-900 dark:text-white">{{ flock.code }}</div>
+                          <div class="text-sm text-gray-500 dark:text-gray-400">
+                            <span 
+                              class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                              :class="flock.status == 1 
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
+                            >
+                              {{ flock.status == 1 ? 'Active' : 'Inactive' }}
+                            </span>
+                          </div>
                         </div>
                         <CheckCircle2 v-if="selectedFlockId == flock.id" class="h-4 w-4 text-emerald-500 flex-shrink-0" />
                       </button>
@@ -413,9 +435,20 @@ const submit = () => {
                 Parent Stock Details
               </h3>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">PI No:</span><div class="text-gray-900 dark:text-gray-100">PI-{{ selectedPs.pi_no }}</div></div>
-                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Order No:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.order_no || 'N/A' }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Shipment Type:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.shipment_type_id === 1 ? 'Local' : 'Foreign' }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">PI No:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.pi_no }}</div></div>
                 <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">LC No:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.lc_no || 'N/A' }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Order No:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.order_no || 'N/A' }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Receive Type:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.receive_type || 'box' }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Breed:</span><div class="text-gray-900 dark:text-gray-100">{{ getBreedNames(selectedPs.breed_type) || 'N/A' }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Transport:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.transport_type || 'N/A' }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Challan Box:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.ps_challan_box_qty || 0 }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Receive Box:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.female_box_qty || 0 }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Receive Box:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.male_box_qty || 0 }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Gross Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.gross_weight || 0 }} kg</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Net Weight:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.net_weight || 0 }} kg</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Female Chicks:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.female_chicks || 0 }}</div></div>
+                <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Male Chicks:</span><div class="text-gray-900 dark:text-gray-100">{{ selectedPs.male_chicks || 0 }}</div></div>
                 <div class="space-y-1"><span class="font-semibold text-gray-600 dark:text-gray-300">Total Chicks:</span><div class="font-bold text-blue-900 dark:text-blue-100">{{ selectedPs.total_chicks_qty || 0 }}</div></div>
               </div>
               

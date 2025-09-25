@@ -268,7 +268,7 @@ function submit() {
           </div>
           <div>
             <h2 class="text-lg font-bold text-gray-900 dark:text-white">Farm Receive & Shed Information</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Select firm receive code and destination shed</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Select farm receive code and destination shed</p>
           </div>
         </div>
 
@@ -278,7 +278,7 @@ function submit() {
           <div class="space-y-2">
             <Label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
               <Package class="h-3 w-3" />
-              Firm Receive Code
+              Select Farm Receive
               <span class="text-red-500 ml-1">*</span>
             </Label>
             <div class="firm-receive-dropdown relative">
@@ -292,7 +292,7 @@ function submit() {
                   <span v-if="selectedFirmReceive" class="text-blue-600 dark:text-blue-400 font-semibold">
                     Rcv-{{ String(selectedFirmReceive.id).padStart(6, '0') }}-{{ selectedFirmReceive.company_short_name }}-{{ selectedFirmReceive.project_name }}-{{ selectedFirmReceive.flock_code || props.flocks.find(f => f.id === selectedFirmReceive.flock_id)?.code || selectedFirmReceive.flock_name }}
                   </span>
-                  <span v-else>Select Firm Receive Code</span>
+                  <span v-else>Select Farm Receive</span>
                 </span>
                 <ChevronDown class="h-3 w-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFirmReceiveDropdown }" />
               </button>
@@ -309,13 +309,13 @@ function submit() {
                 >
                   <!-- Header -->
                   <div class="border-b border-gray-200 p-4 dark:border-gray-600">
-                    <h3 class="font-semibold text-gray-900 dark:text-white">Select Firm Receive</h3>
+                    <h3 class="font-semibold text-gray-900 dark:text-white">Select Farm Receive</h3>
                     <div class="relative mt-3">
                       <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                       <input
                         v-model="firmReceiveSearchQuery"
                         type="text"
-                        placeholder="Search firm receives..."
+                        placeholder="Search farm receives..."
                         class="w-full rounded-lg border border-gray-300 bg-gray-50 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                         @click.stop
                       />
@@ -326,8 +326,8 @@ function submit() {
                   <div class="max-h-96 overflow-y-auto">
                     <div v-if="(props.firmReceives?.length || 0) === 0" class="px-6 py-8 text-center">
                       <AlertCircle class="mx-auto h-8 w-8 text-red-500" />
-                      <div class="mt-2 font-medium text-red-600">No Firm Receives Available</div>
-                      <div class="text-sm text-gray-500">Please create firm receives first</div>
+                      <div class="mt-2 font-medium text-red-600">No Farm Receives Available</div>
+                      <div class="text-sm text-gray-500">Please create farm receives first</div>
                     </div>
                     <button
                       v-for="fr in filteredFirmReceives"
@@ -388,7 +388,7 @@ function submit() {
               >
                 <span class="flex items-center gap-2">
                   <div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
-                  {{ selectedFlock ? selectedFlock.code : (selectedFirmReceive ? selectedFirmReceive.flock_name : 'Select Firm Receive First') }}
+                  {{ selectedFlock ? selectedFlock.code : (selectedFirmReceive ? selectedFirmReceive.flock_name : 'Select Farm Receive First') }}
                 </span>
                 <ChevronDown class="h-3 w-3 text-gray-400" />
               </button>
@@ -499,7 +499,7 @@ function submit() {
             <div class="mb-4 flex items-center justify-between">
               <h3 class="flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-100">
                 <CheckCircle2 class="h-5 w-5" />
-                Firm Receive Details
+                Farm Receive Details
               </h3>
               <button
                 type="button"
