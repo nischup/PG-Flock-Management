@@ -281,7 +281,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
             <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                 <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">{{ currentTitle }} Operations</h1>
                 <Link
-                    v-if="can('daily-operation.bording.create')"
+                    v-if="can(`${props.stage}.create`)"
                     :href="`/daily-operation/stage/${props.stage}/create`"
                     class="group relative overflow-hidden rounded-md px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl focus:ring-2 focus:ring-gray-500 focus:outline-none"
                     style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3)"
