@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Production;
 
 use App\Http\Controllers\Controller;
+use App\Models\DailyOperation\DailyEggCollection;
+use App\Models\DailyOperation\DailyOperation;
 use App\Models\Master\EggType;
 use App\Models\Master\Unit;
 use App\Models\Production\EggClassification;
 use App\Models\Production\EggClassificationRejected;
 use App\Models\Production\EggClassificationTechnical;
 use App\Models\Shed\BatchAssign;
-use App\Models\DailyOperation\DailyOperation;
-use App\Models\DailyOperation\DailyEggCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -22,8 +22,7 @@ class EggClassificationController extends Controller
      */
     public function index(Request $request)
     {
-        
-        
+
         $query = EggClassification::with([
             'batchAssign.shed',
             'batchAssign.batch',
@@ -31,7 +30,7 @@ class EggClassificationController extends Controller
             'rejectedEggs.eggType',
         ])->whereHas('batchAssign', function ($q) {
             $q->visibleFor(); // Apply scope from BatchAssign model
-        });;
+        });
 
         // Search filter
         if ($request->filled('search')) {
@@ -128,6 +127,10 @@ class EggClassificationController extends Controller
      */
     public function store(Request $request)
     {
+        // Validate that total eggs is not zero or negative
+        if ($request->total_egg <= 0) {
+            return back()->withErrors(['total_egg' => 'Total eggs must be greater than 0.']);
+        }
 
         $rejected_total = ($request->double_yolk) +
                           ($request->double_yolk_broken) +
@@ -143,15 +146,22 @@ class EggClassificationController extends Controller
                            ($request->dirty_egg);
 
         $commercial_total = ($request->commercial);
-        $hatching_egg = ($request->total_egg) - $rejected_total;
+
+        // Calculate hatching eggs, ensuring it's never negative
+        $hatching_egg = max(0, ($request->total_egg) - $rejected_total);
+
+        // Validate that rejected eggs don't exceed total eggs
+        if ($rejected_total > $request->total_egg) {
+            return back()->withErrors(['rejected_total' => 'Rejected eggs cannot exceed total eggs.']);
+        }
 
         // 1️⃣ Create main classification record
         $classification = EggClassification::create([
             'batchassign_id' => $request->batchassign_id,
-            'classification_date' => date("Y-m-d"),
+            'classification_date' => date('Y-m-d'),
             'total_eggs' => $request->total_egg,
             'hatching_eggs' => $hatching_egg,
-            'commercial_eggs' => $rejected_total,
+            'commercial_eggs' => $commercial_total,
             'rejected_eggs' => $rejected_total,
             'technical_eggs' => $technical_total,
             'created_by' => Auth::id(),
@@ -206,7 +216,7 @@ class EggClassificationController extends Controller
 
         return redirect()->route('egg-classification.index')->with('success', 'Egg Classification.');
 
-        dd($request->all());
+        // dd($request->all());
     }
 
     /**
@@ -214,7 +224,19 @@ class EggClassificationController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $classification = EggClassification::with([
+            'batchAssign.shed',
+            'batchAssign.batch',
+            'batchAssign.flock',
+            'batchAssign.company',
+            'batchAssign.project',
+            'technicalEggs.eggType',
+            'rejectedEggs.eggType',
+        ])->findOrFail($id);
+
+        return Inertia::render('production/egg-classification/Show', [
+            'classification' => $classification,
+        ]);
     }
 
     /**
@@ -222,7 +244,45 @@ class EggClassificationController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $classification = EggClassification::with([
+            'batchAssign.shed',
+            'batchAssign.batch',
+            'batchAssign.flock',
+            'batchAssign.company',
+            'batchAssign.project',
+            'technicalEggs.eggType',
+            'rejectedEggs.eggType',
+        ])->findOrFail($id);
+
+        $batchAssign = BatchAssign::with(['flock', 'shed', 'batch', 'company', 'project'])
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($batch) {
+                return [
+                    'id' => $batch->id,
+                    'flock' => $batch->flock?->name ?? 'N/A',
+                    'batch_no' => $batch->batch_no,
+                    'batch' => $batch->batch?->name ?? 'N/A',
+                    'shed_id' => $batch->shed_id,
+                    'shed' => $batch->shed?->name ?? 'N/A',
+                    'company' => $batch->company?->name ?? 'N/A',
+                    'project' => $batch->project?->name ?? 'N/A',
+                    'label' => sprintf(
+                        '%s, %s, %s, %s, %s, %s',
+                        $batch->company?->short_name ?? 'Unknown',
+                        $batch->project?->name ?? 'Proj',
+                        $batch->flock?->code ?? 'Flock',
+                        $batch->shed?->name ?? 'Shed',
+                        'Level '.$batch->level,
+                        $batch->batch?->name ?? 'Batch'
+                    ),
+                ];
+            });
+
+        return Inertia::render('production/egg-classification/Edit', [
+            'classification' => $classification,
+            'batchAssign' => $batchAssign,
+        ]);
     }
 
     /**
@@ -230,7 +290,102 @@ class EggClassificationController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $classification = EggClassification::findOrFail($id);
+
+        // Validate that total eggs is not zero or negative
+        if ($request->total_egg <= 0) {
+            return back()->withErrors(['total_egg' => 'Total eggs must be greater than 0.']);
+        }
+
+        $rejected_total = ($request->double_yolk) +
+                          ($request->double_yolk_broken) +
+                          ($request->commercial) +
+                          ($request->commercial_broken) +
+                          ($request->liquid) +
+                          ($request->damage);
+
+        $technical_total = ($request->floor_egg) +
+                           ($request->thin_egg) +
+                           ($request->misshape_egg) +
+                           ($request->white_egg) +
+                           ($request->dirty_egg);
+
+        $commercial_total = ($request->commercial);
+
+        // Calculate hatching eggs, ensuring it's never negative
+        $hatching_egg = max(0, ($request->total_egg) - $rejected_total);
+
+        // Validate that rejected eggs don't exceed total eggs
+        if ($rejected_total > $request->total_egg) {
+            return back()->withErrors(['rejected_total' => 'Rejected eggs cannot exceed total eggs.']);
+        }
+
+        // Update main classification record
+        $classification->update([
+            'batchassign_id' => $request->batchassign_id,
+            'classification_date' => $request->classification_date ?? date('Y-m-d'),
+            'total_eggs' => $request->total_egg,
+            'hatching_eggs' => $hatching_egg,
+            'commercial_eggs' => $commercial_total,
+            'rejected_eggs' => $rejected_total,
+            'technical_eggs' => $technical_total,
+            'updated_by' => Auth::id(),
+        ]);
+
+        // Delete existing rejected eggs
+        $classification->rejectedEggs()->delete();
+
+        // Save rejected eggs
+        $rejectedEggs = [
+            'double_yolk' => $request->double_yolk,
+            'double_yolk_broken' => $request->double_yolk_broken,
+            'commercial' => $request->commercial,
+            'commercial_broken' => $request->commercial_broken,
+            'liquid' => $request->liquid,
+            'damage' => $request->damage,
+        ];
+
+        foreach ($rejectedEggs as $key => $qty) {
+            if ($qty > 0 || $request->input($key.'_note')) {
+                $eggType = EggType::where('name', $key)->where('category', 1)->first();
+                if ($eggType) {
+                    EggClassificationRejected::create([
+                        'classification_id' => $classification->id,
+                        'egg_type_id' => $eggType->id,
+                        'quantity' => $qty ?? 0,
+                        'note' => $request->input($key.'_note'),
+                    ]);
+                }
+            }
+        }
+
+        // Delete existing technical eggs
+        $classification->technicalEggs()->delete();
+
+        // Save technical eggs
+        $technicalEggs = [
+            'floor_egg' => $request->floor_egg,
+            'thin_egg' => $request->thin_egg,
+            'misshape_egg' => $request->misshape_egg,
+            'white_egg' => $request->white_egg,
+            'dirty_egg' => $request->dirty_egg,
+        ];
+
+        foreach ($technicalEggs as $key => $qty) {
+            if ($qty > 0 || $request->input($key.'_note')) {
+                $eggType = EggType::where('name', $key)->where('category', 2)->first();
+                if ($eggType) {
+                    EggClassificationTechnical::create([
+                        'classification_id' => $classification->id,
+                        'egg_type_id' => $eggType->id,
+                        'quantity' => $qty ?? 0,
+                        'note' => $request->input($key.'_note'),
+                    ]);
+                }
+            }
+        }
+
+        return redirect()->route('egg-classification.index')->with('success', 'Egg Classification updated successfully.');
     }
 
     /**
@@ -238,14 +393,22 @@ class EggClassificationController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $classification = EggClassification::findOrFail($id);
+
+        // Delete related records first
+        $classification->rejectedEggs()->delete();
+        $classification->technicalEggs()->delete();
+
+        // Delete the main record
+        $classification->delete();
+
+        return redirect()->route('egg-classification.index')->with('success', 'Egg Classification deleted successfully.');
     }
 
     public function getTotalEggs($batchassign_id, $operation_date)
     {
-        
-        
-        if (!is_numeric($batchassign_id) || !strtotime($operation_date)) {
+
+        if (! is_numeric($batchassign_id) || ! strtotime($operation_date)) {
             return response()->json(['total_egg' => 0]);
         }
 
@@ -254,7 +417,7 @@ class EggClassificationController extends Controller
             ->whereDate('operation_date', $operation_date)
             ->first();
 
-        if (!$dailyOperation) {
+        if (! $dailyOperation) {
             return response()->json(['total_egg' => 0]);
         }
 
@@ -273,7 +436,7 @@ class EggClassificationController extends Controller
         $batch = BatchAssign::with(['flock', 'shed', 'batch', 'shedReceive'])
             ->find($batchId);
 
-        if (!$batch) {
+        if (! $batch) {
             return response()->json(['error' => 'Batch not found'], 404);
         }
 
@@ -291,8 +454,8 @@ class EggClassificationController extends Controller
         $latestOperation = DailyOperation::where('batchassign_id', $batchId)
             ->with([
                 'mortalities', 'destroys', 'sexingErrors', 'cullings',
-                'feeds', 'waters', 'lights', 'weights', 'temperatures', 
-                'humidities', 'eggCollections', 'medicines', 'vaccines'
+                'feeds', 'waters', 'lights', 'weights', 'temperatures',
+                'humidities', 'eggCollections', 'medicines', 'vaccines',
             ])
             ->latest('operation_date')
             ->first();
@@ -344,7 +507,7 @@ class EggClassificationController extends Controller
             if ($feed) {
                 $unit = Unit::find($feed->unit_id);
                 $unitName = $unit ? $unit->name : 'Kg';
-                $tabData['feed_consumption'] = $feed->quantity . ' ' . $unitName;
+                $tabData['feed_consumption'] = $feed->quantity.' '.$unitName;
             }
 
             // Get water data
@@ -352,19 +515,19 @@ class EggClassificationController extends Controller
             if ($water) {
                 $unit = Unit::find($water->unit_id);
                 $unitName = $unit ? $unit->name : 'L';
-                $tabData['water_consumption'] = $water->quantity . ' ' . $unitName;
+                $tabData['water_consumption'] = $water->quantity.' '.$unitName;
             }
 
             // Get light data
             $light = $latestOperation->lights()->first();
             if ($light) {
-                $tabData['light_hour'] = $light->hour . ' H';
+                $tabData['light_hour'] = $light->hour.' H';
             }
 
             // Get weight data
             $weight = $latestOperation->weights()->first();
             if ($weight) {
-                $tabData['weight'] = $weight->weight . ' gm';
+                $tabData['weight'] = $weight->weight.' gm';
             }
 
             // Get temperature data
@@ -382,8 +545,8 @@ class EggClassificationController extends Controller
             // Get egg collection data
             $eggCollection = $latestOperation->eggCollections()->first();
             if ($eggCollection) {
-                $tabData['egg_collection'] = $eggCollection->total_egg;
-                $tabData['total_eggs'] = $eggCollection->total_egg;
+                $tabData['egg_collection'] = $eggCollection->quantity;
+                $tabData['total_eggs'] = $eggCollection->quantity;
             }
 
             // Get medicine data
@@ -409,7 +572,7 @@ class EggClassificationController extends Controller
                 'shed_name' => $batch->shed?->name ?? 'N/A',
                 'batch_name' => $batch->batch?->name ?? 'N/A',
             ],
-            'statistics' => $tabData
+            'statistics' => $tabData,
         ]);
     }
 }

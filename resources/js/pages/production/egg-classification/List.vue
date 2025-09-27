@@ -122,7 +122,7 @@ function clearFilters() {
 
 function deleteClassification(id: number) {
   confirmDelete({
-    url: `/egg-classification/${id}`,
+    url: `/production/egg-classification/${id}`,
     text: 'This will permanently delete the classification record.',
     successMessage: 'Classification record has been deleted.',
   });
@@ -465,28 +465,36 @@ function getStatusColor(item: any) {
               <!-- Actions -->
               <td class="px-6 py-4">
                 <div class="flex items-center space-x-2">
+                  <!-- View Details Button -->
                   <Link
-                    :href="`/egg-classification/${item.id}`"
-                    class="p-1 text-gray-400 hover:text-blue-600 transition-colors duration-200"
+                    :href="`/production/egg-classification/${item.id}`"
+                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors duration-200"
                     title="View Details"
                   >
-                    <Eye class="w-4 h-4" />
+                    <Eye class="w-3 h-3 mr-1" />
+                    View
                   </Link>
+                  
+                  <!-- Edit Button -->
                   <Link
-                    v-if="can('eggclassification.edit')"
-                    :href="`/egg-classification/${item.id}/edit`"
-                    class="p-1 text-gray-400 hover:text-green-600 transition-colors duration-200"
-                    title="Edit"
+                    v-if="can('egg-classification.edit')"
+                    :href="`/production/egg-classification/${item.id}/edit`"
+                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-md transition-colors duration-200"
+                    title="Edit Classification"
                   >
-                    <Edit class="w-4 h-4" />
+                    <Edit class="w-3 h-3 mr-1" />
+                    Edit
                   </Link>
+                  
+                  <!-- Delete Button -->
                   <button
-                    v-if="can('eggclassification.delete')"
+                    v-if="can('egg-classification.delete')"
                     @click="deleteClassification(item.id)"
-                    class="p-1 text-gray-400 hover:text-red-600 transition-colors duration-200"
-                    title="Delete"
+                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors duration-200"
+                    title="Delete Classification"
                   >
-                    <Trash2 class="w-4 h-4" />
+                    <Trash2 class="w-3 h-3 mr-1" />
+                    Delete
                   </button>
                 </div>
               </td>
@@ -494,7 +502,7 @@ function getStatusColor(item: any) {
 
             <!-- Empty State -->
             <tr v-if="(props.classifications?.data || []).length === 0">
-              <td colspan="8" class="px-6 py-12 text-center">
+              <td colspan="6" class="px-6 py-12 text-center">
                 <div class="flex flex-col items-center">
                   <AlertCircle class="w-12 h-12 text-gray-400 mb-4" />
                   <h3 class="text-lg font-medium text-gray-900 mb-2">No classification records found</h3>
@@ -542,16 +550,6 @@ function getStatusColor(item: any) {
           </div>
         </div>
       </div>
-       
-      </div>
-
-      <!-- Pagination -->
-      <Pagination :meta="props.classifications.meta" :page="page" class="mt-6" />
-        
-
-
-      <!-- Pagination -->
-      <Pagination :meta="props.classifications.meta" :page="page" class="mt-6" />
-  
+    </div>
   </AppLayout>
 </template>
