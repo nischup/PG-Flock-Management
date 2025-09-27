@@ -8,7 +8,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
-import { Calendar, Eye, Pencil, Trash2 } from 'lucide-vue-next';
+import { Calendar, Eye, Pencil } from 'lucide-vue-next';
+import Button from '@/components/ui/button/Button.vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 // ✅ Props
@@ -64,7 +65,6 @@ const stageTitles: Record<string, string> = {
 const currentTitle = stageTitles[props.stage] ?? props.stage;
 
 useListFilters({ routeName: `/daily-operation/stage/${props.stage}`, filters: props.filters });
-const { confirmDelete } = useNotifier();
 const { can } = usePermissions();
 
 // Date picker states
@@ -232,14 +232,6 @@ const clearShedFilter = () => {
     showShedDropdown.value = false;
 };
 
-// Delete operation
-const deleteOperation = (id: number) => {
-    confirmDelete({
-        url: `/daily-operation/${props.stage}/${id}`,
-        text: 'This will permanently delete the daily operation.',
-        successMessage: 'Daily operation deleted.',
-    });
-};
 
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
@@ -252,6 +244,7 @@ const openDropdownId = ref<number | null>(null);
 const toggleDropdown = (id: number) => {
     openDropdownId.value = openDropdownId.value === id ? null : id;
 };
+const closeDropdown = () => (openDropdownId.value = null);
 
 // ✅ Close on outside click
 const handleClick = (e: MouseEvent) => {
@@ -813,41 +806,66 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
                             <td class="px-4 py-3 font-medium whitespace-nowrap text-gray-900 dark:text-white">
                                 {{ dayjs(item.operation_date).format('MMM DD, YYYY') }}
                             </td>
-                            <td class="px-4 py-3 text-center text-sm font-medium whitespace-nowrap">
-                                <div class="dropdown-container relative">
-                                    <button @click="toggleDropdown(item.id)" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                        </svg>
-                                    </button>
+                            <td class="relative px-4 py-3">
+                                <Button
+                                    size="sm"
+                                    class="action-btn bg-gray-500 text-white hover:bg-gray-600"
+                                    @click.stop="toggleDropdown(item.id)"
+                                >
+                                    Actions ▼
+                                </Button>
+
+                                <!-- Action Popup Overlay -->
+                                <div
+                                    v-if="openDropdownId === item.id"
+                                    class="fixed inset-0 z-50 flex items-center justify-center"
+                                    @click.stop="closeDropdown"
+                                >
+                                    <!-- Backdrop -->
+                                    <div class="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+
+                                    <!-- Popup Content -->
                                     <div
-                                        v-if="openDropdownId === item.id"
-                                        class="absolute right-0 z-10 mt-2 w-48 rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                                        class="relative z-10 w-48 rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                                        @click.stop
                                     >
-                                        <div class="py-1">
-                                            <Link
-                                                v-if="can(`daily-operation.${props.stage}.edit`)"
-                                                :href="`/daily-operation/stage/${props.stage}/${item.id}/edit`"
-                                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                                            >
-                                                <Pencil class="mr-2 h-4 w-4" />
-                                                Edit
-                                            </Link>
+                                        <!-- Header -->
+                                        <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+                                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Actions</h3>
+                                        </div>
+
+                                        <!-- Actions List -->
+                                        <div class="py-2">
+                                            <!-- View -->
                                             <Link
                                                 :href="`/daily-operation/stage/${props.stage}/${item.id}`"
-                                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                                                class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                                             >
-                                                <Eye class="mr-2 h-4 w-4" />
-                                                View Details
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                                    ></path>
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                                    ></path>
+                                                </svg>
+                                                <span>View</span>
                                             </Link>
-                                            <button
-                                                v-if="can(`daily-operation.${props.stage}.delete`)"
-                                                @click="deleteOperation(item.id)"
-                                                class="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+
+                                            <!-- Edit -->
+                                            <Link
+                                                :href="`/daily-operation/stage/${props.stage}/${item.id}/edit`"
+                                                class="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                             >
-                                                <Trash2 class="mr-2 h-4 w-4" />
-                                                Delete
-                                            </button>
+                                                <Pencil class="h-4 w-4" />
+                                                <span>Edit</span>
+                                            </Link>
                                         </div>
                                     </div>
                                 </div>

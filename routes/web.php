@@ -92,11 +92,22 @@ Route::prefix('daily-operation')->group(function () {
         ->where('stage', 'brooding|growing|laying|closing')
         ->name('daily-operation.stage.create');
 
+    Route::get('/stage/{stage}/{id}/edit', [DailyOperationController::class, 'edit'])
+        ->where('stage', 'brooding|growing|laying|closing')
+        ->name('daily-operation.stage.edit');
+
+    Route::get('/stage/{stage}/{id}', [DailyOperationController::class, 'show'])
+        ->where('stage', 'brooding|growing|laying|closing')
+        ->name('daily-operation.stage.show');
+
     Route::get('/batch/{batchId}/data', [DailyOperationController::class, 'getBatchData'])
         ->name('daily-operation.batch.data');
 
     Route::post('/store', [DailyOperationController::class, 'store'])
         ->name('daily-operation.store');
+
+    Route::put('/{id}', [DailyOperationController::class, 'update'])
+        ->name('daily-operation.update');
 });
 
 Route::get('/mortality/create', [DailyOperationController::class, 'mortality']);

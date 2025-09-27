@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -88,14 +87,19 @@ class PermissionSeeder extends Seeder
             'laying.edit',
             'laying.delete',
 
-            //Daily operation
+            // Daily operation
             'daily-operation.brooding.create',
             'daily-operation.brooding.edit',
             'daily-operation.brooding.delete',
             'daily-operation.growing.create',
             'daily-operation.growing.edit',
             'daily-operation.growing.delete',
-
+            'daily-operation.laying.create',
+            'daily-operation.laying.edit',
+            'daily-operation.laying.delete',
+            'daily-operation.closing.create',
+            'daily-operation.closing.edit',
+            'daily-operation.closing.delete',
 
             // Egg
             'egg-classification.view',

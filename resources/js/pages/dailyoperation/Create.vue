@@ -442,7 +442,7 @@ const noteFieldByTab: Record<string, keyof typeof form> = {
   light_hour: 'light_note',
   destroy: 'destroy_note',
   cull: 'culling_note',
-  seerror_error: 'serror_note',
+  sexing_error: 'serror_note',
   weight: 'weight_note',
   temperature: 'temperature_note',
   humidity: 'humidity_note',
