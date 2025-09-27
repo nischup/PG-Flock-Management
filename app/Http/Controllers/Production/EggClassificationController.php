@@ -93,13 +93,28 @@ class EggClassificationController extends Controller
      */
     public function create()
     {
-        $batchAssign = BatchAssign::with(['flock', 'shed', 'batch'])
+        $batchAssign = BatchAssign::with(['flock', 'shed', 'batch', 'company', 'project'])
             ->orderBy('id', 'desc')
             ->get()
             ->map(function ($batch) {
                 return [
                     'id' => $batch->id,
-                    'label' => "{$batch->transaction_no}-{$batch->shed?->name}-{$batch->batch?->name}",
+                    'flock' => $batch->flock?->name ?? 'N/A',
+                    'batch_no' => $batch->batch_no,
+                    'batch' => $batch->batch?->name ?? 'N/A',
+                    'shed_id' => $batch->shed_id,
+                    'shed' => $batch->shed?->name ?? 'N/A',
+                    'company' => $batch->company?->name ?? 'N/A',
+                    'project' => $batch->project?->name ?? 'N/A',
+                    'label' => sprintf(
+                        '%s, %s, %s, %s, %s, %s',
+                        $batch->company?->short_name ?? 'Unknown',
+                        $batch->project?->name ?? 'Proj',
+                        $batch->flock?->code ?? 'Flock',
+                        $batch->shed?->name ?? 'Shed',
+                        'Level '.$batch->level,
+                        $batch->batch?->name ?? 'Batch'
+                    ),
                 ];
             });
 

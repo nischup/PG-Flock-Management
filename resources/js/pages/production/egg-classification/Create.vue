@@ -73,11 +73,10 @@ const { batchOptions } = useDropdownOptions()
 
 const batchWithLabel = computed(() =>
   props.batchAssign?.map(batch => {
-    const batchOption = batchOptions.find(b => b.value === batch.batch_no)
     return {
       ...batch,
-      batch_label: batchOption?.label || '',
-      display_label: `${batch.label}-${batchOption?.label || ''}`,
+      batch_label: batch.label, // Use the formatted label from backend
+      display_label: batch.label, // Use the formatted label from backend
     }
   }) || []
 )
@@ -568,7 +567,7 @@ function goToTab(index: number) {
                         <div class="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0"></div>
                         <div class="flex-1">
                           <div class="font-semibold text-gray-900 text-sm">{{ flock.label }}</div>
-                          <div class="text-xs text-gray-500">Batch: {{ flock.batch_label }}</div>
+                          <div class="text-xs text-gray-500">{{ flock.company }} • {{ flock.project }}</div>
                         </div>
                         <CheckCircle2 v-if="form.batchassign_id == flock.id" class="h-3 w-3 text-blue-500 flex-shrink-0" />
                       </button>

@@ -217,11 +217,12 @@ class DailyOperationController extends Controller
                     'company' => $batch->company?->name ?? 'N/A',
                     'project' => $batch->project?->name ?? 'N/A',
                     'label' => sprintf(
-                        '%s-%s-%s-%s-%s',
-                        $batch->company?->short_name ?? substr($batch->company?->name ?? 'Unknown', 0, 8),
+                        '%s, %s, %s, %s, %s, %s',
+                        $batch->company?->short_name ?? 'Unknown',
                         $batch->project?->name ?? 'Proj',
-                        $batch->flock?->name ?? 'Flock',
+                        $batch->flock?->code ?? 'Flock',
                         $batch->shed?->name ?? 'Shed',
+                        'Level '.$batch->level,
                         $batch->batch?->name ?? 'Batch'
                     ),
                     // Statistics data
