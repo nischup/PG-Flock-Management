@@ -419,7 +419,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <h1 class="text-xl font-semibold text-gray-800 dark:text-white">Batch Assignment Information</h1>
                 <div class="flex items-center gap-2">
                     <Link
-                        v-if="can('batch-assign.edit')"
+                        v-if="can('batch-assign.create')"
                         href="/batch-assign/create"
                         class="group relative overflow-hidden rounded-md px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl focus:ring-2 focus:ring-gray-500 focus:outline-none"
                         style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3)"
