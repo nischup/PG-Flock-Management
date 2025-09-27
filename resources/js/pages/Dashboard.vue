@@ -1099,8 +1099,11 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assign Birds</th>
+                  
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
+                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Rejections</th>
+                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Birds</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batches</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Companies</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -1115,20 +1118,31 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.total_assign_bird.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">
+                      M: {{ flock.assign_male_birds.toLocaleString() }} | F: {{ flock.assign_female_birds.toLocaleString() }}
+                    </div>
+                  </td>
+                  
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.total_mortality.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ flock.mortality_percentage }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ flock.others_rejection.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ flock.rejection_precentage }}%</div>
+                  </td>
+
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ flock.total_birds.toLocaleString() }}</div>
                     <div class="text-xs text-gray-500">
                       M: {{ flock.male_birds.toLocaleString() }} | F: {{ flock.female_birds.toLocaleString() }}
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ flock.total_mortality.toLocaleString() }}</div>
-                    <div class="text-xs text-gray-500">{{ flock.mortality_percentage }}%</div>
+                    <div class="text-sm text-gray-900">{{ flock.batch_assignments.map(d => d.batch_name).join(', ') }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ flock.batch_assignments.length }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ flock.companies.length }}</div>
                     <div class="text-xs text-gray-500">
                       {{ flock.companies.map(c => c.name).join(', ') }}
                     </div>
@@ -1993,42 +2007,64 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
       <div v-else-if="modalData?.maleBirdsData" class="space-y-6">
         <!-- Summary Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="bg-blue-50 p-4 rounded-lg">
-            <div class="flex items-center space-x-2 mb-2">
-              <div class="text-blue-600">🐣</div>
-              <div class="text-sm text-blue-600 font-medium">Total Male Birds</div>
-            </div>
-            <div class="text-2xl font-bold text-blue-800">{{ modalData.maleBirdsData.summary.total_male_birds.toLocaleString() }}</div>
-          </div>
+
           <div class="bg-gray-50 p-4 rounded-lg">
             <div class="flex items-center space-x-2 mb-2">
               <div class="text-gray-600">🐣</div>
-              <div class="text-sm text-gray-600 font-medium">Total Birds</div>
+              <div class="text-sm text-gray-600 font-medium">Assign Total Birds</div>
             </div>
             <div class="text-2xl font-bold text-gray-800">{{ modalData.maleBirdsData.summary.total_birds.toLocaleString() }}</div>
           </div>
-          <div class="bg-pink-50 p-4 rounded-lg">
+          
+          <div class="bg-gray-50 p-4 rounded-lg">
             <div class="flex items-center space-x-2 mb-2">
-              <div class="text-pink-600">🐣</div>
-              <div class="text-sm text-pink-600 font-medium">Female Birds</div>
+              <div class="text-gray-600">🐣</div>
+              <div class="text-sm text-gray-600 font-medium">Assign Male Birds</div>
             </div>
-            <div class="text-2xl font-bold text-pink-800">{{ modalData.maleBirdsData.summary.total_female_birds.toLocaleString() }}</div>
+            <div class="text-2xl font-bold text-gray-800">{{ modalData.maleBirdsData.summary.total_male_birds.toLocaleString() }}</div>
           </div>
+          
+          
           <div class="bg-green-50 p-4 rounded-lg">
             <div class="flex items-center space-x-2 mb-2">
               <div class="text-green-600">📊</div>
-              <div class="text-sm text-green-600 font-medium">Male Percentage</div>
+              <div class="text-sm text-green-600 font-medium">Assign Male Percentage</div>
             </div>
-            <div class="text-2xl font-bold text-green-800">{{ modalData.maleBirdsData.summary.male_percentage }}%</div>
+            <div class="text-2xl font-bold text-green-800">{{ modalData.maleBirdsData.summary.assign_male_percentage }}%</div>
+          </div>
+          
+          
+          <div class="bg-pink-50 p-4 rounded-lg">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-pink-600">🐣</div>
+              <div class="text-sm text-pink-600 font-medium">Current Total Birds</div>
+            </div>
+            <div class="text-2xl font-bold text-pink-800">{{ modalData.maleBirdsData.summary.current_total_birds.toLocaleString() }}</div>
+          </div>
+
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-blue-600">🐣</div>
+              <div class="text-sm text-blue-600 font-medium">Current Male Birds</div>
+            </div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.maleBirdsData.summary.current_male_birds.toLocaleString() }}</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-blue-600">🐣</div>
+              <div class="text-sm text-blue-600 font-medium">Current Male Percentage</div>
+            </div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.maleBirdsData.summary.current_male_percentage.toLocaleString() }} %</div>
           </div>
         </div>
+        
 
         <!-- Additional Stats -->
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div class="bg-red-50 p-4 rounded-lg">
             <div class="text-sm text-red-600 font-medium">Male Mortality</div>
-            <div class="text-xl font-bold text-red-800">{{ modalData.maleBirdsData.summary.male_mortality.toLocaleString() }}</div>
-            <div class="text-xs text-red-600">{{ modalData.maleBirdsData.summary.male_mortality_rate }}% mortality rate</div>
+            <div class="text-xl font-bold text-red-800">{{ modalData.maleBirdsData.summary.total_male_mortality?.toLocaleString() }}</div>
+            <div class="text-xs text-red-600">{{ modalData.maleBirdsData.summary.male_mortality_percentage }}% mortality rate</div>
           </div>
           <div class="bg-purple-50 p-4 rounded-lg">
             <div class="text-sm text-purple-600 font-medium">Active Flocks</div>
@@ -2104,10 +2140,10 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                     <div class="text-sm text-gray-900">{{ flock.total_birds.toLocaleString() }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ flock.male_percentage }}%</div>
+                    <div class="text-sm font-medium text-gray-900">{{ flock.assign_male_percentage }}%</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ flock.male_mortality.toLocaleString() }}</div>
+                    <div class="text-sm text-gray-900">{{ flock.male_mortality?.toLocaleString() }}</div>
                     <div class="text-xs text-red-600">{{ flock.male_mortality_rate }}% rate</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
