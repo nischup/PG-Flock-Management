@@ -281,7 +281,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
             <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                 <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">{{ currentTitle }} Operations</h1>
                 <Link
-                    v-if="can(`${props.stage}.create`)"
+                    v-if="can(`daily-operation.${props.stage}.create`)"
                     :href="`/daily-operation/stage/${props.stage}/create`"
                     class="group relative overflow-hidden rounded-md px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl focus:ring-2 focus:ring-gray-500 focus:outline-none"
                     style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3)"
@@ -826,7 +826,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
                                     >
                                         <div class="py-1">
                                             <Link
-                                                v-if="can('daily-operation.bording.edit')"
+                                                v-if="can(`daily-operation.${props.stage}.edit`)"
                                                 :href="`/daily-operation/stage/${props.stage}/${item.id}/edit`"
                                                 class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                                             >
@@ -841,7 +841,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
                                                 View Details
                                             </Link>
                                             <button
-                                                v-if="can('daily-operation.bording.delete')"
+                                                v-if="can(`daily-operation.${props.stage}.delete`)"
                                                 @click="deleteOperation(item.id)"
                                                 class="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                                             >
