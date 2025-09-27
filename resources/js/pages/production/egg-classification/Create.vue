@@ -73,11 +73,10 @@ const { batchOptions } = useDropdownOptions()
 
 const batchWithLabel = computed(() =>
   props.batchAssign?.map(batch => {
-    const batchOption = batchOptions.find(b => b.value === batch.batch_no)
     return {
       ...batch,
-      batch_label: batchOption?.label || '',
-      display_label: `${batch.label}-${batchOption?.label || ''}`,
+      batch_label: batch.label, // Use the formatted label from backend
+      display_label: batch.label, // Use the formatted label from backend
     }
   }) || []
 )
@@ -219,11 +218,10 @@ watch(() => form.batchassign_id, async (id) => {
   }
 })
 
+// Watch for changes in both batch and date
 watch(
-  () => form.operation_date,
-  async (operationDate) => {
-    const batchId = form.batchassign_id;
-
+  [() => form.batchassign_id, () => form.operation_date],
+  async ([batchId, operationDate]) => {
     if (!batchId || !operationDate) {
       form.total_egg = 0;
       return;
@@ -232,6 +230,8 @@ watch(
     try {
       // Format as YYYY-MM-DD to match DB
       const formattedDate = dayjs(operationDate).format('YYYY-MM-DD');
+      
+      console.log('Fetching total eggs for batch:', batchId, 'date:', formattedDate);
 
       const response = await fetch(
         `/production/egg-classification/total-eggs/${batchId}/${formattedDate}`,
@@ -239,6 +239,8 @@ watch(
       );
 
       const data = await response.json();
+      
+      console.log('Total eggs response:', data);
 
       form.total_egg = data.total_egg ?? 0;
     } catch (error) {
@@ -259,10 +261,28 @@ const tech_total = computed(() => {
   return techTabs.reduce((sum, key) => sum + ((form as any)[key] || 0), 0)
 })
 
-const hatching_egg = computed(() => form.total_egg - rejected_total.value)
+const hatching_egg = computed(() => Math.max(0, form.total_egg - rejected_total.value))
+
+// Validation for form submission
+const isFormValid = computed(() => {
+  if (!form.batchassign_id) return false
+  if (form.total_egg <= 0) return false
+  if (rejected_total.value > form.total_egg) return false
+  return true
+})
+
+const validationMessage = computed(() => {
+  if (!form.batchassign_id) return "Please select a Batch"
+  if (form.total_egg <= 0) return "Total eggs must be greater than 0"
+  if (rejected_total.value > form.total_egg) return "Rejected eggs cannot exceed total eggs"
+  return null
+})
 
 function submit() {
-  if (!form.batchassign_id) return showInfo("Please select a Batch")
+  if (!isFormValid.value) {
+    return showInfo(validationMessage.value || "Please fix the form errors")
+  }
+  
   form.post(route('egg-classification.store'), {
     onSuccess: () => showInfo("Egg classification saved successfully")
   })
@@ -568,7 +588,7 @@ function goToTab(index: number) {
                         <div class="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0"></div>
                         <div class="flex-1">
                           <div class="font-semibold text-gray-900 text-sm">{{ flock.label }}</div>
-                          <div class="text-xs text-gray-500">Batch: {{ flock.batch_label }}</div>
+                          <div class="text-xs text-gray-500">{{ flock.company }} • {{ flock.project }}</div>
                         </div>
                         <CheckCircle2 v-if="form.batchassign_id == flock.id" class="h-3 w-3 text-blue-500 flex-shrink-0" />
                       </button>
@@ -703,6 +723,23 @@ function goToTab(index: number) {
                 <p class="text-xs font-bold text-gray-900">{{ hatching_egg.toLocaleString() }}</p>
               </div>
           </div>
+          </div>
+
+          <!-- Validation Warnings -->
+          <div v-if="!isFormValid" class="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+            <div class="flex items-center space-x-2">
+              <AlertTriangle class="w-5 h-5 text-red-500" />
+              <h3 class="text-sm font-semibold text-red-800">Validation Error</h3>
+            </div>
+            <p class="text-sm text-red-700 mt-2">{{ validationMessage }}</p>
+            <div v-if="rejected_total > form.total_egg" class="mt-3 p-3 bg-red-100 rounded-lg">
+              <p class="text-sm text-red-800">
+                <strong>Issue:</strong> Rejected eggs ({{ rejected_total.toLocaleString() }}) exceed total eggs ({{ form.total_egg.toLocaleString() }})
+              </p>
+              <p class="text-xs text-red-600 mt-1">
+                Please reduce the rejected egg quantities or increase the total egg count.
+              </p>
+            </div>
           </div>
 
           <!-- Additional Statistics from Daily Operations -->
@@ -1045,12 +1082,17 @@ function goToTab(index: number) {
                 </Button>
         <Button
                   v-else 
-  type="submit"
-                  class="flex items-center space-x-2 px-6 py-3 h-10 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                  type="button"
+                  @click="submit"
+                  :disabled="!isFormValid"
+                  class="flex items-center space-x-2 px-6 py-3 h-10 rounded-lg shadow-lg transition-all duration-200"
+                  :class="isFormValid 
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white hover:shadow-xl' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
                 >
                   <Save class="w-4 h-4" />
                   <span>Save Classification</span>
-</Button>
+                </Button>
               </div>
             </div>
     </div>

@@ -88,6 +88,15 @@ class PermissionSeeder extends Seeder
             'laying.edit',
             'laying.delete',
 
+            //Daily operation
+            'daily-operation.brooding.create',
+            'daily-operation.brooding.edit',
+            'daily-operation.brooding.delete',
+            'daily-operation.growing.create',
+            'daily-operation.growing.edit',
+            'daily-operation.growing.delete',
+
+
             // Egg
             'egg-classification.view',
             'egg-classification.create',
@@ -203,7 +212,7 @@ class PermissionSeeder extends Seeder
         $userExists = User::role('superadmin')->exists();
 
         if (! $userExists) {
-            
+
             // Create default SuperAdmin user if none exists
             $user = User::create([
                 'name' => 'PG Admin',
@@ -214,8 +223,6 @@ class PermissionSeeder extends Seeder
             ]);
 
             $user->assignRole($superAdminRole);
-            
         }
-
     }
 }

@@ -52,52 +52,57 @@ const props = defineProps<{
 
 const { showInfo } = useNotifier(); // auto-shows flash messages
 
-// Tabs (keys must match below validations)
-const tabs = [
-  { key: 'daily_mortality', label: 'Mortality' },
-  { key: 'destroy', label: 'Destroy' }, 
-  { key: 'sexing_error', label: 'Sexing Error' },
-  { key: 'cull', label: 'Cull' }, 
-  { key: 'feed_consumption', label: 'Feed' },
-  { key: 'water_consumption', label: 'Water' },
-  { key: 'light_hour', label: 'Light' },  
-  { key: 'medicine', label: 'Medicine' },     // optional in this form model
-  { key: 'vaccine', label: 'Vaccine' }, // uses `cull` (number)
-   // uses `sexing_error` (number)
-  { key: 'weight', label: 'Weight' },         // uses `weight` (number)
-  { key: 'temperature', label: 'Temperature' }, // uses `temperature` (number)
-  { key: 'feedingprogram', label: 'Feeding Program' }, // uses `temperature` (number)
-  { key: 'feedFinishingtime', label: 'Finishing Time' }, // uses `temperature` (number)
-  { key: 'humidity', label: 'Humidity' },     // uses `humidity` (number)
-  { key: 'egg_collection', label: 'Egg collection' },      // optional in this form model
-]
+// Tabs (keys must match below validations) - filter out egg collection for brooding
+const tabs = computed(() => {
+  const allTabs = [
+    { key: 'daily_mortality', label: 'Mortality' },
+    { key: 'destroy', label: 'Destroy' }, 
+    { key: 'sexing_error', label: 'Sexing Error' },
+    { key: 'cull', label: 'Cull' }, 
+    { key: 'feed_consumption', label: 'Feed' },
+    { key: 'water_consumption', label: 'Water' },
+    { key: 'light_hour', label: 'Light' },  
+    { key: 'medicine', label: 'Medicine' },     // optional in this form model
+    { key: 'vaccine', label: 'Vaccine' }, // uses `cull` (number)
+     // uses `sexing_error` (number)
+    { key: 'weight', label: 'Weight' },         // uses `weight` (number)
+    { key: 'temperature', label: 'Temperature' }, // uses `temperature` (number)
+    { key: 'feedingprogram', label: 'Feeding Program' }, // uses `temperature` (number)
+    { key: 'feedFinishingtime', label: 'Finishing Time' }, // uses `temperature` (number)
+    { key: 'humidity', label: 'Humidity' },     // uses `humidity` (number)
+    { key: 'egg_collection', label: 'Egg collection' },      // optional in this form model
+  ]
+  
+  if (props.stage === 'brooding') {
+    return allTabs.filter(tab => tab.key !== 'egg_collection')
+  }
+  return allTabs
+})
 
 const { batchOptions } = useDropdownOptions()
 
 const batchWithLabel = computed(() =>
   props.flocks?.map(flock => {
-    const batch = batchOptions.find(b => b.value === flock.batch_no)
     return {
       ...flock,
-      batch_label: batch?.label || '', // safe access
-      display_label: `${flock.label}-${batch?.label || ''}`, // fallback
+      display_label: flock.label, // Use the label directly from controller
     }
   }) || []
 )
 
 // Active Tab + progress
 const activeTabIndex = ref(0)
-const totalTabs = tabs.length
+const totalTabs = computed(() => tabs.value.length)
 const currentStep = computed(() => activeTabIndex.value + 1)
-const progress = computed(() => (currentStep.value / totalTabs) * 100)
+const progress = computed(() => (currentStep.value / totalTabs.value) * 100)
 // Compute gradient for full progress bar
 
 
 const progressBarBackground = computed(() => {
-  const segmentPercent = 100 / tabs.length
+  const segmentPercent = 100 / tabs.value.length
   const segments: string[] = []
 
-  tabs.forEach((tab, index) => {
+  tabs.value.forEach((tab, index) => {
     const key = tab.key
     const mainFields = mainFieldsByTab[key] || []
     const noteField = noteFieldByTab[key]
@@ -134,7 +139,7 @@ const progressBarBackground = computed(() => {
 })
 
 
-const activeTab = computed(() => tabs[activeTabIndex.value].key)
+const activeTab = computed(() => tabs.value[activeTabIndex.value].key)
 
 // Form (exactly as you stated)
 const form = useForm({
@@ -201,6 +206,13 @@ const form = useForm({
 
 })
 
+// Auto-set egg collection note for brooding stage
+watch(() => props.stage, (newStage) => {
+  if (newStage === 'brooding') {
+    form.eggcollection_note = 'No egg collection - Brooding stage'
+  }
+}, { immediate: true })
+
 // Errors
 const errors = ref<Record<string, string>>({})
 
@@ -232,8 +244,11 @@ const filteredFlocks = computed(() => {
   if (!flockSearchQuery.value) return batchWithLabel.value
   return batchWithLabel.value.filter(flock => 
     flock.label?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
-    flock.batch_label?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
-    flock.display_label?.toLowerCase().includes(flockSearchQuery.value.toLowerCase())
+    flock.company?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+    flock.project?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+    flock.flock?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+    flock.shed?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+    flock.batch?.toLowerCase().includes(flockSearchQuery.value.toLowerCase())
   )
 })
 
@@ -505,7 +520,7 @@ function nextTab() {
   }
 
 
-  if (activeTabIndex.value < tabs.length - 1) activeTabIndex.value++
+  if (activeTabIndex.value < tabs.value.length - 1) activeTabIndex.value++
   
 }
 
@@ -530,7 +545,7 @@ function onVaccineScheduleChange() {
     // Clear vaccine fields if no schedule selected
     form.vaccine_id = ''
     form.vaccine_dose = ''
-    form.vaccine_unit = ''
+    form.vaccine_unit = 0
     return
   }
 
@@ -540,7 +555,7 @@ function onVaccineScheduleChange() {
     // Auto-populate vaccine fields
     form.vaccine_id = selectedSchedule.vaccine_id
     form.vaccine_dose = '' // Let user enter dose
-    form.vaccine_unit = '' // Let user select unit
+    form.vaccine_unit = 0 // Let user select unit
     form.vaccine_note = selectedSchedule.notes || ''
   }
 }
@@ -550,7 +565,7 @@ function submit() {
   if (!validateTab(activeTab.value)) return
 
   // Optionally, validate all tabs before post:
-  // for (const t of tabs) { if (!validateTab(t.key)) { activeTabIndex.value = tabs.findIndex(x => x.key === t.key); return } }
+  // for (const t of tabs.value) { if (!validateTab(t.key)) { activeTabIndex.value = tabs.value.findIndex(x => x.key === t.key); return } }
 
   form.post(route('daily-operation.store'), {
     onSuccess: () => form.reset(),
@@ -646,13 +661,13 @@ function submit() {
                   >
                     <!-- Header -->
                     <div class="border-b border-gray-200 p-3">
-                      <h3 class="font-semibold text-gray-900 text-sm">Select Flock</h3>
+                      <h3 class="font-semibold text-gray-900 text-sm">Select Batch</h3>
                       <div class="relative mt-2">
                         <Search class="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
                         <input
                           v-model="flockSearchQuery"
                           type="text"
-                          placeholder="Search flocks..."
+                          placeholder="Search batches..."
                           class="w-full rounded border border-gray-300 bg-gray-50 pl-7 pr-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                           @click.stop
                         />
@@ -663,8 +678,8 @@ function submit() {
                     <div class="max-h-80 overflow-y-auto">
                       <div v-if="(batchWithLabel?.length || 0) === 0" class="px-4 py-6 text-center">
                         <AlertCircle class="mx-auto h-6 w-6 text-red-500" />
-                        <div class="mt-2 font-medium text-red-600 text-sm">No Flocks Available</div>
-                        <div class="text-xs text-gray-500">Please create flocks first</div>
+                        <div class="mt-2 font-medium text-red-600 text-sm">No Batches Available</div>
+                        <div class="text-xs text-gray-500">Please create batches first</div>
                       </div>
                       <button
                         v-for="flock in filteredFlocks"
@@ -677,7 +692,7 @@ function submit() {
                         <div class="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0"></div>
                         <div class="flex-1">
                           <div class="font-semibold text-gray-900 text-sm">{{ flock.label }}</div>
-                          <div class="text-xs text-gray-500">Batch: {{ flock.batch_label }}</div>
+                          <div class="text-xs text-gray-500">{{ flock.company }} • {{ flock.project }}</div>
                         </div>
                         <CheckCircle2 v-if="form.batchassign_id == flock.id" class="h-3 w-3 text-blue-500 flex-shrink-0" />
                       </button>

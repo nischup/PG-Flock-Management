@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useForm, Head } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useNotifier } from '@/composables/useNotifier'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { 
+  ChevronDown, 
+  Search, 
+  CheckCircle2, 
+  AlertCircle 
+} from 'lucide-vue-next'
 
 // Props from controller
 const props = defineProps<{
@@ -31,6 +37,10 @@ const selectedClassification = ref<number | null>(null)
 const selectedType = ref<string | null>(null) // "commercial" | "hatching"
 const filteredGrades = ref<Array<{ id: number; name: string; min_weight: number | null; max_weight: number | null }>>([])
 
+// Modern dropdown states
+const showFlockDropdown = ref(false)
+const flockSearchQuery = ref('')
+
 // Real egg data
 const eggData = ref({
   total_eggs: 0,
@@ -49,6 +59,36 @@ const form = useForm({
 const selectedClass = computed(() =>
   props.classifications.find(c => c.id === selectedClassification.value)
 )
+
+// Filtered classifications for dropdown
+const filteredClassifications = computed(() => {
+  if (!flockSearchQuery.value) return props.classifications
+  return props.classifications.filter(classification => 
+    classification.label?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+    classification.transaction_no?.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+    classification.batch_name?.toLowerCase().includes(flockSearchQuery.value.toLowerCase())
+  )
+})
+
+// Selected classification display
+const selectedClassificationDisplay = computed(() => {
+  return props.classifications.find(classification => classification.id === selectedClassification.value)
+})
+
+// Close dropdown on outside click
+const handleClickOutside = (e: MouseEvent) => {
+  if (!(e.target as HTMLElement).closest('.flock-dropdown')) {
+    showFlockDropdown.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 // Watch batch selection to fetch real egg data
 watch(selectedClassification, async (batchId) => {
@@ -147,28 +187,90 @@ function submit() {
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
               <!-- Batch Selection -->
               <div class="space-y-3">
-                <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C8.5 2 6 4.5 6 8c0 2.5 1.5 4.5 3 6l3 3 3-3c1.5-1.5 3-3.5 3-6 0-3.5-2.5-6-6-6z"/>
-                  </svg>
-                  Select Batch / Transaction
+                <Label class="text-xs font-semibold text-gray-700 flex items-center">
+                  <div class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5"></div>
+                  Select Batch
                 </Label>
-          <select
-            v-model="selectedClassification"
-                  class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 dark:text-white text-sm"
-          >
-                  <option value=null disabled>Choose a batch to grade</option>
-            <option
-              v-for="c in props.classifications"
-              :key="c.id"
-              :value="c.id"
-                    class="py-2"
-            >
-                    {{ c.transaction_no }} - {{ c.batch_name }} - {{ c.classification_date }}
-                    <span v-if="c.is_batch_assign"> ({{ c.flock_name }} - {{ c.shed_name }})</span>
-            </option>
-          </select>
-        </div>
+                <div class="flock-dropdown relative">
+                  <button
+                    type="button"
+                    @click.stop="showFlockDropdown = !showFlockDropdown"
+                    class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-xs h-10"
+                  >
+                    <span class="flex items-center gap-2">
+                      <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                      {{ selectedClassificationDisplay ? selectedClassificationDisplay.label : 'Select Batch' }}
+                    </span>
+                    <ChevronDown class="h-3 w-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFlockDropdown }" />
+                  </button>
+                  
+                  <!-- Classification Dropdown -->
+                  <div 
+                    v-if="showFlockDropdown" 
+                    class="fixed inset-0 z-[9999] flex items-start justify-center pt-20"
+                    @click="showFlockDropdown = false"
+                  >
+                    <div 
+                      class="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl"
+                      @click.stop
+                    >
+                      <!-- Header -->
+                      <div class="border-b border-gray-200 p-3">
+                        <h3 class="font-semibold text-gray-900 text-sm">Select Batch</h3>
+                        <div class="relative mt-2">
+                          <Search class="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
+                          <input
+                            v-model="flockSearchQuery"
+                            type="text"
+                            placeholder="Search Batch..."
+                            class="w-full rounded border border-gray-300 bg-gray-50 pl-7 pr-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            @click.stop
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Classification List -->
+                      <div class="max-h-80 overflow-y-auto">
+                        <div v-if="(props.classifications?.length || 0) === 0" class="px-4 py-6 text-center">
+                          <AlertCircle class="mx-auto h-6 w-6 text-red-500" />
+                          <div class="mt-2 font-medium text-red-600 text-sm">No Classifications Available</div>
+                          <div class="text-xs text-gray-500">Please create classifications first</div>
+                        </div>
+                        <button
+                          v-for="classification in filteredClassifications"
+                          :key="classification.id"
+                          type="button"
+                          @click.stop="selectedClassification = classification.id; showFlockDropdown = false"
+                          class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-blue-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                          :class="{ 'bg-blue-100': selectedClassification == classification.id }"
+                        >
+                          <div class="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0"></div>
+                          <div class="flex-1">
+                            <div class="font-semibold text-gray-900 text-sm">{{ classification.label }}</div>
+                            <div class="text-xs text-gray-500">{{ classification.company }} • {{ classification.project }}</div>
+                          </div>
+                          <CheckCircle2 v-if="selectedClassification == classification.id" class="h-3 w-3 text-blue-500 flex-shrink-0" />
+                        </button>
+                        <div v-if="filteredClassifications.length === 0 && (props.classifications?.length || 0) > 0" class="px-4 py-6 text-center text-gray-500">
+                          <Search class="mx-auto h-5 w-5 text-gray-400" />
+                          <div class="mt-2 text-xs">No results found for "{{ flockSearchQuery }}"</div>
+                        </div>
+                      </div>
+
+                      <!-- Close Button -->
+                      <div class="border-t border-gray-200 p-3">
+                        <Button 
+                          type="button"
+                          @click="showFlockDropdown = false"
+                          class="w-full rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs py-2"
+                        >
+                          Close
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <!-- Egg Category Selection -->
               <div class="space-y-3">

@@ -37,26 +37,39 @@ class EggClassificationGradeController extends Controller
 
     public function create() {
         // First try to get existing egg classifications
-        $classifications = EggClassification::with('batchAssign.batch:id,name')
+        $classifications = EggClassification::with(['batchAssign.batch:id,name', 'batchAssign.company', 'batchAssign.project', 'batchAssign.flock:id,name,code', 'batchAssign.shed'])
             ->select('id', 'batchassign_id', 'classification_date', 'total_eggs', 'commercial_eggs', 'hatching_eggs')
             ->orderBy('classification_date', 'desc')
             ->get()
             ->map(function ($c) {
+                $batch = $c->batchAssign;
                 return [
                     'id' => $c->id,
                     'classification_date' => $c->classification_date,
                     'total_eggs' => $c->total_eggs,
                     'commercial_egg' => $c->commercial_eggs,
                     'hatching_egg' => $c->hatching_eggs,
-                    'transaction_no' => $c->batchAssign->transaction_no ?? null,
-                    'batch_name' => $c->batchAssign->batch->name ?? null,
+                    'transaction_no' => $batch->transaction_no ?? null,
+                    'batch_name' => $batch->batch->name ?? null,
+                    'flock' => $batch->flock?->name ?? 'N/A',
+                    'shed' => $batch->shed?->name ?? 'N/A',
+                    'company' => $batch->company?->name ?? 'N/A',
+                    'project' => $batch->project?->name ?? 'N/A',
+                    'label' => sprintf(
+                        '%s, %s, %s, %s, %s, %s',
+                        $batch->company?->short_name ?? 'Unknown',
+                        $batch->project?->name ?? 'Proj',
+                        $batch->flock?->code ?? 'Flock',
+                        $batch->shed?->name ?? 'Shed',
+                        'Level '.$batch->level,
+                        $batch->batch?->name ?? 'Batch'
+                    ),
                 ];
             });
 
         // If no classifications exist, show batch assignments that can be used to create classifications
         if ($classifications->isEmpty()) {
-            $classifications = \App\Models\Shed\BatchAssign::with(['batch:id,name', 'flock:id,name', 'shed:id,name'])
-                ->select('id', 'transaction_no', 'batch_no', 'flock_id', 'shed_id', 'batch_total_qty')
+            $classifications = \App\Models\Shed\BatchAssign::with(['batch:id,name', 'flock:id,name,code', 'shed:id,name', 'company', 'project'])
                 ->orderBy('id', 'desc')
                 ->get()
                 ->map(function ($ba) {
@@ -70,6 +83,19 @@ class EggClassificationGradeController extends Controller
                         'batch_name' => $ba->batch->name ?? 'N/A',
                         'flock_name' => $ba->flock->name ?? 'N/A',
                         'shed_name' => $ba->shed->name ?? 'N/A',
+                        'flock' => $ba->flock?->name ?? 'N/A',
+                        'shed' => $ba->shed?->name ?? 'N/A',
+                        'company' => $ba->company?->name ?? 'N/A',
+                        'project' => $ba->project?->name ?? 'N/A',
+                        'label' => sprintf(
+                            '%s, %s, %s, %s, %s, %s',
+                            $ba->company?->short_name ?? 'Unknown',
+                            $ba->project?->name ?? 'Proj',
+                            $ba->flock?->code ?? 'Flock',
+                            $ba->shed?->name ?? 'Shed',
+                            'Level '.$ba->level,
+                            $ba->batch?->name ?? 'Batch'
+                        ),
                         'is_batch_assign' => true, // Flag to indicate this is a batch assign, not a classification
                     ];
                 });
@@ -209,26 +235,39 @@ class EggClassificationGradeController extends Controller
         });
 
     // Fetch all classifications for dropdown (same as create page)
-    $classifications = EggClassification::with('batchAssign.batch:id,name')
+    $classifications = EggClassification::with(['batchAssign.batch:id,name', 'batchAssign.company', 'batchAssign.project', 'batchAssign.flock:id,name,code', 'batchAssign.shed'])
         ->select('id', 'batchassign_id', 'classification_date', 'total_eggs', 'commercial_eggs', 'hatching_eggs')
         ->orderBy('classification_date', 'desc')
         ->get()
         ->map(function ($c) {
+            $batch = $c->batchAssign;
             return [
                 'id' => $c->id,
                 'classification_date' => $c->classification_date,
                 'total_eggs' => $c->total_eggs,
                 'commercial_egg' => $c->commercial_eggs,
                 'hatching_egg' => $c->hatching_eggs,
-                'transaction_no' => $c->batchAssign->transaction_no ?? null,
-                'batch_name' => $c->batchAssign->batch->name ?? null,
+                'transaction_no' => $batch->transaction_no ?? null,
+                'batch_name' => $batch->batch->name ?? null,
+                'flock' => $batch->flock?->name ?? 'N/A',
+                'shed' => $batch->shed?->name ?? 'N/A',
+                'company' => $batch->company?->name ?? 'N/A',
+                'project' => $batch->project?->name ?? 'N/A',
+                'label' => sprintf(
+                    '%s, %s, %s, %s, %s, %s',
+                    $batch->company?->short_name ?? 'Unknown',
+                    $batch->project?->name ?? 'Proj',
+                    $batch->flock?->code ?? 'Flock',
+                    $batch->shed?->name ?? 'Shed',
+                    'Level '.$batch->level,
+                    $batch->batch?->name ?? 'Batch'
+                ),
             ];
         });
 
     // If no classifications exist, show batch assignments for creating new
     if ($classifications->isEmpty()) {
-        $classifications = \App\Models\Shed\BatchAssign::with(['batch:id,name', 'flock:id,name', 'shed:id,name'])
-            ->select('id', 'transaction_no', 'batch_no', 'flock_id', 'shed_id', 'batch_total_qty')
+        $classifications = \App\Models\Shed\BatchAssign::with(['batch:id,name', 'flock:id,name,code', 'shed:id,name', 'company', 'project'])
             ->orderBy('id', 'desc')
             ->get()
             ->map(function ($ba) {
@@ -242,6 +281,19 @@ class EggClassificationGradeController extends Controller
                     'batch_name' => $ba->batch->name ?? 'N/A',
                     'flock_name' => $ba->flock->name ?? 'N/A',
                     'shed_name' => $ba->shed->name ?? 'N/A',
+                    'flock' => $ba->flock?->name ?? 'N/A',
+                    'shed' => $ba->shed?->name ?? 'N/A',
+                    'company' => $ba->company?->name ?? 'N/A',
+                    'project' => $ba->project?->name ?? 'N/A',
+                    'label' => sprintf(
+                        '%s, %s, %s, %s, %s, %s',
+                        $ba->company?->short_name ?? 'Unknown',
+                        $ba->project?->name ?? 'Proj',
+                        $ba->flock?->code ?? 'Flock',
+                        $ba->shed?->name ?? 'Shed',
+                        'Level '.$ba->level,
+                        $ba->batch?->name ?? 'Batch'
+                    ),
                     'is_batch_assign' => true,
                 ];
             });

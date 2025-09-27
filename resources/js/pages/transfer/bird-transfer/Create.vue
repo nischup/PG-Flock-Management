@@ -52,7 +52,7 @@ const batchOptionsFromDB = computed(() =>
 
 // Selected batch display name
 const selectedBatchName = computed(() => {
-  const selectedBatch = props.batches.find(batch => batch.id === form.batch_assign_id)
+  const selectedBatch = props.batches.find(batch => batch.id === form.batch_id)
   return selectedBatch ? selectedBatch.name : 'Select batch'
 })
 
@@ -72,12 +72,13 @@ const selectedProjectName = computed(() => {
 // Form pre-filled with backend data
 const form = useForm({
   batch_assign_id: props.batchAssign.id,
+  batch_id: props.batchAssign.batch_no, // Use batch_no as the batch_id
   flock_id: props.batchAssign.flock_id,
   from_company_id: props.batchAssign.company_id,
   from_shed_id: props.batchAssign.shed_id,
   to_company_id: undefined,
   to_shed_id: undefined,
-  to_project_id:undefined,
+  to_project_id: undefined,
   total_bird: props.batchAssign.batch_total_qty,
   male_qty: props.batchAssign.batch_male_qty - props.batchAssign.batch_male_mortality,
   female_qty: props.batchAssign.batch_female_qty - props.batchAssign.batch_female_mortality,
@@ -105,6 +106,7 @@ const current_total_chicks = computed(() => current_male_chicks.value + current_
 
 const transfer_total_qty = computed(() => form.transfer_male_qty + form.transfer_female_qty)
 const medical_total_qty = computed(() => form.medical_male_qty + form.medical_female_qty)
+const deviation_total = computed(() => form.deviation_total_qty)
 
 // Show shed only if same company
 const showShed = computed(() => props.batchAssign.company_id === form.to_company_id)
