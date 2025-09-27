@@ -89,8 +89,13 @@ class PermissionSeeder extends Seeder
             'laying.delete',
 
             //Daily operation
-            'daily-operation.Bording.create',
-            'daily-operation.bording.edit',
+            'daily-operation.brooding.create',
+            'daily-operation.brooding.edit',
+            'daily-operation.brooding.delete',
+            'daily-operation.growing.create',
+            'daily-operation.growing.edit',
+            'daily-operation.growing.delete',
+
 
             // Egg
             'egg-classification.view',
