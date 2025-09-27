@@ -1529,7 +1529,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
           </div>
           <div class="bg-orange-50 p-4 rounded-lg">
             <div class="text-sm text-orange-600 font-medium">Technical Eggs</div>
-            <div class="text-2xl font-bold text-orange-800">{{ modalData.eggsData.summary.technical_eggs.toLocaleString() }}</div>
+            <div class="text-2xl font-bold text-orange-800">{{ modalData.eggsData.summary.technical_eggs?.toLocaleString() }}</div>
           </div>
           <div class="bg-purple-50 p-4 rounded-lg">
             <div class="text-sm text-purple-600 font-medium">Hatching Eggs</div>
@@ -1619,7 +1619,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                     <div class="text-xs text-gray-500">{{ flock.commercial_percentage }}%</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ flock.technical_eggs.toLocaleString() }}</div>
+                    <div class="text-sm text-gray-900">{{ flock.technical_eggs?.toLocaleString() }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ flock.hatching_eggs.toLocaleString() }}</div>
@@ -1684,7 +1684,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                     <div class="text-xs text-gray-500">{{ batch.commercial_percentage }}%</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ batch.technical_eggs.toLocaleString() }}</div>
+                    <div class="text-sm text-gray-900">{{ batch.technical_eggs?.toLocaleString() }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ batch.hatching_eggs.toLocaleString() }}</div>
@@ -1732,7 +1732,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                     </div>
                     <div>
                       <span class="text-gray-600">Technical:</span>
-                      <span class="font-medium text-orange-600">{{ classification.technical_eggs.toLocaleString() }}</span>
+                      <span class="font-medium text-orange-600">{{ classification.technical_eggs?.toLocaleString() }}</span>
                     </div>
                     <div>
                       <span class="text-gray-600">Hatching:</span>
@@ -1764,13 +1764,13 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
       <div v-else-if="modalData?.hatchableEggsData" class="space-y-6">
         <!-- Summary Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="bg-purple-50 p-4 rounded-lg">
-            <div class="text-sm text-purple-600 font-medium">Total Hatchable Eggs</div>
-            <div class="text-2xl font-bold text-purple-800">{{ modalData.hatchableEggsData.summary.total_hatching_eggs.toLocaleString() }}</div>
-          </div>
           <div class="bg-blue-50 p-4 rounded-lg">
             <div class="text-sm text-blue-600 font-medium">Total Eggs</div>
             <div class="text-2xl font-bold text-blue-800">{{ modalData.hatchableEggsData.summary.total_eggs.toLocaleString() }}</div>
+          </div>
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <div class="text-sm text-purple-600 font-medium">Total Hatchable Eggs</div>
+            <div class="text-2xl font-bold text-purple-800">{{ modalData.hatchableEggsData.summary.total_hatching_eggs.toLocaleString() }}</div>
           </div>
           <div class="bg-green-50 p-4 rounded-lg">
             <div class="text-sm text-green-600 font-medium">Hatching Rate</div>
