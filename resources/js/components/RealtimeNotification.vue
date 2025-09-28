@@ -57,6 +57,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { X, CheckCircle, AlertCircle, Info, RefreshCw } from 'lucide-vue-next'
+import { useNotificationSound } from '@/composables/useNotificationSound'
 
 interface Props {
   isVisible: boolean
@@ -85,6 +86,12 @@ const emit = defineEmits<{
 // Local state
 const progress = ref(100)
 const progressTimer = ref<NodeJS.Timeout | null>(null)
+
+// Initialize notification sound
+const { playSound, preloadAudio } = useNotificationSound({
+  volume: 0.5,
+  preload: true
+})
 
 // Computed properties
 const icon = computed(() => {
@@ -164,6 +171,7 @@ const formatTime = (timestamp: number) => {
 
 // Lifecycle
 onMounted(() => {
+  preloadAudio() // Preload the sound file
   if (props.isVisible && props.autoClose) {
     startProgress()
   }
@@ -175,9 +183,14 @@ onUnmounted(() => {
 
 // Watch for visibility changes
 watch(() => props.isVisible, (isVisible) => {
-  if (isVisible && props.autoClose) {
-    progress.value = 100
-    startProgress()
+  if (isVisible) {
+    // Play sound when notification becomes visible
+    playSound()
+    
+    if (props.autoClose) {
+      progress.value = 100
+      startProgress()
+    }
   } else {
     stopProgress()
   }
