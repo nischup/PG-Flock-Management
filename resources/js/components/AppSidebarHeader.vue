@@ -4,7 +4,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import Clock from '@/components/Clock.vue' // reusable clock component
 import { ref, onMounted, watch } from 'vue';
 import type { BreadcrumbItemType } from '@/types';
-import WeatherWidget from '../components/WehatherWidget.vue';
+// import WeatherWidget from '../components/WehatherWidget.vue';
 import NotificationBell from '../components/NotificationBell.vue';
 import { useNotificationSound } from '@/composables/useNotificationSound';
 
@@ -129,7 +129,7 @@ onMounted(() => {
 
   <!-- Right side: Bell + Clock -->
   <div class="flex items-center gap-6">
-    <WeatherWidget/>
+    <!-- <WeatherWidget/> -->
     <!-- Bell Icon -->
     <button
       class="relative text-gray-600 hover:text-black-800 transition"
