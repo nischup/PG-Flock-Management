@@ -288,7 +288,18 @@ class DashboardRealtimeService
         $broken     = $classQuery->sum('rejected_eggs');
 
         $totalEggs = $query->sum('quantity');
+        // ----- Calculate current chicks from BatchAssign and deductions -----
+        $operations = DailyOperation::with('batchAssign')
+        ->whereIn('id', $dailyOperationIds)
+        ->get();
 
+        $batchAssignIds = $operations->pluck('batchassign_id')->unique();
+
+        
+        $batchAssignsData = BatchAssign::where('status', 1)
+        ->get()
+        ->keyBy('id');
+            
         // ----- Calculate current chicks from daily operations -----
         $mortality = DailyMortality::whereIn('daily_operation_id', $dailyOperationIds)
             ->selectRaw('daily_operation_id, SUM(male_qty) as male, SUM(female_qty) as female')
@@ -318,32 +329,41 @@ class DashboardRealtimeService
         $operations = DailyOperation::with(['batchAssign'])
             ->whereIn('id', $dailyOperationIds)
             ->get();
-
         $currentMale = $currentFemale = 0;
 
+        
         foreach ($operations as $op) {
             $opId = $op->id;
+            $batchId = $op->batchassign_id;
 
-            $maleDeducted = ($mortality[$opId]->male ?? 0) 
-                        + ($culling[$opId]->male ?? 0) 
-                        + ($destroy[$opId]->male ?? 0) 
-                        + ($sexingError[$opId]->male ?? 0);
+            // Total deductions per operation
+            $maleDeducted = ($mortality[$opId]->male ?? 0)
+                        + ($culling[$opId]->male ?? 0)
+                        + ($destroy[$opId]->male ?? 0)
+                        + ($sexingError[$opId]->male ?? 0)
+                        + ($labSend[$batchId]->male ?? 0);
 
-            $femaleDeducted = ($mortality[$opId]->female ?? 0) 
-                            + ($culling[$opId]->female ?? 0) 
-                            + ($destroy[$opId]->female ?? 0) 
-                            + ($sexingError[$opId]->female ?? 0);
+            $femaleDeducted = ($mortality[$opId]->female ?? 0)
+                            + ($culling[$opId]->female ?? 0)
+                            + ($destroy[$opId]->female ?? 0)
+                            + ($sexingError[$opId]->female ?? 0)
+                            + ($labSend[$batchId]->female ?? 0);
+           
+            // Assign chicks from BatchAssign table
+            $assignedMale = $batchAssignsData[$batchId]->batch_male_qty ?? 0;
+            $assignedFemale = $batchAssignsData[$batchId]->batch_female_qty ?? 0;
 
-            $currentMale += max(0, $op->male_qty - $maleDeducted);
-            $currentFemale += max(0, $op->female_qty - $femaleDeducted);
+            $currentMale += $assignedMale - $maleDeducted;
+            $currentFemale += $assignedFemale - $femaleDeducted;
         }
-
+            
         $currentTotalChicks = $currentMale + $currentFemale;
-
+        
+        // Percentage of eggs based on current chicks
         $totalPercentageBasedOnChicks = $currentTotalChicks > 0
             ? ($totalEggs / $currentTotalChicks) * 100
             : 0;
-
+        
         return [
             'total' => $totalEggs,
             'hatchable' => $hatchable,
