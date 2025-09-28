@@ -133,7 +133,7 @@ class DashboardController extends Controller
             ['title'=>'Male Mortality','value'=>$totalMortalityMale,'icon'=>'ShieldX'],
             ['title'=>'Female Mortality','value'=>$totalMortalityFemale,'icon'=>'ShieldX'],
             ['title'=>'Current Chicks','value'=>$currentChicks,'icon'=>'ShieldX'],
-            ['title'=>'Total Egg Collection','value'=>0,'icon'=>'Egg'],
+            ['title'=>'Total Egg Collection','value'=>$totalEggCollection,'icon'=>'Egg'],
             ['title'=>'Total Hatching Eggs','value'=>$totalHatchableEggs,'icon'=>'PackageSearch'],
             ['title'=>'Total Commercial Eggs','value'=>$totalCommercialEggs,'icon'=>'PackageSearch'],
             ['title'=>'Total Feed Consumption','value'=>$totalFeed,'icon'=>'Factory'],

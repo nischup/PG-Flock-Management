@@ -240,7 +240,7 @@ const handleCardClick = (card: any) => {
   // Special handling for Total Flock card
   if (card.title === 'Total Flock' || card.title === 'Active Flocks') {
     handleFlockCardClick(card)
-  } else if (card.title === 'Total Birds') {
+  } else if (card.title === 'Current Birds') {
     handleBirdsCardClick(card)
   } else if (card.title === 'Mortality Rate') {
     handleMortalityCardClick(card)
@@ -326,7 +326,7 @@ const handleBirdsCardClick = async (card: any) => {
       loading: true
     }
     showModal.value = true
-
+   
     // Fetch detailed birds data
     const response = await fetch(`/api/dashboard/birds-details?${new URLSearchParams(filters.value)}`)
     const result = await response.json()
@@ -1100,10 +1100,9 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assign Birds</th>
-                  
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
-                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Rejections</th>
-                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Rejections</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Birds</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batches</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Companies</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -1191,20 +1190,39 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         <!-- Summary Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="bg-blue-50 p-4 rounded-lg">
-            <div class="text-sm text-blue-600 font-medium">Total Birds</div>
-            <div class="text-2xl font-bold text-blue-800">{{ modalData.birdsData.summary.total_birds.toLocaleString() }}</div>
+            <div class="text-sm text-blue-600 font-medium">Assign Total Birds</div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.birdsData.summary.total_birds?.toLocaleString() }}</div>
           </div>
           <div class="bg-orange-50 p-4 rounded-lg">
             <div class="text-sm text-orange-600 font-medium">Male Birds</div>
-            <div class="text-2xl font-bold text-orange-800">{{ modalData.birdsData.summary.male_birds.toLocaleString() }}</div>
+            <div class="text-2xl font-bold text-orange-800">{{ modalData.birdsData.summary.total_male_birds?.toLocaleString() }}</div>
           </div>
           <div class="bg-pink-50 p-4 rounded-lg">
             <div class="text-sm text-pink-600 font-medium">Female Birds</div>
-            <div class="text-2xl font-bold text-pink-800">{{ modalData.birdsData.summary.female_birds.toLocaleString() }}</div>
+            <div class="text-2xl font-bold text-pink-800">{{ modalData.birdsData.summary.total_female_birds?.toLocaleString() }} </div>
           </div>
           <div class="bg-red-50 p-4 rounded-lg">
-            <div class="text-sm text-red-600 font-medium">Mortality Rate</div>
-            <div class="text-2xl font-bold text-red-800">{{ modalData.birdsData.summary.mortality_rate }}%</div>
+            <div class="text-sm text-red-600 font-medium">Assign F/M Percentage</div>
+            <div class="text-xl font-bold text-red-800"> F-{{ modalData.birdsData.summary?.assign_female_percentage }}%, M-{{ modalData.birdsData.summary?.assign_male_percentage }} %</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Current Total Birds</div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.birdsData.summary.current_total_birds?.toLocaleString() }}</div>
+          </div>
+          <div class="bg-orange-50 p-4 rounded-lg">
+            <div class="text-sm text-orange-600 font-medium">Current Male Birds</div>
+            <div class="text-2xl font-bold text-orange-800">{{ modalData.birdsData.summary.current_male_birds?.toLocaleString() }}</div>
+          </div>
+          <div class="bg-pink-50 p-4 rounded-lg">
+            <div class="text-sm text-pink-600 font-medium">Current Female Birds</div>
+            <div class="text-2xl font-bold text-pink-800">{{ modalData.birdsData.summary.current_female_birds?.toLocaleString() }}</div>
+          </div>
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="text-sm text-red-600 font-medium">Current F/M Percentage</div>
+            <div class="text-xl font-bold text-red-800">F-{{ modalData.birdsData.summary?.current_female_percentage }}%, M-{{ modalData.birdsData.summary?.current_male_percentage }} %</div>
           </div>
         </div>
 
@@ -1212,15 +1230,15 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div class="bg-green-50 p-4 rounded-lg">
             <div class="text-sm text-green-600 font-medium">Total Batches</div>
-            <div class="text-xl font-bold text-green-800">{{ modalData.birdsData.summary.total_batches }}</div>
+            <div class="text-xl font-bold text-green-800">{{ modalData.birdsData.summary?.total_batches }}</div>
           </div>
           <div class="bg-purple-50 p-4 rounded-lg">
             <div class="text-sm text-purple-600 font-medium">Active Batches</div>
-            <div class="text-xl font-bold text-purple-800">{{ modalData.birdsData.summary.active_batches }}</div>
+            <div class="text-xl font-bold text-purple-800">{{ modalData.birdsData.summary?.active_batches }}</div>
           </div>
           <div class="bg-indigo-50 p-4 rounded-lg">
             <div class="text-sm text-indigo-600 font-medium">Total Assignments</div>
-            <div class="text-xl font-bold text-indigo-800">{{ modalData.birdsData.summary.total_assignments }}</div>
+            <div class="text-xl font-bold text-indigo-800">{{ modalData.birdsData.summary?.total_assignments }}</div>
           </div>
         </div>
 
@@ -1238,9 +1256,10 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CurrentTotal Birds</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male/Female</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Rejectios</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shed</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -1259,17 +1278,21 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                     <div class="text-sm text-gray-900">{{ batch.flock_name }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ batch.total_birds.toLocaleString() }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ batch.current_total_birds?.toLocaleString() }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">
-                      <div>M: {{ batch.male_birds.toLocaleString() }}</div>
-                      <div>F: {{ batch.female_birds.toLocaleString() }}</div>
+                      <div>M: {{ batch.current_male_birds?.toLocaleString() }}</div>
+                      <div>F: {{ batch.current_female_birds?.toLocaleString() }}</div>
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ batch.mortality_count.toLocaleString() }}</div>
-                    <div class="text-xs text-gray-500">{{ batch.mortality_rate }}%</div>
+                    <div class="text-sm text-gray-900">{{ batch.total_mortality?.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.total_mortality_percentage }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ batch.total_other_rejection?.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.total_other_rejection_percentage }}%</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ batch.company_name }}</div>
@@ -2114,9 +2137,8 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Male Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Female Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Assign Male Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Current Male Birds</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male %</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
@@ -2134,28 +2156,28 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                     <div class="text-sm font-medium text-blue-900">{{ flock.total_male_birds.toLocaleString() }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-pink-900">{{ flock.total_female_birds.toLocaleString() }}</div>
+                    <div class="text-sm font-medium text-pink-900">{{ flock.current_male_birds.toLocaleString() }}</div>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <!-- <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ flock.total_birds.toLocaleString() }}</div>
-                  </td>
+                  </td> -->
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ flock.assign_male_percentage }}%</div>
+                    <div class="text-sm font-medium text-gray-900">{{ flock.current_male_percentage }}%</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ flock.male_mortality?.toLocaleString() }}</div>
-                    <div class="text-xs text-red-600">{{ flock.male_mortality_rate }}% rate</div>
+                    <div class="text-xs text-red-600">{{ flock.male_mortality_percentage }}% rate</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span :class="{
-                      'bg-green-100 text-green-800': flock.male_percentage >= 50,
-                      'bg-blue-100 text-blue-800': flock.male_percentage >= 45 && flock.male_percentage < 50,
-                      'bg-yellow-100 text-yellow-800': flock.male_percentage >= 40 && flock.male_percentage < 45,
-                      'bg-red-100 text-red-800': flock.male_percentage < 40
+                      'bg-green-100 text-green-800': flock.current_male_percentage >= 50,
+                      'bg-blue-100 text-blue-800': flock.current_male_percentage >= 45 && flock.current_male_percentage < 50,
+                      'bg-yellow-100 text-yellow-800': flock.current_male_percentage >= 40 && flock.current_male_percentage < 45,
+                      'bg-red-100 text-red-800': flock.current_male_percentage < 40
                     }" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
-                      {{ flock.male_percentage >= 50 ? 'Excellent' : 
-                         flock.male_percentage >= 45 ? 'Good' : 
-                         flock.male_percentage >= 40 ? 'Moderate' : 'Poor' }}
+                      {{ flock.current_male_percentage >= 50 ? 'Excellent' : 
+                         flock.current_male_percentage >= 45 ? 'Good' : 
+                         flock.current_male_percentage >= 40 ? 'Moderate' : 'Poor' }}
                     </span>
                   </td>
                 </tr>
@@ -2178,9 +2200,10 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Male Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Female Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Total Birds</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male %</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣Male Mortality</th>
+                  <!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Total Birds</th> -->
+                  
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
                 </tr>
               </thead>
@@ -2194,17 +2217,20 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                     <div class="text-sm text-gray-900">{{ batch.flock_name }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-blue-900">{{ batch.total_male_birds.toLocaleString() }}</div>
+                    <div class="text-sm font-medium text-blue-900">{{ batch.current_male_birds?.toLocaleString() }}</div>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <!-- <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-pink-900">{{ batch.total_female_birds.toLocaleString() }}</div>
+                  </td> -->
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.current_male_percentage }}%</div>
+                    
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ batch.total_birds.toLocaleString() }}</div>
+                    <div class="text-sm text-gray-900">{{ batch.mortality_male.toLocaleString() }}</div>
+                    <div class="text-xs text-red-600">{{ batch.male_mortality_percentage }}% rate</div>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ batch.male_percentage }}%</div>
-                  </td>
+                  
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ batch.company_name }}</div>
                     <div class="text-xs text-gray-500">{{ batch.project_name }}</div>
@@ -2258,13 +2284,6 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
       <div v-else-if="modalData?.femaleBirdsData" class="space-y-6">
         <!-- Summary Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="bg-pink-50 p-4 rounded-lg">
-            <div class="flex items-center space-x-2 mb-2">
-              <div class="text-pink-600">🐣</div>
-              <div class="text-sm text-pink-600 font-medium">Total Female Birds</div>
-            </div>
-            <div class="text-2xl font-bold text-pink-800">{{ modalData.femaleBirdsData.summary.total_female_birds.toLocaleString() }}</div>
-          </div>
           <div class="bg-gray-50 p-4 rounded-lg">
             <div class="flex items-center space-x-2 mb-2">
               <div class="text-gray-600">🐣</div>
@@ -2272,12 +2291,13 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
             </div>
             <div class="text-2xl font-bold text-gray-800">{{ modalData.femaleBirdsData.summary.total_birds.toLocaleString() }}</div>
           </div>
-          <div class="bg-blue-50 p-4 rounded-lg">
+          
+          <div class="bg-pink-50 p-4 rounded-lg">
             <div class="flex items-center space-x-2 mb-2">
-              <div class="text-blue-600">🐣</div>
-              <div class="text-sm text-blue-600 font-medium">Male Birds</div>
+              <div class="text-pink-600">🐣</div>
+              <div class="text-sm text-pink-600 font-medium">Assign Female Birds</div>
             </div>
-            <div class="text-2xl font-bold text-blue-800">{{ modalData.femaleBirdsData.summary.total_male_birds.toLocaleString() }}</div>
+            <div class="text-2xl font-bold text-pink-800">{{ modalData.femaleBirdsData.summary.total_female_birds.toLocaleString() }}</div>
           </div>
           <div class="bg-green-50 p-4 rounded-lg">
             <div class="flex items-center space-x-2 mb-2">
@@ -2286,6 +2306,22 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
             </div>
             <div class="text-2xl font-bold text-green-800">{{ modalData.femaleBirdsData.summary.female_percentage }}%</div>
           </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-blue-600">🐣</div>
+              <div class="text-sm text-blue-600 font-medium">Current Female Birds</div>
+            </div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.femaleBirdsData.summary.current_female_birds.toLocaleString() }}</div>
+          </div>
+
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="text-blue-600">🐣</div>
+              <div class="text-sm text-blue-600 font-medium">Current Female Percentage</div>
+            </div>
+            <div class="text-2xl font-bold text-green-800">{{ modalData.femaleBirdsData.summary.current_female_percentage }}%</div>
+          </div>
+          
         </div>
 
         <!-- Additional Stats -->
@@ -2343,10 +2379,13 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Female Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Male Birds</th>
+                  
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Total Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Female %</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Assign Female Birds</th>
+                  
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assign Female %</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Current Female Birds</th>
+                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Current Female %</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
                 </tr>
@@ -2360,20 +2399,24 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-pink-900">{{ flock.total_female_birds.toLocaleString() }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-blue-900">{{ flock.total_male_birds.toLocaleString() }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ flock.total_birds.toLocaleString() }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ flock.female_percentage }}%</div>
+                    <div class="text-sm font-medium text-pink-900">{{ flock.total_female_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-blue-900">{{ flock.female_percentage.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-blue-900">{{ flock.current_female_birds.toLocaleString() }}</div>
+                  </td>
+                  
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ flock.current_female_percentage }}%</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ flock.female_mortality.toLocaleString() }}</div>
-                    <div class="text-xs text-red-600">{{ flock.female_mortality_rate }}% rate</div>
+                    <div class="text-xs text-red-600">{{ flock.female_mortality_percentage }}% rate</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span :class="{
@@ -2406,10 +2449,12 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Female Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Male Birds</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Total Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Female %</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Assign Female</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Assign Female %</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Current Female</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Female %</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🐣 Mortality</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
                 </tr>
               </thead>
@@ -2423,17 +2468,27 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
                     <div class="text-sm text-gray-900">{{ batch.flock_name }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-pink-900">{{ batch.total_female_birds.toLocaleString() }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-blue-900">{{ batch.total_male_birds.toLocaleString() }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ batch.total_birds.toLocaleString() }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ batch.female_percentage }}%</div>
+                    <div class="text-sm font-medium text-pink-900">{{ batch.total_female_birds.toLocaleString() }}</div>
                   </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.female_percentage }} %</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-blue-900">{{ batch.current_female_birds.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-blue-900">{{ batch.current_female_percentage.toLocaleString() }} %</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    
+                    <div class="text-sm text-gray-900">{{ batch.female_mortality.toLocaleString() }}</div>
+                    <div class="text-xs text-red-600">{{ batch.female_mortality_rate }}% rate</div>
+                  
+                  </td>
+                  
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ batch.company_name }}</div>
                     <div class="text-xs text-gray-500">{{ batch.project_name }}</div>
