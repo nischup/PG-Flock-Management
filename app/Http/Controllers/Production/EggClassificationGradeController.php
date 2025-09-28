@@ -6,25 +6,64 @@ use App\Http\Controllers\Controller;
 use App\Models\EggGrade;
 use App\Models\Production\EggClassification;
 use App\Models\Production\EggClassificationGrade;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EggClassificationGradeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-
-
-        $grades = EggClassificationGrade::with([
+        $query = EggClassificationGrade::with([
             'grade',                           // Egg grade info
             'classification.batchAssign',
-            'classification.batchAssign.batch'       // Classification + Batch info
+            'classification.batchAssign.batch',       // Classification + Batch info
         ])->whereHas('classification.batchAssign', function ($q) {
             $q->visibleFor(); // Scope from BatchAssign
-        })->latest()->get();
+        });
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('classification.batchAssign', function ($subQ) use ($search) {
+                    $subQ->where('transaction_no', 'like', "%{$search}%")
+                        ->orWhereHas('batch', function ($batchQ) use ($search) {
+                            $batchQ->where('name', 'like', "%{$search}%");
+                        });
+                })
+                    ->orWhereHas('grade', function ($gradeQ) use ($search) {
+                        $gradeQ->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Apply date range filter
+        if ($request->filled('date_from')) {
+            $query->whereHas('classification', function ($q) use ($request) {
+                $q->where('classification_date', '>=', $request->get('date_from'));
+            });
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereHas('classification', function ($q) use ($request) {
+                $q->where('classification_date', '<=', $request->get('date_to'));
+            });
+        }
+
+        // Apply grade type filter
+        if ($request->filled('grade_type')) {
+            $query->whereHas('grade', function ($q) use ($request) {
+                $q->where('type', $request->get('grade_type'));
+            });
+        }
+
+        // Get paginated results
+        $perPage = $request->get('per_page', 10);
+        $grades = $query->latest()->paginate($perPage);
 
         return inertia('production/egg-classification/GradeList', [
             'grades' => $grades,
+            'filters' => $request->only(['search', 'per_page', 'date_from', 'date_to', 'grade_type']),
         ]);
     }
 
@@ -37,6 +76,7 @@ class EggClassificationGradeController extends Controller
             ->get()
             ->map(function ($c) {
                 $batch = $c->batchAssign;
+
                 return [
                     'id' => $c->id,
                     'classification_date' => $c->classification_date,
@@ -55,7 +95,7 @@ class EggClassificationGradeController extends Controller
                         $batch->project?->name ?? 'Proj',
                         $batch->flock?->code ?? 'Flock',
                         $batch->shed?->name ?? 'Shed',
-                        'Level ' . $batch->level,
+                        'Level '.$batch->level,
                         $batch->batch?->name ?? 'Batch'
                     ),
                 ];
@@ -87,7 +127,7 @@ class EggClassificationGradeController extends Controller
                             $ba->project?->name ?? 'Proj',
                             $ba->flock?->code ?? 'Flock',
                             $ba->shed?->name ?? 'Shed',
-                            'Level ' . $ba->level,
+                            'Level '.$ba->level,
                             $ba->batch?->name ?? 'Batch'
                         ),
                         'is_batch_assign' => true, // Flag to indicate this is a batch assign, not a classification
@@ -150,7 +190,7 @@ class EggClassificationGradeController extends Controller
         $batch = \App\Models\Shed\BatchAssign::with(['flock', 'shed', 'batch'])
             ->find($batchId);
 
-        if (!$batch) {
+        if (! $batch) {
             return response()->json(['error' => 'Batch not found'], 404);
         }
 
@@ -197,10 +237,9 @@ class EggClassificationGradeController extends Controller
                 'total_eggs' => $totalEggs,
                 'hatching_eggs' => $hatchingEggs,
                 'commercial_eggs' => $commercialEggs,
-            ]
+            ],
         ]);
     }
-
 
     public function edit($classificationId)
     {
@@ -231,6 +270,7 @@ class EggClassificationGradeController extends Controller
             ->get()
             ->map(function ($c) {
                 $batch = $c->batchAssign;
+
                 return [
                     'id' => $c->id,
                     'classification_date' => $c->classification_date,
@@ -249,7 +289,7 @@ class EggClassificationGradeController extends Controller
                         $batch->project?->name ?? 'Proj',
                         $batch->flock?->code ?? 'Flock',
                         $batch->shed?->name ?? 'Shed',
-                        'Level ' . $batch->level,
+                        'Level '.$batch->level,
                         $batch->batch?->name ?? 'Batch'
                     ),
                 ];
@@ -281,7 +321,7 @@ class EggClassificationGradeController extends Controller
                             $ba->project?->name ?? 'Proj',
                             $ba->flock?->code ?? 'Flock',
                             $ba->shed?->name ?? 'Shed',
-                            'Level ' . $ba->level,
+                            'Level '.$ba->level,
                             $ba->batch?->name ?? 'Batch'
                         ),
                         'is_batch_assign' => true,
@@ -333,18 +373,6 @@ class EggClassificationGradeController extends Controller
             ->with('success', 'Egg grades updated successfully.');
     }
 
-    //test push//
-
-
-
-
-
-
-
-
-
-
-
-
+    // test push//
 
 }

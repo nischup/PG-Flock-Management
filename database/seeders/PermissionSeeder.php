@@ -106,10 +106,10 @@ class PermissionSeeder extends Seeder
             'egg-classification.create',
             'egg-classification.edit',
             'egg-classification.delete',
-            // 'egg-classification-grades.view',
-            // 'egg-classification-grades.create',
-            // 'egg-classification-grades.edit',
-            // 'egg-classification-grades.delete',
+            'egg-classification-grades.view',
+            'egg-classification-grades.create',
+            'egg-classification-grades.edit',
+            'egg-classification-grades.delete',
 
             // Egg grade
             'egg-grade.view',

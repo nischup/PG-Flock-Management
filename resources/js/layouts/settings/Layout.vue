@@ -18,6 +18,10 @@ const sidebarNavItems: NavItem[] = [
         title: 'Appearance',
         href: '/settings/appearance',
     },
+    {
+        title: 'Notifications',
+        href: '/settings/notifications',
+    },
 ];
 
 const page = usePage();
@@ -48,8 +52,8 @@ const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.locati
 
             <Separator class="my-6 lg:hidden" />
 
-            <div class="flex-1 md:max-w-2xl">
-                <section class="max-w-xl space-y-12">
+            <div class="flex-1 max-w-6xl">
+                <section class="space-y-12">
                     <slot />
                 </section>
             </div>

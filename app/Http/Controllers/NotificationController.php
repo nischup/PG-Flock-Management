@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\UserNotification;
 use App\Services\NotificationService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,7 +21,7 @@ class NotificationController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        
+
         $notifications = $user->notifications()
             ->notExpired()
             ->orderBy('created_at', 'desc')
@@ -52,7 +52,7 @@ class NotificationController extends Controller
     public function recent(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         $notifications = $user->notifications()
             ->notExpired()
             ->orderBy('created_at', 'desc')

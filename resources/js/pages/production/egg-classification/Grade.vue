@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useForm, Head } from '@inertiajs/vue3'
+import { useForm, Head, Link } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useNotifier } from '@/composables/useNotifier'
 import { Button } from '@/components/ui/button'
@@ -162,22 +162,39 @@ function submit() {
       <div class="container mx-auto px-4 py-8">
         <!-- Header Section -->
         <div class="mb-8">
-          <div class="flex items-center gap-4 mb-2">
-            <div class="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
-              <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C8.5 2 6 4.5 6 8c0 2.5 1.5 4.5 3 6l3 3 3-3c1.5-1.5 3-3.5 3-6 0-3.5-2.5-6-6-6z"/>
-              </svg>
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-4">
+              <div class="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C8.5 2 6 4.5 6 8c0 2.5 1.5 4.5 3 6l3 3 3-3c1.5-1.5 3-3.5 3-6 0-3.5-2.5-6-6-6z"/>
+                </svg>
+              </div>
+              <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                  Egg Grading System
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">
+                  Classify and grade eggs by weight and quality
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                Egg Grading System
-        </h1>
-              <p class="text-gray-600 dark:text-gray-400 mt-1">
-                Classify and grade eggs by weight and quality
-              </p>
-            </div>
+            
+            <!-- Back to List Button -->
+            <Link
+              href="/egg-classification-grades"
+              class="group relative overflow-hidden rounded-lg px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-500"
+              style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);"
+            >
+              <span class="relative z-10 flex items-center gap-2">
+                <svg class="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to List
+              </span>
+              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-20 group-hover:translate-x-full"></div>
+            </Link>
           </div>
-      </div>
+        </div>
 
         <!-- Main Content Card -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
