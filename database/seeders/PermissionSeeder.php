@@ -143,6 +143,7 @@ class PermissionSeeder extends Seeder
             // Reports
             'daily-flock-report.view',
             'bird-transfer-receive-report.view',
+            'egg-receive-and-grading-report.view',
 
             // Audit Log
             'audit-log.view',

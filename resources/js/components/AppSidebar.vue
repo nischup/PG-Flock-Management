@@ -2,13 +2,33 @@
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
-import { BabyChick } from '@/icons/BabyChick';
-import { BabyChickMultiple } from '@/icons/BabyChickMultiple';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { usePermissions } from '@/composables/usePermissions';
-import { Building, Building2, Pipette, TestTubes, EggFried, ClockArrowUp, Egg, EggOff, LayoutGrid, Package, PencilRuler, Pill, Route, Skull, Syringe, User, Users, FileText, Settings, CheckCircle } from 'lucide-vue-next';
-import { Link } from '@inertiajs/vue3';
+import { BabyChick } from '@/icons/BabyChick';
+import { BabyChickMultiple } from '@/icons/BabyChickMultiple';
 import { type NavItem } from '@/types';
+import { Link } from '@inertiajs/vue3';
+import {
+    Building,
+    Building2,
+    CheckCircle,
+    ClockArrowUp,
+    Egg,
+    EggFried,
+    EggOff,
+    FileText,
+    LayoutGrid,
+    Package,
+    PencilRuler,
+    Pill,
+    Pipette,
+    Settings,
+    Skull,
+    Syringe,
+    TestTubes,
+    User,
+    Users,
+} from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const { can } = usePermissions();
@@ -200,21 +220,21 @@ const mainNavItems: NavItem[] = [
                 iconClass: 'text-yellow-500',
                 permission: 'upcomming-vaccine.view',
             },
-          {
+            {
                 title: 'Vaccine Routing',
                 href: '/vaccine-routing',
                 icon: Syringe,
                 iconClass: 'text-yellow-500',
                 permission: 'vaccine-routing.view',
             },
-          {
+            {
                 title: 'Vaccine ',
                 href: '/vaccine',
                 icon: Syringe,
                 iconClass: 'text-yellow-500',
                 permission: 'vaccine.view',
             },
-          {
+            {
                 title: 'Vaccine Type ',
                 href: '/vaccine-type',
                 icon: Syringe,
@@ -242,6 +262,13 @@ const mainNavItems: NavItem[] = [
                 icon: FileText,
                 iconClass: 'text-yellow-500',
                 permission: 'bird-transfer-receive-report.view',
+            },
+            {
+                title: 'Egg Receive & Grading Report',
+                href: '/egg-receive-and-grading-report',
+                icon: FileText,
+                iconClass: 'text-yellow-500',
+                permission: 'egg-receive-and-grading-report.view',
             },
         ],
     },
@@ -296,19 +323,23 @@ const mainNavItems: NavItem[] = [
             { title: 'Supplier', href: '/supplier', icon: Users, iconClass: 'text-yellow-500', permission: 'supplier.view' },
             { title: 'Chicks Type', href: '/chick-type', icon: BabyChick, iconClass: 'text-yellow-500', permission: 'chick-type.view' },
             { title: 'Breed Type', href: '/breed-type', icon: Package, iconClass: 'text-yellow-500', permission: 'breed-type.view' },
-            { title: 'Approval Matrix', href: '/approval-matrix-config', icon: CheckCircle, iconClass: 'text-yellow-500', permission: 'approval-matrix-config.view' },
+            {
+                title: 'Approval Matrix',
+                href: '/approval-matrix-config',
+                icon: CheckCircle,
+                iconClass: 'text-yellow-500',
+                permission: 'approval-matrix-config.view',
+            },
         ],
     },
 ];
 
-
-
 // Recursive filtering function
 function filterNavItems(items: NavItem[]): NavItem[] {
     return items
-        .map(item => {
+        .map((item) => {
             if (item.children) {
-                const filteredChildren = filterNavItems(item.children).filter(child => can(child.permission));
+                const filteredChildren = filterNavItems(item.children).filter((child) => can(child.permission));
                 if (filteredChildren.length === 0) return null; // hide parent if no children accessible
                 return { ...item, children: filteredChildren };
             }
