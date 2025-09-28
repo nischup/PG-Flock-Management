@@ -26,7 +26,7 @@ const unreadCount = ref(0)
 const previousNotificationCount = ref(0)
 
 // Initialize notification sound
-const { playSound, preloadAudio } = useNotificationSound({
+const { playSound, preloadAudio, testSound, enableAudioAfterInteraction } = useNotificationSound({
   volume: 0.5,
   preload: true
 })
@@ -81,6 +81,9 @@ const getPriorityClasses = (priority: string) => {
 
 // Handle notification click
 const handleNotificationClick = (notification: Notification) => {
+  // Enable audio on first user interaction
+  enableAudioAfterInteraction()
+  
   if (notification.action_url) {
     window.location.href = notification.action_url
   }
@@ -144,7 +147,7 @@ const formatTime = (dateString: string) => {
   <div class="relative">
     <!-- Bell Button -->
     <button
-      @click="isOpen = !isOpen"
+      @click="isOpen = !isOpen; enableAudioAfterInteraction()"
       class="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
     >
       <Bell class="w-6 h-6" />
@@ -173,13 +176,22 @@ const formatTime = (dateString: string) => {
         <!-- Header -->
         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Notifications</h3>
-          <button
-            v-if="unreadCount > 0"
-            @click="markAllAsRead"
-            class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-          >
-            Mark all read
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              @click="testSound"
+              class="text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+              title="Test notification sound"
+            >
+              🔊 Test
+            </button>
+            <button
+              v-if="unreadCount > 0"
+              @click="markAllAsRead"
+              class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Mark all read
+            </button>
+          </div>
         </div>
 
         <!-- Notifications List -->

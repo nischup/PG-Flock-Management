@@ -21,22 +21,41 @@ export function useNotificationSound(options: NotificationSoundOptions = {}) {
   const initAudio = () => {
     if (audio.value) return
 
-    audio.value = new Audio('/Audio/notification-sound.mp3')
+    const audioPath = '/Audio/notification-sound.mp3'
+    console.log('Initializing notification sound with path:', audioPath)
+    
+    audio.value = new Audio(audioPath)
     audio.value.volume = volume
     audio.value.loop = loop
     audio.value.preload = preload ? 'auto' : 'none'
     
     // Handle audio events
+    audio.value.addEventListener('loadstart', () => {
+      console.log('Audio loading started')
+    })
+    
+    audio.value.addEventListener('canplay', () => {
+      console.log('Audio can play')
+    })
+    
     audio.value.addEventListener('play', () => {
+      console.log('Audio playing')
       isPlaying.value = true
     })
     
     audio.value.addEventListener('ended', () => {
+      console.log('Audio ended')
       isPlaying.value = false
     })
     
     audio.value.addEventListener('error', (e) => {
-      console.warn('Failed to load notification sound:', e)
+      console.error('Failed to load notification sound:', e)
+      console.error('Audio error details:', {
+        error: audio.value?.error,
+        networkState: audio.value?.networkState,
+        readyState: audio.value?.readyState,
+        src: audio.value?.src
+      })
       isPlaying.value = false
     })
   }
@@ -54,10 +73,18 @@ export function useNotificationSound(options: NotificationSoundOptions = {}) {
       // Reset audio to beginning
       if (audio.value) {
         audio.value.currentTime = 0
-        await audio.value.play()
+        
+        // Try to play the audio
+        const playPromise = audio.value.play()
+        
+        if (playPromise !== undefined) {
+          await playPromise
+          console.log('Notification sound played successfully')
+        }
       }
     } catch (error) {
       console.warn('Failed to play notification sound:', error)
+      console.warn('This might be due to browser autoplay policies. User interaction may be required.')
     }
   }
 
@@ -93,12 +120,34 @@ export function useNotificationSound(options: NotificationSoundOptions = {}) {
     }
   }
 
+  // Test function for debugging
+  const testSound = (): void => {
+    console.log('Testing notification sound...')
+    playSound()
+  }
+
+  // Enable audio after user interaction (for autoplay policies)
+  const enableAudioAfterInteraction = (): void => {
+    if (audio.value) {
+      // Try to play and immediately pause to enable audio
+      audio.value.play().then(() => {
+        audio.value?.pause()
+        audio.value!.currentTime = 0
+        console.log('Audio enabled after user interaction')
+      }).catch((error) => {
+        console.warn('Failed to enable audio:', error)
+      })
+    }
+  }
+
   return {
     playSound,
     stopSound,
     setEnabled,
     setVolume,
     preloadAudio,
+    testSound,
+    enableAudioAfterInteraction,
     isEnabled: readonly(isEnabled),
     isPlaying: readonly(isPlaying)
   }
