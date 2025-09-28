@@ -433,8 +433,8 @@ class DailyOperationController extends Controller
             $dailyOperation->mortalities()->create([
                 'female_qty' => $request->female_mortality,
                 'male_qty' => $request->male_mortality,
-                'female_mortality_reason' => $request->female_reason,
-                'male_mortality_reason' => $request->male_reason,
+                'female_mortality_reason' => $request->female_mortality_reason,
+                'male_mortality_reason' => $request->male_mortality_reason,
                 'note' => $request->mortalitynote,
             ]);
         }
@@ -444,7 +444,7 @@ class DailyOperationController extends Controller
             $dailyOperation->feeds()->create([
                 'feed_type_id' => $request->feed_type_id,
                 'quantity' => $request->feed_quantity,
-                'unit' => $request->feed_unit,
+                'unit_id' => $request->feed_unit,
                 'note' => $request->feed_note,
             ]);
         }
@@ -454,7 +454,7 @@ class DailyOperationController extends Controller
             $dailyOperation->waters()->create([
                 'water_type_id' => $request->water_type,
                 'quantity' => $request->water_quantity,
-                'unit_id' => $request->feed_unit,
+                'unit_id' => $request->water_unit,
                 'note' => $request->water_note,
             ]);
         }
@@ -556,11 +556,11 @@ class DailyOperationController extends Controller
         }
 
         // feeding program
-        if ($request->feeding_pro_male) {
+        if ($request->male_program) {
             $dailyOperation->feedingPrograms()->create([
-                'female_program' => $request->feeding_pro_female,
-                'male_program' => $request->feeding_pro_male,
-                'note' => $request->feeding_pro_note,
+                'female_program' => $request->female_program,
+                'male_program' => $request->male_program,
+                'note' => $request->feeding_program_note,
             ]);
         }
 
@@ -605,40 +605,347 @@ class DailyOperationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Request $request, $flockId)
+    public function show(Request $request, $stage, $id)
     {
-        $startDate = $request->start_date;
-        $endDate = $request->end_date;
+        $dailyOperation = DailyOperation::with([
+            'batchAssign.flock',
+            'batchAssign.shed',
+            'batchAssign.company',
+            'batchAssign.batch',
+            'batchAssign.project',
+            'mortalities',
+            'feeds.feedType',
+            'waters',
+            'lights',
+            'weights',
+            'temperatures',
+            'eggCollections',
+            'medicines.medicine',
+            'vaccines.vaccine',
+            'creator',
+        ])->findOrFail($id);
 
-        // Dummy daily data for the flock (for now)
-        $dailyData = [
-            ['date' => '2025-08-01', 'mortality' => 2, 'feed' => 10, 'water' => 8],
-            ['date' => '2025-08-02', 'mortality' => 3, 'feed' => 12, 'water' => 9],
-            ['date' => '2025-08-03', 'mortality' => 1, 'feed' => 11, 'water' => 7],
-        ];
-
-        return Inertia::render('dailyoperation/Details', [
-            'dailyData' => $dailyData,
-            'flockId' => $flockId,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
+        return Inertia::render('dailyoperation/Show', [
+            'dailyOperation' => $dailyOperation,
+            'stage' => $stage,
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(DailyOperation $dailyOperation)
+    public function edit($stage, $id)
     {
-        //
+        $dailyOperation = DailyOperation::with([
+            'batchAssign.flock',
+            'batchAssign.shed',
+            'batchAssign.company',
+            'batchAssign.batch',
+            'batchAssign.project',
+            'mortalities',
+            'destroys',
+            'cullings',
+            'sexingErrors',
+            'feeds.feedType',
+            'waters',
+            'lights',
+            'weights',
+            'temperatures',
+            'humidities',
+            'eggCollections',
+            'medicines.medicine',
+            'vaccines.vaccine',
+            'feedingPrograms',
+            'feedFinishings',
+            'creator',
+        ])->findOrFail($id);
+
+        // Get all batch assignments with related flock info (same as create method)
+        $st = 0;
+        if ($stage == 'brooding') {
+            $st = 1;
+        } elseif ($stage == 'growing') {
+            $st = 2;
+        } else {
+            $st = 3;
+        }
+
+        $flocks = BatchAssign::with(['flock', 'shed', 'batch', 'shedReceive', 'company', 'project'])
+            ->visibleFor()
+            ->where('stage', $st)
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($batch) {
+                // Calculate current birds (total - mortality)
+                $totalBirds = $batch->batch_total_qty;
+                $batchMortality = $batch->batch_total_mortality;
+                $currentBirds = 0;
+                // Calculate age from shed receive date
+                $startDate = $batch->shedReceive?->created_at ?? $batch->created_at;
+                $age = $startDate ? $startDate->diffInDays(now()) : 0;
+                $weeks = floor($age / 7);
+                $days = $age % 7;
+                $ageString = "{$weeks} weeks {$days} days";
+
+                return [
+                    'id' => $batch->id,
+                    'flock' => $batch->flock?->name ?? 'N/A',
+                    'batch_no' => $batch->batch_no,
+                    'batch' => $batch->batch?->name ?? 'N/A',
+                    'shed_id' => $batch->shed_id,
+                    'shed' => $batch->shed?->name ?? 'N/A',
+                    'company' => $batch->company?->name ?? 'N/A',
+                    'project' => $batch->project?->name ?? 'N/A',
+                    'label' => sprintf(
+                        '%s, %s, %s, %s, %s, %s',
+                        $batch->company?->short_name ?? 'Unknown',
+                        $batch->project?->name ?? 'Proj',
+                        $batch->flock?->code ?? 'Flock',
+                        $batch->shed?->name ?? 'Shed',
+                        'Level '.$batch->level,
+                        $batch->batch?->name ?? 'Batch'
+                    ),
+                    'total_birds' => $totalBirds,
+                    'current_birds' => $currentBirds,
+                    'batch_mortality' => $batchMortality,
+                    'batch_female_mortality' => $batch->batch_female_mortality ?? 0,
+                    'batch_male_mortality' => $batch->batch_male_mortality ?? 0,
+                    'age' => $ageString,
+                    'job_no' => $batch->job_no,
+                    'transaction_no' => $batch->transaction_no,
+                    'flock_no' => $batch->flock_no,
+                    'stage' => $batch->stage,
+                    'male_qty' => $batch->male_qty,
+                    'female_qty' => $batch->female_qty,
+                    'total_qty' => $batch->total_qty,
+                ];
+            });
+
+        // Get master data for dropdowns
+        $feeds = Feed::all();
+        $medicines = Medicine::all();
+        $vaccines = Vaccine::all();
+        $units = Unit::all();
+
+        // Waters data (same as create method)
+        $waters = [
+            ['id' => 1, 'name' => 'Normal Water'],
+            ['id' => 2, 'name' => 'Mineral Water'],
+            ['id' => 3, 'name' => 'Vitamin Mixed Water'],
+        ];
+
+        return Inertia::render('dailyoperation/Edit', [
+            'dailyOperation' => $dailyOperation,
+            'stage' => $stage,
+            'flocks' => $flocks,
+            'feeds' => $feeds,
+            'medicines' => $medicines,
+            'vaccines' => $vaccines,
+            'units' => $units,
+            'waters' => $waters,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, DailyOperation $dailyOperation)
+    public function update(Request $request, $id)
     {
-        //
+        $dailyOperation = DailyOperation::findOrFail($id);
+
+        // Get the stage from the daily operation's batch assign
+        $stage = $dailyOperation->batchAssign->stage;
+        $stageName = match ($stage) {
+            1 => 'brooding',
+            2 => 'growing',
+            3 => 'laying',
+            default => 'brooding'
+        };
+
+        // Update the daily operation with the same logic as store
+        $dailyOperation->update([
+            'operation_date' => $request->operation_date,
+            'created_by' => Auth::id(),
+        ]);
+
+        // Update or create related data (same logic as store method)
+        $this->updateRelatedData($dailyOperation, $request);
+
+        return redirect()
+            ->route('daily-operation.stage', ['stage' => $stageName])
+            ->with('success', ucfirst($stageName).' operation updated successfully.');
+    }
+
+    /**
+     * Update related data for daily operation
+     */
+    private function updateRelatedData(DailyOperation $dailyOperation, Request $request)
+    {
+        // Update mortalities
+        if ($request->female_mortality > 0 || $request->male_mortality > 0) {
+            $dailyOperation->mortalities()->delete(); // Remove existing
+            $dailyOperation->mortalities()->create([
+                'female_qty' => $request->female_mortality,
+                'male_qty' => $request->male_mortality,
+                'female_mortality_reason' => $request->female_mortality_reason,
+                'male_mortality_reason' => $request->male_mortality_reason,
+                'note' => $request->mortalitynote,
+            ]);
+        }
+
+        // Update feeds
+        if ($request->feed_quantity > 0) {
+            $dailyOperation->feeds()->delete(); // Remove existing
+            $dailyOperation->feeds()->create([
+                'feed_type_id' => $request->feed_type_id,
+                'quantity' => $request->feed_quantity,
+                'unit_id' => $request->feed_unit,
+                'note' => $request->feed_note,
+            ]);
+        }
+
+        // Update waters
+        if ($request->water_quantity > 0) {
+            $dailyOperation->waters()->delete(); // Remove existing
+            $dailyOperation->waters()->create([
+                'water_type_id' => $request->water_type,
+                'quantity' => $request->water_quantity,
+                'unit_id' => $request->water_unit,
+                'note' => $request->water_note,
+            ]);
+        }
+
+        // Update lights
+        if ($request->light_hour > 0 || $request->light_minute > 0) {
+            $dailyOperation->lights()->delete(); // Remove existing
+            $dailyOperation->lights()->create([
+                'hour' => $request->light_hour,
+                'minute' => $request->light_minute,
+                'note' => $request->light_note,
+            ]);
+        }
+
+        // Update destroys
+        if ($request->destroy_male > 0 || $request->destroy_female > 0) {
+            $dailyOperation->destroys()->delete(); // Remove existing
+            $dailyOperation->destroys()->create([
+                'male_qty' => $request->destroy_male,
+                'female_qty' => $request->destroy_female,
+                'male_destroy_reason' => $request->destroy_male_reason,
+                'female_destroy_reason' => $request->destroy_female_reason,
+                'note' => $request->destroy_note,
+            ]);
+        }
+
+        // Update cullings
+        if ($request->cull_male_qty > 0 || $request->cull_female_qty > 0) {
+            $dailyOperation->cullings()->delete(); // Remove existing
+            $dailyOperation->cullings()->create([
+                'male_qty' => $request->cull_male_qty,
+                'female_qty' => $request->cull_female_qty,
+                'male_culling_reason' => $request->cull_male_reason,
+                'female_culling_reason' => $request->cull_female_reason,
+                'note' => $request->culling_note,
+            ]);
+        }
+
+        // Update sexing errors
+        if ($request->sexing_error_male > 0 || $request->sexing_error_female > 0) {
+            $dailyOperation->sexingErrors()->delete(); // Remove existing
+            $dailyOperation->sexingErrors()->create([
+                'male_qty' => $request->sexing_error_male,
+                'female_qty' => $request->sexing_error_female,
+                'note' => $request->serror_note,
+            ]);
+        }
+
+        // Update weights
+        if ($request->weight_male > 0 || $request->weight_female > 0) {
+            $dailyOperation->weights()->delete(); // Remove existing
+            $dailyOperation->weights()->create([
+                'male_weight' => $request->weight_male,
+                'female_weight' => $request->weight_female,
+                'note' => $request->weight_note,
+            ]);
+        }
+
+        // Update temperatures
+        if ($request->temp_inside > 0 || $request->temp_outside > 0 || $request->humidity_today > 0) {
+            $dailyOperation->temperatures()->delete(); // Remove existing
+            $dailyOperation->temperatures()->create([
+                'inside_temp' => $request->temp_inside,
+                'std_inside_temp' => $request->temp_inside_std,
+                'outside_temp' => $request->temp_outside,
+                'std_outside_temp' => $request->temp_outside_std,
+                'humidity' => $request->humidity_today,
+                'humidity_std' => $request->humidity_std,
+                'note' => $request->temperature_note,
+                'humidity_note' => $request->humidity_note,
+            ]);
+        }
+
+        // Update egg collections (only for non-brooding stages)
+        if ($request->egg_collection > 0 && $dailyOperation->batchAssign->stage != 1) {
+            $dailyOperation->eggCollections()->delete(); // Remove existing
+            $dailyOperation->eggCollections()->create([
+                'qty' => $request->egg_collection,
+                'note' => $request->eggcollection_note,
+            ]);
+        }
+
+        // Update medicines
+        if ($request->medicine_qty > 0) {
+            $dailyOperation->medicines()->delete(); // Remove existing
+            $dailyOperation->medicines()->create([
+                'medicine_id' => $request->medicine_id,
+                'quantity' => $request->medicine_qty,
+                'unit_id' => $request->medicine_unit,
+                'dose' => $request->medicine_dose,
+                'note' => $request->medicine_note,
+            ]);
+        }
+
+        // Update vaccines
+        if ($request->vaccine_dose) {
+            $dailyOperation->vaccines()->delete(); // Remove existing
+            $dailyOperation->vaccines()->create([
+                'vaccine_schedule_detail_id' => $request->vaccine_schedule_detail_id,
+                'vaccine_id' => $request->vaccine_id,
+                'dose' => $request->vaccine_dose,
+                'unit_id' => $request->vaccine_unit,
+                'note' => $request->vaccine_note,
+            ]);
+        }
+
+        // Update feeding programs
+        if ($request->male_program > 0 || $request->female_program > 0) {
+            $dailyOperation->feedingPrograms()->delete(); // Remove existing
+            $dailyOperation->feedingPrograms()->create([
+                'female_program' => $request->female_program,
+                'male_program' => $request->male_program,
+                'note' => $request->feeding_program_note,
+            ]);
+        }
+
+        // Update feed finishings
+        if ($request->finishtime_female > 0 || $request->finishtime_male > 0) {
+            $dailyOperation->feedFinishings()->delete(); // Remove existing
+            $dailyOperation->feedFinishings()->create([
+                'female_finishing_time' => $request->finishtime_female,
+                'male_finishing_time' => $request->finishtime_male,
+                'note' => $request->finishtime_note,
+            ]);
+        }
+
+        // Update humidities
+        if ($request->humidity_today > 0 || $request->humidity_std > 0) {
+            $dailyOperation->humidities()->delete(); // Remove existing
+            $dailyOperation->humidities()->create([
+                'today_humidity' => $request->humidity_today,
+                'std_humidity' => $request->humidity_std,
+                'note' => $request->humidity_note,
+            ]);
+        }
     }
 
     /**

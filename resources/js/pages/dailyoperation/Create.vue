@@ -50,7 +50,7 @@ const props = defineProps<{
   todayVaccineSchedules?: Array<any>
 }>()
 
-const { showInfo } = useNotifier(); // auto-shows flash messages
+const { showInfo, showError } = useNotifier(); // auto-shows flash messages
 
 // Tabs (keys must match below validations) - filter out egg collection for brooding
 const tabs = computed(() => {
@@ -193,16 +193,16 @@ const form = useForm({
   vaccine_schedule_detail_id:'',
   vaccine_id:'',
   vaccine_dose:'',
-  vaccine_unit:0,
+  vaccine_unit:'',
   vaccine_note:'',
-  feeding_pro_male:0,
-  feeding_pro_female:0,
-  feeding_pro_note:'',
+  male_program:0,
+  female_program:0,
+  feeding_program_note:'',
   finishtime_male:0,
   finishtime_female:0,
   finishtime_note:0,
   eggcollection_note:'',
-  vaccine_file: [] as File[],
+  vaccine_file: null as File | null,
 
 })
 
@@ -416,6 +416,7 @@ const rulesByTab: Record<string, Rule[]> = {
   humidity: [{ field: 'humidity_note', label: 'Humidity note', kind: 'string' }],
   medicine: [{ field: 'medicine_note', label: 'Medicine note', kind: 'string' }],
   vaccine: [{ field: 'vaccine_note', label: 'Vaccine note', kind: 'string' }],
+  feedingprogram: [{ field: 'feeding_program_note', label: 'Feeding program note', kind: 'string' }],
 }
 
 // ---------- Main Fields Mapping ----------
@@ -431,7 +432,8 @@ const mainFieldsByTab: Record<string, (keyof typeof form)[]> = {
   temperature: ['temp_inside'],
   humidity: ['humidity_today'],
   medicine: ['medicine_id', 'medicine_qty', 'medicine_unit'],
-  vaccine: ['vaccine_id', 'vaccine_dose', 'vaccine_unit'],
+  vaccine: ['vaccine_schedule_detail_id', 'vaccine_dose', 'vaccine_unit'],
+  feedingprogram: ['male_program', 'female_program'],
 }
 
 // ---------- Note Field Mapping ----------
@@ -442,12 +444,13 @@ const noteFieldByTab: Record<string, keyof typeof form> = {
   light_hour: 'light_note',
   destroy: 'destroy_note',
   cull: 'culling_note',
-  seerror_error: 'serror_note',
+  sexing_error: 'serror_note',
   weight: 'weight_note',
   temperature: 'temperature_note',
   humidity: 'humidity_note',
   medicine: 'medicine_note',
   vaccine: 'vaccine_note',
+  feedingprogram: 'feeding_program_note',
 }
 
 // ---------- Clear Errors ----------
@@ -545,7 +548,7 @@ function onVaccineScheduleChange() {
     // Clear vaccine fields if no schedule selected
     form.vaccine_id = ''
     form.vaccine_dose = ''
-    form.vaccine_unit = 0
+    form.vaccine_unit = ''
     return
   }
 
@@ -555,7 +558,7 @@ function onVaccineScheduleChange() {
     // Auto-populate vaccine fields
     form.vaccine_id = selectedSchedule.vaccine_id
     form.vaccine_dose = '' // Let user enter dose
-    form.vaccine_unit = 0 // Let user select unit
+    form.vaccine_unit = '' // Let user select unit
     form.vaccine_note = selectedSchedule.notes || ''
   }
 }
@@ -569,6 +572,12 @@ function submit() {
 
   form.post(route('daily-operation.store'), {
     onSuccess: () => form.reset(),
+    onError: (errors) => {
+      // Handle duplicate entry error
+      if (errors.duplicate_entry) {
+        showError(errors.duplicate_entry, 'Duplicate Entry')
+      }
+    }
   })
 }
 </script>
@@ -1681,7 +1690,7 @@ function submit() {
                   Feeding Program Female
                 </Label>
                 <Input 
-                  v-model.number="form.feeding_pro_female" 
+                  v-model.number="form.female_program" 
                   type="number" 
                   min="0" 
                   placeholder="Enter quantity..."
@@ -1694,7 +1703,7 @@ function submit() {
                   Feeding Program Male
                 </Label>
                 <Input 
-                  v-model.number="form.feeding_pro_male" 
+                  v-model.number="form.male_program" 
                   type="number" 
                   min="0" 
                   placeholder="Enter quantity..."
@@ -1709,15 +1718,15 @@ function submit() {
                 Additional Notes
               </Label>
                 <textarea
-                v-model="form.feeding_pro_note"
+                v-model="form.feeding_program_note"
                 placeholder="Add any additional notes about feeding program..."
                 rows="4"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 resize-none"
-                :class="errors.feeding_pro_note ? 'border-red-500 ring-2 ring-red-200' : ''"
+                :class="errors.feeding_program_note ? 'border-red-500 ring-2 ring-red-200' : ''"
               ></textarea>
-              <p v-if="errors.feeding_pro_note" class="text-red-600 text-xs mt-1 flex items-center">
+              <p v-if="errors.feeding_program_note" class="text-red-600 text-xs mt-1 flex items-center">
                 <AlertTriangle class="w-4 h-4 mr-1" />
-                {{ errors.feeding_pro_note }}
+                {{ errors.feeding_program_note }}
               </p>
           </div>
           </div>
@@ -2011,7 +2020,7 @@ function submit() {
                 </Label>
                   <input 
                     type="file" 
-                  @change="(event) => { const target = event.target as HTMLInputElement; form.vaccine_file = target.files?.[0] ? [target.files[0]] : [] }" 
+                  @change="(event) => { const target = event.target as HTMLInputElement; form.vaccine_file = target.files?.[0] || null }" 
                   class="w-full h-10 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
                   />
                 </div>
@@ -2073,10 +2082,11 @@ function submit() {
                 <Button 
                   v-else 
                   type="submit" 
-                  class="flex items-center space-x-2 px-6 py-3 h-10 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                  class="flex items-center space-x-2 px-6 py-3 h-10 bg-gradient-to-r from-gray-900 to-black hover:from-gray-800 hover:to-gray-900 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                  style="background: linear-gradient(135deg, #1f2937 0%, #000000 100%); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);"
                 >
                   <Save class="w-4 h-4" />
-                  <span>Save Operations</span>
+                  <span>Submit</span>
                 </Button>
               </div>
             </div>
