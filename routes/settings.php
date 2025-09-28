@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Ps\PsFirmReceiveController;
 use App\Http\Controllers\Ps\PsReceiveController;
 use App\Http\Controllers\Settings\PasswordController;
@@ -25,6 +26,9 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/Appearance');
     })->name('appearance');
+
+    // Notifications page
+    Route::get('settings/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
     Route::get('/ps-receive/suppliers-by-shipment-type', [PsReceiveController::class, 'getSuppliersByShipmentType']);
     Route::get('/ps-receive/{id}/data', [PsReceiveController::class, 'getData']);

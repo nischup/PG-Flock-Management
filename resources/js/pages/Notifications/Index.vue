@@ -1,264 +1,18 @@
-<template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <div class="max-w-4xl mx-auto px-4 py-8">
-      <!-- Header -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Notifications</h1>
-        <p class="text-gray-600 dark:text-gray-400 mt-2">Manage your notifications and stay updated</p>
-      </div>
-
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div class="flex items-center">
-            <div class="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-              <Bell class="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ stats.total }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div class="flex items-center">
-            <div class="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
-              <AlertCircle class="w-6 h-6 text-red-600 dark:text-red-400" />
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Unread</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ stats.unread }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div class="flex items-center">
-            <div class="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <CheckCircle class="w-6 h-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Read</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ stats.read }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div class="flex items-center">
-            <div class="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-              <BarChart3 class="w-6 h-6 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600 dark:text-gray-400">This Week</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ weeklyCount }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Filters and Actions -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
-        <div class="p-6">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <!-- Filters -->
-            <div class="flex flex-wrap gap-4">
-              <select
-                v-model="filters.type"
-                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              >
-                <option value="">All Types</option>
-                <option value="approval">Approval</option>
-                <option value="flock">Flock</option>
-                <option value="system">System</option>
-                <option value="alert">Alert</option>
-              </select>
-
-              <select
-                v-model="filters.priority"
-                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              >
-                <option value="">All Priorities</option>
-                <option value="urgent">Urgent</option>
-                <option value="high">High</option>
-                <option value="normal">Normal</option>
-                <option value="low">Low</option>
-              </select>
-
-              <select
-                v-model="filters.status"
-                class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              >
-                <option value="">All Status</option>
-                <option value="unread">Unread</option>
-                <option value="read">Read</option>
-              </select>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex gap-2">
-              <button
-                @click="markAllAsRead"
-                :disabled="stats.unread === 0"
-                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                Mark All Read
-              </button>
-              <button
-                @click="refreshNotifications"
-                class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm"
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Notifications List -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div v-if="filteredNotifications.length > 0" class="divide-y divide-gray-200 dark:divide-gray-700">
-          <div
-            v-for="notification in filteredNotifications"
-            :key="notification.id"
-            class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-            :class="{ 'bg-blue-50 dark:bg-blue-900/20': !notification.is_read }"
-          >
-            <div class="flex items-start gap-4">
-              <!-- Icon -->
-              <div class="flex-shrink-0">
-                <div class="p-2 rounded-lg" :class="getIconBgClass(notification.type)">
-                  <component
-                    :is="getIcon(notification.icon)"
-                    class="w-6 h-6"
-                    :class="getIconClass(notification.type)"
-                  />
-                </div>
-              </div>
-
-              <!-- Content -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between">
-                  <div class="flex-1">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      {{ notification.title }}
-                    </h3>
-                    <p class="text-gray-600 dark:text-gray-400 mt-1">
-                      {{ notification.message }}
-                    </p>
-                  </div>
-
-                  <div class="flex items-center gap-2 ml-4">
-                    <!-- Priority Badge -->
-                    <span
-                      class="px-2 py-1 text-xs font-medium rounded-full"
-                      :class="getPriorityClasses(notification.priority)"
-                    >
-                      {{ notification.priority }}
-                    </span>
-
-                    <!-- Type Badge -->
-                    <span
-                      class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                    >
-                      {{ notification.type }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Meta Information -->
-                <div class="flex items-center justify-between mt-4">
-                  <div class="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                    <span>{{ formatTime(notification.created_at) }}</span>
-                    <span v-if="notification.action_url" class="text-blue-600 dark:text-blue-400">
-                      Click to view details
-                    </span>
-                  </div>
-
-                  <div class="flex items-center gap-2">
-                    <!-- Read Status -->
-                    <span
-                      v-if="!notification.is_read"
-                      class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200"
-                    >
-                      Unread
-                    </span>
-
-                    <!-- Actions -->
-                    <div class="flex items-center gap-1">
-                      <button
-                        v-if="!notification.is_read"
-                        @click="markAsRead(notification)"
-                        class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
-                        title="Mark as read"
-                      >
-                        <CheckCircle class="w-4 h-4" />
-                      </button>
-                      <button
-                        @click="deleteNotification(notification)"
-                        class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
-                        title="Delete"
-                      >
-                        <Trash2 class="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Empty State -->
-        <div v-else class="p-12 text-center">
-          <Bell class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No notifications found</h3>
-          <p class="text-gray-500 dark:text-gray-400">Try adjusting your filters or check back later.</p>
-        </div>
-      </div>
-
-      <!-- Pagination -->
-      <div v-if="notifications.links" class="mt-6">
-        <nav class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-gray-700 dark:text-gray-300">
-              Showing {{ notifications.from }} to {{ notifications.to }} of {{ notifications.total }} results
-            </span>
-          </div>
-          <div class="flex items-center gap-1">
-            <a
-              v-for="link in notifications.links"
-              :key="link.label"
-              :href="link.url"
-              v-html="link.label"
-              class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
-              :class="{
-                'bg-blue-600 text-white border-blue-600': link.active,
-                'text-gray-500 dark:text-gray-400': !link.url
-              }"
-            />
-          </div>
-        </nav>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-// import { Link } from '@inertiajs/vue3' // Not needed for this page
-import { 
-  Bell, 
-  CheckCircle, 
-  AlertCircle, 
-  BarChart3, 
-  Clock, 
-  XCircle, 
-  Feather, 
-  Trash2,
-  Info
-} from 'lucide-vue-next'
+import { Head } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Bell, AlertCircle, CheckCircle, Clock, XCircle, Feather, Info, RefreshCw, Filter } from 'lucide-vue-next';
+import { type BreadcrumbItem } from '@/types';
+import AppLayout from '@/layouts/AppLayout.vue';
+import SettingsLayout from '@/layouts/settings/Layout.vue';
+import HeadingSmall from '@/components/HeadingSmall.vue';
+
+const breadcrumbItems: BreadcrumbItem[] = [
+  {
+    title: 'Notifications',
+    href: '/settings/notifications',
+  },
+];
 
 interface Notification {
   id: number
@@ -366,10 +120,10 @@ const getIconClass = (type: string) => {
 
 const getPriorityClasses = (priority: string) => {
   const classes = {
-    'urgent': 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200',
-    'high': 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-200',
-    'normal': 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200',
-    'low': 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-200',
+    'urgent': 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800',
+    'high': 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800',
+    'normal': 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800',
+    'low': 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-800',
   }
   return classes[priority as keyof typeof classes] || classes.normal
 }
@@ -382,8 +136,15 @@ const formatTime = (dateString: string) => {
   if (diffInMinutes < 1) return 'Just now'
   if (diffInMinutes < 60) return `${diffInMinutes}m ago`
   if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
-  if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d ago`
   return date.toLocaleDateString()
+}
+
+const clearFilters = () => {
+  filters.value = {
+    type: '',
+    priority: '',
+    status: ''
+  }
 }
 
 const markAsRead = async (notification: Notification) => {
@@ -398,6 +159,7 @@ const markAsRead = async (notification: Notification) => {
       },
     })
     
+    // Update local state
     notification.is_read = true
   } catch (error) {
     console.error('Failed to mark notification as read:', error)
@@ -444,3 +206,224 @@ const refreshNotifications = () => {
   window.location.reload()
 }
 </script>
+
+<template>
+  <AppLayout :breadcrumbs="breadcrumbItems">
+    <Head title="Notifications" />
+
+    <SettingsLayout>
+      <div class="space-y-6">
+        <HeadingSmall title="Notifications" description="Manage your notifications and stay updated" />
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+              <div class="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                <Bell class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ stats.total }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+              <div class="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                <AlertCircle class="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Unread</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ stats.unread }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+              <div class="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                <CheckCircle class="w-6 h-6 text-green-600 dark:text-green-400" />
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Read</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ stats.read }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+              <div class="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
+                <Clock class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">This Week</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ weeklyCount }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="flex flex-wrap gap-4 items-center">
+              <div class="flex items-center gap-2">
+                <Filter class="w-4 h-4 text-gray-500" />
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Filters:</span>
+              </div>
+              
+              <select v-model="filters.type" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 min-w-[120px]">
+                <option value="">All Types</option>
+                <option value="approval">Approval</option>
+                <option value="flock">Flock</option>
+                <option value="system">System</option>
+                <option value="alert">Alert</option>
+              </select>
+
+              <select v-model="filters.priority" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 min-w-[140px]">
+                <option value="">All Priorities</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="normal">Normal</option>
+                <option value="low">Low</option>
+              </select>
+
+              <select v-model="filters.status" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 min-w-[120px]">
+                <option value="">All Status</option>
+                <option value="unread">Unread</option>
+                <option value="read">Read</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                @click="clearFilters"
+                class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Notifications ({{ filteredNotifications.length }})
+            </h3>
+            <div class="flex items-center gap-2">
+              <button
+                @click="refreshNotifications"
+                class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                title="Refresh"
+              >
+                <RefreshCw class="w-4 h-4" />
+              </button>
+              <button
+                v-if="stats.unread > 0"
+                @click="markAllAsRead"
+                class="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Mark All Read
+              </button>
+            </div>
+          </div>
+
+          <div class="divide-y divide-gray-200 dark:divide-gray-700">
+            <div v-if="filteredNotifications.length > 0">
+              <div
+                v-for="notification in filteredNotifications"
+                :key="notification.id"
+                class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              >
+                <div class="flex items-start gap-4">
+                  <!-- Icon -->
+                  <div class="flex-shrink-0">
+                    <div
+                      class="w-12 h-12 rounded-full flex items-center justify-center"
+                      :class="getIconBgClass(notification.type)"
+                    >
+                      <component
+                        :is="getIcon(notification.icon)"
+                        class="w-6 h-6"
+                        :class="getIconClass(notification.type)"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Content -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-4">
+                      <div class="flex-1 min-w-0">
+                        <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                          {{ notification.title }}
+                        </h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                          {{ notification.message }}
+                        </p>
+                      </div>
+                      
+                      <!-- Priority Badge -->
+                      <div class="flex-shrink-0">
+                        <span
+                          class="px-3 py-1 text-xs font-medium rounded-full border"
+                          :class="getPriorityClasses(notification.priority)"
+                        >
+                          {{ notification.priority }}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <!-- Time and Actions -->
+                    <div class="flex items-center justify-between mt-4">
+                      <div class="flex items-center gap-4">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                          {{ formatTime(notification.created_at) }}
+                        </span>
+                        <!-- Unread indicator -->
+                        <div
+                          v-if="!notification.is_read"
+                          class="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400"
+                        >
+                          <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
+                          Unread
+                        </div>
+                      </div>
+                      
+                      <!-- Actions -->
+                      <div class="flex items-center gap-2">
+                        <button
+                          v-if="!notification.is_read"
+                          @click="markAsRead(notification)"
+                          class="px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        >
+                          Mark Read
+                        </button>
+                        <button
+                          @click="deleteNotification(notification)"
+                          class="px-3 py-1 text-xs font-medium text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-200 dark:border-red-800 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="p-8 text-center">
+              <Bell class="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No notifications</h3>
+              <p class="text-gray-500 dark:text-gray-400">You're all caught up! No notifications to show.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </SettingsLayout>
+  </AppLayout>
+</template>
