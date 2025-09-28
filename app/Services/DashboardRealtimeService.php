@@ -177,7 +177,7 @@ class DashboardRealtimeService
                     'title' => 'Mortality Rate',
                     'value' => number_format($mortalityPercentage, 2).'%',
                     'icon' => 'ShieldX',
-                    'extra' => number_format($combinedTotalMortality).' birds (Daily: '.$mortalityData['daily_male'].'M/'.$mortalityData['daily_female'].'F, Movement: '.$mortalityData['movement_male'].'M/'.$mortalityData['movement_female'].'F)',
+                    'extra' => number_format($combinedTotalMortality).' birds ',
                     'trend' => $this->calculateTrend('mortality', $mortalityPercentage),
                 ],
                 [
@@ -327,44 +327,46 @@ class DashboardRealtimeService
             ->get()
             ->keyBy('daily_operation_id');
 
-        // Load DailyOperations with batch info
-        $operations = DailyOperation::with(['batchAssign'])
-            ->whereIn('id', $dailyOperationIds)
-            ->get();
+        // Loop through unique batches instead of operations
         $currentMale = $currentFemale = 0;
 
-        
-        foreach ($operations as $op) {
-            $opId = $op->id;
-            $batchId = $op->batchassign_id;
+        foreach ($batchAssignsData as $batchId => $batch) {
+            $assignedMale = $batch->batch_male_qty ?? 0;
+            $assignedFemale = $batch->batch_female_qty ?? 0;
 
-            // Total deductions per operation
-            $maleDeducted = ($mortality[$opId]->male ?? 0)
-                        + ($culling[$opId]->male ?? 0)
-                        + ($destroy[$opId]->male ?? 0)
-                        + ($sexingError[$opId]->male ?? 0)
-                        + ($labSend[$batchId]->male ?? 0);
+            // Sum all deductions related to this batch
+            $maleDeducted = 0;
+            $femaleDeducted = 0;
 
-            $femaleDeducted = ($mortality[$opId]->female ?? 0)
-                            + ($culling[$opId]->female ?? 0)
-                            + ($destroy[$opId]->female ?? 0)
-                            + ($sexingError[$opId]->female ?? 0)
-                            + ($labSend[$batchId]->female ?? 0);
-           
-            // Assign chicks from BatchAssign table
-            $assignedMale = $batchAssignsData[$batchId]->batch_male_qty ?? 0;
-            $assignedFemale = $batchAssignsData[$batchId]->batch_female_qty ?? 0;
+            // Loop over operations in this batch
+            $batchOperations = $operations->where('batchassign_id', $batchId);
+            foreach ($batchOperations as $op) {
+                $opId = $op->id;
+                $maleDeducted += ($mortality[$opId]->male ?? 0)
+                            + ($culling[$opId]->male ?? 0)
+                            + ($destroy[$opId]->male ?? 0)
+                            + ($sexingError[$opId]->male ?? 0);
+                $femaleDeducted += ($mortality[$opId]->female ?? 0)
+                                + ($culling[$opId]->female ?? 0)
+                                + ($destroy[$opId]->female ?? 0)
+                                + ($sexingError[$opId]->female ?? 0);
+            }
 
-            $currentMale += $assignedMale - $maleDeducted;
-            $currentFemale += $assignedFemale - $femaleDeducted;
+            // Add lab send deductions (batch-based)
+            $maleDeducted += $labSend[$batchId]->male ?? 0;
+            $femaleDeducted += $labSend[$batchId]->female ?? 0;
+
+            // Compute current chicks for this batch
+            $currentMale += max($assignedMale - $maleDeducted, 0);
+            $currentFemale += max($assignedFemale - $femaleDeducted, 0);
         }
-            
+
         $currentTotalChicks = $currentMale + $currentFemale;
-        
-        // Percentage of eggs based on current chicks
+
+        // Percentage of eggs based on total current chicks
         $totalPercentageBasedOnChicks = $currentTotalChicks > 0
             ? ($totalEggs / $currentTotalChicks) * 100
-            : 0;
+            : 0;    
         
         return [
             'total' => $totalEggs,
@@ -451,75 +453,88 @@ class DashboardRealtimeService
      * Get chart data for visualizations
      */
     private function getChartData(array $filters): array
-    {
-        // Get last 7 days of data
-        $startDate = now()->subDays(7);
-        $endDate = now();
+{
+    // Date range: last 7 days
+    $startDate = now()->subDays(7);
+    $endDate = now();
 
-        $eggCollections = DailyEggCollection::whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('DATE(created_at) as date, SUM(quantity) as total')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+    // ------------------------------
+    // 1. Daily Egg Collections
+    // ------------------------------
+    $eggCollections = DailyEggCollection::whereBetween('created_at', [$startDate, $endDate])
+        ->selectRaw('SUM(quantity) as total')
+        ->first();
 
-        // Get mortality data from DailyMortality table
-        $dailyMortalityData = DailyMortality::whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('DATE(created_at) as date, SUM(male_qty) as male, SUM(female_qty) as female')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+    $totalEggs = $eggCollections->total ?? 0;
 
-        // Get mortality data from MovementAdjustment table (type = 1 for mortality)
-        $movementMortalityData = MovementAdjustment::where('type', 1) // 1 = Mortality
-            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->selectRaw('DATE(date) as date, SUM(male_qty) as male, SUM(female_qty) as female')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+    // ------------------------------
+    // 2. Mortality Data
+    // ------------------------------
+    $dailyMortalityData = DailyMortality::whereBetween('created_at', [$startDate, $endDate])
+        ->selectRaw('SUM(male_qty) as male, SUM(female_qty) as female')
+        ->first();
 
-        // Combine mortality data from both sources
-        $totalMaleMortality = $dailyMortalityData->sum('male') + $movementMortalityData->sum('male');
-        $totalFemaleMortality = $dailyMortalityData->sum('female') + $movementMortalityData->sum('female');
+    $movementMortalityData = MovementAdjustment::where('type', 1) // 1 = Mortality
+        ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+        ->selectRaw('SUM(male_qty) as male, SUM(female_qty) as female')
+        ->first();
 
-        return [
-            'production' => $eggCollections->map(function ($item, $index) {
-                return [
-                    'label' => 'Day '.($index + 1),
-                    'value' => $item->total,
-                    'color' => '#3b82f6',
-                ];
-            })->toArray(),
-            'mortality' => [
-                [
-                    'label' => 'Male',
-                    'value' => $totalMaleMortality,
-                    'color' => '#ef4444',
-                ],
-                [
-                    'label' => 'Female',
-                    'value' => $totalFemaleMortality,
-                    'color' => '#f97316',
-                ],
+    $totalMaleMortality = ($dailyMortalityData->male ?? 0) + ($movementMortalityData->male ?? 0);
+    $totalFemaleMortality = ($dailyMortalityData->female ?? 0) + ($movementMortalityData->female ?? 0);
+
+    // ------------------------------
+    // 3. Egg Classification Data
+    // ------------------------------
+    $eggClassification = EggClassification::whereBetween('classification_date', [$startDate, $endDate])
+        ->selectRaw('SUM(hatching_eggs) as hatchable, SUM(commercial_eggs) as commercial')
+        ->first();
+
+    $totalHatchable = $eggClassification->hatchable ?? 0;
+    $totalCommercial = $eggClassification->commercial ?? 0;
+
+    // Calculate percentages based on total eggs
+    $hatchablePercentage = $totalEggs > 0 ? round(($totalHatchable / $totalEggs) * 100, 2) : 0;
+    $commercialPercentage = $totalEggs > 0 ? round(($totalCommercial / $totalEggs) * 100, 2) : 0;
+
+    // ------------------------------
+    // 4. Prepare Chart Data
+    // ------------------------------
+    return [
+        'totalEggs' => $totalEggs,
+        'production' => [
+            [
+                'label' => 'Total Eggs',
+                'value' => $totalEggs,
+                'color' => '#3b82f6',
             ],
-            'eggTypes' => [
-                [
-                    'label' => 'Hatchable',
-                    'value' => 60,
-                    'color' => '#10b981',
-                ],
-                [
-                    'label' => 'Commercial',
-                    'value' => 35,
-                    'color' => '#3b82f6',
-                ],
-                [
-                    'label' => 'Broken',
-                    'value' => 5,
-                    'color' => '#ef4444',
-                ],
+        ],
+        'mortality' => [
+            [
+                'label' => 'Male',
+                'value' => $totalMaleMortality,
+                'color' => '#ef4444',
             ],
-        ];
-    }
+            [
+                'label' => 'Female',
+                'value' => $totalFemaleMortality,
+                'color' => '#f97316',
+            ],
+        ],
+        'eggTypes' => [
+            [
+                'label' => 'Hatchable',
+                'value' => $hatchablePercentage,
+                'color' => '#10b981',
+            ],
+            [
+                'label' => 'Commercial',
+                'value' => $commercialPercentage,
+                'color' => '#3b82f6',
+            ],
+        ],
+    ];
+}
+
 
     /**
      * Calculate trend for metrics

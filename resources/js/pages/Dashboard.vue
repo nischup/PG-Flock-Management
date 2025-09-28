@@ -884,7 +884,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         :tooltip="pb.progress + '%'"
       />
       <BirdStage
-        title="Birds Stage"
+        title="Birds Distribution"
         :bordingTotal="props.birdStage.bordingTotal"
         :growingTotal="props.birdStage.growingTotal"
         :productionTotal="props.birdStage.productionTotal"
@@ -971,7 +971,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
           <InteractiveChart
             title="Mortality Distribution"
             :data="dashboardData.chartData?.mortality || chartData.mortality"
-            chart-type="doughnut"
+            chart-type="bar"
             :show-legend="true"
           />
         </div>
@@ -979,7 +979,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Egg Types Chart -->
           <InteractiveChart
-            title="Egg Classification"
+            title="Egg Classification %"
             :data="dashboardData.chartData?.eggTypes || chartData.eggTypes"
             chart-type="bar"
             :show-legend="true"

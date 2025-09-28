@@ -19,17 +19,17 @@
       ></div>
 
       <!-- Tooltip at end of filled part -->
-      <div
+          <div
             class="absolute top-1/2 -translate-y-1/2"
-            :style="{ left: `calc(${progress}% - 20px)` }"
-            >
+            :style="{ left: `calc(${progress}% - 12px)` }"
+          >
             <div
-                class="px-2 py-1 rounded text-white text-xs shadow-md whitespace-nowrap"
-                :style="{ backgroundColor: '#0a080880' }"
+              class="px-2 py-0.5 rounded text-white text-[10px] shadow-md whitespace-nowrap max-w-[60px] truncate"
+              :style="{ backgroundColor: '#0a080880' }"
             >
-                {{ tooltip }}
+              {{ tooltip }}
             </div>
-            </div>
+          </div>
     </div>
 
    
