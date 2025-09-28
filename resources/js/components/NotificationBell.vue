@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { Bell, User, CheckCircle, XCircle, Clock, AlertCircle, Feather } from 'lucide-vue-next'
+import { useNotificationSound } from '@/composables/useNotificationSound'
 // import { router } from '@inertiajs/vue3' // Not needed for this component
 
 interface Notification {
@@ -22,15 +23,32 @@ const props = defineProps<{
 
 const isOpen = ref(false)
 const unreadCount = ref(0)
+const previousNotificationCount = ref(0)
+
+// Initialize notification sound
+const { playSound, preloadAudio } = useNotificationSound({
+  volume: 0.5,
+  preload: true
+})
 
 // Update unread count when notifications change
 const updateUnreadCount = () => {
-  unreadCount.value = props.notifications.filter(n => !n.is_read).length
+  const newCount = props.notifications.filter(n => !n.is_read).length
+  const previousCount = previousNotificationCount.value
+  
+  // Play sound if new notifications arrived (count increased)
+  if (newCount > previousCount && previousCount > 0) {
+    playSound()
+  }
+  
+  unreadCount.value = newCount
+  previousNotificationCount.value = newCount
 }
 
 // Watch for changes in notifications
 onMounted(() => {
   updateUnreadCount()
+  preloadAudio() // Preload the sound file
 })
 
 // Watch for changes in notifications prop

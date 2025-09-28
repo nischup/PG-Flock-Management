@@ -2,10 +2,11 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import Clock from '@/components/Clock.vue' // reusable clock component
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import type { BreadcrumbItemType } from '@/types';
 import WeatherWidget from '../components/WehatherWidget.vue';
 import NotificationBell from '../components/NotificationBell.vue';
+import { useNotificationSound } from '@/composables/useNotificationSound';
 
 withDefaults(
     defineProps<{
@@ -30,6 +31,13 @@ interface Notification {
 }
 
 const userNotifications = ref<Notification[]>([])
+const previousNotificationCount = ref(0)
+
+// Initialize notification sound
+const { playSound, preloadAudio } = useNotificationSound({
+  volume: 0.5,
+  preload: true
+})
 
 // Fetch recent notifications
 const fetchNotifications = async () => {
@@ -43,7 +51,16 @@ const fetchNotifications = async () => {
     
     if (response.ok) {
       const data = await response.json()
+      const newCount = data.filter((n: Notification) => !n.is_read).length
+      const previousCount = previousNotificationCount.value
+      
+      // Play sound if new notifications arrived (count increased)
+      if (newCount > previousCount && previousCount > 0) {
+        playSound()
+      }
+      
       userNotifications.value = data
+      previousNotificationCount.value = newCount
     }
   } catch (error) {
     console.error('Failed to fetch notifications:', error)
@@ -53,6 +70,7 @@ const fetchNotifications = async () => {
 // Fetch notifications on component mount
 onMounted(() => {
   fetchNotifications()
+  preloadAudio() // Preload the sound file
   
   // Refresh notifications every 30 seconds
   setInterval(fetchNotifications, 30000)
