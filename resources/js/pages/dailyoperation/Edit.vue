@@ -158,36 +158,37 @@ const form = useForm({
   operation_date: props.dailyOperation?.operation_date || new Date().toISOString().substr(0, 10),
   female_mortality: props.dailyOperation?.mortalities?.[0]?.female_qty || 0,
   male_mortality: props.dailyOperation?.mortalities?.[0]?.male_qty || 0,
-  water_type: props.dailyOperation?.waters?.[0]?.water_type || '',
-  water_quantity: props.dailyOperation?.waters?.[0]?.qty || 0,
-  female_reason: props.dailyOperation?.mortalities?.[0]?.female_reason || '',
-  male_reason: props.dailyOperation?.mortalities?.[0]?.male_reason || '',
+  water_type: props.dailyOperation?.waters?.[0]?.water_type_id || '',
+  water_quantity: props.dailyOperation?.waters?.[0]?.quantity || 0,
+  water_unit: props.dailyOperation?.waters?.[0]?.unit_id || '',
+  female_mortality_reason: props.dailyOperation?.mortalities?.[0]?.female_mortality_reason || '',
+  male_mortality_reason: props.dailyOperation?.mortalities?.[0]?.male_mortality_reason || '',
   mortalitynote: props.dailyOperation?.mortalities?.[0]?.note || '',
   feed_type_id: props.dailyOperation?.feeds?.[0]?.feed_type_id || '',
-  feed_quantity: props.dailyOperation?.feeds?.[0]?.qty || 0,
+  feed_quantity: props.dailyOperation?.feeds?.[0]?.quantity || 0,
   feed_unit: props.dailyOperation?.feeds?.[0]?.unit_id || '',
   feed_note: props.dailyOperation?.feeds?.[0]?.note || '',
   light_hour: props.dailyOperation?.lights?.[0]?.hour || 0,
   light_minute: props.dailyOperation?.lights?.[0]?.minute || 0,
   destroy_male: props.dailyOperation?.destroys?.[0]?.male_qty || 0,
   destroy_female: props.dailyOperation?.destroys?.[0]?.female_qty || 0,
-  destroy_male_reason: props.dailyOperation?.destroys?.[0]?.male_reason || '',
-  destroy_female_reason: props.dailyOperation?.destroys?.[0]?.female_reason || '',
+  destroy_male_reason: props.dailyOperation?.destroys?.[0]?.male_destroy_reason || '',
+  destroy_female_reason: props.dailyOperation?.destroys?.[0]?.female_destroy_reason || '',
   cull_male_qty: props.dailyOperation?.cullings?.[0]?.male_qty || 0,
   cull_female_qty: props.dailyOperation?.cullings?.[0]?.female_qty || 0,
-  cull_male_reason: props.dailyOperation?.cullings?.[0]?.male_reason || '',
-  cull_female_reason: props.dailyOperation?.cullings?.[0]?.female_reason || '',
+  cull_male_reason: props.dailyOperation?.cullings?.[0]?.male_culling_reason || '',
+  cull_female_reason: props.dailyOperation?.cullings?.[0]?.female_culling_reason || '',
   sexing_error_male: props.dailyOperation?.sexing_errors?.[0]?.male_qty || 0,
   sexing_error_female: props.dailyOperation?.sexing_errors?.[0]?.female_qty || 0,
-  egg_collection: props.dailyOperation?.eggCollections?.[0]?.qty || 0,
+  egg_collection: props.dailyOperation?.egg_collections?.[0]?.quantity || 0,
   weight_male: props.dailyOperation?.weights?.[0]?.male_weight || 0,
   weight_female: props.dailyOperation?.weights?.[0]?.female_weight || 0,
   temp_inside: props.dailyOperation?.temperatures?.[0]?.inside_temp || 0,
-  temp_inside_std: props.dailyOperation?.temperatures?.[0]?.inside_std || 0,
+  temp_inside_std: props.dailyOperation?.temperatures?.[0]?.std_inside_temp || 0,
   temp_outside: props.dailyOperation?.temperatures?.[0]?.outside_temp || 0,
-  temp_outside_std: props.dailyOperation?.temperatures?.[0]?.outside_std || 0,
-  humidity_today: props.dailyOperation?.temperatures?.[0]?.humidity || 0,
-  humidity_std: props.dailyOperation?.temperatures?.[0]?.humidity_std || 0,
+  temp_outside_std: props.dailyOperation?.temperatures?.[0]?.std_outside_temp || 0,
+  humidity_today: props.dailyOperation?.humidities?.[0]?.today_humidity || 0,
+  humidity_std: props.dailyOperation?.humidities?.[0]?.std_humidity || 0,
   water_note: props.dailyOperation?.waters?.[0]?.note || '',
   light_note: props.dailyOperation?.lights?.[0]?.note || '',
   destroy_note: props.dailyOperation?.destroys?.[0]?.note || '',
@@ -195,9 +196,9 @@ const form = useForm({
   serror_note: props.dailyOperation?.sexing_errors?.[0]?.note || '',
   weight_note: props.dailyOperation?.weights?.[0]?.note || '',
   temperature_note: props.dailyOperation?.temperatures?.[0]?.note || '',
-  humidity_note: props.dailyOperation?.temperatures?.[0]?.humidity_note || '',
+  humidity_note: props.dailyOperation?.humidities?.[0]?.note || '',
   medicine_id: props.dailyOperation?.medicines?.[0]?.medicine_id || 0,
-  medicine_qty: props.dailyOperation?.medicines?.[0]?.qty || 0,
+  medicine_qty: props.dailyOperation?.medicines?.[0]?.quantity || 0,
   medicine_unit: props.dailyOperation?.medicines?.[0]?.unit_id || 0,
   medicine_dose: props.dailyOperation?.medicines?.[0]?.dose || 0,
   medicine_note: props.dailyOperation?.medicines?.[0]?.note || '',
@@ -206,13 +207,13 @@ const form = useForm({
   vaccine_dose: props.dailyOperation?.vaccines?.[0]?.dose || '',
   vaccine_unit: props.dailyOperation?.vaccines?.[0]?.unit_id || 0,
   vaccine_note: props.dailyOperation?.vaccines?.[0]?.note || '',
-  feeding_pro_male: props.dailyOperation?.feedingPrograms?.[0]?.male_qty || 0,
-  feeding_pro_female: props.dailyOperation?.feedingPrograms?.[0]?.female_qty || 0,
-  feeding_pro_note: props.dailyOperation?.feedingPrograms?.[0]?.note || '',
-  finishtime_male: props.dailyOperation?.finishingTimes?.[0]?.male_qty || 0,
-  finishtime_female: props.dailyOperation?.finishingTimes?.[0]?.female_qty || 0,
-  finishtime_note: props.dailyOperation?.finishingTimes?.[0]?.note || 0,
-  eggcollection_note: props.dailyOperation?.eggCollections?.[0]?.note || '',
+  male_program: props.dailyOperation?.feeding_programs?.[0]?.male_program || 0,
+  female_program: props.dailyOperation?.feeding_programs?.[0]?.female_program || 0,
+  feeding_program_note: props.dailyOperation?.feeding_programs?.[0]?.note || '',
+  finishtime_male: props.dailyOperation?.feed_finishings?.[0]?.male_finishing_time || 0,
+  finishtime_female: props.dailyOperation?.feed_finishings?.[0]?.female_finishing_time || 0,
+  finishtime_note: props.dailyOperation?.feed_finishings?.[0]?.note || '',
+  eggcollection_note: props.dailyOperation?.egg_collections?.[0]?.note || '',
   vaccine_file: [] as File[],
 })
 
@@ -309,11 +310,45 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 }
 
+// Function to check if a tab has data and mark it as completed
+const checkAndMarkCompletedTabs = () => {
+  const completed: number[] = []
+  
+  tabs.value.forEach((tab, index) => {
+    const mainFields = mainFieldsByTab[tab.key] || []
+    const noteField = noteFieldByTab[tab.key]
+    
+    // Check if any main fields have values
+    const hasMainData = mainFields.some(field => {
+      const value = form[field]
+      return value !== null && value !== undefined && value !== '' && value !== 0
+    })
+    
+    // Check if note field has value
+    const hasNoteData = noteField ? (form[noteField] && form[noteField].trim() !== '') : false
+    
+    // Mark as completed if it has either main data or note data
+    if (hasMainData || hasNoteData) {
+      completed.push(index)
+    }
+  })
+  
+  completedTabs.value = completed
+}
+
 onMounted(() => {
   // Debug: Check what data is being received
   console.log('=== EDIT PAGE MOUNTED ===');
   console.log('props.dailyOperation:', props.dailyOperation);
   console.log('props.dailyOperation?.sexing_errors:', props.dailyOperation?.sexing_errors);
+  
+  // Load batch data on initial mount if batchassign_id is already set
+  if (form.batchassign_id) {
+    loadBatchData(form.batchassign_id);
+  }
+  
+  // Check for existing data and mark tabs as completed
+  checkAndMarkCompletedTabs()
   
   document.addEventListener('click', handleClickOutside)
 })
@@ -324,10 +359,10 @@ onBeforeUnmount(() => {
 
 const counts = ref<Record<string, number | string>>({})
 
-// Watch flock change (real data)
-watch(() => form.batchassign_id, async (id) => {
+// Function to load batch data
+const loadBatchData = async (id: number) => {
   if (!id) {
-    shedQty.value = { opening: 0, current: 0,mortality:0, }
+    shedQty.value = { opening: 0, current: 0, mortality: 0 }
     flockInfo.value.age = '0 weeks 0 days'
     counts.value = {}
     return
@@ -412,7 +447,19 @@ watch(() => form.batchassign_id, async (id) => {
       }
     }
   }
+}
+
+// Watch flock change (real data)
+watch(() => form.batchassign_id, async (id) => {
+  await loadBatchData(id)
+  // Re-check completed tabs after loading batch data
+  checkAndMarkCompletedTabs()
 })
+
+// Watch form data changes to update completed tabs
+watch(() => form, () => {
+  checkAndMarkCompletedTabs()
+}, { deep: true })
 
 // ---------- Validation Setup ----------
 type Rule = { field: keyof typeof form; label: string; kind: 'string' | 'number'; min?: number }
@@ -435,18 +482,20 @@ const rulesByTab: Record<string, Rule[]> = {
 
 // ---------- Main Fields Mapping ----------
 const mainFieldsByTab: Record<string, (keyof typeof form)[]> = {
-  daily_mortality: ['female_mortality', 'male_mortality', 'female_reason', 'male_reason'],
+  daily_mortality: ['female_mortality', 'male_mortality', 'female_mortality_reason', 'male_mortality_reason'],
   feed_consumption: ['feed_type_id', 'feed_quantity', 'feed_unit'],
-  water_consumption: ['water_quantity'],
+  water_consumption: ['water_type', 'water_quantity', 'water_unit'],
   light_hour: ['light_hour'],
-  destroy: ['destroy_male', 'destroy_female'],
-  cull: ['cull_male_qty'],
+  destroy: ['destroy_male', 'destroy_female', 'destroy_male_reason', 'destroy_female_reason'],
+  cull: ['cull_male_qty', 'cull_female_qty', 'cull_male_reason', 'cull_female_reason'],
   sexing_error: ['sexing_error_male'],
   weight: ['weight_male'],
   temperature: ['temp_inside'],
   humidity: ['humidity_today'],
   medicine: ['medicine_id', 'medicine_qty', 'medicine_unit'],
   vaccine: ['vaccine_id', 'vaccine_dose', 'vaccine_unit'],
+  feedingprogram: ['male_program', 'female_program'],
+  feedFinishingtime: ['finishtime_male', 'finishtime_female'],
 }
 
 // ---------- Note Field Mapping ----------
@@ -463,6 +512,8 @@ const noteFieldByTab: Record<string, keyof typeof form> = {
   humidity: 'humidity_note',
   medicine: 'medicine_note',
   vaccine: 'vaccine_note',
+  feedingprogram: 'feeding_program_note',
+  feedFinishingtime: 'finishtime_note',
 }
 
 // ---------- Clear Errors ----------
@@ -990,7 +1041,7 @@ function submit() {
               <div class="space-y-1">
                 <Label class="text-xs font-semibold text-gray-700">Female Reason</Label>
                 <Input 
-                  v-model="form.female_reason" 
+                  v-model="form.female_mortality_reason" 
                   type="text" 
                   placeholder="Enter reason..."
                   class="h-10 border-gray-300 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
@@ -999,7 +1050,7 @@ function submit() {
               <div class="space-y-1">
                 <Label class="text-xs font-semibold text-gray-700">Male Reason</Label>
                 <Input 
-                  v-model="form.male_reason" 
+                  v-model="form.male_mortality_reason" 
                   type="text" 
                   placeholder="Enter reason..."
                   class="h-10 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1257,7 +1308,7 @@ function submit() {
         <!-- Water Consumption -->
         <div v-if="activeTab === 'water_consumption'" class="p-4">
           <div class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="space-y-1">
                 <Label class="text-xs font-semibold text-gray-700 flex items-center">
                   <div class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></div>
@@ -1284,6 +1335,21 @@ function submit() {
                   placeholder="Enter quantity..."
                   class="h-10 border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 />
+            </div>
+              <div class="space-y-1">
+                <Label class="text-xs font-semibold text-gray-700 flex items-center">
+                  <div class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-2"></div>
+                  Unit
+                </Label>
+                <select 
+                  v-model="form.water_unit" 
+                  class="w-full h-10 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white"
+                >
+                  <option value="">Select Unit</option>
+                  <option v-for="unit in props.units" :key="unit.id" :value="unit.id">
+                    {{ unit.name }}
+                  </option>
+                </select>
             </div>
             </div>
             
@@ -1699,7 +1765,7 @@ function submit() {
                   Feeding Program Female
                 </Label>
                 <Input 
-                  v-model.number="form.feeding_pro_female" 
+                  v-model.number="form.female_program" 
                   type="number" 
                   min="0" 
                   placeholder="Enter quantity..."
@@ -1712,7 +1778,7 @@ function submit() {
                   Feeding Program Male
                 </Label>
                 <Input 
-                  v-model.number="form.feeding_pro_male" 
+                  v-model.number="form.male_program" 
                   type="number" 
                   min="0" 
                   placeholder="Enter quantity..."
@@ -1727,15 +1793,15 @@ function submit() {
                 Additional Notes
               </Label>
                 <textarea
-                v-model="form.feeding_pro_note"
+                v-model="form.feeding_program_note"
                 placeholder="Add any additional notes about feeding program..."
                 rows="4"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 resize-none"
-                :class="errors.feeding_pro_note ? 'border-red-500 ring-2 ring-red-200' : ''"
+                :class="errors.feeding_program_note ? 'border-red-500 ring-2 ring-red-200' : ''"
               ></textarea>
-              <p v-if="errors.feeding_pro_note" class="text-red-600 text-xs mt-1 flex items-center">
+              <p v-if="errors.feeding_program_note" class="text-red-600 text-xs mt-1 flex items-center">
                 <AlertTriangle class="w-4 h-4 mr-1" />
-                {{ errors.feeding_pro_note }}
+                {{ errors.feeding_program_note }}
               </p>
           </div>
           </div>
@@ -2091,10 +2157,11 @@ function submit() {
                 <Button 
                   v-else 
                   type="submit" 
-                  class="flex items-center space-x-2 px-6 py-3 h-10 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                  class="flex items-center space-x-2 px-6 py-3 h-10 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                  style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);"
                 >
                   <Save class="w-4 h-4" />
-                  <span>Save Operations</span>
+                  <span>Update</span>
                 </Button>
               </div>
             </div>

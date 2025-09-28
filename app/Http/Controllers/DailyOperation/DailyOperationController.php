@@ -433,8 +433,8 @@ class DailyOperationController extends Controller
             $dailyOperation->mortalities()->create([
                 'female_qty' => $request->female_mortality,
                 'male_qty' => $request->male_mortality,
-                'female_mortality_reason' => $request->female_reason,
-                'male_mortality_reason' => $request->male_reason,
+                'female_mortality_reason' => $request->female_mortality_reason,
+                'male_mortality_reason' => $request->male_mortality_reason,
                 'note' => $request->mortalitynote,
             ]);
         }
@@ -444,7 +444,7 @@ class DailyOperationController extends Controller
             $dailyOperation->feeds()->create([
                 'feed_type_id' => $request->feed_type_id,
                 'quantity' => $request->feed_quantity,
-                'unit' => $request->feed_unit,
+                'unit_id' => $request->feed_unit,
                 'note' => $request->feed_note,
             ]);
         }
@@ -454,7 +454,7 @@ class DailyOperationController extends Controller
             $dailyOperation->waters()->create([
                 'water_type_id' => $request->water_type,
                 'quantity' => $request->water_quantity,
-                'unit_id' => $request->feed_unit,
+                'unit_id' => $request->water_unit,
                 'note' => $request->water_note,
             ]);
         }
@@ -556,11 +556,11 @@ class DailyOperationController extends Controller
         }
 
         // feeding program
-        if ($request->feeding_pro_male) {
+        if ($request->male_program) {
             $dailyOperation->feedingPrograms()->create([
-                'female_program' => $request->feeding_pro_female,
-                'male_program' => $request->feeding_pro_male,
-                'note' => $request->feeding_pro_note,
+                'female_program' => $request->female_program,
+                'male_program' => $request->male_program,
+                'note' => $request->feeding_program_note,
             ]);
         }
 
@@ -651,9 +651,12 @@ class DailyOperationController extends Controller
             'lights',
             'weights',
             'temperatures',
+            'humidities',
             'eggCollections',
             'medicines.medicine',
             'vaccines.vaccine',
+            'feedingPrograms',
+            'feedFinishings',
             'creator',
         ])->findOrFail($id);
 
@@ -668,27 +671,53 @@ class DailyOperationController extends Controller
         }
 
         $flocks = BatchAssign::with(['flock', 'shed', 'batch', 'shedReceive', 'company', 'project'])
+            ->visibleFor()
             ->where('stage', $st)
-            ->where('status', 1)
+            ->orderBy('id', 'desc')
             ->get()
-            ->map(function ($item) {
+            ->map(function ($batch) {
+                // Calculate current birds (total - mortality)
+                $totalBirds = $batch->batch_total_qty;
+                $batchMortality = $batch->batch_total_mortality;
+                $currentBirds = 0;
+                // Calculate age from shed receive date
+                $startDate = $batch->shedReceive?->created_at ?? $batch->created_at;
+                $age = $startDate ? $startDate->diffInDays(now()) : 0;
+                $weeks = floor($age / 7);
+                $days = $age % 7;
+                $ageString = "{$weeks} weeks {$days} days";
+
                 return [
-                    'id' => $item->id,
-                    'flock' => $item->flock ? ['id' => $item->flock->id, 'name' => $item->flock->name] : null,
-                    'shed' => $item->shed ? ['id' => $item->shed->id, 'name' => $item->shed->name] : null,
-                    'batch' => $item->batch ? ['id' => $item->batch->id, 'name' => $item->batch->name] : null,
-                    'company' => $item->company ? ['id' => $item->company->id, 'name' => $item->company->name] : null,
-                    'project' => $item->project ? ['id' => $item->project->id, 'name' => $item->project->name] : null,
-                    'job_no' => $item->job_no,
-                    'transaction_no' => $item->transaction_no,
-                    'flock_no' => $item->flock_no,
-                    'batch_no' => $item->batch_no,
-                    'stage' => $item->stage,
-                    'male_qty' => $item->male_qty,
-                    'female_qty' => $item->female_qty,
-                    'total_qty' => $item->total_qty,
-                    'display_name' => ($item->flock ? $item->flock->name : 'Unknown').' - '.($item->shed ? $item->shed->name : 'Unknown').' ('.$item->batch_no.')',
-                    'label' => ($item->flock ? $item->flock->name : 'Unknown').' - '.($item->shed ? $item->shed->name : 'Unknown').' ('.$item->batch_no.')',
+                    'id' => $batch->id,
+                    'flock' => $batch->flock?->name ?? 'N/A',
+                    'batch_no' => $batch->batch_no,
+                    'batch' => $batch->batch?->name ?? 'N/A',
+                    'shed_id' => $batch->shed_id,
+                    'shed' => $batch->shed?->name ?? 'N/A',
+                    'company' => $batch->company?->name ?? 'N/A',
+                    'project' => $batch->project?->name ?? 'N/A',
+                    'label' => sprintf(
+                        '%s, %s, %s, %s, %s, %s',
+                        $batch->company?->short_name ?? 'Unknown',
+                        $batch->project?->name ?? 'Proj',
+                        $batch->flock?->code ?? 'Flock',
+                        $batch->shed?->name ?? 'Shed',
+                        'Level '.$batch->level,
+                        $batch->batch?->name ?? 'Batch'
+                    ),
+                    'total_birds' => $totalBirds,
+                    'current_birds' => $currentBirds,
+                    'batch_mortality' => $batchMortality,
+                    'batch_female_mortality' => $batch->batch_female_mortality ?? 0,
+                    'batch_male_mortality' => $batch->batch_male_mortality ?? 0,
+                    'age' => $ageString,
+                    'job_no' => $batch->job_no,
+                    'transaction_no' => $batch->transaction_no,
+                    'flock_no' => $batch->flock_no,
+                    'stage' => $batch->stage,
+                    'male_qty' => $batch->male_qty,
+                    'female_qty' => $batch->female_qty,
+                    'total_qty' => $batch->total_qty,
                 ];
             });
 
@@ -758,8 +787,8 @@ class DailyOperationController extends Controller
             $dailyOperation->mortalities()->create([
                 'female_qty' => $request->female_mortality,
                 'male_qty' => $request->male_mortality,
-                'female_reason' => $request->female_reason,
-                'male_reason' => $request->male_reason,
+                'female_mortality_reason' => $request->female_mortality_reason,
+                'male_mortality_reason' => $request->male_mortality_reason,
                 'note' => $request->mortalitynote,
             ]);
         }
@@ -769,7 +798,7 @@ class DailyOperationController extends Controller
             $dailyOperation->feeds()->delete(); // Remove existing
             $dailyOperation->feeds()->create([
                 'feed_type_id' => $request->feed_type_id,
-                'qty' => $request->feed_quantity,
+                'quantity' => $request->feed_quantity,
                 'unit_id' => $request->feed_unit,
                 'note' => $request->feed_note,
             ]);
@@ -779,8 +808,9 @@ class DailyOperationController extends Controller
         if ($request->water_quantity > 0) {
             $dailyOperation->waters()->delete(); // Remove existing
             $dailyOperation->waters()->create([
-                'water_type' => $request->water_type,
-                'qty' => $request->water_quantity,
+                'water_type_id' => $request->water_type,
+                'quantity' => $request->water_quantity,
+                'unit_id' => $request->water_unit,
                 'note' => $request->water_note,
             ]);
         }
@@ -801,8 +831,8 @@ class DailyOperationController extends Controller
             $dailyOperation->destroys()->create([
                 'male_qty' => $request->destroy_male,
                 'female_qty' => $request->destroy_female,
-                'male_reason' => $request->destroy_male_reason,
-                'female_reason' => $request->destroy_female_reason,
+                'male_destroy_reason' => $request->destroy_male_reason,
+                'female_destroy_reason' => $request->destroy_female_reason,
                 'note' => $request->destroy_note,
             ]);
         }
@@ -813,8 +843,8 @@ class DailyOperationController extends Controller
             $dailyOperation->cullings()->create([
                 'male_qty' => $request->cull_male_qty,
                 'female_qty' => $request->cull_female_qty,
-                'male_reason' => $request->cull_male_reason,
-                'female_reason' => $request->cull_female_reason,
+                'male_culling_reason' => $request->cull_male_reason,
+                'female_culling_reason' => $request->cull_female_reason,
                 'note' => $request->culling_note,
             ]);
         }
@@ -844,9 +874,9 @@ class DailyOperationController extends Controller
             $dailyOperation->temperatures()->delete(); // Remove existing
             $dailyOperation->temperatures()->create([
                 'inside_temp' => $request->temp_inside,
-                'inside_std' => $request->temp_inside_std,
+                'std_inside_temp' => $request->temp_inside_std,
                 'outside_temp' => $request->temp_outside,
-                'outside_std' => $request->temp_outside_std,
+                'std_outside_temp' => $request->temp_outside_std,
                 'humidity' => $request->humidity_today,
                 'humidity_std' => $request->humidity_std,
                 'note' => $request->temperature_note,
@@ -868,7 +898,7 @@ class DailyOperationController extends Controller
             $dailyOperation->medicines()->delete(); // Remove existing
             $dailyOperation->medicines()->create([
                 'medicine_id' => $request->medicine_id,
-                'qty' => $request->medicine_qty,
+                'quantity' => $request->medicine_qty,
                 'unit_id' => $request->medicine_unit,
                 'dose' => $request->medicine_dose,
                 'note' => $request->medicine_note,
@@ -884,6 +914,36 @@ class DailyOperationController extends Controller
                 'dose' => $request->vaccine_dose,
                 'unit_id' => $request->vaccine_unit,
                 'note' => $request->vaccine_note,
+            ]);
+        }
+
+        // Update feeding programs
+        if ($request->male_program > 0 || $request->female_program > 0) {
+            $dailyOperation->feedingPrograms()->delete(); // Remove existing
+            $dailyOperation->feedingPrograms()->create([
+                'female_program' => $request->female_program,
+                'male_program' => $request->male_program,
+                'note' => $request->feeding_program_note,
+            ]);
+        }
+
+        // Update feed finishings
+        if ($request->finishtime_female > 0 || $request->finishtime_male > 0) {
+            $dailyOperation->feedFinishings()->delete(); // Remove existing
+            $dailyOperation->feedFinishings()->create([
+                'female_finishing_time' => $request->finishtime_female,
+                'male_finishing_time' => $request->finishtime_male,
+                'note' => $request->finishtime_note,
+            ]);
+        }
+
+        // Update humidities
+        if ($request->humidity_today > 0 || $request->humidity_std > 0) {
+            $dailyOperation->humidities()->delete(); // Remove existing
+            $dailyOperation->humidities()->create([
+                'today_humidity' => $request->humidity_today,
+                'std_humidity' => $request->humidity_std,
+                'note' => $request->humidity_note,
             ]);
         }
     }
