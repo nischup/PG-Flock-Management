@@ -187,95 +187,152 @@ onUnmounted(() => {
                                     Export Excel
                                 </button>
                             </div>
-                            <!-- Egg Grading Report Table (inside dropdown) -->
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full border border-gray-300 text-sm dark:border-gray-600">
-                                    <thead class="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                                        <tr>
-                                            <th class="border px-2 py-1">Sr. No.</th>
-                                            <th class="border px-2 py-1">Shed No.</th>
-                                            <th class="border px-2 py-1">MC</th>
-                                            <th class="border px-2 py-1">Total Eggs Received</th>
-                                            <th class="border px-2 py-1">Graded Eggs</th>
-                                            <th class="border px-2 py-1">Damage Eggs</th>
-                                            <th class="border px-2 py-1">A</th>
-                                            <th class="border px-2 py-1">B</th>
-                                            <th class="border px-2 py-1">C</th>
-                                            <th class="border px-2 py-1">Liquid</th>
-                                            <th class="border px-2 py-1">Dirty</th>
-                                            <th class="border px-2 py-1">Cracked</th>
-                                            <th class="border px-2 py-1">Hatchable</th>
-                                            <th class="border px-2 py-1">Remarks</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr v-for="(batch, index) in props.batches" :key="index">
-                                            <td class="border px-2 py-1">{{ index + 1 }}</td>
-                                            <td class="border px-2 py-1">{{ batch.flock_no }}</td>
-                                            <td class="border px-2 py-1">{{ batch.breed }}</td>
-                                            <td class="border px-2 py-1">{{ batch.eggs }}</td>
-                                            <td class="border px-2 py-1">{{ batch.hatchable_eggs }}</td>
-                                            <td class="border px-2 py-1">{{ batch.damage }}</td>
-                                            <td class="border px-2 py-1">{{ batch.broken }}</td>
-                                            <td class="border px-2 py-1">{{ batch.liquid }}</td>
-                                            <td class="border px-2 py-1">{{ batch.total }}</td>
-                                            <td class="border px-2 py-1">{{ batch.percent }}</td>
-                                            <td class="border px-2 py-1">{{ batch.hatchable_eggs }}</td>
-                                            <td class="border px-2 py-1">{{ batch.set_eggs }}</td>
-                                            <td class="border px-2 py-1">{{ batch.set_date }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Report Table (Main report) -->
-            <div class="report-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Flock No</th>
-                            <th>Breed</th>
-                            <th>Age (Wks)</th>
-                            <th>Received Date</th>
-                            <th>Eggs</th>
-                            <th>Commercial Rejects</th>
-                            <th>Broken</th>
-                            <th>Liquid</th>
-                            <th>Damage</th>
-                            <th>Total</th>
-                            <th>%</th>
-                            <th>Hatchable Eggs</th>
-                            <th>Set Eggs</th>
-                            <th>Set Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="batch in props.batches" :key="batch.batch_no">
-                            <td>{{ batch.flock_no }}</td>
-                            <td>{{ batch.breed }}</td>
-                            <td>{{ batch.age }}</td>
-                            <td>{{ batch.received_date }}</td>
-                            <td>{{ batch.eggs }}</td>
-                            <td>{{ batch.commercial_rejects }}</td>
-                            <td>{{ batch.broken }}</td>
-                            <td>{{ batch.liquid }}</td>
-                            <td>{{ batch.damage }}</td>
-                            <td>{{ batch.total }}</td>
-                            <td>{{ batch.percent }}</td>
-                            <td>{{ batch.hatchable_eggs }}</td>
-                            <td>{{ batch.set_eggs }}</td>
-                            <td>{{ batch.set_date }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="min-h-screen bg-background p-6">
+                <div class="mx-auto max-w-7xl">
+                    <div class="mb-6">
+                        <h1 class="mb-4 text-center text-xl font-bold text-foreground">Egg Received and Grading Report Of Farm-PHL-1</h1>
+                        <div class="mb-6 grid grid-cols-3 gap-4 text-xs">
+                            <div class="space-y-1">
+                                <div class="flex justify-between"><span class="font-medium">Received Date:</span><span>24.05.2025</span></div>
+                                <div class="flex justify-between"><span class="font-medium">HF Fm Date:</span><span>22.25.05.2025</span></div>
+                                <div class="flex justify-between"><span class="font-medium">Report No:</span><span>285</span></div>
+                                <div class="flex justify-between"><span class="font-medium">Stock Day Report Set:</span><span>6</span></div>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex justify-between"><span class="font-medium">Unloading Time Start:</span><span>9:00 Am</span></div>
+                                <div class="flex justify-between"><span class="font-medium">Unloading Time Finish:</span><span>9:30 Am</span></div>
+                                <div class="flex justify-between"><span class="font-medium">Total Time Elapsed (Hour):</span><span>0.30</span></div>
+                                <div class="flex justify-between"><span class="font-medium">Unloading Day Name:</span><span>Shribnoddin</span></div>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex justify-between"><span class="font-medium">Driver Name:</span><span>Sujon</span></div>
+                                <div class="flex justify-between"><span class="font-medium">Vehicle No:</span><span>J2-H-01</span></div>
+                                <div class="flex justify-between"><span class="font-medium">Mobile No:</span><span>1865972468</span></div>
+                                <div class="flex justify-between"><span class="font-medium">Challan No:</span><span>3936</span></div>
+                            </div>
+                        </div>
 
-                <!-- Footer -->
-                <div class="footer">
-                    <p>Prepared by: {{ props.from_company }} | Grading Date: {{ new Date().toLocaleDateString() }}</p>
+                        <div class="grid grid-cols-3 gap-4 text-xs">
+                            <div class="flex justify-between"><span class="font-medium">Egg Grading Date:</span><span>24.05.2025</span></div>
+                            <div class="flex justify-between"><span class="font-medium">Grading Start Time:</span><span>3:00 Am</span></div>
+                            <div class="flex justify-between"><span class="font-medium">Grading Finish Time:</span><span>6:00 Pm</span></div>
+                        </div>
+
+                        <div class="mt-1 grid grid-cols-3 gap-4 text-xs">
+                            <div></div>
+                            <div class="flex justify-between"><span class="font-medium">Total Time Elapsed:</span><span>3:00</span></div>
+                            <div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="report-table min-w-full border border-black text-xs">
+                        <thead class="bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                            <tr>
+                                <th rowspan="3" class="border border-black px-2 py-1">Shed<br />No.</th>
+                                <th colspan="4" class="border border-black px-2 py-1">Stock Day Report Set</th>
+                                <th rowspan="3" class="border border-black px-2 py-1">Received<br />Egg</th>
+                                <th colspan="6" class="border border-black px-2 py-1">Commercial/Reject Details</th>
+                                <th colspan="2" class="border border-black px-2 py-1">Hatchable</th>
+                                <th colspan="4" class="border border-black px-2 py-1">Set Egg</th>
+                                <th rowspan="3" class="border border-black px-2 py-1">Closing<br />Balance</th>
+                                <th rowspan="3" class="border border-black px-2 py-1">Remarks</th>
+                            </tr>
+                            <tr>
+                                <th class="border border-black px-2 py-1">Flock No</th>
+                                <th class="border border-black px-2 py-1">Breed</th>
+                                <th class="border border-black px-2 py-1">Age<br />(Wks)</th>
+                                <th class="border border-black px-2 py-1">Pro.<br />Date</th>
+                                <th class="border border-black px-2 py-1">Com</th>
+                                <th class="border border-black px-2 py-1">Broken</th>
+                                <th class="border border-black px-2 py-1">Liquid</th>
+                                <th class="border border-black px-2 py-1">Damage</th>
+                                <th class="border border-black px-2 py-1">Total</th>
+                                <th class="border border-black px-2 py-1">%</th>
+                                <th class="border border-black px-2 py-1">Egg</th>
+                                <th class="border border-black px-2 py-1">Total Hatchable<br />Eggs</th>
+                                <th class="border border-black px-2 py-1">Quantity-1</th>
+                                <th class="border border-black px-2 py-1">Sec.<br />Date</th>
+                                <th class="border border-black px-2 py-1">Quantity-2</th>
+                                <th class="border border-black px-2 py-1">Sec<br />Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="row-even">
+                                <td class="border border-black px-2 py-1">50.B</td>
+                                <td class="border border-black px-2 py-1">4</td>
+                                <td class="border border-black px-2 py-1">MC</td>
+                                <td class="border border-black px-2 py-1">77.4</td>
+                                <td class="border border-black px-2 py-1">23.05</td>
+                                <td class="border border-black px-2 py-1">1,800</td>
+                                <td class="border border-black px-2 py-1">0</td>
+                                <td class="border border-black px-2 py-1">4</td>
+                                <td class="border border-black px-2 py-1">2</td>
+                                <td class="border border-black px-2 py-1">6</td>
+                                <td class="border border-black px-2 py-1">12</td>
+                                <td class="border border-black px-2 py-1">0.67</td>
+                                <td class="border border-black px-2 py-1">1,788</td>
+                                <td class="border border-black px-2 py-1">1,788</td>
+                                <td class="border border-black px-2 py-1">1,788</td>
+                                <td class="border border-black px-2 py-1">28.05.2025</td>
+                                <td class="border border-black px-2 py-1">123</td>
+                                <td class="border border-black px-2 py-1">123</td>
+                                <td class="border border-black px-2 py-1">0</td>
+                                <td class="border border-black px-2 py-1">123</td>
+                            </tr>
+                            <tr class="row-even">
+                                <td class="border border-black px-2 py-1">50.B</td>
+                                <td class="border border-black px-2 py-1">4</td>
+                                <td class="border border-black px-2 py-1">MC</td>
+                                <td class="border border-black px-2 py-1">77.4</td>
+                                <td class="border border-black px-2 py-1">23.05</td>
+                                <td class="border border-black px-2 py-1">1,800</td>
+                                <td class="border border-black px-2 py-1">0</td>
+                                <td class="border border-black px-2 py-1">4</td>
+                                <td class="border border-black px-2 py-1">2</td>
+                                <td class="border border-black px-2 py-1">6</td>
+                                <td class="border border-black px-2 py-1">12</td>
+                                <td class="border border-black px-2 py-1">0.67</td>
+                                <td class="border border-black px-2 py-1">1,788</td>
+                                <td class="border border-black px-2 py-1">1,788</td>
+                                <td class="border border-black px-2 py-1">1,788</td>
+                                <td class="border border-black px-2 py-1">28.05.2025</td>
+                                <td class="border border-black px-2 py-1">123</td>
+                                <td class="border border-black px-2 py-1">123</td>
+                                <td class="border border-black px-2 py-1">0</td>
+                                <td class="border border-black px-2 py-1">123</td>
+                            </tr>
+                            <tr class="row-even">
+                                <td class="border border-black px-2 py-1">50.B</td>
+                                <td class="border border-black px-2 py-1">4</td>
+                                <td class="border border-black px-2 py-1">MC</td>
+                                <td class="border border-black px-2 py-1">77.4</td>
+                                <td class="border border-black px-2 py-1">23.05</td>
+                                <td class="border border-black px-2 py-1">1,800</td>
+                                <td class="border border-black px-2 py-1">0</td>
+                                <td class="border border-black px-2 py-1">4</td>
+                                <td class="border border-black px-2 py-1">2</td>
+                                <td class="border border-black px-2 py-1">6</td>
+                                <td class="border border-black px-2 py-1">12</td>
+                                <td class="border border-black px-2 py-1">0.67</td>
+                                <td class="border border-black px-2 py-1">1,788</td>
+                                <td class="border border-black px-2 py-1">1,788</td>
+                                <td class="border border-black px-2 py-1">1,788</td>
+                                <td class="border border-black px-2 py-1">28.05.2025</td>
+                                <td class="border border-black px-2 py-1">123</td>
+                                <td class="border border-black px-2 py-1">123</td>
+                                <td class="border border-black px-2 py-1">0</td>
+                                <td class="border border-black px-2 py-1">123</td>
+                            </tr>
+                            <!-- Repeat for other rows... -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
