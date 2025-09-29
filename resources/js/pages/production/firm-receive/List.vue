@@ -24,9 +24,15 @@ const props = defineProps<{
             transfer_female_qty: number;
             transfer_male_qty: number;
             transfer_total_qty: number;
+            receive_female_qty?: number;
+            receive_male_qty?: number;
+            receive_total_qty?: number;
+            receive_date?: string;
+            status: number;
             flock: {
                 id: number;
                 name: string;
+                code: string;
             };
             from_company: {
                 id: number;
@@ -37,6 +43,10 @@ const props = defineProps<{
                 id: number;
                 name: string;
                 short_name: string;
+            };
+            to_project?: {
+                id: number;
+                name: string;
             };
             from_shed: {
                 id: number;
@@ -59,7 +69,7 @@ const props = defineProps<{
         date_to?: string;
     };
     companies?: Array<{ id: number; name: string; short_name?: string; code?: string }>;
-    flocks?: Array<{ id: number; name: string }>;
+    flocks?: Array<{ id: number; name: string; code: string }>;
     sheds?: Array<{ id: number; name: string }>;
     projects?: Array<{ id: number; name: string }>;
 }>();
@@ -136,14 +146,14 @@ const openTransferModal = (transfer: any) => {
 
 // Computed: projects filtered by selected company
 const filteredProjects = computed(() => {
-  if (!form.receive_company_id) return [];
-  return props.projects.filter(p => p.company_id === form.receive_company_id);
+  if (!form.receive_company_id || !props.projects) return [];
+  return props.projects.filter(p => p.id === form.receive_company_id);
 });
 
 
 watch(() => form.receive_company_id, (newVal, oldVal) => {
   if (newVal !== oldVal) {
-    form.to_project_id = null;
+    form.project_id = null;
   }
 });
 // Watch Receive Qty to calculate Shortage & Excess only
@@ -255,19 +265,33 @@ const hasActiveFilters = computed(() => {
     return filters.value.from_company_id || filters.value.flock_id || filters.value.date_from || filters.value.date_to;
 });
 
-const getCompanyName = (companyId: string | number) => {
+const getCompanyName = (companyId: string | number | undefined) => {
+    if (!companyId) return 'Unknown';
     const company = props.companies?.find((c) => c.id === Number(companyId));
     return company?.name || 'Unknown';
 };
 
-const geProjectName = (projectId: string | number) => {
+const geProjectName = (projectId: string | number | undefined) => {
+    if (!projectId) return 'Unknown';
     const project = props.projects?.find((c) => c.id === Number(projectId));
     return project?.name || 'Unknown';
 };
 
-const getFlockName = (flockId: string | number) => {
+const getFlockName = (flockId: string | number | undefined) => {
+    if (!flockId) return 'Unknown';
     const flock = props.flocks?.find((f) => f.id === Number(flockId));
-    return flock?.name || 'Unknown';
+    return flock?.code || 'Unknown';
+};
+
+const getStatusDisplay = (status: number) => {
+    switch (status) {
+        case 1:
+            return { text: 'Pending', class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' };
+        case 2:
+            return { text: 'Received', class: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' };
+        default:
+            return { text: 'Unknown', class: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' };
+    }
 };
 
 // Date picker helper functions
@@ -376,8 +400,8 @@ const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
 
     // Add current filters to the export URL
     if (filters.value.search) params.append('search', filters.value.search);
-    if (filters.value.from_company_id) params.append('from_company_id', filters.value.from_company_id);
-    if (filters.value.flock_id) params.append('flock_id', filters.value.flock_id);
+    if (filters.value.from_company_id) params.append('from_company_id', filters.value.from_company_id.toString());
+    if (filters.value.flock_id) params.append('flock_id', filters.value.flock_id.toString());
     if (filters.value.date_from) params.append('date_from', filters.value.date_from);
     if (filters.value.date_to) params.append('date_to', filters.value.date_to);
 
@@ -390,8 +414,8 @@ const exportExcel = () => {
 
     // Add current filters to the export URL
     if (filters.value.search) params.append('search', filters.value.search);
-    if (filters.value.from_company_id) params.append('from_company_id', filters.value.from_company_id);
-    if (filters.value.flock_id) params.append('flock_id', filters.value.flock_id);
+    if (filters.value.from_company_id) params.append('from_company_id', filters.value.from_company_id.toString());
+    if (filters.value.flock_id) params.append('flock_id', filters.value.flock_id.toString());
     if (filters.value.date_from) params.append('date_from', filters.value.date_from);
     if (filters.value.date_to) params.append('date_to', filters.value.date_to);
 
@@ -444,7 +468,7 @@ const cardData = computed(() => {
         },
         {
             title: 'Flock',
-            value: selectedItem.flock?.name || 'N/A',
+            value: selectedItem.flock?.code || 'N/A',
             title1: '',
             value1: '',
             title2: '',
@@ -496,7 +520,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 >
                     <option :value="null" disabled>Select Receive Record</option>
                     <option v-for="item in props.transferBirds?.data ?? []" :key="item.id" :value="item.id">
-                        {{ item.flock?.name || item.flock_no }} - {{ item.from_company?.short_name }} to {{ item.to_company?.short_name }} :
+                        {{ item.flock?.code || item.flock_no }} - {{ item.from_company?.short_name }} to {{ item.to_company?.short_name }} :
                         {{ dayjs(item.transfer_date).format('YYYY-MM-DD') }}
                     </option>
                 </select>
@@ -740,7 +764,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                                     'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': filters.flock_id == flock.id,
                                                 }"
                                             >
-                                                <span>{{ flock.name }}</span>
+                                                <span>{{ flock.code }}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -889,30 +913,66 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <!-- List Table -->
                 <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
                     <table class="w-full border-collapse text-left">
-                        <thead class="bg-gray-100 dark:bg-gray-700">
+                        <thead>
                             <tr>
-                                <th class="border-b px-4 py-2">#SL</th>
-                                <th class="border-b px-4 py-2">Flock No</th>
-                                <th class="border-b px-4 py-2">Shed</th>
-                                <th class="border-b px-4 py-2">Batch No</th>
-                                <th class="border-b px-4 py-2">Company</th>
-                                <th class="border-b px-4 py-2">Breed</th>
-                                <th class="border-b px-4 py-2">Origin</th>
-                                <th class="border-b px-4 py-2">Total Qty</th>
-                                <th class="border-b px-4 py-2">Action</th>
+                                <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">#SL</th>
+                                <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Receive Company</th>
+                                <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Receive Project</th>
+                                <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Flock</th>
+                                <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">
+                                    <div class="text-center">
+                                        <div>Challan Qty</div>
+                                        <div class="text-xs opacity-90">Female | Male | Total</div>
+                                    </div>
+                                </th>
+                                <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">
+                                    <div class="text-center">
+                                        <div>Receive Qty</div>
+                                        <div class="text-xs opacity-90">Female | Male | Total</div>
+                                    </div>
+                                </th>
+                                <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Receive Date</th>
+                                <th class="border-b px-4 py-2 bg-emerald-500 text-white font-semibold text-sm whitespace-nowrap">Status</th>
+                                <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(transfer, index) in transferBirds.data" :key="transfer.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="border-b px-4 py-2">{{ (transferBirds.current_page - 1) * transferBirds.per_page + index + 1 }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.flock?.name || 'Flock-' + transfer.flock_no }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.shed?.name || 'Shed-' + transfer.shed_no }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.batch?.name || 'Batch-' + transfer.batch_no }}</td>
-                                <!-- Using optional chaining and default values -->
-                                <td class="border-b px-4 py-2">{{ transfer.from_company?.short_name || 'N/A' }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.to_company?.short_name || 'N/A' }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.transaction_no || 'N/A' }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.transfer_total_qty || 0 }}</td>
+                            <tr v-for="(transfer, index) in transferBirds?.data ?? []" :key="transfer.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="border-b px-4 py-2">{{ ((transferBirds?.meta?.current_page || 1) - 1) * (transferBirds?.meta?.per_page || 10) + index + 1 }}</td>
+                                <td class="border-b px-4 py-2">{{ transfer.to_company?.name || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ transfer.to_project?.name || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ transfer.flock?.code || 'Flock-' + transfer.flock_no }}</td>
+                                <td class="border-b px-4 py-2">
+                                    <div class="text-center">
+                                        <div class="text-sm">
+                                            <span class="text-pink-600 dark:text-pink-400">{{ transfer.transfer_female_qty || 0 }}</span>
+                                            <span class="mx-1 text-gray-400">|</span>
+                                            <span class="text-blue-600 dark:text-blue-400">{{ transfer.transfer_male_qty || 0 }}</span>
+                                            <span class="mx-1 text-gray-400">|</span>
+                                            <span class="font-semibold text-gray-800 dark:text-gray-200">{{ transfer.transfer_total_qty || 0 }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="border-b px-4 py-2">
+                                    <div class="text-center">
+                                        <div class="text-sm">
+                                            <span class="text-pink-600 dark:text-pink-400">{{ transfer.receive_female_qty || 0 }}</span>
+                                            <span class="mx-1 text-gray-400">|</span>
+                                            <span class="text-blue-600 dark:text-blue-400">{{ transfer.receive_male_qty || 0 }}</span>
+                                            <span class="mx-1 text-gray-400">|</span>
+                                            <span class="font-semibold text-gray-800 dark:text-gray-200">{{ transfer.receive_total_qty || 0 }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="border-b px-4 py-2">{{ transfer.receive_date ? dayjs(transfer.receive_date).format('MMM DD, YYYY') : 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">
+                                    <span 
+                                        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                        :class="getStatusDisplay(transfer.status).class"
+                                    >
+                                        {{ getStatusDisplay(transfer.status).text }}
+                                    </span>
+                                </td>
                                 <td class="relative border-b px-4 py-2">
                                     <Button
                                         size="sm"

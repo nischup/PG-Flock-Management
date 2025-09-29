@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Production;
 
-use App\Models\Country;
-use App\Models\Master\Shed;
-use App\Models\Master\Flock;
-use Illuminate\Http\Request;
-use App\Models\Master\Company;
-use App\Models\Master\Project;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\Master\BreedType;
-use App\Models\Ps\PsFirmReceive;
-use App\Models\MovementAdjustment;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use App\Models\BirdTransfer\BirdTransfer;
+use App\Models\Country;
+use App\Models\Master\BreedType;
+use App\Models\Master\Company;
+use App\Models\Master\Flock;
+use App\Models\Master\Project;
+use App\Models\Master\Shed;
+use App\Models\MovementAdjustment;
+use App\Models\Ps\PsFirmReceive;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProductionFirmReceiveController extends Controller
 {
@@ -31,7 +31,7 @@ class ProductionFirmReceiveController extends Controller
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
 
-        // Build query for bird transfers with status 1
+        // Build query for bird transfers with status 1 and 2
         $query = BirdTransfer::with([
             'flock',
             'fromCompany',
@@ -39,8 +39,9 @@ class ProductionFirmReceiveController extends Controller
             'toProject',
             'fromShed',
             'toShed',
+            'firmReceive', // Load the related PsFirmReceive data
         ])->visibleFor('toCompany')
-            ->where('status', 1) // Only fetch transfers with status 1
+            ->whereIn('status', [1, 2]) // Fetch transfers with status 1 (pending) and 2 (received)
             ->latest();
         // Apply filters
         if ($search) {
@@ -78,10 +79,28 @@ class ProductionFirmReceiveController extends Controller
         // Get paginated results
         $transfers = $query->paginate($perPage)->withQueryString();
 
+        // Map receive quantities from ps_firm_receives to the transfer data
+        $transfers->getCollection()->transform(function ($transfer) {
+            if ($transfer->firmReceive) {
+                $transfer->receive_female_qty = $transfer->firmReceive->firm_female_qty ?? 0;
+                $transfer->receive_male_qty = $transfer->firmReceive->firm_male_qty ?? 0;
+                $transfer->receive_total_qty = $transfer->firmReceive->firm_total_qty ?? 0;
+                $transfer->receive_date = $transfer->firmReceive->created_at?->format('Y-m-d');
+            } else {
+                $transfer->receive_female_qty = 0;
+                $transfer->receive_male_qty = 0;
+                $transfer->receive_total_qty = 0;
+                $transfer->receive_date = null;
+            }
+
+            return $transfer;
+        });
+
         $companies = Company::all();
         $flocks = Flock::all();
         $sheds = Shed::all();
         $projects = Project::all();
+
         return inertia('production/firm-receive/List', [
             'transferBirds' => $transfers,
             'companies' => $companies,
@@ -134,70 +153,66 @@ class ProductionFirmReceiveController extends Controller
             'status' => 1,
         ]);
 
-
         $insertId = $firmReceive->id;
-        $transactionNo = "{$insertId}-{$companyInfo->short_name}-{$flockInfo->name}";
+        $timestamp = now()->format('YmdHis'); // YearMonthDayHourMinuteSecond
+        $transactionNo = "TRN{$timestamp}";
 
         // Save the job_no back to the record
         $firmReceive->update(['transaction_no' => $transactionNo]);
 
         if ($request->total_shortage > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $flockInfo->id,
-                'flock_no' =>    $flockInfo->name,
+                'flock_id' => $flockInfo->id,
+                'flock_no' => $flockInfo->name,
                 'job_no' => $psReceive->job_no,
                 'transaction_no' => $transactionNo,
-                'stage'      =>  1,                  // 5 = Bird Transfer stage
-                'stage_id'   =>  $insertId,
-                'type'       =>  3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                'male_qty'   =>  $request->shortage_male ?? 0,
-                'female_qty' =>  $request->shortage_female ?? 0,
-                'total_qty'  =>  $request->total_shortage ?? 0,
-                'date'       =>  date('Y-m-d'),
-                'remarks'    => "Sortage when firm receive from tansfer",
+                'stage' => 1,                  // 5 = Bird Transfer stage
+                'stage_id' => $insertId,
+                'type' => 3,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->shortage_male ?? 0,
+                'female_qty' => $request->shortage_female ?? 0,
+                'total_qty' => $request->total_shortage ?? 0,
+                'date' => date('Y-m-d'),
+                'remarks' => 'Sortage when firm receive from tansfer',
             ]);
         }
 
         if ($request->total_excess > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $flockInfo->id,
-                'flock_no'   =>  $flockInfo->name, 
+                'flock_id' => $flockInfo->id,
+                'flock_no' => $flockInfo->name,
                 'job_no' => $psReceive->job_no,
-                'transaction_no' => $transactionNo,// fetch from batch or pass from request
-                'stage'      =>  1,                  // 5 = Bird Transfer stage
-                'stage_id'   =>  $insertId,
-                'type'       =>  2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                'male_qty'   =>  $request->excess_male ?? 0,
-                'female_qty' =>  $request->excess_female ?? 0,
-                'total_qty'  =>  $request->total_excess ?? 0,
-                'date'       => date('Y-m-d'),
-                'remarks'    => "Excess when firm receive from tansfer",
+                'transaction_no' => $transactionNo, // fetch from batch or pass from request
+                'stage' => 1,                  // 5 = Bird Transfer stage
+                'stage_id' => $insertId,
+                'type' => 2,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->excess_male ?? 0,
+                'female_qty' => $request->excess_female ?? 0,
+                'total_qty' => $request->total_excess ?? 0,
+                'date' => date('Y-m-d'),
+                'remarks' => 'Excess when firm receive from tansfer',
             ]);
         }
 
         if ($request->total_mortality > 0) {
             MovementAdjustment::create([
-                'flock_id'   =>  $flockInfo->id,
-                'flock_no' =>    $flockInfo->name,
+                'flock_id' => $flockInfo->id,
+                'flock_no' => $flockInfo->name,
                 'job_no' => $psReceive->job_no,
                 'transaction_no' => $transactionNo, // fetch from batch or pass from request
-                'stage'      =>  1,                  // 5 = Bird Transfer stage
-                'stage_id'   =>  $insertId,
-                'type'       =>  1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
-                'male_qty'   =>  $request->mortality_male ?? 0,
-                'female_qty' =>  $request->mortality_female ?? 0,
-                'total_qty'  =>  $request->total_mortality ?? 0,
-                'date'       => date('Y-m-d'),
-                'remarks'    => "Mortality when firm receive from tansfer",
+                'stage' => 1,                  // 5 = Bird Transfer stage
+                'stage_id' => $insertId,
+                'type' => 1,     // 1=Mortality,2=Excess,3=Shortage,4=Deviation
+                'male_qty' => $request->mortality_male ?? 0,
+                'female_qty' => $request->mortality_female ?? 0,
+                'total_qty' => $request->total_mortality ?? 0,
+                'date' => date('Y-m-d'),
+                'remarks' => 'Mortality when firm receive from tansfer',
             ]);
         }
 
-
-
-
-
-
-        
+        // Update bird_transfer status to 2 based on job_no
+        BirdTransfer::where('job_no', $job_no)->update(['status' => 2]);
 
         return redirect()->route('production-farm-receive.index')->with('success', 'Bird Receive successfully.');
     }
@@ -257,17 +272,17 @@ class ProductionFirmReceiveController extends Controller
 
         // dd($firmReceive);
         // Ensure PsFirmReceive is loaded properly
-        if (!$firmReceive) {
+        if (! $firmReceive) {
             abort(404, 'Firm receive data not found.');
         }
 
         // Get breed type names
         $breeds = BreedType::pluck('name', 'id')->toArray();
         $breedtype = $item->breed_type ?? [];
-        if (!is_array($breedtype)) {
+        if (! is_array($breedtype)) {
             $breedtype = is_null($breedtype) ? [] : [$breedtype];
         }
-        $breedAll = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
+        $breedAll = array_map(fn ($id) => $breeds[$id] ?? null, $breedtype);
         $breedNames = array_filter($breedAll);
         $breedName = implode(', ', $breedNames);
         $fromCompany = Company::find($item->from_company_id);
@@ -367,8 +382,9 @@ class ProductionFirmReceiveController extends Controller
             'toCompany',
             'fromShed',
             'toShed',
+            'firmReceive', // Load the related PsFirmReceive data
         ])
-            ->where('status', 1)
+            ->whereIn('status', [1, 2])
             ->latest();
 
         // Apply filters
@@ -405,6 +421,23 @@ class ProductionFirmReceiveController extends Controller
         }
 
         $transfers = $query->get();
+
+        // Map receive quantities from ps_firm_receives to the transfer data
+        $transfers->transform(function ($transfer) {
+            if ($transfer->firmReceive) {
+                $transfer->receive_female_qty = $transfer->firmReceive->firm_female_qty ?? 0;
+                $transfer->receive_male_qty = $transfer->firmReceive->firm_male_qty ?? 0;
+                $transfer->receive_total_qty = $transfer->firmReceive->firm_total_qty ?? 0;
+                $transfer->receive_date = $transfer->firmReceive->created_at?->format('Y-m-d');
+            } else {
+                $transfer->receive_female_qty = 0;
+                $transfer->receive_male_qty = 0;
+                $transfer->receive_total_qty = 0;
+                $transfer->receive_date = null;
+            }
+
+            return $transfer;
+        });
 
         // Prepare data for PDF
         $data = [
@@ -445,8 +478,9 @@ class ProductionFirmReceiveController extends Controller
             'toCompany',
             'fromShed',
             'toShed',
+            'firmReceive', // Load the related PsFirmReceive data
         ])
-            ->where('status', 1)
+            ->whereIn('status', [1, 2])
             ->latest();
 
         // Apply filters
@@ -483,6 +517,23 @@ class ProductionFirmReceiveController extends Controller
         }
 
         $transfers = $query->get();
+
+        // Map receive quantities from ps_firm_receives to the transfer data
+        $transfers->transform(function ($transfer) {
+            if ($transfer->firmReceive) {
+                $transfer->receive_female_qty = $transfer->firmReceive->firm_female_qty ?? 0;
+                $transfer->receive_male_qty = $transfer->firmReceive->firm_male_qty ?? 0;
+                $transfer->receive_total_qty = $transfer->firmReceive->firm_total_qty ?? 0;
+                $transfer->receive_date = $transfer->firmReceive->created_at?->format('Y-m-d');
+            } else {
+                $transfer->receive_female_qty = 0;
+                $transfer->receive_male_qty = 0;
+                $transfer->receive_total_qty = 0;
+                $transfer->receive_date = null;
+            }
+
+            return $transfer;
+        });
 
         // Prepare data for Excel export
         $data = [];
@@ -531,7 +582,7 @@ class ProductionFirmReceiveController extends Controller
             $breedtype = is_null($breedtype) ? [] : [$breedtype];
         }
 
-        $breedAll = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
+        $breedAll = array_map(fn ($id) => $breeds[$id] ?? null, $breedtype);
         $breedNames = array_filter($breedAll);
         $breedName = implode(', ', $breedNames);
 
