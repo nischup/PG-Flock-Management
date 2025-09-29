@@ -24,6 +24,7 @@ const props = defineProps<{
             transfer_female_qty: number;
             transfer_male_qty: number;
             transfer_total_qty: number;
+            status: number;
             flock: {
                 id: number;
                 name: string;
@@ -57,7 +58,7 @@ const props = defineProps<{
             };
             breed_type?: number[];
             country_of_origin?: number;
-            batchAssign?: {
+            batch_assign?: {
                 id: number;
                 shed?: {
                     id: number;
@@ -202,6 +203,17 @@ const getCountryName = (countryId: number | null) => {
     if (!countryId) return 'N/A';
     const country = props.countries?.find(c => c.id === countryId);
     return country?.name || `Country-${countryId}`;
+};
+
+const getStatusDisplay = (status: number) => {
+    switch (status) {
+        case 1:
+            return { text: 'Transfer', class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' };
+        case 2:
+            return { text: 'Transferred', class: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' };
+        default:
+            return { text: 'Unknown', class: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' };
+    }
 };
 
 // Date picker helper functions
@@ -912,33 +924,42 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <!-- List Table -->
                 <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
                     <table class="w-full border-collapse text-left">
-                        <thead class="bg-gray-100 dark:bg-gray-700">
+                        <thead>
                             <tr>
-                                <th class="border-b px-4 py-2">#SL</th>
-                                <th class="border-b px-4 py-2">From Company</th>
-                                <th class="border-b px-4 py-2">From Project</th>
-                                <th class="border-b px-4 py-2">To Company</th>
-                                <th class="border-b px-4 py-2">To Project</th>
-                                <th class="border-b px-4 py-2">Flock</th>
-                                <th class="border-b px-4 py-2">Batch</th>
-                                <th class="border-b px-4 py-2">Breed</th>
-                                <th class="border-b px-4 py-2">Origin</th>
-                                <th class="border-b px-4 py-2">Total Qty</th>
-                                <th class="border-b px-4 py-2">Action</th>
+                                <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">#SL</th>
+                                <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap" style="width: 400px;">From Company</th>
+                                <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">From Project</th>
+                                <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">To Company</th>
+                                <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">To Project</th>
+                                <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Flock</th>
+                                <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Transfered Batch</th>
+                                <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Breed</th>
+                                <th class="border-b px-4 py-2 bg-yellow-500 text-black font-semibold text-sm whitespace-nowrap">Origin</th>
+                                <th class="border-b px-4 py-2 bg-cyan-500 text-white font-semibold text-sm whitespace-nowrap">Total Qty</th>
+                                <th class="border-b px-4 py-2 bg-emerald-500 text-white font-semibold text-sm whitespace-nowrap">Status</th>
+                                <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(transfer, index) in birdTransfers.data" :key="transfer.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="border-b px-4 py-2">{{ (birdTransfers.current_page - 1) * birdTransfers.per_page + index + 1 }}</td>
+                            <tr v-for="(transfer, index) in birdTransfers?.data ?? []" :key="transfer.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="border-b px-4 py-2">{{ index + 1 }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.from_company?.short_name || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.from_project?.name || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.to_company?.short_name || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.to_project?.name || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.flock?.code || 'Flock-' + transfer.flock_no }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.batchAssign?.batch?.name || 'N/A' }}</td>
-                                <td class="border-b px-4 py-2">{{ getBreedNames(transfer.breed_type) || 'N/A' }}</td>
-                                <td class="border-b px-4 py-2">{{ getCountryName(transfer.country_of_origin) || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ transfer.batch_assign?.batch?.name || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ getBreedNames(transfer.breed_type ?? null) || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ getCountryName(transfer.country_of_origin ?? null) || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.transfer_total_qty || 0 }}</td>
+                                <td class="border-b px-4 py-2">
+                                    <span 
+                                        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                        :class="getStatusDisplay(transfer.status).class"
+                                    >
+                                        {{ getStatusDisplay(transfer.status).text }}
+                                    </span>
+                                </td>
                                 <td class="relative border-b px-4 py-2">
                                     <Button
                                         size="sm"
