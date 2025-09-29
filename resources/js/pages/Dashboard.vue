@@ -725,6 +725,44 @@ const tabConfig = {
 
 // Active tab content
 const activeContent = computed(() => tabConfig[activeTab.value] || { filters: [], cards: [] })
+
+
+
+///
+
+const totalBirds = props.birdStage.bordingTotal + props.birdStage.growingTotal + props.birdStage.productionTotal
+
+// Format data for InteractiveChart
+const birdStageChartData = [
+  {
+    label: 'Brooding',
+    value: totalBirds > 0 ? Math.round((props.birdStage.bordingTotal / totalBirds) * 100) : 0,
+    color: '#fbbf24'
+  },
+  {
+    label: 'Growing',
+    value: totalBirds > 0 ? Math.round((props.birdStage.growingTotal / totalBirds) * 100) : 0,
+    color: '#22c55e'
+  },
+  {
+    label: 'Laying',
+    value: totalBirds > 0 ? Math.round((props.birdStage.productionTotal / totalBirds) * 100) : 0,
+    color: '#3b82f6'
+  }
+]
+
+
+const colors = ['#34d399', '#fbbf24', '#3b82f6'] // green, yellow, blue
+
+const progressChartData = props.progressBars.map((pb, index) => ({
+  label: pb.title,
+  value: pb.progress,           
+  color: colors[index % colors.length], // cycle through colors
+  extra: pb.extra || ''
+}))
+
+
+
 </script>
 
 <template>
@@ -866,31 +904,24 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
 
     <!-- Progress Bars -->
     <div 
-      class="p-6 grid gap-4"
+      class="p-6 grid gap-2"
       :class="{
-        'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4': dashboardLayout === 'grid',
+        'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2': dashboardLayout === 'grid',
         'grid-cols-1': dashboardLayout === 'list',
         'grid-cols-4': dashboardLayout === 'compact'
       }"
     >
-      <ProgressInfoBar
-        v-for="(pb,i) in props.progressBars"
-        :key="i"
-        :title="pb.title"
-        :progress="pb.progress"
-        colorFrom="#34d399"
-        colorTo="#10b981"
-        :extra="pb.extra"
-        :tooltip="pb.progress + '%'"
+      <InteractiveChart
+        title="Egg Classification %"
+        chart-type="bar"       
+        :data="progressChartData"
+        :show-legend="true"
       />
-      <BirdStage
-        title="Birds Distribution"
-        :bordingTotal="props.birdStage.bordingTotal"
-        :growingTotal="props.birdStage.growingTotal"
-        :productionTotal="props.birdStage.productionTotal"
-        bordingColor="#fbbf24"
-        growingColor="#22c55e"
-        productionColor="#3b82f6"
+      <InteractiveChart
+        title="Birds Lifecycle %"
+        chart-type="bar"           
+        :data="birdStageChartData"
+        :show-legend="true"
       />
     </div>
 
@@ -969,7 +1000,7 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
 
           <!-- Mortality Distribution -->
           <InteractiveChart
-            title="Mortality Distribution"
+            title="Mortality"
             :data="dashboardData.chartData?.mortality || chartData.mortality"
             chart-type="bar"
             :show-legend="true"
@@ -979,8 +1010,8 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Egg Types Chart -->
           <InteractiveChart
-            title="Egg Classification %"
-            :data="dashboardData.chartData?.eggTypes || chartData.eggTypes"
+            title="Others Rejection %"
+            :data="dashboardData.chartData?.othersRejecton || chartData.eggTypes"
             chart-type="bar"
             :show-legend="true"
           />
@@ -1024,14 +1055,14 @@ const activeContent = computed(() => tabConfig[activeTab.value] || { filters: []
 
 
       <!-- Bird Stage Visualization -->
-      <div class="bg-white/40 backdrop-blur-md border border-white/50 rounded-xl shadow-lg p-6">
+      <!-- <div class="bg-white/40 backdrop-blur-md border border-white/50 rounded-xl shadow-lg p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Bird Lifecycle Distribution</h3>
         <BirdStage
           :bording-total="dashboardData.birdStage.bordingTotal"
           :growing-total="dashboardData.birdStage.growingTotal"
           :production-total="dashboardData.birdStage.productionTotal"
         />
-      </div>
+      </div> -->
     </div>
 
     <!-- Interactive Modal -->

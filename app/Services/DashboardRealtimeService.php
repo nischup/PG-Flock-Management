@@ -87,15 +87,21 @@ class DashboardRealtimeService
 
         $totalLabSendMale   = FirmLabTest::whereIn('batch_assign_id', $batchAssigns->pluck('id'))->sum('firm_lab_send_male_qty');
         $totalLabSendFemale = FirmLabTest::whereIn('batch_assign_id', $batchAssigns->pluck('id'))->sum('firm_lab_send_female_qty');
+        $totalLabSend       = $totalLabSendMale + $totalLabSendFemale;
+
+
 
         $totalCullingMale     = DailyCulling::whereIn('daily_operation_id', $operationIds)->sum('male_qty');
         $totalCullingFemale   = DailyCulling::whereIn('daily_operation_id', $operationIds)->sum('female_qty');
+        $totalCulling       = $totalCullingMale + $totalCullingFemale;
 
         $totalDestroyedMale   = DailyDestroy::whereIn('daily_operation_id', $operationIds)->sum('male_qty');
         $totalDestroyedFemale = DailyDestroy::whereIn('daily_operation_id', $operationIds)->sum('female_qty');
+        $totalDestroyed       = $totalDestroyedMale + $totalDestroyedFemale;
 
         $totalSexingErrorMale   = DailySexingError::whereIn('daily_operation_id', $operationIds)->sum('male_qty');
         $totalSexingErrorFemale = DailySexingError::whereIn('daily_operation_id', $operationIds)->sum('female_qty');
+        $totalSexingError       = $totalSexingErrorMale + $totalSexingErrorFemale;
 
         $totalAssignedMale   = $batchAssigns->sum('batch_male_qty');
         $totalAssignedFemale = $batchAssigns->sum('batch_female_qty');
@@ -116,6 +122,19 @@ class DashboardRealtimeService
             $totalSexingErrorFemale
         );
 
+
+        $totalRejectionMale = $totalLabSendMale + 
+            $totalCullingMale + 
+            $totalDestroyedMale + 
+            $totalSexingErrorMale;
+        $totalRejectionFemale =$totalLabSendFemale + 
+            $totalCullingFemale + 
+            $totalDestroyedFemale + 
+            $totalSexingErrorFemale; 
+        $totalRejection = $totalRejectionMale+$totalRejectionFemale;
+        
+        $totalAssingBirds = $totalAssignedMale+$totalAssignedFemale;
+        
         $totalBirds = $totalMale + $totalFemale;
 
         $femaleExcessBirds = $batchAssigns->sum('batch_excess_female');
@@ -133,10 +152,19 @@ class DashboardRealtimeService
         // For mortality rate calculation, use combined data from DailyMortality and MovementAdjustment tables
         // This gives us the actual mortality rate based on daily operations and movement adjustments
         $mortalityPercentage = $totalBirds > 0 ? ($combinedTotalMortality / $totalBirds) * 100 : 0;
-        $malePercentage = $totalBirds > 0 ? ($totalMale / $totalBirds) * 100 : 0;
-        $femalePercentage = $totalBirds > 0 ? ($totalFemale / $totalBirds) * 100 : 0;
+        $malePercentage = $totalBirds > 0 ? ($totalMale / $totalAssingBirds) * 100 : 0;
+        $rejectionPercentage =  $totalBirds > 0 ? ($totalRejection / $totalAssingBirds) * 100 : 0;
+        $femalePercentage = $totalBirds > 0 ? ($totalFemale / $totalAssingBirds) * 100 : 0;
         $femaleExcessPercentage = $totalBirds > 0 ? ($femaleExcessBirds / $totalBirds) * 100 : 0;
         $maleSortagePercentage = $totalBirds > 0 ? ($maleSortageBirds / $totalBirds) * 100 : 0;
+
+
+
+        // --- Percentages based on total assigned birds ---
+            $labSendPct       = $totalBirds > 0 ? ($totalLabSend / $totalAssingBirds) * 100 : 0;
+            $cullingPct       = $totalBirds > 0 ? ($totalCulling / $totalAssingBirds) * 100 : 0;
+            $destroyedPct     = $totalBirds > 0 ? ($totalDestroyed / $totalAssingBirds) * 100 : 0;
+            $sexingErrorPct   = $totalBirds > 0 ? ($totalSexingError / $totalAssingBirds) * 100 : 0;
         // Get bird stage distribution
         $birdStages = $this->getBirdStageDistribution($batchAssigns);
 
@@ -366,15 +394,17 @@ class DashboardRealtimeService
         // Percentage of eggs based on total current chicks
         $totalPercentageBasedOnChicks = $currentTotalChicks > 0
             ? ($totalEggs / $currentTotalChicks) * 100
-            : 0;    
+            : 0; 
+            
+            
         
         return [
             'total' => $totalEggs,
             'hatchable' => $hatchable,
             'commercial' => $commercial,
             'broken' => $broken,
-            'hatchable_percentage' => round($totalEggs > 0 ? ($hatchable / $totalEggs) * 100 : 0,2),
-            'commercial_percentage' => round($totalEggs > 0 ? ($commercial / $totalEggs) * 100 : 0,2),
+            'hatchable_percentage' => round($totalEggs > 0 ? ($hatchable / $currentTotalChicks) * 100 : 0,2),
+            'commercial_percentage' => round($totalEggs > 0 ? ($commercial / $currentTotalChicks) * 100 : 0,2),
             'goal' => 2000,
             'hatchable_goal' => 1200,
             'commercial_goal' => 700,
@@ -387,7 +417,6 @@ class DashboardRealtimeService
             'total_percentage_based_on_chicks' => round($totalPercentageBasedOnChicks, 2),
         ];
     }
-
 
 
     /**
@@ -453,87 +482,187 @@ class DashboardRealtimeService
      * Get chart data for visualizations
      */
     private function getChartData(array $filters): array
-{
-    // Date range: last 7 days
-    $startDate = now()->subDays(7);
-    $endDate = now();
+    {
+        $startDate = now()->subDays(7);
+        $endDate = now();
 
-    // ------------------------------
-    // 1. Daily Egg Collections
-    // ------------------------------
-    $eggCollections = DailyEggCollection::whereBetween('created_at', [$startDate, $endDate])
-        ->selectRaw('SUM(quantity) as total')
-        ->first();
+        // ------------------------------
+        // 1. Total Egg Collection
+        // ------------------------------
+        $eggCollections = DailyEggCollection::whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('SUM(quantity) as total, MAX(created_at) as last_date')
+            ->first();
 
-    $totalEggs = $eggCollections->total ?? 0;
+        $totalEggs = $eggCollections->total ?? 0;
+        $lastEggCollectionDate = $eggCollections->last_date ?? null;
 
-    // ------------------------------
-    // 2. Mortality Data
-    // ------------------------------
-    $dailyMortalityData = DailyMortality::whereBetween('created_at', [$startDate, $endDate])
-        ->selectRaw('SUM(male_qty) as male, SUM(female_qty) as female')
-        ->first();
+        // ------------------------------
+        // 2. Mortality Data
+        // ------------------------------
+        $dailyMortalityData = DailyMortality::whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('SUM(male_qty) as male, SUM(female_qty) as female')
+            ->first();
 
-    $movementMortalityData = MovementAdjustment::where('type', 1) // 1 = Mortality
-        ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-        ->selectRaw('SUM(male_qty) as male, SUM(female_qty) as female')
-        ->first();
+        $movementMortalityData = MovementAdjustment::where('type', 1) // Mortality
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->selectRaw('SUM(male_qty) as male, SUM(female_qty) as female')
+            ->first();
 
-    $totalMaleMortality = ($dailyMortalityData->male ?? 0) + ($movementMortalityData->male ?? 0);
-    $totalFemaleMortality = ($dailyMortalityData->female ?? 0) + ($movementMortalityData->female ?? 0);
+        $totalMaleMortality = ($dailyMortalityData->male ?? 0) + ($movementMortalityData->male ?? 0);
+        $totalFemaleMortality = ($dailyMortalityData->female ?? 0) + ($movementMortalityData->female ?? 0);
 
-    // ------------------------------
-    // 3. Egg Classification Data
-    // ------------------------------
-    $eggClassification = EggClassification::whereBetween('classification_date', [$startDate, $endDate])
-        ->selectRaw('SUM(hatching_eggs) as hatchable, SUM(commercial_eggs) as commercial')
-        ->first();
+        // ------------------------------
+        // 3. Egg Classification Data
+        // ------------------------------
+        $eggClassification = EggClassification::whereBetween('classification_date', [$startDate, $endDate])
+            ->selectRaw('SUM(hatching_eggs) as hatchable, SUM(commercial_eggs) as commercial')
+            ->first();
 
-    $totalHatchable = $eggClassification->hatchable ?? 0;
-    $totalCommercial = $eggClassification->commercial ?? 0;
+        $totalHatchable = $eggClassification->hatchable ?? 0;
+        $totalCommercial = $eggClassification->commercial ?? 0;
 
-    // Calculate percentages based on total eggs
-    $hatchablePercentage = $totalEggs > 0 ? round(($totalHatchable / $totalEggs) * 100, 2) : 0;
-    $commercialPercentage = $totalEggs > 0 ? round(($totalCommercial / $totalEggs) * 100, 2) : 0;
+        // ------------------------------
+        // 4. Current Chicks & Deductions
+        // ------------------------------
+        $batchAssigns = BatchAssign::where('status', 1)->get()->keyBy('id');
+        $dailyOperationIds = DailyOperation::whereIn('batchassign_id', $batchAssigns->pluck('id'))->pluck('id');
 
-    // ------------------------------
-    // 4. Prepare Chart Data
-    // ------------------------------
-    return [
-        'totalEggs' => $totalEggs,
-        'production' => [
-            [
-                'label' => 'Total Eggs',
-                'value' => $totalEggs,
-                'color' => '#3b82f6',
+        $mortality = DailyMortality::whereIn('daily_operation_id', $dailyOperationIds)
+            ->selectRaw('daily_operation_id, SUM(male_qty) as male, SUM(female_qty) as female')
+            ->groupBy('daily_operation_id')->get()->keyBy('daily_operation_id');
+
+        $culling = DailyCulling::whereIn('daily_operation_id', $dailyOperationIds)
+            ->selectRaw('daily_operation_id, SUM(male_qty) as male, SUM(female_qty) as female')
+            ->groupBy('daily_operation_id')->get()->keyBy('daily_operation_id');
+
+        $destroy = DailyDestroy::whereIn('daily_operation_id', $dailyOperationIds)
+            ->selectRaw('daily_operation_id, SUM(male_qty) as male, SUM(female_qty) as female')
+            ->groupBy('daily_operation_id')->get()->keyBy('daily_operation_id');
+
+        $sexingError = DailySexingError::whereIn('daily_operation_id', $dailyOperationIds)
+            ->selectRaw('daily_operation_id, SUM(male_qty) as male, SUM(female_qty) as female')
+            ->groupBy('daily_operation_id')->get()->keyBy('daily_operation_id');
+
+        $labSend = FirmLabTest::whereIn('batch_assign_id', $batchAssigns->pluck('id'))
+            ->selectRaw('batch_assign_id, SUM(firm_lab_send_male_qty) as male, SUM(firm_lab_send_female_qty) as female')
+            ->groupBy('batch_assign_id')->get()->keyBy('batch_assign_id');
+
+        $operations = DailyOperation::whereIn('id', $dailyOperationIds)->get();
+
+        $currentMale = $currentFemale = 0;
+        $totalCulling = $totalDestroy = $totalSexingError = $totalLabSend = 0;
+
+        foreach ($operations as $op) {
+            $opId = $op->id;
+            $batchId = $op->batchassign_id;
+
+            $assignedMale = $batchAssigns[$batchId]->batch_male_qty ?? 0;
+            $assignedFemale = $batchAssigns[$batchId]->batch_female_qty ?? 0;
+
+            $maleDeducted = ($mortality[$opId]->male ?? 0)
+                        + ($culling[$opId]->male ?? 0)
+                        + ($destroy[$opId]->male ?? 0)
+                        + ($sexingError[$opId]->male ?? 0)
+                        + ($labSend[$batchId]->male ?? 0);
+
+            $femaleDeducted = ($mortality[$opId]->female ?? 0)
+                        + ($culling[$opId]->female ?? 0)
+                        + ($destroy[$opId]->female ?? 0)
+                        + ($sexingError[$opId]->female ?? 0)
+                        + ($labSend[$batchId]->female ?? 0);
+
+            $currentMale += max(0, $assignedMale - $maleDeducted);
+            $currentFemale += max(0, $assignedFemale - $femaleDeducted);
+
+            $totalCulling += ($culling[$opId]->male ?? 0) + ($culling[$opId]->female ?? 0);
+            $totalDestroy += ($destroy[$opId]->male ?? 0) + ($destroy[$opId]->female ?? 0);
+            $totalSexingError += ($sexingError[$opId]->male ?? 0) + ($sexingError[$opId]->female ?? 0);
+            $totalLabSend += ($labSend[$batchId]->male ?? 0) + ($labSend[$batchId]->female ?? 0);
+        }
+
+        $currentTotalChicks = $currentMale + $currentFemale;
+
+        // Percentages
+        $cullingPercentage = $currentTotalChicks > 0 ? round(($totalCulling / $currentTotalChicks) * 100, 2) : 0;
+        $destroyPercentage = $currentTotalChicks > 0 ? round(($totalDestroy / $currentTotalChicks) * 100, 2) : 0;
+        $sexingErrorPercentage = $currentTotalChicks > 0 ? round(($totalSexingError / $currentTotalChicks) * 100, 2) : 0;
+        $labSendPercentage = $currentTotalChicks > 0 ? round(($totalLabSend / $currentTotalChicks) * 100, 2) : 0;
+
+        $hatchablePercentage = $currentTotalChicks > 0 ? round(($totalHatchable / $currentTotalChicks) * 100, 2) : 0;
+        $commercialPercentage = $currentTotalChicks > 0 ? round(($totalCommercial / $currentTotalChicks) * 100, 2) : 0;
+
+        // ------------------------------
+        // 5. Prepare Chart Data
+        // ------------------------------
+        return [
+            'totalEggs' => $totalEggs,
+            'lastEggCollectionDate' => $lastEggCollectionDate,
+            'production' => [
+                [
+                    'label' => 'Current Chicks',
+                    'value' => $currentTotalChicks,
+                    'color' => '#3b82f6',
+                ],
+                [
+                    'label' => 'Total Eggs',
+                    'value' => $totalEggs,
+                    'color' => '#3b82f6',
+                ],
             ],
-        ],
-        'mortality' => [
-            [
-                'label' => 'Male',
-                'value' => $totalMaleMortality,
-                'color' => '#ef4444',
+            'mortality' => [
+                [
+                    'label' => 'Male',
+                    'value' => $totalMaleMortality,
+                    'color' => '#ef4444',
+                ],
+                [
+                    'label' => 'Female',
+                    'value' => $totalFemaleMortality,
+                    'color' => '#f97316',
+                ],
             ],
-            [
-                'label' => 'Female',
-                'value' => $totalFemaleMortality,
-                'color' => '#f97316',
+            'othersRejecton'=>[
+                [
+                    'label' => 'Total Culling',
+                    'value' => $totalCulling,
+                    'percentage' => $cullingPercentage,
+                    'color' => '#f59e0b',
+                ],
+                [
+                    'label' => 'Total Destroy',
+                    'value' => $totalDestroy,
+                    'percentage' => $destroyPercentage,
+                    'color' => '#ef4444',
+                ],
+                [
+                    'label' => 'Sexing Error',
+                    'value' => $totalSexingError,
+                    'percentage' => $sexingErrorPercentage,
+                    'color' => '#8b5cf6',
+                ],
+                [
+                    'label' => 'Lab Send',
+                    'value' => $totalLabSend,
+                    'percentage' => $labSendPercentage,
+                    'color' => '#0ea5e9',
+                ],
             ],
-        ],
-        'eggTypes' => [
-            [
-                'label' => 'Hatchable',
-                'value' => $hatchablePercentage,
-                'color' => '#10b981',
+            'eggTypes' => [
+                [
+                    'label' => 'Hatchable',
+                    'value' => $hatchablePercentage,
+                    'color' => '#10b981',
+                ],
+                [
+                    'label' => 'Commercial',
+                    'value' => $commercialPercentage,
+                    'color' => '#3b82f6',
+                ],
             ],
-            [
-                'label' => 'Commercial',
-                'value' => $commercialPercentage,
-                'color' => '#3b82f6',
-            ],
-        ],
-    ];
-}
+        ];
+    }
+
+
 
 
     /**
@@ -1774,7 +1903,7 @@ class DashboardRealtimeService
                     $query->where('operation_date', '>=', now()->subMonth());
                 }
             } else {
-                $query->where('operation_date', '=', now()->subDays(7));
+                $query->where('operation_date', '>=', now()->subDays(7));
             }
         })
         ->with([
