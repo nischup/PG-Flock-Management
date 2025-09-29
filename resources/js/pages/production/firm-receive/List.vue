@@ -71,7 +71,7 @@ const props = defineProps<{
     companies?: Array<{ id: number; name: string; short_name?: string; code?: string }>;
     flocks?: Array<{ id: number; name: string; code: string }>;
     sheds?: Array<{ id: number; name: string }>;
-    projects?: Array<{ id: number; name: string }>;
+    projects?: Array<{ id: number; name: string; company_id: number }>;
 }>();
 
 useListFilters({ routeName: '/production-farm-receive', filters: props.filters });
@@ -147,7 +147,7 @@ const openTransferModal = (transfer: any) => {
 // Computed: projects filtered by selected company
 const filteredProjects = computed(() => {
   if (!form.receive_company_id || !props.projects) return [];
-  return props.projects.filter(p => p.id === form.receive_company_id);
+  return props.projects.filter(p => p.company_id === form.receive_company_id);
 });
 
 
@@ -1155,9 +1155,10 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Receive Project</label>
                                     <select
                                         v-model="form.project_id"
-                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                        :disabled="!form.receive_company_id"
+                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500 dark:disabled:bg-gray-700 dark:disabled:text-gray-400"
                                     >
-                                        <option value="">Select Project</option>
+                                        <option value="">{{ form.receive_company_id ? 'Select Project' : 'Select Company First' }}</option>
                                         <option v-for="d in filteredProjects" :key="d.id" :value="d.id">{{ d.name }}</option>
                                     </select>
                                 </div>
@@ -1168,7 +1169,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                     >
                                         <option value="">Select Flock</option>
-                                        <option v-for="f in props.flocks" :key="f.id" :value="f.id">{{ f.name }}</option>
+                                        <option v-for="f in props.flocks" :key="f.id" :value="f.id">{{ f.code }}</option>
                                     </select>
                                 </div>
                                 <div>
