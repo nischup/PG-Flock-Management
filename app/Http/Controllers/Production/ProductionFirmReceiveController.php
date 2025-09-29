@@ -99,7 +99,7 @@ class ProductionFirmReceiveController extends Controller
         $companies = Company::all();
         $flocks = Flock::all();
         $sheds = Shed::all();
-        $projects = Project::all();
+        $projects = Project::with('company')->get();
 
         return inertia('production/firm-receive/List', [
             'transferBirds' => $transfers,
