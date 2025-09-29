@@ -145,7 +145,7 @@ class EggClassificationController extends Controller
                            ($request->white_egg) +
                            ($request->dirty_egg);
 
-        $commercial_total = ($request->commercial);
+        $commercial_total = $rejected_total;
 
         // Calculate hatching eggs, ensuring it's never negative
         $hatching_egg = max(0, ($request->total_egg) - $rejected_total);
