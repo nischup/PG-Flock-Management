@@ -57,7 +57,7 @@ const props = defineProps<{
             };
             breed_type?: number[];
             country_of_origin?: number;
-            batchAssign?: {
+            batch_assign?: {
                 id: number;
                 shed?: {
                     id: number;
@@ -920,7 +920,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <th class="border-b px-4 py-2">To Company</th>
                                 <th class="border-b px-4 py-2">To Project</th>
                                 <th class="border-b px-4 py-2">Flock</th>
-                                <th class="border-b px-4 py-2">Batch</th>
+                                <th class="border-b px-4 py-2">Transfered Batch</th>
                                 <th class="border-b px-4 py-2">Breed</th>
                                 <th class="border-b px-4 py-2">Origin</th>
                                 <th class="border-b px-4 py-2">Total Qty</th>
@@ -929,15 +929,15 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </thead>
                         <tbody>
                             <tr v-for="(transfer, index) in birdTransfers.data" :key="transfer.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="border-b px-4 py-2">{{ (birdTransfers.current_page - 1) * birdTransfers.per_page + index + 1 }}</td>
+                                <td class="border-b px-4 py-2">{{ index + 1 }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.from_company?.short_name || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.from_project?.name || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.to_company?.short_name || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.to_project?.name || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.flock?.code || 'Flock-' + transfer.flock_no }}</td>
-                                <td class="border-b px-4 py-2">{{ transfer.batchAssign?.batch?.name || 'N/A' }}</td>
-                                <td class="border-b px-4 py-2">{{ getBreedNames(transfer.breed_type) || 'N/A' }}</td>
-                                <td class="border-b px-4 py-2">{{ getCountryName(transfer.country_of_origin) || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ transfer.batch_assign?.batch?.name || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ getBreedNames(transfer.breed_type ?? null) || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ getCountryName(transfer.country_of_origin ?? null) || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ transfer.transfer_total_qty || 0 }}</td>
                                 <td class="relative border-b px-4 py-2">
                                     <Button

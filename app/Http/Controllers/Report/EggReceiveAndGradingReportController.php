@@ -440,3 +440,4 @@ class EggReceiveAndGradingReportController extends Controller
         ]);
     }
 }
+
