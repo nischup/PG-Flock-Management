@@ -24,6 +24,7 @@ const props = defineProps<{
             shed_name: string;
             company_id: number;
             company_name: string;
+            breed_name: string;
             batch_female_qty: number;
             batch_male_qty: number;
             stage: number;
@@ -980,6 +981,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Company</th>
                                 <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Level</th>
                                 <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Batch</th>
+                                 <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Breed</th>
                                 <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Male Qty</th>
                                 <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Female Qty</th>
                                 <th class="border-b px-4 py-2 bg-yellow-500 text-black font-semibold text-sm whitespace-nowrap">Total Qty</th>
@@ -1012,6 +1014,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     </span>
                                 </td>
                                 <td class="border-b px-4 py-2 whitespace-nowrap">{{ item.batch?.name || item.batch_name }}</td>
+                                <td class="border-b px-4 py-2 whitespace-nowrap">{{ item.breed_name || "N/A" }}</td>
                                 <td class="border-b px-4 py-2 text-center whitespace-nowrap">{{ item.batch_male_qty }}</td>
                                 <td class="border-b px-4 py-2 text-center whitespace-nowrap">{{ item.batch_female_qty }}</td>
                                 <td class="border-b px-4 py-2 text-center font-medium whitespace-nowrap">{{ item.batch_total_qty }}</td>

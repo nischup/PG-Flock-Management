@@ -43,7 +43,7 @@ const props = defineProps<{
 const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }]
 
 // Tabs
-const alltabs = ['Dashboard','Company','Project','Flock','Shed','Batch']
+const alltabs = ['Dashboard','Company','Project','Shed','Flock','Batch']
 const activeTab = ref('Dashboard')
 
 // Real-time data composable (temporarily disabled)
@@ -718,9 +718,9 @@ const tabConfig = {
   Dashboard: { filters: [], cards: dashboardData.value.cards },
   Company: { filters: ["company", "date"], cards: dashboardData.value.cards },
   Project: { filters: ["company","project","date"], cards: dashboardData.value.cards },
-  Flock: { filters: ["company","project","flock","shed"], cards: dashboardData.value.cards },
-  Shed: { filters: ["company","project","flock","shed","date"], cards: dashboardData.value.cards },
-  Batch: { filters: ["company","project","flock","shed","batch","date"], cards: dashboardData.value.cards },
+  Shed: { filters: ["company","project","shed","date"], cards: dashboardData.value.cards },
+  Flock: { filters: ["company","project","shed","flock","date"], cards: dashboardData.value.cards },
+  Batch: { filters: ["company","project","shed","flock","batch","date"], cards: dashboardData.value.cards },
 }
 
 // Active tab content
@@ -902,28 +902,7 @@ const progressChartData = props.progressBars.map((pb, index) => ({
       </template>
     </div>
 
-    <!-- Progress Bars -->
-    <div 
-      class="p-6 grid gap-2"
-      :class="{
-        'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2': dashboardLayout === 'grid',
-        'grid-cols-1': dashboardLayout === 'list',
-        'grid-cols-4': dashboardLayout === 'compact'
-      }"
-    >
-      <InteractiveChart
-        title="Egg Classification %"
-        chart-type="bar"       
-        :data="progressChartData"
-        :show-legend="true"
-      />
-      <InteractiveChart
-        title="Birds Lifecycle %"
-        chart-type="bar"           
-        :data="birdStageChartData"
-        :show-legend="true"
-      />
-    </div>
+    
 
     <!-- Loading State -->
     <div v-if="isLoading" class="p-6">
@@ -978,7 +957,28 @@ const progressChartData = props.progressBars.map((pb, index) => ({
           </DashboardWidget>
         </InteractiveTooltip>
       </div>
-
+      <!-- Progress Bars -->
+    <div 
+      class="grid gap-5"
+      :class="{
+        'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2': dashboardLayout === 'grid',
+        'grid-cols-1': dashboardLayout === 'list',
+        'grid-cols-4': dashboardLayout === 'compact'
+      }"
+    >
+      <InteractiveChart
+        title="Egg Classification %"
+        chart-type="bar"       
+        :data="progressChartData"
+        :show-legend="true"
+      />
+      <InteractiveChart
+        title="Birds Lifecycle %"
+        chart-type="bar"           
+        :data="birdStageChartData"
+        :show-legend="true"
+      />
+    </div>
       <!-- Interactive Charts Section -->
       <div v-if="showCharts" class="space-y-6">
         <div class="flex items-center justify-between">
@@ -1038,6 +1038,7 @@ const progressChartData = props.progressBars.map((pb, index) => ({
         </div>
       </div>
 
+      
       <!-- Interactive Data Table -->
       <div v-if="showDataTable">
         <InteractiveDataTable

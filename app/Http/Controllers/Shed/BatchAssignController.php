@@ -6,6 +6,7 @@ use App\Exports\ArrayExport;
 use App\Http\Controllers\Controller;
 use App\Models\BirdTransfer\BirdTransfer;
 use App\Models\Master\Batch;
+use App\Models\Master\BreedType;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Level;
@@ -90,6 +91,7 @@ class BatchAssignController extends Controller
                     'company_name' => $batch->company->name ?? '',
                     'shed_id' => $batch->shed_id,
                     'shed_name' => $batch->shed->name ?? '',
+                    'breed_name' => $batch->breed->name ?? '',
                     'level' => $batch->level,
                     'stage' => $batch->stage,
                     'batch_no' => $batch->batch_no,
@@ -146,6 +148,7 @@ class BatchAssignController extends Controller
                     'shed_total_qty' => $shed->shed_total_qty ?? 0,
                     'receive_type' => $shed->receive_type ?? '',
                     'created_by' => Auth::id(),
+                    'breed_type'=>$shed->firmReceive?->psReceive?->breed_type,
                 ];
             });
 
@@ -161,9 +164,8 @@ class BatchAssignController extends Controller
         // Batches from database
         $batches = Batch::where('status', true)->select('id', 'name')->get();
 
-
-
-
+        $breeds = BreedType::where('status', true)->select('id', 'name')->get();
+ 
 
         return Inertia::render('shed/batch-assign/Create', [
             'shedReceives' => $shedReceives,
@@ -171,6 +173,7 @@ class BatchAssignController extends Controller
             'companies' => $companies,
             'levels' => $levels,
             'batches' => $batches,
+            'breeds'=>$breeds,
         ]);
 
     }
@@ -200,6 +203,7 @@ class BatchAssignController extends Controller
                 'shed_id' => $shedReceive->shed_id ?? null,
                 'level' => $batch['level'] ?? null,
                 'batch_no' => $batch['batch_no'] ?? 1,
+                'breed_type'=> $batch['breed_id'] ?? 1,
 
                 'batch_received_female_qty' => $batch['batch_received_female_qty'] ?? 0,
                 'batch_received_male_qty' => $batch['batch_received_male_qty'] ?? 0,
@@ -382,6 +386,10 @@ class BatchAssignController extends Controller
         // Batches from database
         $batches = Batch::where('status', true)->select('id', 'name')->get();
 
+        // Breed 
+
+        $breeds = BreedType::where('status', true)->select('id', 'name')->get();
+
         // Format the batch assign data for the form
         $formattedBatchAssign = [
             'id' => $batchAssign->id,
@@ -392,6 +400,7 @@ class BatchAssignController extends Controller
             'flock_id' => $batchAssign->flock_id,
             'company_id' => $batchAssign->company_id,
             'shed_id' => $batchAssign->shed_id,
+            'breed_id' => $batchAssign->breed_type,
             'level' => $batchAssign->level,
             'batch_no' => $batchAssign->batch_no,
             'batch_female_qty' => $batchAssign->batch_female_qty,
@@ -402,7 +411,7 @@ class BatchAssignController extends Controller
             'batch_received_male_qty' => $batchAssign->batch_received_male_qty,
             'batch_received_total_qty' => $batchAssign->batch_received_total_qty,
 
-
+            
             'batch_female_mortality' => $batchAssign->batch_female_mortality,
             'batch_male_mortality' => $batchAssign->batch_male_mortality,
             'batch_total_mortality' => $batchAssign->batch_total_mortality,
@@ -436,6 +445,12 @@ class BatchAssignController extends Controller
             ] : null,
         ];
 
+        
+        $allowedBreedIds = $batchAssign->shedReceive->firmReceive?->psReceive->breed_type ?? [];
+
+        // Fetch only those breeds
+        $breeds = BreedType::whereIn('id', $allowedBreedIds)->get();
+
         return Inertia::render('shed/batch-assign/Edit', [
             'batchAssign' => $formattedBatchAssign,
             'shedReceives' => $shedReceives,
@@ -443,6 +458,7 @@ class BatchAssignController extends Controller
             'companies' => $companies,
             'levels' => $levels,
             'batches' => $batches,
+            'breeds'=>$breeds,
         ]);
     }
 
@@ -486,6 +502,7 @@ class BatchAssignController extends Controller
             'shed_id' => $shedReceive->shed_id ?? null,
             'level' => $request->level ?? null,
             'batch_no' => $request->batch_no ?? 1,
+            'breed_type' => $request->breed_id ?? 1,
             'batch_received_female_qty' => $batch_received_female_qty,
             'batch_received_male_qty' => $batch_received_male_qty,
             'batch_received_total_qty' => $batch_received_total_qty,

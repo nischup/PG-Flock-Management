@@ -46,6 +46,7 @@ const props = defineProps<{
     batch_female_qty: number;
     batch_male_qty: number;
     batch_total_qty: number;
+    breed_id:number;
     batch_received_female_qty: number;
     batch_received_male_qty: number;
     batch_received_total_qty: number;
@@ -80,6 +81,7 @@ const props = defineProps<{
   companies: Array<any>,
   levels: Array<any>,
   batches: Array<any>
+  breeds: Array<any>
 }>()
 
 // Form state
@@ -130,6 +132,7 @@ const form = useForm({
   shed_id: props.batchAssign.shed_id,
   level: props.batchAssign.level,
   batch_no: Number(props.batchAssign.batch_no),
+  breed_id:Number(props.batchAssign.breed_id),
   batch_female_qty: props.batchAssign.batch_female_qty,
   batch_male_qty: props.batchAssign.batch_male_qty,
   batch_total_qty: props.batchAssign.batch_total_qty,
@@ -462,8 +465,17 @@ watch(
                 </option>
               </select>
             </div>
-          </div>
 
+            <div class="space-y-1">
+              <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Breed</Label>
+              <select v-model="form.breed_id" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <option disabled value="">Select Breed</option>
+                <option v-for="breed in props.breeds" :key="breed.id" :value="breed.id">
+                  {{ breed.name }}
+                </option>
+              </select>
+            </div>
+          </div>
           <!-- Main Quantities Section -->
           <div class="mb-4">
             <h4 class="mb-2 text-sm font-medium text-gray-900 dark:text-white">Main Quantities</h4>

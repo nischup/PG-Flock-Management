@@ -34,8 +34,8 @@ class DashboardController extends Controller
         $filterOptions = [
             'company' => Company::pluck('name', 'id')->toArray(),
             'project' => Project::pluck('name', 'id')->toArray(),
-            'flock'   => Flock::pluck('name', 'id')->toArray(),
             'shed'    => Shed::pluck('name', 'id')->toArray(),
+            'flock'   => Flock::pluck('name', 'id')->toArray(),
             'batch'   => Batch::pluck('name', 'id')->toArray(),
             'date'    => ['Last 7 Days', 'Last 1 Month', 'Custom'],
         ];

@@ -126,7 +126,7 @@ class BirdTransferController extends Controller
 
                 'shipment_type_id' => $ps->shipment_type_id,
                 'lc_no' => $ps->lc_no,
-                'breed_type' => $ps->breed_type,
+                'breed_type' => $batch->breed_type,
                 'country_of_origin' => $ps->country_of_origin,
                 'transport_type' => $ps->transport_type,
 

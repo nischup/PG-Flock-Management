@@ -37,6 +37,7 @@ const props = defineProps<{
   companies: Array<any>,
   levels: Array<any>,
   batches: Array<any>
+  breeds: Array<any>
 }>()
 
 // Form state
@@ -76,6 +77,16 @@ const selectedShedReceive = computed(() => {
     return props.shedReceives.find(sr => sr.id === Number(selectedShedReceiveId.value))
 })
 
+const selectedShedBreeds = computed(() => {
+  if (!selectedShedReceive.value) return []
+
+  // Get the breed_type array from the selected shed
+  const shedBreedIds = selectedShedReceive.value.breed_type || []
+
+  // Filter the global breeds list to only those IDs
+  return props.breeds.filter(breed => shedBreedIds.includes(breed.id))
+})
+
 // Close dropdowns on outside click
 const handleClickOutside = (e: MouseEvent) => {
     if (!(e.target as HTMLElement).closest('.shed-receive-dropdown')) {
@@ -103,6 +114,7 @@ const form = useForm({
       level: '',
       batch_no: '',
       batch_female_qty: 0,
+      breed_id:0,
       batch_male_qty: 0,
       batch_received_male_qty: 0,
       batch_received_female_qty: 0,
@@ -168,6 +180,7 @@ const addBatch = () => {
   form.batches.push({
     level: '',
     batch_no: '',
+    breed_id:0,
     batch_female_qty: 0,
     batch_male_qty: 0,
     batch_total_qty: 0,
@@ -459,7 +472,7 @@ watch(
           </div>
 
           <!-- Level & Batch Selection -->
-          <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="space-y-1">
               <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Level</Label>
               <select v-model="batch.level" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
@@ -479,8 +492,16 @@ watch(
                 </option>
               </select>
             </div>
+            <div class="space-y-1">
+              <Label class="text-xs font-medium text-gray-700 dark:text-gray-300">Breed</Label>
+              <select v-model="batch.breed_id" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <option disabled value="0">Select Breed</option>
+                <option v-for="breed in selectedShedBreeds" :key="breed.id" :value="breed.id">
+                  {{ breed.name }}
+                </option>
+              </select>
+            </div>
           </div>
-
           <!-- Main Quantities Section -->
           <div class="mb-4">
             <h4 class="mb-2 text-sm font-medium text-gray-900 dark:text-white">Main Quantities</h4>

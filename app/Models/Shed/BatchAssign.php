@@ -13,6 +13,7 @@ use App\Models\Master\Flock;
 use App\Models\Master\Project;
 use App\Models\Master\Shed;
 use App\Models\FirmLabTest;
+use App\Models\Master\BreedType;
 use App\Models\Production\EggClassification;
 use App\Models\MovementAdjustment;
 use App\Models\Traits\CompanyShedFilter;
@@ -32,6 +33,7 @@ class BatchAssign extends Model
         'company_id',
         'project_id',
         'shed_id',
+        'breed_type',
         'level',
         'batch_no',
         'batch_female_qty',
@@ -85,6 +87,12 @@ class BatchAssign extends Model
     {
         return $this->belongsTo(Batch::class, 'batch_no', 'id');
     }
+
+    public function breed()
+    {
+        return $this->belongsTo(BreedType::class, 'breed_type', 'id');
+    }
+
 
     public function project()
     {
