@@ -3,7 +3,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 
 // Props
 interface Props {
@@ -123,6 +123,9 @@ const isRowExpanded = (scheduleId: number) => {
 
 // Edit schedule function
 const editSchedule = (schedule: any) => {
+    // Set flag to prevent watcher from clearing project_id during initialization
+    isInitializingEditForm.value = true;
+    
     // Populate edit form with schedule data
     editScheduleForm.id = schedule.id;
     editScheduleForm.company_id = schedule.company_id.toString();
@@ -131,6 +134,15 @@ const editSchedule = (schedule: any) => {
     editScheduleForm.shed_id = schedule.shed_id.toString();
     editScheduleForm.batch_id = schedule.batch_id ? schedule.batch_id.toString() : '';
     editScheduleForm.breed_type_id = schedule.breed_type_id.toString();
+
+    // Set flock search query for edit modal
+    if (schedule.flock_id) {
+        const flock = props.flocks.find(f => f.id === schedule.flock_id);
+        if (flock) {
+            selectedEditFlock.value = flock;
+            editFlockSearchQuery.value = `${flock.name} (${flock.code})`;
+        }
+    }
 
     // Populate stages data
     editScheduleForm.stages = schedule.details.map((detail: any) => ({
@@ -143,6 +155,22 @@ const editSchedule = (schedule: any) => {
         notes: detail.notes || '',
         administered_by: detail.administered_by || '',
     }));
+
+    // Set disease and vaccine search queries for edit modal
+    schedule.details.forEach((detail: any, index: number) => {
+        const disease = props.diseases.find(d => d.id === detail.disease_id);
+        const vaccine = props.vaccines.find(v => v.id === detail.vaccine_id);
+        
+        if (disease) {
+            selectedEditDiseases.value[index] = disease;
+            editDiseaseSearchQueries.value[index] = disease.name;
+        }
+        
+        if (vaccine) {
+            selectedEditVaccines.value[index] = vaccine;
+            editVaccineSearchQueries.value[index] = vaccine.name;
+        }
+    });
 
     // If no stages, add one empty stage
     if (editScheduleForm.stages.length === 0) {
@@ -162,6 +190,9 @@ const editSchedule = (schedule: any) => {
 
     editScheduleForm.clearErrors();
     showEditScheduleModal.value = true;
+    
+    // Reset flag after initialization is complete
+    isInitializingEditForm.value = false;
 };
 
 // Add stage for edit form
@@ -381,8 +412,105 @@ const routingForm = useForm({
     status: 'active',
 });
 
+// Flock search functionality
+const showFlockDropdown = ref(false);
+const showEditFlockDropdown = ref(false);
+const flockSearchQuery = ref('');
+const editFlockSearchQuery = ref('');
+const selectedFlock = ref<any>(null);
+const selectedEditFlock = ref<any>(null);
+const highlightedFlockIndex = ref(-1);
+const highlightedEditFlockIndex = ref(-1);
+const flockDropdownRef = ref<HTMLElement | null>(null);
+const editFlockDropdownRef = ref<HTMLElement | null>(null);
+
+// Flag to track when we're initializing edit form
+const isInitializingEditForm = ref(false);
+
+// Computed property for searchable flocks
+const searchableFlocks = computed(() => {
+    if (!flockSearchQuery.value) {
+        return props.flocks;
+    }
+    return props.flocks.filter(flock =>
+        flock.name.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+        flock.code.toLowerCase().includes(flockSearchQuery.value.toLowerCase())
+    );
+});
+
+// Computed property for searchable flocks in edit modal
+const searchableEditFlocks = computed(() => {
+    if (!editFlockSearchQuery.value) {
+        return props.flocks;
+    }
+    return props.flocks.filter(flock =>
+        flock.name.toLowerCase().includes(editFlockSearchQuery.value.toLowerCase()) ||
+        flock.code.toLowerCase().includes(editFlockSearchQuery.value.toLowerCase())
+    );
+});
+
+// Disease and Vaccine search functionality
+const diseaseSearchQueries = ref<Record<number, string>>({});
+const vaccineSearchQueries = ref<Record<number, string>>({});
+const editDiseaseSearchQueries = ref<Record<number, string>>({});
+const editVaccineSearchQueries = ref<Record<number, string>>({});
+const showDiseaseDropdowns = ref<Record<number, boolean>>({});
+const showVaccineDropdowns = ref<Record<number, boolean>>({});
+const showEditDiseaseDropdowns = ref<Record<number, boolean>>({});
+const showEditVaccineDropdowns = ref<Record<number, boolean>>({});
+const selectedDiseases = ref<Record<number, any>>({});
+const selectedVaccines = ref<Record<number, any>>({});
+const selectedEditDiseases = ref<Record<number, any>>({});
+const selectedEditVaccines = ref<Record<number, any>>({});
+const highlightedDiseaseIndex = ref<Record<number, number>>({});
+const highlightedVaccineIndex = ref<Record<number, number>>({});
+const highlightedEditDiseaseIndex = ref<Record<number, number>>({});
+const highlightedEditVaccineIndex = ref<Record<number, number>>({});
+
+// Computed properties for searchable diseases and vaccines
+const searchableDiseases = computed(() => (stageIndex: number) => {
+    const query = diseaseSearchQueries.value[stageIndex] || '';
+    if (!query) {
+        return props.diseases;
+    }
+    return props.diseases.filter(disease =>
+        disease.name.toLowerCase().includes(query.toLowerCase())
+    );
+});
+
+const searchableVaccines = computed(() => (stageIndex: number) => {
+    const query = vaccineSearchQueries.value[stageIndex] || '';
+    if (!query) {
+        return props.vaccines;
+    }
+    return props.vaccines.filter(vaccine =>
+        vaccine.name.toLowerCase().includes(query.toLowerCase())
+    );
+});
+
+const searchableEditDiseases = computed(() => (stageIndex: number) => {
+    const query = editDiseaseSearchQueries.value[stageIndex] || '';
+    if (!query) {
+        return props.diseases;
+    }
+    return props.diseases.filter(disease =>
+        disease.name.toLowerCase().includes(query.toLowerCase())
+    );
+});
+
+const searchableEditVaccines = computed(() => (stageIndex: number) => {
+    const query = editVaccineSearchQueries.value[stageIndex] || '';
+    if (!query) {
+        return props.vaccines;
+    }
+    return props.vaccines.filter(vaccine =>
+        vaccine.name.toLowerCase().includes(query.toLowerCase())
+    );
+});
+
 // Add stage
 const addStage = () => {
+    const newStageIndex = scheduleForm.stages.length;
     scheduleForm.stages.push({
         disease_id: '',
         vaccine_id: '',
@@ -392,11 +520,120 @@ const addStage = () => {
         notes: '',
         administered_by: '',
     });
+    
+    // Initialize search queries for the new stage
+    diseaseSearchQueries.value[newStageIndex] = '';
+    vaccineSearchQueries.value[newStageIndex] = '';
+    showDiseaseDropdowns.value[newStageIndex] = false;
+    showVaccineDropdowns.value[newStageIndex] = false;
+    highlightedDiseaseIndex.value[newStageIndex] = -1;
+    highlightedVaccineIndex.value[newStageIndex] = -1;
 };
 
 // Remove stage
 const removeStage = (index: number) => {
     scheduleForm.stages.splice(index, 1);
+    
+    // Clean up search queries for the removed stage
+    delete diseaseSearchQueries.value[index];
+    delete vaccineSearchQueries.value[index];
+    delete showDiseaseDropdowns.value[index];
+    delete showVaccineDropdowns.value[index];
+    delete selectedDiseases.value[index];
+    delete selectedVaccines.value[index];
+    delete highlightedDiseaseIndex.value[index];
+    delete highlightedVaccineIndex.value[index];
+    
+    // Reindex remaining stages
+    const newDiseaseQueries: Record<number, string> = {};
+    const newVaccineQueries: Record<number, string> = {};
+    const newShowDiseaseDropdowns: Record<number, boolean> = {};
+    const newShowVaccineDropdowns: Record<number, boolean> = {};
+    const newSelectedDiseases: Record<number, any> = {};
+    const newSelectedVaccines: Record<number, any> = {};
+    const newHighlightedDiseaseIndex: Record<number, number> = {};
+    const newHighlightedVaccineIndex: Record<number, number> = {};
+    
+    Object.keys(diseaseSearchQueries.value).forEach(key => {
+        const oldIndex = parseInt(key);
+        if (oldIndex > index) {
+            newDiseaseQueries[oldIndex - 1] = diseaseSearchQueries.value[oldIndex];
+        } else if (oldIndex < index) {
+            newDiseaseQueries[oldIndex] = diseaseSearchQueries.value[oldIndex];
+        }
+    });
+    
+    Object.keys(vaccineSearchQueries.value).forEach(key => {
+        const oldIndex = parseInt(key);
+        if (oldIndex > index) {
+            newVaccineQueries[oldIndex - 1] = vaccineSearchQueries.value[oldIndex];
+        } else if (oldIndex < index) {
+            newVaccineQueries[oldIndex] = vaccineSearchQueries.value[oldIndex];
+        }
+    });
+    
+    Object.keys(showDiseaseDropdowns.value).forEach(key => {
+        const oldIndex = parseInt(key);
+        if (oldIndex > index) {
+            newShowDiseaseDropdowns[oldIndex - 1] = showDiseaseDropdowns.value[oldIndex];
+        } else if (oldIndex < index) {
+            newShowDiseaseDropdowns[oldIndex] = showDiseaseDropdowns.value[oldIndex];
+        }
+    });
+    
+    Object.keys(showVaccineDropdowns.value).forEach(key => {
+        const oldIndex = parseInt(key);
+        if (oldIndex > index) {
+            newShowVaccineDropdowns[oldIndex - 1] = showVaccineDropdowns.value[oldIndex];
+        } else if (oldIndex < index) {
+            newShowVaccineDropdowns[oldIndex] = showVaccineDropdowns.value[oldIndex];
+        }
+    });
+    
+    Object.keys(selectedDiseases.value).forEach(key => {
+        const oldIndex = parseInt(key);
+        if (oldIndex > index) {
+            newSelectedDiseases[oldIndex - 1] = selectedDiseases.value[oldIndex];
+        } else if (oldIndex < index) {
+            newSelectedDiseases[oldIndex] = selectedDiseases.value[oldIndex];
+        }
+    });
+    
+    Object.keys(selectedVaccines.value).forEach(key => {
+        const oldIndex = parseInt(key);
+        if (oldIndex > index) {
+            newSelectedVaccines[oldIndex - 1] = selectedVaccines.value[oldIndex];
+        } else if (oldIndex < index) {
+            newSelectedVaccines[oldIndex] = selectedVaccines.value[oldIndex];
+        }
+    });
+    
+    Object.keys(highlightedDiseaseIndex.value).forEach(key => {
+        const oldIndex = parseInt(key);
+        if (oldIndex > index) {
+            newHighlightedDiseaseIndex[oldIndex - 1] = highlightedDiseaseIndex.value[oldIndex];
+        } else if (oldIndex < index) {
+            newHighlightedDiseaseIndex[oldIndex] = highlightedDiseaseIndex.value[oldIndex];
+        }
+    });
+    
+    Object.keys(highlightedVaccineIndex.value).forEach(key => {
+        const oldIndex = parseInt(key);
+        if (oldIndex > index) {
+            newHighlightedVaccineIndex[oldIndex - 1] = highlightedVaccineIndex.value[oldIndex];
+        } else if (oldIndex < index) {
+            newHighlightedVaccineIndex[oldIndex] = highlightedVaccineIndex.value[oldIndex];
+        }
+    });
+    
+    diseaseSearchQueries.value = newDiseaseQueries;
+    vaccineSearchQueries.value = newVaccineQueries;
+    showDiseaseDropdowns.value = newShowDiseaseDropdowns;
+    showVaccineDropdowns.value = newShowVaccineDropdowns;
+    selectedDiseases.value = newSelectedDiseases;
+    selectedVaccines.value = newSelectedVaccines;
+    highlightedDiseaseIndex.value = newHighlightedDiseaseIndex;
+    highlightedVaccineIndex.value = newHighlightedVaccineIndex;
 };
 
 // Open schedule modal and clear errors
@@ -485,12 +722,366 @@ watch(
 watch(
     () => editScheduleForm.company_id,
     (newCompanyId) => {
-        if (newCompanyId) {
+        if (newCompanyId && !isInitializingEditForm.value) {
             editScheduleForm.project_id = '';
             editScheduleForm.clearErrors('project_id');
         }
     },
 );
+
+// Flock selection methods
+const selectFlock = (flock: { id: number; name: string; code: string }) => {
+    selectedFlock.value = flock;
+    scheduleForm.flock_id = String(flock.id);
+    flockSearchQuery.value = `${flock.name} (${flock.code})`;
+    showFlockDropdown.value = false;
+    highlightedFlockIndex.value = -1;
+};
+
+const clearFlockSelection = () => {
+    selectedFlock.value = null;
+    scheduleForm.flock_id = '';
+    flockSearchQuery.value = '';
+    showFlockDropdown.value = false;
+    highlightedFlockIndex.value = -1;
+};
+
+const toggleFlockDropdown = () => {
+    showFlockDropdown.value = !showFlockDropdown.value;
+    if (showFlockDropdown.value) {
+        highlightedFlockIndex.value = -1;
+    }
+};
+
+// Edit flock selection methods
+const selectEditFlock = (flock: { id: number; name: string; code: string }) => {
+    selectedEditFlock.value = flock;
+    editScheduleForm.flock_id = String(flock.id);
+    editFlockSearchQuery.value = `${flock.name} (${flock.code})`;
+    showEditFlockDropdown.value = false;
+    highlightedEditFlockIndex.value = -1;
+};
+
+const clearEditFlockSelection = () => {
+    selectedEditFlock.value = null;
+    editScheduleForm.flock_id = '';
+    editFlockSearchQuery.value = '';
+    showEditFlockDropdown.value = false;
+    highlightedEditFlockIndex.value = -1;
+};
+
+const toggleEditFlockDropdown = () => {
+    showEditFlockDropdown.value = !showEditFlockDropdown.value;
+    if (showEditFlockDropdown.value) {
+        highlightedEditFlockIndex.value = -1;
+    }
+};
+
+// Keyboard navigation for flock dropdown
+const handleFlockKeydown = (event: KeyboardEvent) => {
+    if (!showFlockDropdown.value) return;
+
+    switch (event.key) {
+        case 'ArrowDown':
+            event.preventDefault();
+            highlightedFlockIndex.value = Math.min(highlightedFlockIndex.value + 1, searchableFlocks.value.length - 1);
+            break;
+        case 'ArrowUp':
+            event.preventDefault();
+            highlightedFlockIndex.value = Math.max(highlightedFlockIndex.value - 1, -1);
+            break;
+        case 'Enter':
+            event.preventDefault();
+            if (highlightedFlockIndex.value >= 0 && searchableFlocks.value[highlightedFlockIndex.value]) {
+                selectFlock(searchableFlocks.value[highlightedFlockIndex.value]);
+            }
+            break;
+        case 'Escape':
+            showFlockDropdown.value = false;
+            highlightedFlockIndex.value = -1;
+            break;
+    }
+};
+
+// Keyboard navigation for edit flock dropdown
+const handleEditFlockKeydown = (event: KeyboardEvent) => {
+    if (!showEditFlockDropdown.value) return;
+
+    switch (event.key) {
+        case 'ArrowDown':
+            event.preventDefault();
+            highlightedEditFlockIndex.value = Math.min(highlightedEditFlockIndex.value + 1, searchableEditFlocks.value.length - 1);
+            break;
+        case 'ArrowUp':
+            event.preventDefault();
+            highlightedEditFlockIndex.value = Math.max(highlightedEditFlockIndex.value - 1, -1);
+            break;
+        case 'Enter':
+            event.preventDefault();
+            if (highlightedEditFlockIndex.value >= 0 && searchableEditFlocks.value[highlightedEditFlockIndex.value]) {
+                selectEditFlock(searchableEditFlocks.value[highlightedEditFlockIndex.value]);
+            }
+            break;
+        case 'Escape':
+            showEditFlockDropdown.value = false;
+            highlightedEditFlockIndex.value = -1;
+            break;
+    }
+};
+
+// Click outside to close dropdowns
+const handleClickOutside = (event: Event) => {
+    if (flockDropdownRef.value && !flockDropdownRef.value.contains(event.target as Node)) {
+        showFlockDropdown.value = false;
+        highlightedFlockIndex.value = -1;
+    }
+    if (editFlockDropdownRef.value && !editFlockDropdownRef.value.contains(event.target as Node)) {
+        showEditFlockDropdown.value = false;
+        highlightedEditFlockIndex.value = -1;
+    }
+    
+    // Close all disease and vaccine dropdowns
+    Object.keys(showDiseaseDropdowns.value).forEach(index => {
+        showDiseaseDropdowns.value[parseInt(index)] = false;
+        highlightedDiseaseIndex.value[parseInt(index)] = -1;
+    });
+    
+    Object.keys(showVaccineDropdowns.value).forEach(index => {
+        showVaccineDropdowns.value[parseInt(index)] = false;
+        highlightedVaccineIndex.value[parseInt(index)] = -1;
+    });
+    
+    Object.keys(showEditDiseaseDropdowns.value).forEach(index => {
+        showEditDiseaseDropdowns.value[parseInt(index)] = false;
+        highlightedEditDiseaseIndex.value[parseInt(index)] = -1;
+    });
+    
+    Object.keys(showEditVaccineDropdowns.value).forEach(index => {
+        showEditVaccineDropdowns.value[parseInt(index)] = false;
+        highlightedEditVaccineIndex.value[parseInt(index)] = -1;
+    });
+};
+
+// Add event listeners
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
+
+// Disease selection methods
+const selectDisease = (stageIndex: number, disease: { id: number; name: string }) => {
+    selectedDiseases.value[stageIndex] = disease;
+    scheduleForm.stages[stageIndex].disease_id = String(disease.id);
+    diseaseSearchQueries.value[stageIndex] = disease.name;
+    showDiseaseDropdowns.value[stageIndex] = false;
+    highlightedDiseaseIndex.value[stageIndex] = -1;
+};
+
+const clearDiseaseSelection = (stageIndex: number) => {
+    delete selectedDiseases.value[stageIndex];
+    scheduleForm.stages[stageIndex].disease_id = '';
+    diseaseSearchQueries.value[stageIndex] = '';
+    showDiseaseDropdowns.value[stageIndex] = false;
+    highlightedDiseaseIndex.value[stageIndex] = -1;
+};
+
+const toggleDiseaseDropdown = (stageIndex: number) => {
+    showDiseaseDropdowns.value[stageIndex] = !showDiseaseDropdowns.value[stageIndex];
+    if (showDiseaseDropdowns.value[stageIndex]) {
+        highlightedDiseaseIndex.value[stageIndex] = -1;
+    }
+};
+
+// Vaccine selection methods
+const selectVaccine = (stageIndex: number, vaccine: { id: number; name: string }) => {
+    selectedVaccines.value[stageIndex] = vaccine;
+    scheduleForm.stages[stageIndex].vaccine_id = String(vaccine.id);
+    vaccineSearchQueries.value[stageIndex] = vaccine.name;
+    showVaccineDropdowns.value[stageIndex] = false;
+    highlightedVaccineIndex.value[stageIndex] = -1;
+};
+
+const clearVaccineSelection = (stageIndex: number) => {
+    delete selectedVaccines.value[stageIndex];
+    scheduleForm.stages[stageIndex].vaccine_id = '';
+    vaccineSearchQueries.value[stageIndex] = '';
+    showVaccineDropdowns.value[stageIndex] = false;
+    highlightedVaccineIndex.value[stageIndex] = -1;
+};
+
+const toggleVaccineDropdown = (stageIndex: number) => {
+    showVaccineDropdowns.value[stageIndex] = !showVaccineDropdowns.value[stageIndex];
+    if (showVaccineDropdowns.value[stageIndex]) {
+        highlightedVaccineIndex.value[stageIndex] = -1;
+    }
+};
+
+// Edit disease selection methods
+const selectEditDisease = (stageIndex: number, disease: { id: number; name: string }) => {
+    selectedEditDiseases.value[stageIndex] = disease;
+    editScheduleForm.stages[stageIndex].disease_id = String(disease.id);
+    editDiseaseSearchQueries.value[stageIndex] = disease.name;
+    showEditDiseaseDropdowns.value[stageIndex] = false;
+    highlightedEditDiseaseIndex.value[stageIndex] = -1;
+};
+
+const clearEditDiseaseSelection = (stageIndex: number) => {
+    delete selectedEditDiseases.value[stageIndex];
+    editScheduleForm.stages[stageIndex].disease_id = '';
+    editDiseaseSearchQueries.value[stageIndex] = '';
+    showEditDiseaseDropdowns.value[stageIndex] = false;
+    highlightedEditDiseaseIndex.value[stageIndex] = -1;
+};
+
+const toggleEditDiseaseDropdown = (stageIndex: number) => {
+    showEditDiseaseDropdowns.value[stageIndex] = !showEditDiseaseDropdowns.value[stageIndex];
+    if (showEditDiseaseDropdowns.value[stageIndex]) {
+        highlightedEditDiseaseIndex.value[stageIndex] = -1;
+    }
+};
+
+// Edit vaccine selection methods
+const selectEditVaccine = (stageIndex: number, vaccine: { id: number; name: string }) => {
+    selectedEditVaccines.value[stageIndex] = vaccine;
+    editScheduleForm.stages[stageIndex].vaccine_id = String(vaccine.id);
+    editVaccineSearchQueries.value[stageIndex] = vaccine.name;
+    showEditVaccineDropdowns.value[stageIndex] = false;
+    highlightedEditVaccineIndex.value[stageIndex] = -1;
+};
+
+const clearEditVaccineSelection = (stageIndex: number) => {
+    delete selectedEditVaccines.value[stageIndex];
+    editScheduleForm.stages[stageIndex].vaccine_id = '';
+    editVaccineSearchQueries.value[stageIndex] = '';
+    showEditVaccineDropdowns.value[stageIndex] = false;
+    highlightedEditVaccineIndex.value[stageIndex] = -1;
+};
+
+const toggleEditVaccineDropdown = (stageIndex: number) => {
+    showEditVaccineDropdowns.value[stageIndex] = !showEditVaccineDropdowns.value[stageIndex];
+    if (showEditVaccineDropdowns.value[stageIndex]) {
+        highlightedEditVaccineIndex.value[stageIndex] = -1;
+    }
+};
+
+// Keyboard navigation for disease dropdown
+const handleDiseaseKeydown = (event: KeyboardEvent, stageIndex: number) => {
+    if (!showDiseaseDropdowns.value[stageIndex]) return;
+
+    switch (event.key) {
+        case 'ArrowDown':
+            event.preventDefault();
+            highlightedDiseaseIndex.value[stageIndex] = Math.min(
+                highlightedDiseaseIndex.value[stageIndex] + 1, 
+                searchableDiseases.value(stageIndex).length - 1
+            );
+            break;
+        case 'ArrowUp':
+            event.preventDefault();
+            highlightedDiseaseIndex.value[stageIndex] = Math.max(highlightedDiseaseIndex.value[stageIndex] - 1, -1);
+            break;
+        case 'Enter':
+            event.preventDefault();
+            if (highlightedDiseaseIndex.value[stageIndex] >= 0 && searchableDiseases.value(stageIndex)[highlightedDiseaseIndex.value[stageIndex]]) {
+                selectDisease(stageIndex, searchableDiseases.value(stageIndex)[highlightedDiseaseIndex.value[stageIndex]]);
+            }
+            break;
+        case 'Escape':
+            showDiseaseDropdowns.value[stageIndex] = false;
+            highlightedDiseaseIndex.value[stageIndex] = -1;
+            break;
+    }
+};
+
+// Keyboard navigation for vaccine dropdown
+const handleVaccineKeydown = (event: KeyboardEvent, stageIndex: number) => {
+    if (!showVaccineDropdowns.value[stageIndex]) return;
+
+    switch (event.key) {
+        case 'ArrowDown':
+            event.preventDefault();
+            highlightedVaccineIndex.value[stageIndex] = Math.min(
+                highlightedVaccineIndex.value[stageIndex] + 1, 
+                searchableVaccines.value(stageIndex).length - 1
+            );
+            break;
+        case 'ArrowUp':
+            event.preventDefault();
+            highlightedVaccineIndex.value[stageIndex] = Math.max(highlightedVaccineIndex.value[stageIndex] - 1, -1);
+            break;
+        case 'Enter':
+            event.preventDefault();
+            if (highlightedVaccineIndex.value[stageIndex] >= 0 && searchableVaccines.value(stageIndex)[highlightedVaccineIndex.value[stageIndex]]) {
+                selectVaccine(stageIndex, searchableVaccines.value(stageIndex)[highlightedVaccineIndex.value[stageIndex]]);
+            }
+            break;
+        case 'Escape':
+            showVaccineDropdowns.value[stageIndex] = false;
+            highlightedVaccineIndex.value[stageIndex] = -1;
+            break;
+    }
+};
+
+// Keyboard navigation for edit disease dropdown
+const handleEditDiseaseKeydown = (event: KeyboardEvent, stageIndex: number) => {
+    if (!showEditDiseaseDropdowns.value[stageIndex]) return;
+
+    switch (event.key) {
+        case 'ArrowDown':
+            event.preventDefault();
+            highlightedEditDiseaseIndex.value[stageIndex] = Math.min(
+                highlightedEditDiseaseIndex.value[stageIndex] + 1, 
+                searchableEditDiseases.value(stageIndex).length - 1
+            );
+            break;
+        case 'ArrowUp':
+            event.preventDefault();
+            highlightedEditDiseaseIndex.value[stageIndex] = Math.max(highlightedEditDiseaseIndex.value[stageIndex] - 1, -1);
+            break;
+        case 'Enter':
+            event.preventDefault();
+            if (highlightedEditDiseaseIndex.value[stageIndex] >= 0 && searchableEditDiseases.value(stageIndex)[highlightedEditDiseaseIndex.value[stageIndex]]) {
+                selectEditDisease(stageIndex, searchableEditDiseases.value(stageIndex)[highlightedEditDiseaseIndex.value[stageIndex]]);
+            }
+            break;
+        case 'Escape':
+            showEditDiseaseDropdowns.value[stageIndex] = false;
+            highlightedEditDiseaseIndex.value[stageIndex] = -1;
+            break;
+    }
+};
+
+// Keyboard navigation for edit vaccine dropdown
+const handleEditVaccineKeydown = (event: KeyboardEvent, stageIndex: number) => {
+    if (!showEditVaccineDropdowns.value[stageIndex]) return;
+
+    switch (event.key) {
+        case 'ArrowDown':
+            event.preventDefault();
+            highlightedEditVaccineIndex.value[stageIndex] = Math.min(
+                highlightedEditVaccineIndex.value[stageIndex] + 1, 
+                searchableEditVaccines.value(stageIndex).length - 1
+            );
+            break;
+        case 'ArrowUp':
+            event.preventDefault();
+            highlightedEditVaccineIndex.value[stageIndex] = Math.max(highlightedEditVaccineIndex.value[stageIndex] - 1, -1);
+            break;
+        case 'Enter':
+            event.preventDefault();
+            if (highlightedEditVaccineIndex.value[stageIndex] >= 0 && searchableEditVaccines.value(stageIndex)[highlightedEditVaccineIndex.value[stageIndex]]) {
+                selectEditVaccine(stageIndex, searchableEditVaccines.value(stageIndex)[highlightedEditVaccineIndex.value[stageIndex]]);
+            }
+            break;
+        case 'Escape':
+            showEditVaccineDropdowns.value[stageIndex] = false;
+            highlightedEditVaccineIndex.value[stageIndex] = -1;
+            break;
+    }
+};
 
 // Error categorization for vaccine schedule form
 const basicInfoFields = ['company_id', 'project_id', 'flock_id', 'shed_id', 'batch_id', 'breed_type_id'];
@@ -753,7 +1344,7 @@ const saveVaccine = () => {
                                     <td class="border-b px-4 py-2 whitespace-nowrap">
                                         <div class="text-sm text-gray-900 dark:text-gray-100">{{ schedule.flock_name }}</div>
                                         <div class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ schedule.flock_code }} | Batch: {{ schedule.batch_name }}
+                                            {{ schedule.flock_code }}{{ schedule.batch_name && schedule.batch_name !== 'N/A' ? ` | Batch: ${schedule.batch_name}` : '' }}
                                         </div>
                                         <div class="text-sm text-gray-500 dark:text-gray-400">Shed: {{ schedule.shed_name }}</div>
                                     </td>
@@ -1179,7 +1770,7 @@ const saveVaccine = () => {
                                     >
                                         <option value="">Select Project</option>
                                         <option v-for="project in filteredProjects" :key="project.id" :value="project.id">
-                                            {{ project.name }} ({{ project.code }})
+                                            {{ project.name }}
                                         </option>
                                     </select>
                                     <div v-if="scheduleForm.errors.project_id" class="flex items-center gap-1 text-sm text-red-500">
@@ -1217,20 +1808,75 @@ const saveVaccine = () => {
                                             <span class="font-bold text-red-500">*</span>
                                         </span>
                                     </label>
-                                    <select
-                                        v-model="scheduleForm.flock_id"
-                                        class="w-full cursor-pointer appearance-none rounded-xl border px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    <div ref="flockDropdownRef" class="relative">
+                                        <!-- Search Input -->
+                                        <div class="relative">
+                                            <input
+                                                v-model="flockSearchQuery"
+                                                @focus="showFlockDropdown = true"
+                                                @input="showFlockDropdown = true; highlightedFlockIndex = -1"
+                                                @keydown="handleFlockKeydown"
+                                                type="text"
+                                                placeholder="Search flocks..."
+                                                class="w-full rounded-xl border px-4 py-3 pr-12 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                         :class="{
                                             'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': scheduleForm.errors.flock_id,
                                             'border-gray-300 dark:border-gray-600': !scheduleForm.errors.flock_id,
                                         }"
                                         required
-                                    >
-                                        <option value="">Select Flock</option>
-                                        <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">
+                                            />
+                                            <button
+                                                type="button"
+                                                @click="toggleFlockDropdown"
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                            >
+                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- Dropdown -->
+                                        <div
+                                            v-if="showFlockDropdown"
+                                            class="absolute z-20 mt-2 w-full overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-gray-200 dark:bg-gray-700 dark:ring-gray-600"
+                                        >
+                                            <div class="max-h-60 overflow-y-auto">
+                                                <div
+                                                    v-if="searchableFlocks.length === 0"
+                                                    class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400"
+                                                >
+                                                    No flocks found
+                                                </div>
+                                                <button
+                                                    v-for="(flock, index) in searchableFlocks"
+                                                    :key="flock.id"
+                                                    type="button"
+                                                    @click="selectFlock(flock)"
+                                                    :class="[
+                                                        'w-full px-4 py-3 text-left text-sm transition-colors focus:outline-none',
+                                                        index === highlightedFlockIndex 
+                                                            ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' 
+                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-600'
+                                                    ]"
+                                                >
                                             {{ flock.name }} ({{ flock.code }})
-                                        </option>
-                                    </select>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Clear button -->
+                                        <button
+                                            v-if="selectedFlock"
+                                            type="button"
+                                            @click="clearFlockSelection"
+                                            class="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                        >
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                     <div v-if="scheduleForm.errors.flock_id" class="flex items-center gap-1 text-sm text-red-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path
@@ -1442,9 +2088,17 @@ const saveVaccine = () => {
                                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                                             Disease <span class="font-bold text-red-500">*</span>
                                         </label>
-                                        <select
-                                            v-model="stage.disease_id"
-                                            class="w-full rounded-lg border px-3 py-2 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
+                                        <div class="relative">
+                                            <!-- Search Input -->
+                                            <div class="relative">
+                                                <input
+                                                    v-model="diseaseSearchQueries[index]"
+                                                    @focus="showDiseaseDropdowns[index] = true"
+                                                    @input="showDiseaseDropdowns[index] = true; highlightedDiseaseIndex[index] = -1"
+                                                    @keydown="handleDiseaseKeydown($event, index)"
+                                                    type="text"
+                                                    placeholder="Search diseases..."
+                                                    class="w-full rounded-lg border px-3 py-2 pr-10 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
                                             :class="{
                                                 'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (scheduleForm.errors as any)[
                                                     `stages.${index}.disease_id`
@@ -1452,12 +2106,59 @@ const saveVaccine = () => {
                                                 'border-gray-300 dark:border-gray-500': !(scheduleForm.errors as any)[`stages.${index}.disease_id`],
                                             }"
                                             required
-                                        >
-                                            <option value="">Select Disease</option>
-                                            <option v-for="disease in props.diseases" :key="disease.id" :value="disease.id">
+                                                />
+                                                <button
+                                                    type="button"
+                                                    @click="toggleDiseaseDropdown(index)"
+                                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            <!-- Dropdown -->
+                                            <div
+                                                v-if="showDiseaseDropdowns[index]"
+                                                class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-gray-200 dark:bg-gray-600 dark:ring-gray-500"
+                                            >
+                                                <div class="max-h-48 overflow-y-auto">
+                                                    <div
+                                                        v-if="searchableDiseases(index).length === 0"
+                                                        class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        No diseases found
+                                                    </div>
+                                                    <button
+                                                        v-for="(disease, diseaseIndex) in searchableDiseases(index)"
+                                                        :key="disease.id"
+                                                        type="button"
+                                                        @click="selectDisease(index, disease)"
+                                                        :class="[
+                                                            'w-full px-3 py-2 text-left text-sm transition-colors focus:outline-none',
+                                                            diseaseIndex === highlightedDiseaseIndex[index] 
+                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100' 
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500'
+                                                        ]"
+                                                    >
                                                 {{ disease.name }}
-                                            </option>
-                                        </select>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Clear button -->
+                                            <button
+                                                v-if="selectedDiseases[index]"
+                                                type="button"
+                                                @click="clearDiseaseSelection(index)"
+                                                class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                            >
+                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
                                         <div v-if="(scheduleForm.errors as any)[`stages.${index}.disease_id`]" class="text-sm text-red-500">
                                             {{ (scheduleForm.errors as any)[`stages.${index}.disease_id`] }}
                                         </div>
@@ -1468,9 +2169,17 @@ const saveVaccine = () => {
                                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                                             Vaccine <span class="font-bold text-red-500">*</span>
                                         </label>
-                                        <select
-                                            v-model="stage.vaccine_id"
-                                            class="w-full rounded-lg border px-3 py-2 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
+                                        <div class="relative">
+                                            <!-- Search Input -->
+                                            <div class="relative">
+                                                <input
+                                                    v-model="vaccineSearchQueries[index]"
+                                                    @focus="showVaccineDropdowns[index] = true"
+                                                    @input="showVaccineDropdowns[index] = true; highlightedVaccineIndex[index] = -1"
+                                                    @keydown="handleVaccineKeydown($event, index)"
+                                                    type="text"
+                                                    placeholder="Search vaccines..."
+                                                    class="w-full rounded-lg border px-3 py-2 pr-10 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
                                             :class="{
                                                 'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (scheduleForm.errors as any)[
                                                     `stages.${index}.vaccine_id`
@@ -1478,12 +2187,59 @@ const saveVaccine = () => {
                                                 'border-gray-300 dark:border-gray-500': !(scheduleForm.errors as any)[`stages.${index}.vaccine_id`],
                                             }"
                                             required
-                                        >
-                                            <option value="">Select Vaccine</option>
-                                            <option v-for="vaccine in props.vaccines" :key="vaccine.id" :value="vaccine.id">
+                                                />
+                                                <button
+                                                    type="button"
+                                                    @click="toggleVaccineDropdown(index)"
+                                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            <!-- Dropdown -->
+                                            <div
+                                                v-if="showVaccineDropdowns[index]"
+                                                class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-gray-200 dark:bg-gray-600 dark:ring-gray-500"
+                                            >
+                                                <div class="max-h-48 overflow-y-auto">
+                                                    <div
+                                                        v-if="searchableVaccines(index).length === 0"
+                                                        class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        No vaccines found
+                                                    </div>
+                                                    <button
+                                                        v-for="(vaccine, vaccineIndex) in searchableVaccines(index)"
+                                                        :key="vaccine.id"
+                                                        type="button"
+                                                        @click="selectVaccine(index, vaccine)"
+                                                        :class="[
+                                                            'w-full px-3 py-2 text-left text-sm transition-colors focus:outline-none',
+                                                            vaccineIndex === highlightedVaccineIndex[index] 
+                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100' 
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500'
+                                                        ]"
+                                                    >
                                                 {{ vaccine.name }}
-                                            </option>
-                                        </select>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Clear button -->
+                                            <button
+                                                v-if="selectedVaccines[index]"
+                                                type="button"
+                                                @click="clearVaccineSelection(index)"
+                                                class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                            >
+                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
                                         <div v-if="(scheduleForm.errors as any)[`stages.${index}.vaccine_id`]" class="text-sm text-red-500">
                                             {{ (scheduleForm.errors as any)[`stages.${index}.vaccine_id`] }}
                                         </div>
@@ -1514,48 +2270,77 @@ const saveVaccine = () => {
 
                                     <!-- Vaccination Date -->
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
                                             Vaccination Date <span class="font-bold text-red-500">*</span>
                                         </label>
-                                        <input
-                                            v-model="stage.vaccination_date"
-                                            type="date"
-                                            class="w-full rounded-lg border px-3 py-2 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
-                                            :class="{
-                                                'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (scheduleForm.errors as any)[
-                                                    `stages.${index}.vaccination_date`
-                                                ],
-                                                'border-gray-300 dark:border-gray-500': !(scheduleForm.errors as any)[
-                                                    `stages.${index}.vaccination_date`
-                                                ],
-                                            }"
-                                            required
-                                        />
-                                        <div v-if="(scheduleForm.errors as any)[`stages.${index}.vaccination_date`]" class="text-sm text-red-500">
+                                        <div class="relative">
+                                            <input
+                                                v-model="stage.vaccination_date"
+                                                type="date"
+                                                class="w-full rounded-xl border px-4 py-3 pl-12 pr-4 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
+                                                :class="{
+                                                    'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (scheduleForm.errors as any)[
+                                                        `stages.${index}.vaccination_date`
+                                                    ],
+                                                    'border-gray-300 dark:border-gray-500': !(scheduleForm.errors as any)[
+                                                        `stages.${index}.vaccination_date`
+                                                    ],
+                                                }"
+                                                required
+                                            />
+                                            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div v-if="(scheduleForm.errors as any)[`stages.${index}.vaccination_date`]" class="flex items-center gap-1 text-sm text-red-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
                                             {{ (scheduleForm.errors as any)[`stages.${index}.vaccination_date`] }}
                                         </div>
                                     </div>
 
                                     <!-- Next Vaccination Date -->
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300"> Next Vaccination Date </label>
-                                        <input
-                                            v-model="stage.next_vaccination_date"
-                                            type="date"
-                                            class="w-full rounded-lg border px-3 py-2 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
-                                            :class="{
-                                                'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (scheduleForm.errors as any)[
-                                                    `stages.${index}.next_vaccination_date`
-                                                ],
-                                                'border-gray-300 dark:border-gray-500': !(scheduleForm.errors as any)[
-                                                    `stages.${index}.next_vaccination_date`
-                                                ],
-                                            }"
-                                        />
+                                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Next Vaccination Date
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">(Optional)</span>
+                                        </label>
+                                        <div class="relative">
+                                            <input
+                                                v-model="stage.next_vaccination_date"
+                                                type="date"
+                                                class="w-full rounded-xl border px-4 py-3 pl-12 pr-4 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
+                                                :class="{
+                                                    'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (scheduleForm.errors as any)[
+                                                        `stages.${index}.next_vaccination_date`
+                                                    ],
+                                                    'border-gray-300 dark:border-gray-500': !(scheduleForm.errors as any)[
+                                                        `stages.${index}.next_vaccination_date`
+                                                    ],
+                                                }"
+                                            />
+                                            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                        </div>
                                         <div
                                             v-if="(scheduleForm.errors as any)[`stages.${index}.next_vaccination_date`]"
-                                            class="text-sm text-red-500"
+                                            class="flex items-center gap-1 text-sm text-red-500"
                                         >
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
                                             {{ (scheduleForm.errors as any)[`stages.${index}.next_vaccination_date`] }}
                                         </div>
                                     </div>
@@ -2298,20 +3083,75 @@ const saveVaccine = () => {
                                         </span>
                                         <span class="text-xs font-normal text-gray-500">Select flock</span>
                                     </label>
-                                    <select
-                                        v-model="editScheduleForm.flock_id"
-                                        class="w-full cursor-pointer appearance-none rounded-xl border px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    <div ref="editFlockDropdownRef" class="relative">
+                                        <!-- Search Input -->
+                                        <div class="relative">
+                                            <input
+                                                v-model="editFlockSearchQuery"
+                                                @focus="showEditFlockDropdown = true"
+                                                @input="showEditFlockDropdown = true; highlightedEditFlockIndex = -1"
+                                                @keydown="handleEditFlockKeydown"
+                                                type="text"
+                                                placeholder="Search flocks..."
+                                                class="w-full rounded-xl border px-4 py-3 pr-12 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                         :class="{
                                             'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': editScheduleForm.errors.flock_id,
                                             'border-gray-300 dark:border-gray-600': !editScheduleForm.errors.flock_id,
                                         }"
                                         required
-                                    >
-                                        <option value="">Select Flock</option>
-                                        <option v-for="flock in props.flocks" :key="flock.id" :value="flock.id">
+                                            />
+                                            <button
+                                                type="button"
+                                                @click="toggleEditFlockDropdown"
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                            >
+                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- Dropdown -->
+                                        <div
+                                            v-if="showEditFlockDropdown"
+                                            class="absolute z-20 mt-2 w-full overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-gray-200 dark:bg-gray-700 dark:ring-gray-600"
+                                        >
+                                            <div class="max-h-60 overflow-y-auto">
+                                                <div
+                                                    v-if="searchableEditFlocks.length === 0"
+                                                    class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400"
+                                                >
+                                                    No flocks found
+                                                </div>
+                                                <button
+                                                    v-for="(flock, index) in searchableEditFlocks"
+                                                    :key="flock.id"
+                                                    type="button"
+                                                    @click="selectEditFlock(flock)"
+                                                    :class="[
+                                                        'w-full px-4 py-3 text-left text-sm transition-colors focus:outline-none',
+                                                        index === highlightedEditFlockIndex 
+                                                            ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' 
+                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-600'
+                                                    ]"
+                                                >
                                             {{ flock.name }} ({{ flock.code }})
-                                        </option>
-                                    </select>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Clear button -->
+                                        <button
+                                            v-if="selectedEditFlock"
+                                            type="button"
+                                            @click="clearEditFlockSelection"
+                                            class="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                        >
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                     <div v-if="editScheduleForm.errors.flock_id" class="flex items-center gap-1 text-sm text-red-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path
@@ -2526,9 +3366,17 @@ const saveVaccine = () => {
                                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                                             Disease <span class="font-bold text-red-500">*</span>
                                         </label>
-                                        <select
-                                            v-model="stage.disease_id"
-                                            class="w-full rounded-lg border px-3 py-2 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
+                                        <div class="relative">
+                                            <!-- Search Input -->
+                                            <div class="relative">
+                                                <input
+                                                    v-model="editDiseaseSearchQueries[index]"
+                                                    @focus="showEditDiseaseDropdowns[index] = true"
+                                                    @input="showEditDiseaseDropdowns[index] = true; highlightedEditDiseaseIndex[index] = -1"
+                                                    @keydown="handleEditDiseaseKeydown($event, index)"
+                                                    type="text"
+                                                    placeholder="Search diseases..."
+                                                    class="w-full rounded-lg border px-3 py-2 pr-10 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
                                             :class="{
                                                 'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (editScheduleForm.errors as any)[
                                                     `stages.${index}.disease_id`
@@ -2538,12 +3386,59 @@ const saveVaccine = () => {
                                                 ],
                                             }"
                                             required
-                                        >
-                                            <option value="">Select Disease</option>
-                                            <option v-for="disease in props.diseases" :key="disease.id" :value="disease.id">
+                                                />
+                                                <button
+                                                    type="button"
+                                                    @click="toggleEditDiseaseDropdown(index)"
+                                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            <!-- Dropdown -->
+                                            <div
+                                                v-if="showEditDiseaseDropdowns[index]"
+                                                class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-gray-200 dark:bg-gray-600 dark:ring-gray-500"
+                                            >
+                                                <div class="max-h-48 overflow-y-auto">
+                                                    <div
+                                                        v-if="searchableEditDiseases(index).length === 0"
+                                                        class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        No diseases found
+                                                    </div>
+                                                    <button
+                                                        v-for="(disease, diseaseIndex) in searchableEditDiseases(index)"
+                                                        :key="disease.id"
+                                                        type="button"
+                                                        @click="selectEditDisease(index, disease)"
+                                                        :class="[
+                                                            'w-full px-3 py-2 text-left text-sm transition-colors focus:outline-none',
+                                                            diseaseIndex === highlightedEditDiseaseIndex[index] 
+                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100' 
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500'
+                                                        ]"
+                                                    >
                                                 {{ disease.name }}
-                                            </option>
-                                        </select>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Clear button -->
+                                            <button
+                                                v-if="selectedEditDiseases[index]"
+                                                type="button"
+                                                @click="clearEditDiseaseSelection(index)"
+                                                class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                            >
+                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
                                         <div v-if="(editScheduleForm.errors as any)[`stages.${index}.disease_id`]" class="text-sm text-red-500">
                                             {{ (editScheduleForm.errors as any)[`stages.${index}.disease_id`] }}
                                         </div>
@@ -2554,24 +3449,79 @@ const saveVaccine = () => {
                                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                                             Vaccine <span class="font-bold text-red-500">*</span>
                                         </label>
-                                        <select
-                                            v-model="stage.vaccine_id"
-                                            class="w-full rounded-lg border px-3 py-2 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
-                                            :class="{
-                                                'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (editScheduleForm.errors as any)[
-                                                    `stages.${index}.vaccine_id`
-                                                ],
-                                                'border-gray-300 dark:border-gray-500': !(editScheduleForm.errors as any)[
-                                                    `stages.${index}.vaccine_id`
-                                                ],
-                                            }"
-                                            required
-                                        >
-                                            <option value="">Select Vaccine</option>
-                                            <option v-for="vaccine in props.vaccines" :key="vaccine.id" :value="vaccine.id">
-                                                {{ vaccine.name }}
-                                            </option>
-                                        </select>
+                                        <div class="relative">
+                                            <!-- Search Input -->
+                                            <div class="relative">
+                                                <input
+                                                    v-model="editVaccineSearchQueries[index]"
+                                                    @focus="showEditVaccineDropdowns[index] = true"
+                                                    @input="showEditVaccineDropdowns[index] = true; highlightedEditVaccineIndex[index] = -1"
+                                                    @keydown="handleEditVaccineKeydown($event, index)"
+                                                    type="text"
+                                                    placeholder="Search vaccines..."
+                                                    class="w-full rounded-lg border px-3 py-2 pr-10 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
+                                                    :class="{
+                                                        'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (editScheduleForm.errors as any)[
+                                                            `stages.${index}.vaccine_id`
+                                                        ],
+                                                        'border-gray-300 dark:border-gray-500': !(editScheduleForm.errors as any)[
+                                                            `stages.${index}.vaccine_id`
+                                                        ],
+                                                    }"
+                                                    required
+                                                />
+                                                <button
+                                                    type="button"
+                                                    @click="toggleEditVaccineDropdown(index)"
+                                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            <!-- Dropdown -->
+                                            <div
+                                                v-if="showEditVaccineDropdowns[index]"
+                                                class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-gray-200 dark:bg-gray-600 dark:ring-gray-500"
+                                            >
+                                                <div class="max-h-48 overflow-y-auto">
+                                                    <div
+                                                        v-if="searchableEditVaccines(index).length === 0"
+                                                        class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        No vaccines found
+                                                    </div>
+                                                    <button
+                                                        v-for="(vaccine, vaccineIndex) in searchableEditVaccines(index)"
+                                                        :key="vaccine.id"
+                                                        type="button"
+                                                        @click="selectEditVaccine(index, vaccine)"
+                                                        :class="[
+                                                            'w-full px-3 py-2 text-left text-sm transition-colors focus:outline-none',
+                                                            vaccineIndex === highlightedEditVaccineIndex[index] 
+                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100' 
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500'
+                                                        ]"
+                                                    >
+                                                        {{ vaccine.name }}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Clear button -->
+                                            <button
+                                                v-if="selectedEditVaccines[index]"
+                                                type="button"
+                                                @click="clearEditVaccineSelection(index)"
+                                                class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                            >
+                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
                                         <div v-if="(editScheduleForm.errors as any)[`stages.${index}.vaccine_id`]" class="text-sm text-red-500">
                                             {{ (editScheduleForm.errors as any)[`stages.${index}.vaccine_id`] }}
                                         </div>
@@ -2602,48 +3552,77 @@ const saveVaccine = () => {
 
                                     <!-- Vaccination Date -->
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
                                             Vaccination Date <span class="font-bold text-red-500">*</span>
                                         </label>
-                                        <input
-                                            v-model="stage.vaccination_date"
-                                            type="date"
-                                            class="w-full rounded-lg border px-3 py-2 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
-                                            :class="{
-                                                'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (editScheduleForm.errors as any)[
-                                                    `stages.${index}.vaccination_date`
-                                                ],
-                                                'border-gray-300 dark:border-gray-500': !(editScheduleForm.errors as any)[
-                                                    `stages.${index}.vaccination_date`
-                                                ],
-                                            }"
-                                            required
-                                        />
-                                        <div v-if="(editScheduleForm.errors as any)[`stages.${index}.vaccination_date`]" class="text-sm text-red-500">
+                                        <div class="relative">
+                                            <input
+                                                v-model="stage.vaccination_date"
+                                                type="date"
+                                                class="w-full rounded-xl border px-4 py-3 pl-12 pr-4 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
+                                                :class="{
+                                                    'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (editScheduleForm.errors as any)[
+                                                        `stages.${index}.vaccination_date`
+                                                    ],
+                                                    'border-gray-300 dark:border-gray-500': !(editScheduleForm.errors as any)[
+                                                        `stages.${index}.vaccination_date`
+                                                    ],
+                                                }"
+                                                required
+                                            />
+                                            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div v-if="(editScheduleForm.errors as any)[`stages.${index}.vaccination_date`]" class="flex items-center gap-1 text-sm text-red-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
                                             {{ (editScheduleForm.errors as any)[`stages.${index}.vaccination_date`] }}
                                         </div>
                                     </div>
 
                                     <!-- Next Vaccination Date -->
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300"> Next Vaccination Date </label>
-                                        <input
-                                            v-model="stage.next_vaccination_date"
-                                            type="date"
-                                            class="w-full rounded-lg border px-3 py-2 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
-                                            :class="{
-                                                'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (editScheduleForm.errors as any)[
-                                                    `stages.${index}.next_vaccination_date`
-                                                ],
-                                                'border-gray-300 dark:border-gray-500': !(editScheduleForm.errors as any)[
-                                                    `stages.${index}.next_vaccination_date`
-                                                ],
-                                            }"
-                                        />
+                                        <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Next Vaccination Date
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">(Optional)</span>
+                                        </label>
+                                        <div class="relative">
+                                            <input
+                                                v-model="stage.next_vaccination_date"
+                                                type="date"
+                                                class="w-full rounded-xl border px-4 py-3 pl-12 pr-4 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
+                                                :class="{
+                                                    'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (editScheduleForm.errors as any)[
+                                                        `stages.${index}.next_vaccination_date`
+                                                    ],
+                                                    'border-gray-300 dark:border-gray-500': !(editScheduleForm.errors as any)[
+                                                        `stages.${index}.next_vaccination_date`
+                                                    ],
+                                                }"
+                                            />
+                                            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                        </div>
                                         <div
                                             v-if="(editScheduleForm.errors as any)[`stages.${index}.next_vaccination_date`]"
-                                            class="text-sm text-red-500"
+                                            class="flex items-center gap-1 text-sm text-red-500"
                                         >
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
                                             {{ (editScheduleForm.errors as any)[`stages.${index}.next_vaccination_date`] }}
                                         </div>
                                     </div>
