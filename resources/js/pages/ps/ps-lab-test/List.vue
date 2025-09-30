@@ -208,7 +208,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 <template>
     <Head title="PS Lab Tests" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="p-6 m-3 bg-white dark:bg-gray-900 rounded-xl shadow-md">
+        <div class="p-6 m-3 bg-transparent rounded-xl shadow-md backdrop-blur-sm" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 30%, rgba(255, 255, 255, 0.35) 70%, rgba(255, 255, 255, 0.2) 100%); border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 12px 40px rgba(255, 255, 255, 0.2), 0 4px 16px rgba(255, 255, 255, 0.15), inset 0 2px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1);">
             <!-- Header -->
             <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h1 class="text-xl font-semibold text-gray-800 dark:text-white">Parent Stock Lab Test Information</h1>
@@ -271,7 +271,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             </div>
 
             <!-- Custom Filter Section -->
-            <div class="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+            <div class="mb-6 rounded-lg border p-4 backdrop-blur-sm" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.12) 30%, rgba(255, 255, 255, 0.25) 70%, rgba(255, 255, 255, 0.15) 100%); border: 1px solid rgba(255, 255, 255, 0.35); box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15), 0 2px 8px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 0 rgba(255, 255, 255, 0.05);">
                 <div class="mb-4 flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Filters</h3>
                     <button
@@ -351,7 +351,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             </div>
 
             <!-- Table -->
-            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+            <div class="mt-4 overflow-x-auto rounded-xl bg-transparent backdrop-blur-sm shadow" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 30%, rgba(255, 255, 255, 0.2) 70%, rgba(255, 255, 255, 0.12) 100%); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 6px 20px rgba(255, 255, 255, 0.12), 0 2px 8px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.05);">
                 <table class="w-full border-collapse text-left">
                     <thead>
                         <tr>
@@ -369,7 +369,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(lab, index) in (props.labTests?.data ?? [])" :key="lab.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <tr v-for="(lab, index) in (props.labTests?.data ?? [])" :key="lab.id" class="hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-300 hover:shadow-lg" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0.08) 100%);">
                             <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
                                 {{ ((props.labTests?.meta?.current_page || 1) - 1) * (props.labTests?.meta?.per_page || 10) + index + 1 }}
                             </td>
