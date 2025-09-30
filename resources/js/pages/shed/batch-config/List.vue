@@ -37,41 +37,41 @@ const { can } = usePermissions();
                 <h2 class="text-xl font-semibold text-gray-800">Batch Configurations</h2>
                 <Button v-if="can('batch-config.create')" class="bg-chicken text-white" @click="goToCreate">+ Add New</Button>
             </div>
-            <div class="overflow-x-auto rounded-lg border border-gray-200">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50 text-gray-600">
+            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                <table class="w-full border-collapse text-left">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left font-semibold">#</th>
-                            <th class="px-6 py-3 text-left font-semibold">Company</th>
-                            <th class="px-6 py-3 text-left font-semibold">Project</th>
-                            <th class="px-6 py-3 text-left font-semibold">Shed</th>
-                            <th class="px-6 py-3 text-left font-semibold">Transaction No</th>
-                            <th class="px-6 py-3 text-left font-semibold">Batch Name</th>
-                            <th class="px-6 py-3 text-left font-semibold">Area (sqft)</th>
-                            <th class="px-6 py-3 text-left font-semibold">Workers</th>
-                            <th class="px-6 py-3 text-left font-semibold">Effective From</th>
-                            <th class="px-6 py-3 text-left font-semibold">Actions</th>
+                            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">#</th>
+                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Company</th>
+                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Project</th>
+                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Shed</th>
+                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Transaction No</th>
+                            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Batch Name</th>
+                            <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Area (sqft)</th>
+                            <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Workers</th>
+                            <th class="border-b px-4 py-2 bg-yellow-500 text-black font-semibold text-sm whitespace-nowrap">Effective From</th>
+                            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
-                        <tr v-for="(item, index) in batchConfigs" :key="item.id">
-                            <td class="px-6 py-4">{{ index + 1 }}</td>
-                            <td>{{ item.batch_assign.company.name }}</td>
-                            <td>{{ item.batch_assign.project.name }}</td>
-                            <td>{{ item.batch_assign.shed.name }}</td>
-                            <td class="px-6 py-4">{{ item.batch_assign.transaction_no }}</td>
-                            <td class="px-6 py-4">{{ item.batch_assign.batch.name }}</td>
-                            <td class="px-6 py-4">{{ item.area_sqft }}</td>
-                            <td class="px-6 py-4">{{ item.num_workers }}</td>
-                            <td class="px-6 py-4">
+                    <tbody>
+                        <tr v-for="(item, index) in batchConfigs" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="border-b px-4 py-2">{{ index + 1 }}</td>
+                            <td class="border-b px-4 py-2">{{ item.batch_assign.company.name }}</td>
+                            <td class="border-b px-4 py-2">{{ item.batch_assign.project.name }}</td>
+                            <td class="border-b px-4 py-2">{{ item.batch_assign.shed.name }}</td>
+                            <td class="border-b px-4 py-2">{{ item.batch_assign.transaction_no }}</td>
+                            <td class="border-b px-4 py-2">{{ item.batch_assign.batch.name }}</td>
+                            <td class="border-b px-4 py-2">{{ item.area_sqft }}</td>
+                            <td class="border-b px-4 py-2">{{ item.num_workers }}</td>
+                            <td class="border-b px-4 py-2">
                                 {{ dayjs(item.effective_from).format('YYYY-MM-DD') }}
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="border-b px-4 py-2">
                                 <Button size="sm" class="bg-gray-500 text-white" @click="goToEdit(item.id)">Edit</Button>
                             </td>
                         </tr>
                         <tr v-if="batchConfigs.length === 0">
-                            <td colspan="7" class="px-6 py-6 text-center text-gray-500">No batch configurations found.</td>
+                            <td colspan="10" class="border-b px-4 py-6 text-center text-gray-500">No batch configurations found.</td>
                         </tr>
                     </tbody>
                 </table>

@@ -238,15 +238,15 @@ const breadcrumbs = [
             </div>
 
             <!-- Medicine Table -->
-            <div class="overflow-x-auto rounded-lg border border-gray-200">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50 text-gray-600">
+            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                <table class="w-full border-collapse text-left">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left font-semibold">#</th>
-                            <th class="px-6 py-3 text-left font-semibold">Name</th>
-                            <th class="px-6 py-3 text-left font-semibold">Status</th>
-                            <th class="px-6 py-3 text-left font-semibold">Created At</th>
-                            <th class="px-6 py-3 text-left font-semibold">Actions</th>
+                            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">#</th>
+                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Name</th>
+                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Status</th>
+                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Created At</th>
+                            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">

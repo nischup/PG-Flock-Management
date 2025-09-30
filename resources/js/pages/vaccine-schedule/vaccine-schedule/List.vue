@@ -692,38 +692,38 @@ const saveVaccine = () => {
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                    <table class="w-full border-collapse text-left">
+                        <thead>
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">S/N</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                                <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">S/N</th>
+                                <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">
                                     Company
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                                <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">
                                     Project
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                                <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">
                                     Flock Details
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                                <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">
                                     Breed Type
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                                <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">
                                     Status
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                                <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">
                                     Created
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                                <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                        <tbody>
                             <template v-for="(schedule, index) in props.vaccineSchedules" :key="schedule.id">
                                 <!-- Main Schedule Row -->
                                 <tr class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" @click="toggleRow(schedule.id)">
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="border-b px-4 py-2 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <button class="mr-2 rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-600">
                                                 <svg
@@ -742,25 +742,25 @@ const saveVaccine = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="border-b px-4 py-2 whitespace-nowrap">
                                         <div class="text-sm text-gray-900 dark:text-gray-100">{{ schedule.company_name }}</div>
                                         <div class="text-sm text-gray-500 dark:text-gray-400">{{ schedule.details.length }} stage(s)</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="border-b px-4 py-2 whitespace-nowrap">
                                         <div class="text-sm text-gray-900 dark:text-gray-100">{{ schedule.project_name }}</div>
                                         <div class="text-sm text-gray-500 dark:text-gray-400">{{ schedule.project_code }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="border-b px-4 py-2 whitespace-nowrap">
                                         <div class="text-sm text-gray-900 dark:text-gray-100">{{ schedule.flock_name }}</div>
                                         <div class="text-sm text-gray-500 dark:text-gray-400">
                                             {{ schedule.flock_code }} | Batch: {{ schedule.batch_name }}
                                         </div>
                                         <div class="text-sm text-gray-500 dark:text-gray-400">Shed: {{ schedule.shed_name }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="border-b px-4 py-2 whitespace-nowrap">
                                         <div class="text-sm text-gray-900 dark:text-gray-100">{{ schedule.breed_type_name }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="border-b px-4 py-2 whitespace-nowrap">
                                         <span
                                             class="inline-flex rounded-full px-2 py-1 text-xs font-semibold"
                                             :class="
@@ -772,10 +772,10 @@ const saveVaccine = () => {
                                             {{ schedule.status === 1 ? 'Active' : 'Inactive' }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                    <td class="border-b px-4 py-2 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         {{ new Date(schedule.created_at).toLocaleDateString() }}
                                     </td>
-                                    <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                                    <td class="border-b px-4 py-2 text-sm font-medium whitespace-nowrap">
                                         <div class="flex items-center gap-2">
                                             <button
                                                 @click.stop="editSchedule(schedule)"
@@ -823,7 +823,7 @@ const saveVaccine = () => {
 
                                 <!-- Expanded Details Row -->
                                 <tr v-if="isRowExpanded(schedule.id)" class="bg-gray-50 dark:bg-gray-700/50">
-                                    <td colspan="8" class="px-6 py-4">
+                                    <td colspan="8" class="border-b px-4 py-4">
                                         <div class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-600 dark:bg-gray-800">
                                             <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-600">
                                                 <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Vaccination Stages</h4>

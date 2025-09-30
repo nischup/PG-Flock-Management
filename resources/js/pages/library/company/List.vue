@@ -278,46 +278,46 @@ const breadcrumbs = [
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto rounded-lg border border-gray-200">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50 text-gray-600">
+            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                <table class="w-full border-collapse text-left">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left font-semibold">#</th>
-                            <th class="px-6 py-3 text-left font-semibold">Name</th>
-                            <th class="px-6 py-3 text-left font-semibold">Short Name</th>
-                            <th class="px-6 py-3 text-left font-semibold">Type</th>
-                            <th class="px-6 py-3 text-left font-semibold">Location</th>
-                            <th class="px-6 py-3 text-left font-semibold">Contact Name</th>
-                            <th class="px-6 py-3 text-left font-semibold">Contact Phone</th>
-                            <th class="px-6 py-3 text-left font-semibold">Contact Email</th>
-                            <th class="px-6 py-3 text-left font-semibold">Designation</th>
-                            <th class="px-6 py-3 text-left font-semibold">Status</th>
-                            <th class="px-6 py-3 text-left font-semibold">Created At</th>
-                            <th class="px-6 py-3 text-left font-semibold">Actions</th>
+                            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">#</th>
+                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Name</th>
+                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Short Name</th>
+                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Type</th>
+                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Location</th>
+                            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Contact Name</th>
+                            <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Contact Phone</th>
+                            <th class="border-b px-4 py-2 bg-yellow-500 text-black font-semibold text-sm whitespace-nowrap">Contact Email</th>
+                            <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Designation</th>
+                            <th class="border-b px-4 py-2 bg-cyan-500 text-white font-semibold text-sm whitespace-nowrap">Status</th>
+                            <th class="border-b px-4 py-2 bg-emerald-500 text-white font-semibold text-sm whitespace-nowrap">Created At</th>
+                            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
+                    <tbody>
                         <tr
                             v-for="(company, index) in companies"
                             :key="company.id"
-                            class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                            class="hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
-                            <td class="px-6 py-4">{{ index + 1 }}</td>
-                            <td class="px-6 py-4">{{ company.name }}</td>
-                            <td class="px-6 py-4">{{ company.short_name }}</td>
-                            <td class="px-6 py-4">{{ company.company_type }}</td>
-                            <td class="px-6 py-4">{{ company.location || '-' }}</td>
-                            <td class="px-6 py-4">{{ company.contact_person_name || '-' }}</td>
-                            <td class="px-6 py-4">{{ company.contact_person_phone || '-' }}</td>
-                            <td class="px-6 py-4">{{ company.contact_person_email || '-' }}</td>
-                            <td class="px-6 py-4">{{ company.contact_person_designation || '-' }}</td>
-                            <td class="px-6 py-4">
+                            <td class="border-b px-4 py-2">{{ index + 1 }}</td>
+                            <td class="border-b px-4 py-2">{{ company.name }}</td>
+                            <td class="border-b px-4 py-2">{{ company.short_name }}</td>
+                            <td class="border-b px-4 py-2">{{ company.company_type }}</td>
+                            <td class="border-b px-4 py-2">{{ company.location || '-' }}</td>
+                            <td class="border-b px-4 py-2">{{ company.contact_person_name || '-' }}</td>
+                            <td class="border-b px-4 py-2">{{ company.contact_person_phone || '-' }}</td>
+                            <td class="border-b px-4 py-2">{{ company.contact_person_email || '-' }}</td>
+                            <td class="border-b px-4 py-2">{{ company.contact_person_designation || '-' }}</td>
+                            <td class="border-b px-4 py-2">
                                 <span :class="company.status === 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
                                     {{ company.status === 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ dayjs(company.created_at).format('YYYY-MM-DD') }}</td>
-                            <td class="relative px-6 py-4">
+                            <td class="border-b px-4 py-2">{{ dayjs(company.created_at).format('YYYY-MM-DD') }}</td>
+                            <td class="border-b px-4 py-2 relative">
                                 <Button size="sm" class="actions-button bg-gray-500 text-white hover:bg-gray-600" @click="toggleDropdown(company.id)">
                                     Actions ▼
                                 </Button>

@@ -970,60 +970,56 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <span class="text-xs">{{ props.batchAssigns?.data?.length ?? 0 }} records</span>
                 </div>
 
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700" style="min-width: 1300px">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
-                            <tr class="text-left text-gray-600 dark:text-gray-300">
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 60px">S/N</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px">Flock No</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px">Shed Name</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px">Company</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px">Level</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px">Batch</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px">Male Qty</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px">Female Qty</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px">Total Qty</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px">Period</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px">Created Date</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px">Actions</th>
+                <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                    <table class="w-full border-collapse text-left">
+                        <thead>
+                            <tr>
+                                <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">S/N</th>
+                                <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Flock No</th>
+                                <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Shed Name</th>
+                                <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Company</th>
+                                <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Level</th>
+                                <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Batch</th>
+                                <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Male Qty</th>
+                                <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Female Qty</th>
+                                <th class="border-b px-4 py-2 bg-yellow-500 text-black font-semibold text-sm whitespace-nowrap">Total Qty</th>
+                                <th class="border-b px-4 py-2 bg-cyan-500 text-white font-semibold text-sm whitespace-nowrap">Period</th>
+                                <th class="border-b px-4 py-2 bg-emerald-500 text-white font-semibold text-sm whitespace-nowrap">Created Date</th>
+                                <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr
-                                v-for="(item, index) in props.batchAssigns?.data ?? []"
-                                :key="item.id"
-                                class="odd:bg-white even:bg-gray-50 hover:bg-gray-100 dark:odd:bg-gray-900 dark:even:bg-gray-800"
-                            >
-                                <td class="px-4 py-3 text-center font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
+                        <tbody>
+                            <tr v-for="(item, index) in props.batchAssigns?.data ?? []" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="border-b px-4 py-2 text-center font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
                                     {{ ((props.batchAssigns?.meta?.current_page || 1) - 1) * (props.batchAssigns?.meta?.per_page || 10) + index + 1 }}
                                 </td>
-                                <td class="px-4 py-3 font-medium whitespace-nowrap text-gray-900 dark:text-white">
+                                <td class="border-b px-4 py-2 font-medium whitespace-nowrap text-gray-900 dark:text-white">
                                     {{ item.flock?.name || item.flock_name }}
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <span
                                         class="inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-200"
                                     >
                                         {{ item.shed?.name || item.shed_name }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">{{ item.company?.name || item.company_name }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">{{ item.company?.name || item.company_name }}</td>
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <span
                                         class="inline-flex rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200"
                                     >
                                         {{ getLevelName(item.level) }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">{{ item.batch?.name || item.batch_name }}</td>
-                                <td class="px-4 py-3 text-center whitespace-nowrap">{{ item.batch_male_qty }}</td>
-                                <td class="px-4 py-3 text-center whitespace-nowrap">{{ item.batch_female_qty }}</td>
-                                <td class="px-4 py-3 text-center font-medium whitespace-nowrap">{{ item.batch_total_qty }}</td>
-                                <td class="px-4 py-3 text-center font-medium whitespace-nowrap">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">{{ item.batch?.name || item.batch_name }}</td>
+                                <td class="border-b px-4 py-2 text-center whitespace-nowrap">{{ item.batch_male_qty }}</td>
+                                <td class="border-b px-4 py-2 text-center whitespace-nowrap">{{ item.batch_female_qty }}</td>
+                                <td class="border-b px-4 py-2 text-center font-medium whitespace-nowrap">{{ item.batch_total_qty }}</td>
+                                <td class="border-b px-4 py-2 text-center font-medium whitespace-nowrap">
                                     {{ item.stage == 1 ? 'Brooding' : item.stage == 2 ? 'Growing' : item.stage == 3 ? 'Production' : '' }}
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">{{ dayjs(item.created_at).format('MMM DD, YYYY') }}</td>
-                                <td class="relative px-4 py-3">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">{{ dayjs(item.created_at).format('MMM DD, YYYY') }}</td>
+                                <td class="relative border-b px-4 py-2">
                                     <Button
                                         size="sm"
                                         class="action-btn bg-gray-500 text-white hover:bg-gray-600"
@@ -1142,7 +1138,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             </tr>
 
                             <tr v-if="(props.batchAssigns?.data ?? []).length === 0">
-                                <td colspan="11" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No batch assignments found.</td>
+                                <td colspan="11" class="border-b px-4 py-6 text-center text-gray-500 dark:text-gray-400">No batch assignments found.</td>
                             </tr>
                         </tbody>
                     </table>

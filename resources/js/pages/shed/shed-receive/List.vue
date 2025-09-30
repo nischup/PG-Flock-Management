@@ -840,44 +840,38 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <span class="text-xs">{{ props.shedReceives?.data?.length ?? 0 }} records</span>
                 </div>
 
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700" style="min-width: 1300px">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
-                            <tr class="text-left text-gray-600 dark:text-gray-300">
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 60px">S/N</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px">Flock No</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px">Shed</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 150px">Company</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px">Male Box Qty</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px">Female Box Qty</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px">Total Box Qty</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 120px">Receive Date</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap" style="min-width: 100px">Actions</th>
+                <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                    <table class="w-full border-collapse text-left">
+                        <thead>
+                            <tr>
+                                <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">S/N</th>
+                                <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Flock No</th>
+                                <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Shed</th>
+                                <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Company</th>
+                                <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Male Box Qty</th>
+                                <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Female Box Qty</th>
+                                <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Total Box Qty</th>
+                                <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Receive Date</th>
+                                <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr
-                                v-for="(item, index) in props.shedReceives?.data ?? []"
-                                :key="item.id"
-                                class="odd:bg-white even:bg-gray-50 hover:bg-gray-100 dark:odd:bg-gray-900 dark:even:bg-gray-800"
-                            >
-                                <td class="px-4 py-3 text-center font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                    {{ ((props.shedReceives?.meta?.current_page || 1) - 1) * (props.shedReceives?.meta?.per_page || 10) + index + 1 }}
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap">{{ item.flock?.code || item.flock_name }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                        <tbody>
+                            <tr v-for="(item, index) in props.shedReceives?.data ?? []" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="border-b px-4 py-2">{{ ((props.shedReceives?.meta?.current_page || 1) - 1) * (props.shedReceives?.meta?.per_page || 10) + index + 1 }}</td>
+                                <td class="border-b px-4 py-2">{{ item.flock?.code || item.flock_name }}</td>
+                                <td class="border-b px-4 py-2">
                                     <span
                                         class="inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-200"
                                     >
                                         {{ item.shed?.name || item.shed_name }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">{{ item.company?.name || item.company_name }}</td>
-                                <td class="px-4 py-3 text-center whitespace-nowrap">{{ item.shed_male_qty }}</td>
-                                <td class="px-4 py-3 text-center whitespace-nowrap">{{ item.shed_female_qty }}</td>
-                                <td class="px-4 py-3 text-center font-medium whitespace-nowrap">{{ item.shed_total_qty }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap">{{ dayjs(item.created_at).format('MMM DD, YYYY') }}</td>
-                                <td class="relative px-4 py-3">
+                                <td class="border-b px-4 py-2">{{ item.company?.name || item.company_name }}</td>
+                                <td class="border-b px-4 py-2">{{ item.shed_male_qty }}</td>
+                                <td class="border-b px-4 py-2">{{ item.shed_female_qty }}</td>
+                                <td class="border-b px-4 py-2">{{ item.shed_total_qty }}</td>
+                                <td class="border-b px-4 py-2">{{ dayjs(item.created_at).format('MMM DD, YYYY') }}</td>
+                                <td class="relative border-b px-4 py-2">
                                     <Button
                                         size="sm"
                                         class="action-btn bg-gray-500 text-white hover:bg-gray-600"
@@ -988,7 +982,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             </tr>
 
                             <tr v-if="(props.shedReceives?.data ?? []).length === 0">
-                                <td colspan="11" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">No Shed Receives found.</td>
+                                <td colspan="9" class="border-b px-4 py-6 text-center text-gray-500 dark:text-gray-400">No Shed Receives found.</td>
                             </tr>
                         </tbody>
                     </table>

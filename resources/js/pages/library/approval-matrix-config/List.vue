@@ -279,48 +279,47 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- Table -->
-            <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Name
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Module
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Type
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Layers
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Created
-                                </th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="config in paginatedConfigs" :key="config.id" class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
+            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                <table class="w-full border-collapse text-left">
+                    <thead>
+                        <tr>
+                            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Name
+                            </th>
+                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Module
+                            </th>
+                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Type
+                            </th>
+                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Layers
+                            </th>
+                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Status
+                            </th>
+                            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Created
+                            </th>
+                            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap text-right">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="config in paginatedConfigs" :key="config.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">{{ config.name }}</div>
                                     <div v-if="config.description" class="text-sm text-gray-500 truncate max-w-xs">
                                         {{ config.description }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <span class="text-sm text-gray-900 capitalize">
                                         {{ config.module_name.replace('-', ' ') }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <span
                                         :class="getApprovalTypeBadge(config.approval_type)"
                                         class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
@@ -328,13 +327,13 @@ onBeforeUnmount(() => {
                                         {{ getApprovalTypeText(config.approval_type) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <div class="flex items-center text-sm text-gray-900">
                                         <Layers class="w-4 h-4 mr-1" />
                                         {{ config.layers_count }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <span
                                         :class="getStatusBadge(config.is_active)"
                                         class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
@@ -342,10 +341,10 @@ onBeforeUnmount(() => {
                                         {{ getStatusText(config.is_active) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="border-b px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                                     {{ dayjs(config.created_at).format('MMM DD, YYYY') }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <td class="border-b px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end gap-2">
                                         <Button
                                             v-if="can('approval-matrix-config.edit')"
@@ -379,27 +378,26 @@ onBeforeUnmount(() => {
                             </tr>
                         </tbody>
                     </table>
-                </div>
 
-                <!-- Empty State -->
-                <div v-if="paginatedConfigs.length === 0" class="text-center py-12">
-                    <CheckCircle class="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No configurations found</h3>
-                    <p class="mt-1 text-sm text-gray-500">
-                        Get started by creating a new approval matrix configuration.
-                    </p>
-                    <div class="mt-6">
-                        <Button
-                            v-if="can('approval-matrix-config.create')"
-                            @click="handleCreate"
-                            class="bg-yellow-500 hover:bg-yellow-600"
-                        >
-                            <Plus class="w-4 h-4 mr-2" />
-                            Add Configuration
-                        </Button>
+                    <!-- Empty State -->
+                    <div v-if="paginatedConfigs.length === 0" class="text-center py-12">
+                        <CheckCircle class="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No configurations found</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Get started by creating a new approval matrix configuration.
+                        </p>
+                        <div class="mt-6">
+                            <Button
+                                v-if="can('approval-matrix-config.create')"
+                                @click="handleCreate"
+                                class="bg-yellow-500 hover:bg-yellow-600"
+                            >
+                                <Plus class="w-4 h-4 mr-2" />
+                                Add Configuration
+                            </Button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
             <!-- Pagination -->
             <div v-if="totalPages > 1" class="flex items-center justify-between">

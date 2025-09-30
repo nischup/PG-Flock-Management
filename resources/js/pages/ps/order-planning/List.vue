@@ -387,66 +387,33 @@ const breadcrumbs: BreadcrumbItem[] = [
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-                    <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                <table class="w-full border-collapse text-left">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left font-semibold">S/N</th>
-                            <th class="px-6 py-3 text-left font-semibold">Order From</th>
-                            <th class="px-6 py-3 text-left font-semibold">Order To</th>
-                            <th class="px-6 py-3 text-left font-semibold">Subject</th>
-                            <th class="px-6 py-3 text-left font-semibold">CC</th>
-                            <th class="px-6 py-3 text-left font-semibold">Items Count</th>
-                            <th class="px-6 py-3 text-left font-semibold">Created Date</th>
-                            <th class="px-6 py-3 text-left font-semibold">Status</th>
-                            <th class="px-6 py-3 text-left font-semibold">Actions</th>
+                            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">S/N</th>
+                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Order From</th>
+                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Order To</th>
+                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Subject</th>
+                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">CC</th>
+                            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Items Count</th>
+                            <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Created Date</th>
+                            <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Status</th>
+                            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                        <tr
-                            v-for="(orderPlan, index) in (props.orderPlans?.data ?? [])" 
-                            :key="orderPlan.id"
-                            class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100"
-                        >
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                                {{ ((props.orderPlans?.meta?.current_page || 1) - 1) * (props.orderPlans?.meta?.per_page || 10) + index + 1 }}
-                            </td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                                <div class="flex items-center gap-2">
-                                    <Mail class="h-4 w-4 text-gray-400" />
-                                    {{ orderPlan.order_from }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                                <div class="flex items-center gap-2">
-                                    <User class="h-4 w-4 text-gray-400" />
-                                    {{ orderPlan.order_to }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                                <div class="max-w-xs truncate" :title="orderPlan.subject">
-                                    {{ orderPlan.subject }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                                <div class="max-w-xs truncate" :title="orderPlan.cc">
-                                    {{ orderPlan.cc || '-' }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                    {{ orderPlan.items?.length || 0 }} items
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                                <div class="flex items-center gap-2">
-                                    <Calendar class="h-4 w-4 text-gray-400" />
-                                    {{ dayjs(orderPlan.created_at).format('MMM DD, YYYY') }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
+                    <tbody>
+                        <tr v-for="(orderPlan, index) in (props.orderPlans?.data ?? [])" :key="orderPlan.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="border-b px-4 py-2">{{ ((props.orderPlans?.meta?.current_page || 1) - 1) * (props.orderPlans?.meta?.per_page || 10) + index + 1 }}</td>
+                            <td class="border-b px-4 py-2">{{ orderPlan.order_from }}</td>
+                            <td class="border-b px-4 py-2">{{ orderPlan.order_to }}</td>
+                            <td class="border-b px-4 py-2">{{ orderPlan.subject }}</td>
+                            <td class="border-b px-4 py-2">{{ orderPlan.cc || 'N/A' }}</td>
+                            <td class="border-b px-4 py-2">{{ orderPlan.items?.length || 0 }}</td>
+                            <td class="border-b px-4 py-2">{{ dayjs(orderPlan.created_at).format('MMM DD, YYYY') }}</td>
+                            <td class="border-b px-4 py-2">
                                 <span 
-                                    class="inline-flex rounded-full px-2 py-1 text-xs font-medium"
+                                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
                                     :class="orderPlan.status === 1 
                                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
                                         : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
@@ -454,7 +421,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     {{ orderPlan.status === 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 flex gap-4">
+                            <td class="relative border-b px-4 py-2">
                                 <Link
                                     v-if="can('order-plans.edit')"
                                     :href="`/order-plans/${orderPlan.id}/edit`"
@@ -482,7 +449,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             </td>
                         </tr>
                         <tr v-if="(props.orderPlans?.data ?? []).length === 0">
-                            <td colspan="9" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="9" class="border-b px-4 py-6 text-center text-gray-500 dark:text-gray-400">
                                 No order plans found.
                             </td>
                         </tr>

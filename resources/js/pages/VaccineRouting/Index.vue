@@ -301,30 +301,30 @@ onBeforeUnmount(() => {
                 </div>
 
                 <!-- Table -->
-                <div class="overflow-x-auto rounded-lg border border-gray-200">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50 text-gray-600">
+                <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                    <table class="w-full border-collapse text-left">
+                        <thead>
                             <tr>
-                                <th class="px-6 py-3 text-left font-semibold">#</th>
-                                <th class="px-6 py-3 text-left font-semibold">Name</th>
-                                <th class="px-6 py-3 text-left font-semibold">Description</th>
-                                <th class="px-6 py-3 text-left font-semibold">Status</th>
-                                <th class="px-6 py-3 text-left font-semibold">Created At</th>
-                                <th class="px-6 py-3 text-left font-semibold">Actions</th>
+                                <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">#</th>
+                                <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Name</th>
+                                <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Description</th>
+                                <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Status</th>
+                                <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Created At</th>
+                                <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white">
-                            <tr v-for="(routing, index) in routings" :key="routing.id" class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-6 py-4">{{ index + 1 }}</td>
-                                <td class="px-6 py-4 font-medium">{{ routing.name }}</td>
-                                <td class="px-6 py-4">{{ routing.description || '-' }}</td>
-                                <td class="px-6 py-4">
+                        <tbody>
+                            <tr v-for="(routing, index) in routings" :key="routing.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="border-b px-4 py-2">{{ index + 1 }}</td>
+                                <td class="border-b px-4 py-2 font-medium">{{ routing.name }}</td>
+                                <td class="border-b px-4 py-2">{{ routing.description || '-' }}</td>
+                                <td class="border-b px-4 py-2">
                                     <span :class="routing.status === 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
                                         {{ routing.status === 1 ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">{{ dayjs(routing.created_at).format('YYYY-MM-DD') }}</td>
-                                <td class="relative flex items-center gap-2 px-6 py-4">
+                                <td class="border-b px-4 py-2">{{ dayjs(routing.created_at).format('YYYY-MM-DD') }}</td>
+                                <td class="border-b px-4 py-2 relative flex items-center gap-2">
                                     <Button
                                         v-if="can('vaccine-routing.edit')"
                                         variant="outline"

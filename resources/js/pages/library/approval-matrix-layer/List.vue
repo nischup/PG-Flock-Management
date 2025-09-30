@@ -244,57 +244,56 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- Table -->
-            <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Order
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Layer Name
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Role
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Required
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Timeout
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Created
-                                </th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="layer in paginatedLayers" :key="layer.id" class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
+            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                <table class="w-full border-collapse text-left">
+                    <thead>
+                        <tr>
+                            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Order
+                            </th>
+                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Layer Name
+                            </th>
+                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Role
+                            </th>
+                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Required
+                            </th>
+                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Timeout
+                            </th>
+                            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Status
+                            </th>
+                            <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">
+                                Created
+                            </th>
+                            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap text-right">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="layer in paginatedLayers" :key="layer.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <Layers class="w-4 h-4 mr-2 text-gray-400" />
                                         <span class="text-sm font-medium text-gray-900">{{ layer.layer_order }}</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">{{ layer.layer_name }}</div>
                                     <div v-if="layer.description" class="text-sm text-gray-500 truncate max-w-xs">
                                         {{ layer.description }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <span class="text-sm text-gray-900 capitalize">
                                         {{ layer.role_name.replace('-', ' ') }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <span
                                         :class="getRequiredBadge(layer.is_required)"
                                         class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
@@ -302,10 +301,10 @@ onBeforeUnmount(() => {
                                         {{ getRequiredText(layer.is_required) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td class="border-b px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                                     {{ layer.timeout_hours ? `${layer.timeout_hours}h` : '-' }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="border-b px-4 py-2 whitespace-nowrap">
                                     <span
                                         :class="getStatusBadge(layer.is_active)"
                                         class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
@@ -313,10 +312,10 @@ onBeforeUnmount(() => {
                                         {{ getStatusText(layer.is_active) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="border-b px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                                     {{ dayjs(layer.created_at).format('MMM DD, YYYY') }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <td class="border-b px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end gap-2">
                                         <Button
                                             v-if="can('approval-matrix-layer.edit')"

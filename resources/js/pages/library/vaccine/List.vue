@@ -256,36 +256,36 @@ const breadcrumbs = [
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto rounded-lg border border-gray-200">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50 text-gray-600">
+            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                <table class="w-full border-collapse text-left">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left font-semibold">#</th>
-                            <th class="px-6 py-3 text-left font-semibold">Vaccine Type</th>
-                            <th class="px-6 py-3 text-left font-semibold">Name</th>
-                            <th class="px-6 py-3 text-left font-semibold">Applicator</th>
-                            <th class="px-6 py-3 text-left font-semibold">Dose</th>
-                            <th class="px-6 py-3 text-left font-semibold">Note</th>
-                            <th class="px-6 py-3 text-left font-semibold">Status</th>
-                            <th class="px-6 py-3 text-left font-semibold">Created At</th>
-                            <th class="px-6 py-3 text-left font-semibold">Actions</th>
+                            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">#</th>
+                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Vaccine Type</th>
+                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Name</th>
+                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Applicator</th>
+                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Dose</th>
+                            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Note</th>
+                            <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Status</th>
+                            <th class="border-b px-4 py-2 bg-yellow-500 text-white font-semibold text-sm whitespace-nowrap">Created At</th>
+                            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
-                        <tr v-for="(v, index) in vaccines" :key="v.id" class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <td class="px-6 py-4">{{ index + 1 }}</td>
-                            <td class="px-6 py-4">{{ v.vaccine_type_name }}</td>
-                            <td class="px-6 py-4">{{ v.name }}</td>
-                            <td class="px-6 py-4">{{ v.applicator }}</td>
-                            <td class="px-6 py-4">{{ v.dose }}</td>
-                            <td class="px-6 py-4">{{ v.note }}</td>
-                            <td class="px-6 py-4">
+                    <tbody>
+                        <tr v-for="(v, index) in vaccines" :key="v.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="border-b px-4 py-2">{{ index + 1 }}</td>
+                            <td class="border-b px-4 py-2">{{ v.vaccine_type_name }}</td>
+                            <td class="border-b px-4 py-2">{{ v.name }}</td>
+                            <td class="border-b px-4 py-2">{{ v.applicator }}</td>
+                            <td class="border-b px-4 py-2">{{ v.dose }}</td>
+                            <td class="border-b px-4 py-2">{{ v.note }}</td>
+                            <td class="border-b px-4 py-2">
                                 <span :class="v.status === 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
                                     {{ v.status === 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ dayjs(v.created_at).format('YYYY-MM-DD') }}</td>
-                            <td class="relative flex items-center gap-2 px-6 py-4">
+                            <td class="border-b px-4 py-2">{{ dayjs(v.created_at).format('YYYY-MM-DD') }}</td>
+                            <td class="border-b px-4 py-2 relative flex items-center gap-2">
                                 <Button size="sm" class="actions-button bg-gray-500 text-white hover:bg-gray-600" @click.stop="toggleDropdown(v.id)">
                                     Actions ▼
                                 </Button>

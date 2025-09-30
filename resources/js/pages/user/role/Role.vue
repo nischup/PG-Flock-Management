@@ -224,32 +224,32 @@ const breadcrumbs: BreadcrumbItem[] = [
           </div>
 
           <!-- Roles Table -->
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-              <thead class="bg-slate-50 dark:bg-slate-800">
+          <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+            <table class="w-full border-collapse text-left">
+              <thead>
                 <tr>
-                  <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">
                     Role Details
                   </th>
-                  <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">
                     Permissions
                   </th>
-                  <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">
                     Status
                   </th>
-                  <th class="px-6 py-4 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap text-right">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody class="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-700">
+              <tbody>
                 <tr
                   v-for="role in roles.data"
                   :key="role.id"
-                  class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors duration-200"
+                  class="hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   <!-- Role Details -->
-                  <td class="px-6 py-4">
+                  <td class="border-b px-4 py-2">
                     <div class="flex items-center gap-3">
                       <div class="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg">
                         <Shield class="w-5 h-5 text-white" />
@@ -262,7 +262,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                   </td>
 
                   <!-- Permissions -->
-                  <td class="px-6 py-4">
+                  <td class="border-b px-4 py-2">
                     <div class="flex flex-wrap gap-1">
                       <span
                         v-for="perm in role.permissions.slice(0, 3)"
@@ -281,7 +281,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                   </td>
 
                   <!-- Status -->
-                  <td class="px-6 py-4">
+                  <td class="border-b px-4 py-2">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
                       <div class="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></div>
                       Active
@@ -289,7 +289,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                   </td>
 
                   <!-- Actions -->
-                  <td class="px-6 py-4 text-right">
+                  <td class="border-b px-4 py-2 text-right">
                     <div class="relative dropdown-container">
                       <Button
                         @click="toggleDropdown(role.id)"

@@ -351,62 +351,58 @@ const breadcrumbs: BreadcrumbItem[] = [
             </div>
 
             <!-- Table -->
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-                    <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                <table class="w-full border-collapse text-left">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left font-semibold">S/N</th>
-                            <th class="px-6 py-3 text-left font-semibold">PI No</th>
-                            <th class="px-6 py-3 text-left font-semibold">Order No</th>
-                            <th class="px-6 py-3 text-left font-semibold">Receive Date</th>
-                            <th class="px-6 py-3 text-left font-semibold">Lab Type</th>
-                            <th class="px-6 py-3 text-left font-semibold">Female Qty</th>
-                            <th class="px-6 py-3 text-left font-semibold">Male Qty</th>
-                            <th class="px-6 py-3 text-left font-semibold">Total Qty</th>
-                            <th class="px-6 py-3 text-left font-semibold">Notes</th>
-                            <th class="px-6 py-3 text-left font-semibold">Status</th>
-                            <th class="px-6 py-3 text-left font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                    <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                            <tr
-                            v-for="(lab, index) in (props.labTests?.data ?? [])" 
-                                :key="lab.id"
-                            class="hover:bg-gray-50 dark:hover:bg-gray-800 odd:bg-white even:bg-gray-100"
-                            >
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
+                            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">S/N</th>
+                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">PI No</th>
+                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Order No</th>
+                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Receive Date</th>
+                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Lab Type</th>
+                            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Female Qty</th>
+                            <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Male Qty</th>
+                            <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Total Qty</th>
+                            <th class="border-b px-4 py-2 bg-yellow-500 text-black font-semibold text-sm whitespace-nowrap">Notes</th>
+                            <th class="border-b px-4 py-2 bg-cyan-500 text-white font-semibold text-sm whitespace-nowrap">Status</th>
+                            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(lab, index) in (props.labTests?.data ?? [])" :key="lab.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
                                 {{ ((props.labTests?.meta?.current_page || 1) - 1) * (props.labTests?.meta?.per_page || 10) + index + 1 }}
-                                </td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ lab.ps_receive?.pi_no ?? '-' }}</td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ lab.ps_receive?.order_no ?? '-' }}</td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                                    {{ lab.ps_receive?.created_at ? dayjs(lab.ps_receive.created_at).format('YYYY-MM-DD') : '-' }}
-                                </td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                                    <span 
-                                        class="inline-flex rounded-full px-2 py-1 text-xs font-medium"
-                                        :class="lab.lab_type === '1' 
-                                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
-                                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'"
-                                    >
-                                        {{ lab.lab_type === '1' ? 'Government Lab' : lab.lab_type === '2' ? 'Provita Lab' : 'Unknown' }}
-                                    </span>
-                                </td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ lab.lab_send_female_qty }}</td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ lab.lab_send_male_qty }}</td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100 font-medium">{{ lab.lab_send_total_qty }}</td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">{{ lab.notes ?? '-' }}</td>
-                            <td class="px-6 py-4 text-gray-800 dark:text-gray-100">
-                                    <span 
-                                        class="inline-flex rounded-full px-2 py-1 text-xs font-medium"
-                                        :class="lab.status === 1 
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
-                                    >
-                                        {{ lab.status === 1 ? 'Active' : 'Inactive' }}
-                                    </span>
-                                </td>
-                            <td class="px-6 py-4 flex gap-4">
+                            </td>
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">{{ lab.ps_receive?.pi_no ?? '-' }}</td>
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">{{ lab.ps_receive?.order_no ?? '-' }}</td>
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
+                                {{ lab.ps_receive?.created_at ? dayjs(lab.ps_receive.created_at).format('YYYY-MM-DD') : '-' }}
+                            </td>
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
+                                <span 
+                                    class="inline-flex rounded-full px-2 py-1 text-xs font-medium"
+                                    :class="lab.lab_type === '1' 
+                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
+                                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'"
+                                >
+                                    {{ lab.lab_type === '1' ? 'Government Lab' : lab.lab_type === '2' ? 'Provita Lab' : 'Unknown' }}
+                                </span>
+                            </td>
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">{{ lab.lab_send_female_qty }}</td>
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">{{ lab.lab_send_male_qty }}</td>
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 font-medium">{{ lab.lab_send_total_qty }}</td>
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">{{ lab.notes ?? '-' }}</td>
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
+                                <span 
+                                    class="inline-flex rounded-full px-2 py-1 text-xs font-medium"
+                                    :class="lab.status === 1 
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
+                                >
+                                    {{ lab.status === 1 ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td class="border-b px-4 py-2 flex gap-4">
                                         <Link
                                             v-if="can('ps-lab-test.edit')"
                                             :href="`/ps-lab-test/${lab.id}/edit`"
@@ -424,10 +420,10 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 </td>
                             </tr>
                         <tr v-if="(props.labTests?.data ?? []).length === 0">
-                            <td colspan="11" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="11" class="border-b px-4 py-6 text-center text-gray-500 dark:text-gray-400">
                                 No lab tests found.
                             </td>
-                            </tr>
+                        </tr>
                         </tbody>
                     </table>
             </div>

@@ -362,45 +362,34 @@ function getStatusColor(item: any) {
     </div>
 
     <!-- Data Table -->
-    <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
-            <tr>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Date & Batch
-              </th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Total Eggs
-              </th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Hatching
-              </th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Commercial
-              </th>
-              <!-- <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Rejected
-              </th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Technical
-              </th> -->
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Status
-              </th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Actions
-              </th>
-           </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr
-              v-for="item in (props.classifications?.data || [])"
-              :key="item.id"
-              class="hover:bg-gray-50 transition-colors duration-200"
-            >
+    <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+      <table class="w-full border-collapse text-left">
+        <thead>
+          <tr>
+            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">
+              Date & Batch
+            </th>
+            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">
+              Total Eggs
+            </th>
+            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">
+              Hatching
+            </th>
+            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">
+              Commercial
+            </th>
+            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">
+              Status
+            </th>
+            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">
+              Actions
+            </th>
+         </tr>
+        </thead>
+        <tbody>
+            <tr v-for="item in (props.classifications?.data || [])" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
               <!-- Date & Batch -->
-             <td class="px-6 py-4">
+             <td class="border-b px-4 py-2">
                 <div class="flex flex-col">
                   <div class="text-sm font-medium text-gray-900">{{ formatDate(item.classification_date) }}</div>
                   <div class="text-xs text-gray-500">{{ item.batch_assign?.transaction_no || 'N/A' }}</div>
@@ -409,12 +398,12 @@ function getStatusColor(item: any) {
               </td>
 
               <!-- Total Eggs -->
-              <td class="px-6 py-4">
+              <td class="border-b px-4 py-2">
                 <div class="text-sm font-semibold text-gray-900">{{ item.total_eggs?.toLocaleString() || 0 }}</div>
               </td>
 
               <!-- Hatching Eggs -->
-              <td class="px-6 py-4">
+              <td class="border-b px-4 py-2">
                 <div class="flex items-center">
                   <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                   <span class="text-sm font-medium text-green-700">{{ item.hatching_eggs?.toLocaleString() || 0 }}</span>
@@ -422,7 +411,7 @@ function getStatusColor(item: any) {
               </td>
 
               <!-- Commercial Eggs -->
-              <td class="px-6 py-4">
+              <td class="border-b px-4 py-2">
                 <div class="flex items-center">
                   <div class="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
                   <span class="text-sm font-medium text-red-700">{{ item.commercial_eggs?.toLocaleString() || 0 }}</span>
@@ -430,7 +419,7 @@ function getStatusColor(item: any) {
               </td>
 
               <!-- Rejected Eggs 
-              <td class="px-6 py-4">
+              <td class="border-b px-4 py-2">
                 <div class="flex items-center">
                   <div class="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
                   <span class="text-sm font-medium text-orange-700">{{ item.rejected_eggs?.toLocaleString() || 0 }}</span>
@@ -438,7 +427,7 @@ function getStatusColor(item: any) {
               </td>
               -->
               <!-- Technical Eggs 
-              <td class="px-6 py-4">
+              <td class="border-b px-4 py-2">
                 <div class="flex items-center">
                   <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                   <span class="text-sm font-medium text-blue-700">{{ item.technical_eggs?.toLocaleString() || 0 }}</span>
@@ -446,7 +435,7 @@ function getStatusColor(item: any) {
               </td>
               -->
               <!-- Status -->
-              <td class="px-6 py-4">
+              <td class="border-b px-4 py-2">
                 <span 
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                   :class="getStatusColor(item)"
@@ -463,7 +452,7 @@ function getStatusColor(item: any) {
               </td>
 
               <!-- Actions -->
-              <td class="px-6 py-4">
+              <td class="border-b px-4 py-2">
                 <div class="flex items-center space-x-2">
                   <!-- View Details Button -->
                   <Link
@@ -502,7 +491,7 @@ function getStatusColor(item: any) {
 
             <!-- Empty State -->
             <tr v-if="(props.classifications?.data || []).length === 0">
-              <td colspan="6" class="px-6 py-12 text-center">
+              <td colspan="6" class="border-b px-4 py-12 text-center">
                 <div class="flex flex-col items-center">
                   <AlertCircle class="w-12 h-12 text-gray-400 mb-4" />
                   <h3 class="text-lg font-medium text-gray-900 mb-2">No classification records found</h3>
@@ -521,33 +510,32 @@ function getStatusColor(item: any) {
         </table>
       </div>
 
-      <!-- Pagination -->
-      <div v-if="totalPages > 1" class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-        <div class="flex items-center justify-between">
-          <div class="text-sm text-gray-700">
-            Showing {{ ((currentPage - 1) * perPage) + 1 }} to {{ Math.min(currentPage * perPage, totalRecords) }} of {{ totalRecords }} results
-          </div>
-          <div class="flex items-center space-x-2">
-            <Button
-              @click="router.get('/production/egg-classification', { ...props.filters, page: currentPage - 1 })"
-              :disabled="currentPage <= 1"
-              variant="outline"
-              size="sm"
-            >
-              Previous
-            </Button>
-            <span class="px-3 py-1 text-sm text-gray-700">
-              Page {{ currentPage }} of {{ totalPages }}
-            </span>
-            <Button
-              @click="router.get('/production/egg-classification', { ...props.filters, page: currentPage + 1 })"
-              :disabled="currentPage >= totalPages"
-              variant="outline"
-              size="sm"
-            >
-              Next
-            </Button>
-          </div>
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+          Showing {{ ((currentPage - 1) * perPage) + 1 }} to {{ Math.min(currentPage * perPage, totalRecords) }} of {{ totalRecords }} results
+        </div>
+        <div class="flex items-center space-x-2">
+          <Button
+            @click="router.get('/production/egg-classification', { ...props.filters, page: currentPage - 1 })"
+            :disabled="currentPage <= 1"
+            variant="outline"
+            size="sm"
+          >
+            Previous
+          </Button>
+          <span class="px-3 py-1 text-sm text-gray-700">
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
+          <Button
+            @click="router.get('/production/egg-classification', { ...props.filters, page: currentPage + 1 })"
+            :disabled="currentPage >= totalPages"
+            variant="outline"
+            size="sm"
+          >
+            Next
+          </Button>
         </div>
       </div>
     </div>

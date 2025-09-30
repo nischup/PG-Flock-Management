@@ -245,34 +245,34 @@ const breadcrumbs = [
             </div>
 
             <!-- Feed Table -->
-            <div class="overflow-x-auto rounded-lg border border-gray-200">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50 text-gray-600">
+            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                <table class="w-full border-collapse text-left">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left font-semibold">#</th>
-                            <th class="px-6 py-3 text-left font-semibold">Feed Type</th>
-                            <th class="px-6 py-3 text-left font-semibold">Feed Name</th>
-                            <th class="px-6 py-3 text-left font-semibold">Status</th>
-                            <th class="px-6 py-3 text-left font-semibold">Created At</th>
-                            <th class="px-6 py-3 text-left font-semibold">Actions</th>
+                            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">#</th>
+                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Feed Type</th>
+                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Feed Name</th>
+                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Status</th>
+                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Created At</th>
+                            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
+                    <tbody>
                         <tr
                             v-for="(feed, index) in feeds"
                             :key="feed.id"
-                            class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                            class="hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
-                            <td class="px-6 py-4">{{ index + 1 }}</td>
-                            <td class="px-6 py-4">{{ feed.feed_type_name }}</td>
-                            <td class="px-6 py-4">{{ feed.feed_name }}</td>
-                            <td class="px-6 py-4">
+                            <td class="border-b px-4 py-2">{{ index + 1 }}</td>
+                            <td class="border-b px-4 py-2">{{ feed.feed_type_name }}</td>
+                            <td class="border-b px-4 py-2">{{ feed.feed_name }}</td>
+                            <td class="border-b px-4 py-2">
                                 <span :class="feed.status === 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
                                     {{ feed.status === 1 ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">{{ dayjs(feed.created_at).format('YYYY-MM-DD') }}</td>
-                            <td class="relative px-6 py-4">
+                            <td class="border-b px-4 py-2">{{ dayjs(feed.created_at).format('YYYY-MM-DD') }}</td>
+                            <td class="border-b px-4 py-2 relative">
                                 <Button
                                     size="sm"
                                     class="actions-button bg-gray-500 text-white hover:bg-gray-600"
@@ -294,7 +294,7 @@ const breadcrumbs = [
                         </tr>
 
                         <tr v-if="feeds.length === 0">
-                            <td colspan="6" class="px-6 py-6 text-center text-gray-500">No feeds found.</td>
+                            <td colspan="6" class="border-b px-4 py-6 text-center text-gray-500">No feeds found.</td>
                         </tr>
                     </tbody>
                 </table>

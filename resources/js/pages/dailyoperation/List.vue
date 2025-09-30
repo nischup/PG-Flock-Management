@@ -714,99 +714,95 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
             </div>
 
             <!-- Table -->
-            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
-                    <thead class="bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+                <table class="w-full border-collapse text-left">
+                    <thead>
                         <tr>
-                            <th class="px-4 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">#</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">Company</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">Project</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">Flock</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">Shed</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">Batch</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">Stage</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">Age</th>
-                            <th class="px-4 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">#</th>
+                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Company</th>
+                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Project</th>
+                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Flock</th>
+                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Shed</th>
+                            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Batch</th>
+                            <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Stage</th>
+                            <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Age</th>
+                            <th class="border-b px-4 py-2 bg-yellow-500 text-black font-semibold text-sm whitespace-nowrap">
                                 Male Mortality
                             </th>
-                            <th class="px-4 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                            <th class="border-b px-4 py-2 bg-cyan-500 text-white font-semibold text-sm whitespace-nowrap">
                                 Female Mortality
                             </th>
-                            <th class="px-4 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                            <th class="border-b px-4 py-2 bg-emerald-500 text-white font-semibold text-sm whitespace-nowrap">
                                 Total Mortality
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">Feed</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">Water</th>
-                            <th class="px-4 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                            <th class="border-b px-4 py-2 bg-gray-500 text-white font-semibold text-sm whitespace-nowrap">Feed</th>
+                            <th class="border-b px-4 py-2 bg-slate-500 text-white font-semibold text-sm whitespace-nowrap">Water</th>
+                            <th class="border-b px-4 py-2 bg-zinc-500 text-white font-semibold text-sm whitespace-nowrap">
                                 Light (hrs)
                             </th>
-                            <th class="px-4 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">Eggs</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                            <th class="border-b px-4 py-2 bg-neutral-500 text-white font-semibold text-sm whitespace-nowrap">Eggs</th>
+                            <th class="border-b px-4 py-2 bg-stone-500 text-white font-semibold text-sm whitespace-nowrap">
                                 Created By
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                            <th class="border-b px-4 py-2 bg-amber-500 text-white font-semibold text-sm whitespace-nowrap">
                                 Submitted Date
                             </th>
-                            <th class="px-4 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">
                                 Actions
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                        <tr
-                            v-for="(item, index) in props.dailyOperations?.data ?? []"
-                            :key="item.id"
-                            class="odd:bg-white even:bg-gray-50 hover:bg-gray-100 dark:odd:bg-gray-900 dark:even:bg-gray-800"
-                        >
-                            <td class="px-4 py-3 text-center font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <tbody>
+                        <tr v-for="(item, index) in props.dailyOperations?.data ?? []" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="border-b px-4 py-2 text-center font-medium whitespace-nowrap text-gray-500 dark:text-gray-400">
                                 {{
                                     ((props.dailyOperations?.meta?.current_page || 1) - 1) * (props.dailyOperations?.meta?.per_page || 10) + index + 1
                                 }}
                             </td>
 
-                            <td class="px-4 py-3 whitespace-nowrap">{{ item.company_name }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap">{{ item.project_name }}</td>
+                            <td class="border-b px-4 py-2 whitespace-nowrap">{{ item.company_name }}</td>
+                            <td class="border-b px-4 py-2 whitespace-nowrap">{{ item.project_name }}</td>
 
-                            <td class="px-4 py-3 whitespace-nowrap">{{ item.flock_name }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap">
+                            <td class="border-b px-4 py-2 whitespace-nowrap">{{ item.flock_name }}</td>
+                            <td class="border-b px-4 py-2 whitespace-nowrap">
                                 <span
                                     class="inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-200"
                                 >
                                     {{ item.shed_name }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap">{{ item.batch_name }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap">{{ item.stage_name }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap">{{ item.age || 'N/A' }}</td>
+                            <td class="border-b px-4 py-2 whitespace-nowrap">{{ item.batch_name }}</td>
+                            <td class="border-b px-4 py-2 whitespace-nowrap">{{ item.stage_name }}</td>
+                            <td class="border-b px-4 py-2 whitespace-nowrap">{{ item.age || 'N/A' }}</td>
 
-                            <td class="px-4 py-3 text-center font-medium whitespace-nowrap text-red-600">
+                            <td class="border-b px-4 py-2 text-center font-medium whitespace-nowrap text-red-600">
                                 {{ item.male_mortality || 0 }}
                             </td>
-                            <td class="px-4 py-3 text-center font-medium whitespace-nowrap text-red-600">
+                            <td class="border-b px-4 py-2 text-center font-medium whitespace-nowrap text-red-600">
                                 {{ item.female_mortality || 0 }}
                             </td>
-                            <td class="px-4 py-3 text-center font-medium whitespace-nowrap text-red-700">
+                            <td class="border-b px-4 py-2 text-center font-medium whitespace-nowrap text-red-700">
                                 {{ item.total_mortality || 0 }}
                             </td>
-                            <td class="px-4 py-3 font-medium whitespace-nowrap text-green-600">
+                            <td class="border-b px-4 py-2 font-medium whitespace-nowrap text-green-600">
                                 {{ item.feed_consumption }}
                             </td>
-                            <td class="px-4 py-3 font-medium whitespace-nowrap text-blue-600">
+                            <td class="border-b px-4 py-2 font-medium whitespace-nowrap text-blue-600">
                                 {{ item.water_consumption }}
                             </td>
-                            <td class="px-4 py-3 text-center font-medium whitespace-nowrap text-yellow-600">
+                            <td class="border-b px-4 py-2 text-center font-medium whitespace-nowrap text-yellow-600">
                                 {{ item.light_hour || 0 }}
                             </td>
-                            <td class="px-4 py-3 text-center font-medium whitespace-nowrap text-purple-600">
+                            <td class="border-b px-4 py-2 text-center font-medium whitespace-nowrap text-purple-600">
                                 {{ item.egg_collection || 0 }}
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                            <td class="border-b px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400">
                                 {{ item.created_by_name }}
                             </td>
-                            <td class="px-4 py-3 font-medium whitespace-nowrap text-gray-900 dark:text-white">
+                            <td class="border-b px-4 py-2 font-medium whitespace-nowrap text-gray-900 dark:text-white">
                                 {{ dayjs(item.operation_date).format('MMM DD, YYYY') }}
                             </td>
-                            <td class="relative px-4 py-3">
+                            <td class="relative border-b px-4 py-2">
                                 <Button
                                     size="sm"
                                     class="action-btn bg-gray-500 text-white hover:bg-gray-600"
@@ -872,7 +868,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
                             </td>
                         </tr>
                         <tr v-if="!props.dailyOperations?.data?.length">
-                            <td colspan="13" class="px-4 py-6 text-center text-gray-500 dark:text-gray-400">No daily operations found.</td>
+                            <td colspan="18" class="border-b px-4 py-6 text-center text-gray-500 dark:text-gray-400">No daily operations found.</td>
                         </tr>
                     </tbody>
                 </table>
