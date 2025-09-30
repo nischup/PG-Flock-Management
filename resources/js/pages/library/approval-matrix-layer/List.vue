@@ -340,27 +340,26 @@ onBeforeUnmount(() => {
                             </tr>
                         </tbody>
                     </table>
-                </div>
 
-                <!-- Empty State -->
-                <div v-if="paginatedLayers.length === 0" class="text-center py-12">
-                    <CheckCircle class="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No layers found</h3>
-                    <p class="mt-1 text-sm text-gray-500">
-                        Get started by creating a new approval layer.
-                    </p>
-                    <div class="mt-6">
-                        <Button
-                            v-if="can('approval-matrix-layer.create')"
-                            @click="handleCreate"
-                            class="bg-yellow-500 hover:bg-yellow-600"
-                        >
-                            <Plus class="w-4 h-4 mr-2" />
-                            Add Layer
-                        </Button>
+                    <!-- Empty State -->
+                    <div v-if="paginatedLayers.length === 0" class="text-center py-12">
+                        <CheckCircle class="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No layers found</h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Get started by creating a new approval layer.
+                        </p>
+                        <div class="mt-6">
+                            <Button
+                                v-if="can('approval-matrix-layer.create')"
+                                @click="handleCreate"
+                                class="bg-yellow-500 hover:bg-yellow-600"
+                            >
+                                <Plus class="w-4 h-4 mr-2" />
+                                Add Layer
+                            </Button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
             <!-- Pagination -->
             <div v-if="totalPages > 1" class="flex items-center justify-between">
