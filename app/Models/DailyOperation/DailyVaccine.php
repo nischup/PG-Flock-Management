@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models\DailyOperation;
-use  App\Models\Master\unit;
+use  App\Models\Master\Unit;
 use  App\Models\Master\vaccine;
 use  App\Models\vaccineSchedule;
 use  App\Models\VaccineScheduleDetail;

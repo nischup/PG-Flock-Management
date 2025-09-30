@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models\DailyOperation;
-use  App\Models\Master\unit;
+use  App\Models\Master\Unit;
 use Illuminate\Database\Eloquent\Model;
 
 class DailyWater extends Model
