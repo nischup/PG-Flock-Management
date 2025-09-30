@@ -341,6 +341,8 @@ const exportRowPdf = (id: number) => {
     window.open(url, '_blank');
 };
 
+
+
 // ✅ Dynamic data for cards based on selected Receive
 const selectedReceive = ref<number | null>(null);
 const cardData = computed(() => {
@@ -809,15 +811,12 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <tr>
                                 <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">#SL</th>
                                 <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Company</th>
-                                <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Project</th>
+                                <!-- <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Project</th> -->
                                 <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Flock No</th>
                                 <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Shed</th>
                                 <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Female Qty</th>
                                 <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Male Qty</th>
-                                <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Total Mortality</th>
-                                <th class="border-b px-4 py-2 bg-yellow-500 text-black font-semibold text-sm whitespace-nowrap">Total Excess</th>
-                                <th class="border-b px-4 py-2 bg-cyan-500 text-white font-semibold text-sm whitespace-nowrap">Total Shortage</th>
-                                <th class="border-b px-4 py-2 bg-emerald-500 text-white font-semibold text-sm whitespace-nowrap">Grand Total Qty</th>
+                                <th class="border-b px-4 py-2 bg-emerald-500 text-white font-semibold text-sm whitespace-nowrap">Total Qty</th>
                                 <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Action</th>
                             </tr>
                         </thead>
@@ -827,16 +826,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 :key="receive.id"
                                 class="hover:bg-gray-50 dark:hover:bg-gray-700"
                             >
-                                <td class="border-b px-4 py-2">{{ (props.shedReceives?.meta?.current_page - 1) * (props.shedReceives?.meta?.per_page || 10) + index + 1 }}</td>
+                                <td class="border-b px-4 py-2">{{  index + 1 }}</td>
                                 <td class="border-b px-4 py-2">{{ receive.company?.short_name || 'N/A' }}</td>
-                                <td class="border-b px-4 py-2">{{ receive.project?.name || 'N/A' }}</td>
+                                <!-- <td class="border-b px-4 py-2">{{ receive.project?.name || 'N/A' }}</td> -->
                                 <td class="border-b px-4 py-2">{{ receive.flock?.name || 'Flock-' + receive.flock_no }}</td>
                                 <td class="border-b px-4 py-2">{{ receive.shed?.name || 'Shed-' + receive.shed_no }}</td>
                                 <td class="border-b px-4 py-2">{{ receive.shed_female_qty || 0 }}</td>
                                 <td class="border-b px-4 py-2">{{ receive.shed_male_qty || 0 }}</td>
-                                <td class="border-b px-4 py-2">{{ receive.shed_total_qty || 0 }}</td>
-                                <td class="border-b px-4 py-2">{{ receive.shed_total_qty || 0 }}</td>
-                                <td class="border-b px-4 py-2">{{ receive.shed_total_qty || 0 }}</td>
                                 <td class="border-b px-4 py-2">{{ receive.shed_total_qty || 0 }}</td>
                                 <td class="relative border-b px-4 py-2">
                                     <Button

@@ -93,6 +93,8 @@ class ProductionShedReceiveController extends Controller
     {
         $firmReceive = PsFirmReceive::findOrFail($request->job_id);
         
+
+        
         $flock = Flock::findOrFail($request->flock_id);;
 
         $shedReceive = ShedReceive::create([
