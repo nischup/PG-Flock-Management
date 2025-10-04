@@ -7,6 +7,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import { BabyChick } from '@/icons/BabyChick';
 import { BabyChickMultiple } from '@/icons/BabyChickMultiple';
 import { type NavItem } from '@/types';
+import AppLogo from './AppLogo.vue';
 import { Link } from '@inertiajs/vue3';
 import {
     Building,
@@ -29,7 +30,7 @@ import {
     User,
     Users,
 } from 'lucide-vue-next';
-import AppLogo from './AppLogo.vue';
+
 
 const { can } = usePermissions();
 
