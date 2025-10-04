@@ -232,7 +232,13 @@ watch(
       
       batch.batch_total_qty = (batch.batch_female_qty || 0) + (batch.batch_male_qty || 0)
 
-      batch.percentage = (batch.batch_excess_female / batch.batch_received_female_qty)*100
+      if (batch.batch_received_female_qty > 0) {
+        const percent = (batch.batch_excess_female / batch.batch_received_female_qty) * 100
+        batch.percentage = Math.round(percent * 100) / 100  // number like 12.34
+        // Or if you want string: batch.percentage = percent.toFixed(2)
+      } else {
+        batch.percentage = 0
+      }
     })
   },
   { deep: true, immediate: true }
