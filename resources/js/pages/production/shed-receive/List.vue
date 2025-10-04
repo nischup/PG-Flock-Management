@@ -33,6 +33,10 @@ const props = defineProps<{
                 name: string;
                 short_name: string;
             };
+            project: {
+                id: number;
+                name: string;
+            };
             shed: {
                 id: number;
                 name: string;
@@ -55,7 +59,7 @@ const props = defineProps<{
         date_to?: string;
     };
     companies?: Array<{ id: number; name: string; short_name?: string; code?: string }>;
-    flocks?: Array<{ id: number; name: string }>;
+    flocks?: Array<{ id: number; name: string; code: string }>;
     sheds?: Array<{ id: number; name: string }>;
 }>();
 
@@ -200,7 +204,7 @@ const getCompanyName = (companyId: string | number) => {
 
 const getFlockName = (flockId: string | number) => {
     const flock = props.flocks?.find((f) => f.id === Number(flockId));
-    return flock?.name || 'Unknown';
+    return flock?.code || 'Unknown';
 };
 
 const getShedName = (shedId: string | number) => {
@@ -275,7 +279,7 @@ const clearCompanyFilter = () => {
 const getSelectedFlockName = () => {
     if (!filters.value.flock_id) return '';
     const flock = props.flocks?.find((f) => f.id === Number(filters.value.flock_id));
-    return flock?.name || '';
+    return flock?.code || '';
 };
 
 const selectFlock = (flockId: string | number) => {
@@ -369,8 +373,16 @@ const cardData = computed(() => {
             value2: '',
         },
         {
+            title: 'Project',
+            value: selectedItem.project?.name || 'N/A',
+            title1: '',
+            value1: '',
+            title2: '',
+            value2: '',
+        },
+        {
             title: 'Flock',
-            value: selectedItem.flock?.name || 'N/A',
+            value: selectedItem.flock?.code || 'N/A',
             title1: '',
             value1: '',
             title2: '',
@@ -422,7 +434,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 >
                     <option :value="null" disabled>Select Receive Record</option>
                     <option v-for="item in props.shedReceives?.data ?? []" :key="item.id" :value="item.id">
-                        {{ item.flock?.name || item.flock_no }} - {{ item.company?.short_name }} : {{ dayjs(item.receive_date).format('YYYY-MM-DD') }}
+                        {{ item.flock?.code || item.flock_no }} - {{ item.company?.short_name }} - {{ item.project?.name || 'N/A' }} : {{ dayjs(item.receive_date).format('YYYY-MM-DD') }}
                     </option>
                 </select>
             </div>
@@ -692,7 +704,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                                     'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': filters.flock_id == flock.id,
                                                 }"
                                             >
-                                                <span>{{ flock.name }}</span>
+                                                <span>{{ flock.code }}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -811,12 +823,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <tr>
                                 <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">#SL</th>
                                 <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Company</th>
-                                <!-- <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Project</th> -->
+                                <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Project</th>
                                 <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Flock No</th>
                                 <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Shed</th>
                                 <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Female Qty</th>
                                 <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Male Qty</th>
                                 <th class="border-b px-4 py-2 bg-emerald-500 text-white font-semibold text-sm whitespace-nowrap">Total Qty</th>
+                                <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Receive Date</th>
                                 <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Action</th>
                             </tr>
                         </thead>
@@ -828,12 +841,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                             >
                                 <td class="border-b px-4 py-2">{{  index + 1 }}</td>
                                 <td class="border-b px-4 py-2">{{ receive.company?.short_name || 'N/A' }}</td>
-                                <!-- <td class="border-b px-4 py-2">{{ receive.project?.name || 'N/A' }}</td> -->
-                                <td class="border-b px-4 py-2">{{ receive.flock?.name || 'Flock-' + receive.flock_no }}</td>
+                                <td class="border-b px-4 py-2">{{ receive.project?.name || 'N/A' }}</td>
+                                <td class="border-b px-4 py-2">{{ receive.flock?.code || 'Flock-' + receive.flock_no }}</td>
                                 <td class="border-b px-4 py-2">{{ receive.shed?.name || 'Shed-' + receive.shed_no }}</td>
                                 <td class="border-b px-4 py-2">{{ receive.shed_female_qty || 0 }}</td>
                                 <td class="border-b px-4 py-2">{{ receive.shed_male_qty || 0 }}</td>
                                 <td class="border-b px-4 py-2">{{ receive.shed_total_qty || 0 }}</td>
+                                <td class="border-b px-4 py-2">{{ dayjs(receive.receive_date).format('YYYY-MM-DD') }}</td>
                                 <td class="relative border-b px-4 py-2">
                                     <Button
                                         size="sm"
