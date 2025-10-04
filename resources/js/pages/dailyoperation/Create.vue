@@ -149,6 +149,7 @@ const form = useForm({
   male_mortality: 0,
   water_type:'',
   water_quantity:0,
+  water_unit:0,
   female_reason: '',
   male_reason: '',
   mortalitynote: '',
@@ -231,8 +232,10 @@ const showDateOverlay = ref(false)
 const showFeedTypeDropdown = ref(false)
 const feedTypeSearchQuery = ref('')
 const showUnitDropdown = ref(false)
-const unitSearchQuery = ref('')
+const showWaterUnitDropdown = ref(false)
 
+const unitSearchQuery = ref('')
+const waterUnitSearchQuery = ref('')
 // Selected vaccine schedule
 const selectedVaccineSchedule = computed(() => {
   if (!form.vaccine_schedule_detail_id) return null
@@ -272,6 +275,12 @@ const filteredUnits = computed(() => {
     unit.name.toLowerCase().includes(unitSearchQuery.value.toLowerCase())
   )
 })
+const filteredWaterUnits = computed(() => {
+  if (!waterUnitSearchQuery.value) return props.units || []
+  return (props.units || []).filter(u =>
+    u.name.toLowerCase().includes(waterUnitSearchQuery.value.toLowerCase())
+  )
+})
 
 // Selected feed type display
 const selectedFeedType = computed(() => {
@@ -282,7 +291,9 @@ const selectedFeedType = computed(() => {
 const selectedUnit = computed(() => {
   return (props.units || []).find(unit => unit.id === form.feed_unit) || null
 })
-
+const selectedWaterUnit = computed(() => {
+  return (props.units || []).find(u => u.id === form.water_unit) || null
+})
 // Close dropdown on outside click
 const handleClickOutside = (e: MouseEvent) => {
   if (!(e.target as HTMLElement).closest('.flock-dropdown')) {
@@ -1133,95 +1144,95 @@ function submit() {
                   {{ errors.feed_quantity }}
                 </p>
             </div>
-              <div class="space-y-1">
-                <Label class="text-xs font-semibold text-gray-700 flex items-center">
-                  <div class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-2"></div>
-                  Unit
-                </Label>
-                <div class="unit-dropdown relative">
-                  <button
-                    type="button"
-                    @click.stop="showUnitDropdown = !showUnitDropdown"
-                    class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm transition-all duration-200 hover:border-purple-500 hover:shadow-md focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-xs h-10"
-                  >
-                    <span class="flex items-center gap-2">
-                      <div class="h-1.5 w-1.5 rounded-full bg-purple-500"></div>
-                      {{ selectedUnit ? selectedUnit.name : 'Select Unit' }}
-                    </span>
-                    <ChevronDown class="h-3 w-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showUnitDropdown }" />
-                  </button>
-                  
-                  <!-- Unit Dropdown -->
-                  <div 
-                    v-if="showUnitDropdown" 
-                    class="fixed inset-0 z-[9999] flex items-start justify-center pt-20"
-                    @click="showUnitDropdown = false"
-                  >
-                    <div 
-                      class="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl"
-                      @click.stop
-                    >
-                      <!-- Header -->
-                      <div class="flex items-center justify-between p-4 border-b border-gray-200">
-                        <h3 class="font-semibold text-gray-900 text-sm">Select Unit</h3>
-                        <button
-                          type="button"
-                          @click="showUnitDropdown = false"
-                          class="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
-                        >
-                          <X class="h-4 w-4 text-gray-400" />
-                        </button>
-            </div>
-                      
-                      <!-- Search -->
-                      <div class="p-4 border-b border-gray-200">
-                        <div class="relative">
-                          <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <input
-                            v-model="unitSearchQuery"
-                            type="text"
-                            placeholder="Search units..."
-                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                          />
+                      <div class="space-y-1">
+                        <Label class="text-xs font-semibold text-gray-700 flex items-center">
+                          <div class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-2"></div>
+                          Unit
+                        </Label>
+                        <div class="unit-dropdown relative">
+                          <button
+                            type="button"
+                            @click.stop="showUnitDropdown = !showUnitDropdown"
+                            class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm transition-all duration-200 hover:border-purple-500 hover:shadow-md focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-xs h-10"
+                          >
+                            <span class="flex items-center gap-2">
+                              <div class="h-1.5 w-1.5 rounded-full bg-purple-500"></div>
+                              {{ selectedUnit ? selectedUnit.name : 'Select Unit' }}
+                            </span>
+                            <ChevronDown class="h-3 w-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showUnitDropdown }" />
+                          </button>
+                          
+                          <!-- Unit Dropdown -->
+                          <div 
+                            v-if="showUnitDropdown" 
+                            class="fixed inset-0 z-[9999] flex items-start justify-center pt-20"
+                            @click="showUnitDropdown = false"
+                          >
+                            <div 
+                              class="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl"
+                              @click.stop
+                            >
+                              <!-- Header -->
+                              <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                                <h3 class="font-semibold text-gray-900 text-sm">Select Unit</h3>
+                                <button
+                                  type="button"
+                                  @click="showUnitDropdown = false"
+                                  class="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
+                                >
+                                  <X class="h-4 w-4 text-gray-400" />
+                                </button>
+                          </div>
+                          
+                          <!-- Search -->
+                          <div class="p-4 border-b border-gray-200">
+                            <div class="relative">
+                              <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              <input
+                                v-model="unitSearchQuery"
+                                type="text"
+                                placeholder="Search units..."
+                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                              />
+                            </div>
+                          </div>
+                          
+                          <!-- Options -->
+                          <div class="max-h-60 overflow-y-auto">
+                            <button
+                              v-for="unit in filteredUnits"
+                              :key="unit.id"
+                              type="button"
+                              @click.stop="form.feed_unit = unit.id; showUnitDropdown = false"
+                              class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-purple-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                              :class="{ 'bg-purple-100': form.feed_unit == unit.id }"
+                            >
+                              <div class="flex-shrink-0">
+                                <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+                              </div>
+                              <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium text-gray-900">{{ unit.name }}</div>
+                              </div>
+                              <div v-if="form.feed_unit == unit.id" class="flex-shrink-0">
+                                <CheckCircle2 class="h-4 w-4 text-purple-600" />
+                              </div>
+                            </button>
+                          </div>
+                          
+                          <!-- Footer -->
+                          <div class="border-t border-gray-200 p-3">
+                            <Button 
+                              type="button"
+                              @click="showUnitDropdown = false"
+                              class="w-full rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs py-2"
+                            >
+                              Close
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      
-                      <!-- Options -->
-                      <div class="max-h-60 overflow-y-auto">
-                        <button
-                          v-for="unit in filteredUnits"
-                          :key="unit.id"
-                          type="button"
-                          @click.stop="form.feed_unit = unit.id; showUnitDropdown = false"
-                          class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-purple-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
-                          :class="{ 'bg-purple-100': form.feed_unit == unit.id }"
-                        >
-                          <div class="flex-shrink-0">
-                            <div class="w-2 h-2 rounded-full bg-purple-500"></div>
-                          </div>
-                          <div class="flex-1 min-w-0">
-                            <div class="text-sm font-medium text-gray-900">{{ unit.name }}</div>
-                          </div>
-                          <div v-if="form.feed_unit == unit.id" class="flex-shrink-0">
-                            <CheckCircle2 class="h-4 w-4 text-purple-600" />
-                          </div>
-                        </button>
-                      </div>
-                      
-                      <!-- Footer -->
-                      <div class="border-t border-gray-200 p-3">
-                        <Button 
-                          type="button"
-                          @click="showUnitDropdown = false"
-                          class="w-full rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs py-2"
-                        >
-                          Close
-                        </Button>
-                      </div>
                     </div>
-                  </div>
                 </div>
-            </div>
             </div>
             
             <div class="space-y-1">
@@ -1277,7 +1288,97 @@ function submit() {
                 />
             </div>
             </div>
-            
+            <!-- Water Unit -->
+            <div class="space-y-1">
+              <Label class="text-xs font-semibold text-gray-700 flex items-center">
+                <div class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></div>
+                Water Unit
+              </Label>
+
+              <div class="unit-dropdown relative">
+                <button
+                  type="button"
+                  @click.stop="showWaterUnitDropdown = !showWaterUnitDropdown"
+                  class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-xs h-10"
+                >
+                  <span class="flex items-center gap-2">
+                    <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                    {{ selectedWaterUnit ? selectedWaterUnit.name : 'Select Water Unit' }}
+                  </span>
+                  <ChevronDown class="h-3 w-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showWaterUnitDropdown }" />
+                </button>
+
+                <!-- Water Unit Dropdown -->
+                <div 
+                  v-if="showWaterUnitDropdown" 
+                  class="fixed inset-0 z-[9999] flex items-start justify-center pt-20"
+                  @click="showWaterUnitDropdown = false"
+                >
+                  <div 
+                    class="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl"
+                    @click.stop
+                  >
+                    <!-- Header -->
+                    <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                      <h3 class="font-semibold text-gray-900 text-sm">Select Water Unit</h3>
+                      <button
+                        type="button"
+                        @click="showWaterUnitDropdown = false"
+                        class="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
+                      >
+                        <X class="h-4 w-4 text-gray-400" />
+                      </button>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="p-4 border-b border-gray-200">
+                      <div class="relative">
+                        <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          v-model="waterUnitSearchQuery"
+                          type="text"
+                          placeholder="Search water units..."
+                          class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="max-h-60 overflow-y-auto">
+                      <button
+                        v-for="unit in filteredWaterUnits"
+                        :key="unit.id"
+                        type="button"
+                        @click.stop="form.water_unit = unit.id; showWaterUnitDropdown = false"
+                        class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-blue-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                        :class="{ 'bg-blue-100': form.water_unit == unit.id }"
+                      >
+                        <div class="flex-shrink-0">
+                          <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <div class="text-sm font-medium text-gray-900">{{ unit.name }}</div>
+                        </div>
+                        <div v-if="form.water_unit == unit.id" class="flex-shrink-0">
+                          <CheckCircle2 class="h-4 w-4 text-blue-600" />
+                        </div>
+                      </button>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="border-t border-gray-200 p-3">
+                      <Button 
+                        type="button"
+                        @click="showWaterUnitDropdown = false"
+                        class="w-full rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs py-2"
+                      >
+                        Close
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="space-y-1">
               <Label class="text-xs font-semibold text-gray-700 flex items-center">
                 <span class="text-red-500 mr-1">*</span>
@@ -1886,7 +1987,7 @@ function submit() {
                     v-model="form.medicine_id" 
                     class="w-full h-10 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white"
                   >
-                    <option value="">Select medicine...</option>
+                    <option value="0">Select medicine...</option>
                     <option v-for="medicine in props.medicines" :key="medicine.id" :value="medicine.id">
                       {{ medicine.name }}
                     </option>
@@ -1914,7 +2015,7 @@ function submit() {
                     v-model="form.medicine_unit" 
                   class="w-full h-10 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
                   >
-                    <option value="">Select unit...</option>
+                    <option value="0">Select unit...</option>
                     <option v-for="unit in units" :key="unit.id" :value="unit.id">
                       {{ unit.name }}
                     </option>

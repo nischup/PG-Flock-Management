@@ -153,7 +153,9 @@ class DailyOperationController extends Controller
                     'male_mortality' => $item->mortalities->sum('male_qty'),
                     'female_mortality' => $item->mortalities->sum('female_qty'),
                     'total_mortality' => $totalMortality,
-                    'feed_consumption' => $totalFeed > 0 ? $totalFeed.' '.($item->feeds->first()->unit ?? 'Kg') : '0 Kg',
+                    'feed_consumption' => $totalFeed > 0 
+    ? $totalFeed.' '.($item->feeds->first()->unit->name ?? 'Kg') 
+    : '0 Kg',
                     'water_consumption' => $totalWater > 0 ? $totalWater.' L' : '0 L',
                     'light_hour' => $item->lights->first()->hour ?? 0,
                     'egg_collection' => $totalEggs,
@@ -410,6 +412,10 @@ class DailyOperationController extends Controller
     public function store(Request $request)
     {
 
+       
+        
+        
+        
         $batch = BatchAssign::findOrFail($request->batchassign_id);
 
         $dailyOperation = DailyOperation::create([
@@ -884,6 +890,8 @@ class DailyOperationController extends Controller
             ]);
         }
 
+
+          
         // Update egg collections (only for non-brooding stages)
         if ($request->egg_collection > 0 && $dailyOperation->batchAssign->stage != 1) {
             $dailyOperation->eggCollections()->delete(); // Remove existing

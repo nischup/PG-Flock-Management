@@ -5,6 +5,7 @@ namespace App\Models\Shed;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Shed;
+use App\Models\User;
 use App\Models\Ps\PsFirmReceive;
 use App\Models\Traits\CompanyShedFilter;
 use Illuminate\Database\Eloquent\Model;
@@ -49,5 +50,10 @@ class ShedReceive extends Model
     }
     public function firmReceive() {
         return $this->belongsTo(PsFirmReceive::class, 'receive_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'created_by'); // assuming column name is created_by
     }
 }

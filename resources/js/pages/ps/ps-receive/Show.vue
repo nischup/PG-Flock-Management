@@ -109,7 +109,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transport Type</label>
-                                <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ psReceive.transport_type || '-' }}</p>
+                                <p class="mt-1 text-sm text-gray-900 dark:text-white">{{  getTransportTypeName(psReceive.transport_type)  || '-' }}</p>
                             </div>
                         </div>
                     </div>
@@ -299,6 +299,7 @@ import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import PsReceiveApprovalStatus from '@/components/PsReceiveApprovalStatus.vue';
+import { useDropdownOptions } from '@/composables/dropdownOptions';
 import dayjs from 'dayjs';
 
 interface Props {
@@ -360,6 +361,14 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const { transportTypes } = useDropdownOptions();
+
+const getTransportTypeName = (id?: number | string) => {
+  if (!id) return '';
+  const option = transportTypes.find(t => t.id === Number(id));
+  return option ? option.name : '';
+};
 
 const formatDate = (date: string) => {
     return dayjs(date).format('YYYY-MM-DD');
