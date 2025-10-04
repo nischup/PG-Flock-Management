@@ -129,6 +129,8 @@ class PsLabTestController extends Controller
                 ]
             ];
 
+
+            
             return Inertia::render('ps/ps-lab-test/Edit', [
                 'labTest' => $labTestData
             ]);
@@ -153,10 +155,10 @@ class PsLabTestController extends Controller
 
         // Update the lab test
         $labTest->update([
-            'lab_receive_female_qty' =>10,
-            'lab_receive_male_qty' => 4,
-            'lab_receive_total_qty' =>15,
-            'mortality_qty' => 1 ,
+            'lab_receive_female_qty' =>$labReceiveFemale,
+            'lab_receive_male_qty' => $labReceiveMale,
+            'lab_receive_total_qty' =>$labReceiveTotal,
+            'mortality_qty' => $mortality ,
             'status' => (int) $status,
             'notes' => $notes,
         ]);

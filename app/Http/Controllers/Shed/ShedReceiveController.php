@@ -204,7 +204,7 @@ class ShedReceiveController extends Controller
     public function show(ShedReceive $shedReceive)
     {
         // Load the shed receive with all relationships
-        $shedReceive = ShedReceive::with(['flock', 'company', 'shed'])
+        $shedReceive = ShedReceive::with(['flock', 'company', 'shed','user'])
             ->findOrFail($shedReceive->id);
 
         // Get related firm receive data if available

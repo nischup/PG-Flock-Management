@@ -10,7 +10,7 @@ import type { BreadcrumbItem } from '@/types'
 import { Input } from '@/components/ui/input'
 // Props
 const props = defineProps<{ labTest: any }>()
-
+console.log(props.labTest);
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Lab Tests', href: '/ps-lab-test' },

@@ -1102,7 +1102,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 @click="showTransferModal = false"
             >
                 <div
-                    class="relative z-[10000] max-h-[85vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800"
+                    class="relative z-[10000] max-h-[95vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800"
                     @click.stop
                 >
                     <!-- Header -->

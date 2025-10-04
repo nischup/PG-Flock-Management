@@ -3,7 +3,7 @@ import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 // Props
 interface Props {
@@ -125,7 +125,7 @@ const isRowExpanded = (scheduleId: number) => {
 const editSchedule = (schedule: any) => {
     // Set flag to prevent watcher from clearing project_id during initialization
     isInitializingEditForm.value = true;
-    
+
     // Populate edit form with schedule data
     editScheduleForm.id = schedule.id;
     editScheduleForm.company_id = schedule.company_id.toString();
@@ -137,7 +137,7 @@ const editSchedule = (schedule: any) => {
 
     // Set flock search query for edit modal
     if (schedule.flock_id) {
-        const flock = props.flocks.find(f => f.id === schedule.flock_id);
+        const flock = props.flocks.find((f) => f.id === schedule.flock_id);
         if (flock) {
             selectedEditFlock.value = flock;
             editFlockSearchQuery.value = `${flock.name} (${flock.code})`;
@@ -158,14 +158,14 @@ const editSchedule = (schedule: any) => {
 
     // Set disease and vaccine search queries for edit modal
     schedule.details.forEach((detail: any, index: number) => {
-        const disease = props.diseases.find(d => d.id === detail.disease_id);
-        const vaccine = props.vaccines.find(v => v.id === detail.vaccine_id);
-        
+        const disease = props.diseases.find((d) => d.id === detail.disease_id);
+        const vaccine = props.vaccines.find((v) => v.id === detail.vaccine_id);
+
         if (disease) {
             selectedEditDiseases.value[index] = disease;
             editDiseaseSearchQueries.value[index] = disease.name;
         }
-        
+
         if (vaccine) {
             selectedEditVaccines.value[index] = vaccine;
             editVaccineSearchQueries.value[index] = vaccine.name;
@@ -190,7 +190,7 @@ const editSchedule = (schedule: any) => {
 
     editScheduleForm.clearErrors();
     showEditScheduleModal.value = true;
-    
+
     // Reset flag after initialization is complete
     isInitializingEditForm.value = false;
 };
@@ -432,9 +432,10 @@ const searchableFlocks = computed(() => {
     if (!flockSearchQuery.value) {
         return props.flocks;
     }
-    return props.flocks.filter(flock =>
-        flock.name.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
-        flock.code.toLowerCase().includes(flockSearchQuery.value.toLowerCase())
+    return props.flocks.filter(
+        (flock) =>
+            flock.name.toLowerCase().includes(flockSearchQuery.value.toLowerCase()) ||
+            flock.code.toLowerCase().includes(flockSearchQuery.value.toLowerCase()),
     );
 });
 
@@ -443,9 +444,10 @@ const searchableEditFlocks = computed(() => {
     if (!editFlockSearchQuery.value) {
         return props.flocks;
     }
-    return props.flocks.filter(flock =>
-        flock.name.toLowerCase().includes(editFlockSearchQuery.value.toLowerCase()) ||
-        flock.code.toLowerCase().includes(editFlockSearchQuery.value.toLowerCase())
+    return props.flocks.filter(
+        (flock) =>
+            flock.name.toLowerCase().includes(editFlockSearchQuery.value.toLowerCase()) ||
+            flock.code.toLowerCase().includes(editFlockSearchQuery.value.toLowerCase()),
     );
 });
 
@@ -473,9 +475,7 @@ const searchableDiseases = computed(() => (stageIndex: number) => {
     if (!query) {
         return props.diseases;
     }
-    return props.diseases.filter(disease =>
-        disease.name.toLowerCase().includes(query.toLowerCase())
-    );
+    return props.diseases.filter((disease) => disease.name.toLowerCase().includes(query.toLowerCase()));
 });
 
 const searchableVaccines = computed(() => (stageIndex: number) => {
@@ -483,9 +483,7 @@ const searchableVaccines = computed(() => (stageIndex: number) => {
     if (!query) {
         return props.vaccines;
     }
-    return props.vaccines.filter(vaccine =>
-        vaccine.name.toLowerCase().includes(query.toLowerCase())
-    );
+    return props.vaccines.filter((vaccine) => vaccine.name.toLowerCase().includes(query.toLowerCase()));
 });
 
 const searchableEditDiseases = computed(() => (stageIndex: number) => {
@@ -493,9 +491,7 @@ const searchableEditDiseases = computed(() => (stageIndex: number) => {
     if (!query) {
         return props.diseases;
     }
-    return props.diseases.filter(disease =>
-        disease.name.toLowerCase().includes(query.toLowerCase())
-    );
+    return props.diseases.filter((disease) => disease.name.toLowerCase().includes(query.toLowerCase()));
 });
 
 const searchableEditVaccines = computed(() => (stageIndex: number) => {
@@ -503,9 +499,7 @@ const searchableEditVaccines = computed(() => (stageIndex: number) => {
     if (!query) {
         return props.vaccines;
     }
-    return props.vaccines.filter(vaccine =>
-        vaccine.name.toLowerCase().includes(query.toLowerCase())
-    );
+    return props.vaccines.filter((vaccine) => vaccine.name.toLowerCase().includes(query.toLowerCase()));
 });
 
 // Add stage
@@ -520,7 +514,7 @@ const addStage = () => {
         notes: '',
         administered_by: '',
     });
-    
+
     // Initialize search queries for the new stage
     diseaseSearchQueries.value[newStageIndex] = '';
     vaccineSearchQueries.value[newStageIndex] = '';
@@ -533,7 +527,7 @@ const addStage = () => {
 // Remove stage
 const removeStage = (index: number) => {
     scheduleForm.stages.splice(index, 1);
-    
+
     // Clean up search queries for the removed stage
     delete diseaseSearchQueries.value[index];
     delete vaccineSearchQueries.value[index];
@@ -543,7 +537,7 @@ const removeStage = (index: number) => {
     delete selectedVaccines.value[index];
     delete highlightedDiseaseIndex.value[index];
     delete highlightedVaccineIndex.value[index];
-    
+
     // Reindex remaining stages
     const newDiseaseQueries: Record<number, string> = {};
     const newVaccineQueries: Record<number, string> = {};
@@ -553,8 +547,8 @@ const removeStage = (index: number) => {
     const newSelectedVaccines: Record<number, any> = {};
     const newHighlightedDiseaseIndex: Record<number, number> = {};
     const newHighlightedVaccineIndex: Record<number, number> = {};
-    
-    Object.keys(diseaseSearchQueries.value).forEach(key => {
+
+    Object.keys(diseaseSearchQueries.value).forEach((key) => {
         const oldIndex = parseInt(key);
         if (oldIndex > index) {
             newDiseaseQueries[oldIndex - 1] = diseaseSearchQueries.value[oldIndex];
@@ -562,8 +556,8 @@ const removeStage = (index: number) => {
             newDiseaseQueries[oldIndex] = diseaseSearchQueries.value[oldIndex];
         }
     });
-    
-    Object.keys(vaccineSearchQueries.value).forEach(key => {
+
+    Object.keys(vaccineSearchQueries.value).forEach((key) => {
         const oldIndex = parseInt(key);
         if (oldIndex > index) {
             newVaccineQueries[oldIndex - 1] = vaccineSearchQueries.value[oldIndex];
@@ -571,8 +565,8 @@ const removeStage = (index: number) => {
             newVaccineQueries[oldIndex] = vaccineSearchQueries.value[oldIndex];
         }
     });
-    
-    Object.keys(showDiseaseDropdowns.value).forEach(key => {
+
+    Object.keys(showDiseaseDropdowns.value).forEach((key) => {
         const oldIndex = parseInt(key);
         if (oldIndex > index) {
             newShowDiseaseDropdowns[oldIndex - 1] = showDiseaseDropdowns.value[oldIndex];
@@ -580,8 +574,8 @@ const removeStage = (index: number) => {
             newShowDiseaseDropdowns[oldIndex] = showDiseaseDropdowns.value[oldIndex];
         }
     });
-    
-    Object.keys(showVaccineDropdowns.value).forEach(key => {
+
+    Object.keys(showVaccineDropdowns.value).forEach((key) => {
         const oldIndex = parseInt(key);
         if (oldIndex > index) {
             newShowVaccineDropdowns[oldIndex - 1] = showVaccineDropdowns.value[oldIndex];
@@ -589,8 +583,8 @@ const removeStage = (index: number) => {
             newShowVaccineDropdowns[oldIndex] = showVaccineDropdowns.value[oldIndex];
         }
     });
-    
-    Object.keys(selectedDiseases.value).forEach(key => {
+
+    Object.keys(selectedDiseases.value).forEach((key) => {
         const oldIndex = parseInt(key);
         if (oldIndex > index) {
             newSelectedDiseases[oldIndex - 1] = selectedDiseases.value[oldIndex];
@@ -598,8 +592,8 @@ const removeStage = (index: number) => {
             newSelectedDiseases[oldIndex] = selectedDiseases.value[oldIndex];
         }
     });
-    
-    Object.keys(selectedVaccines.value).forEach(key => {
+
+    Object.keys(selectedVaccines.value).forEach((key) => {
         const oldIndex = parseInt(key);
         if (oldIndex > index) {
             newSelectedVaccines[oldIndex - 1] = selectedVaccines.value[oldIndex];
@@ -607,8 +601,8 @@ const removeStage = (index: number) => {
             newSelectedVaccines[oldIndex] = selectedVaccines.value[oldIndex];
         }
     });
-    
-    Object.keys(highlightedDiseaseIndex.value).forEach(key => {
+
+    Object.keys(highlightedDiseaseIndex.value).forEach((key) => {
         const oldIndex = parseInt(key);
         if (oldIndex > index) {
             newHighlightedDiseaseIndex[oldIndex - 1] = highlightedDiseaseIndex.value[oldIndex];
@@ -616,8 +610,8 @@ const removeStage = (index: number) => {
             newHighlightedDiseaseIndex[oldIndex] = highlightedDiseaseIndex.value[oldIndex];
         }
     });
-    
-    Object.keys(highlightedVaccineIndex.value).forEach(key => {
+
+    Object.keys(highlightedVaccineIndex.value).forEach((key) => {
         const oldIndex = parseInt(key);
         if (oldIndex > index) {
             newHighlightedVaccineIndex[oldIndex - 1] = highlightedVaccineIndex.value[oldIndex];
@@ -625,7 +619,7 @@ const removeStage = (index: number) => {
             newHighlightedVaccineIndex[oldIndex] = highlightedVaccineIndex.value[oldIndex];
         }
     });
-    
+
     diseaseSearchQueries.value = newDiseaseQueries;
     vaccineSearchQueries.value = newVaccineQueries;
     showDiseaseDropdowns.value = newShowDiseaseDropdowns;
@@ -839,24 +833,24 @@ const handleClickOutside = (event: Event) => {
         showEditFlockDropdown.value = false;
         highlightedEditFlockIndex.value = -1;
     }
-    
+
     // Close all disease and vaccine dropdowns
-    Object.keys(showDiseaseDropdowns.value).forEach(index => {
+    Object.keys(showDiseaseDropdowns.value).forEach((index) => {
         showDiseaseDropdowns.value[parseInt(index)] = false;
         highlightedDiseaseIndex.value[parseInt(index)] = -1;
     });
-    
-    Object.keys(showVaccineDropdowns.value).forEach(index => {
+
+    Object.keys(showVaccineDropdowns.value).forEach((index) => {
         showVaccineDropdowns.value[parseInt(index)] = false;
         highlightedVaccineIndex.value[parseInt(index)] = -1;
     });
-    
-    Object.keys(showEditDiseaseDropdowns.value).forEach(index => {
+
+    Object.keys(showEditDiseaseDropdowns.value).forEach((index) => {
         showEditDiseaseDropdowns.value[parseInt(index)] = false;
         highlightedEditDiseaseIndex.value[parseInt(index)] = -1;
     });
-    
-    Object.keys(showEditVaccineDropdowns.value).forEach(index => {
+
+    Object.keys(showEditVaccineDropdowns.value).forEach((index) => {
         showEditVaccineDropdowns.value[parseInt(index)] = false;
         highlightedEditVaccineIndex.value[parseInt(index)] = -1;
     });
@@ -975,8 +969,8 @@ const handleDiseaseKeydown = (event: KeyboardEvent, stageIndex: number) => {
         case 'ArrowDown':
             event.preventDefault();
             highlightedDiseaseIndex.value[stageIndex] = Math.min(
-                highlightedDiseaseIndex.value[stageIndex] + 1, 
-                searchableDiseases.value(stageIndex).length - 1
+                highlightedDiseaseIndex.value[stageIndex] + 1,
+                searchableDiseases.value(stageIndex).length - 1,
             );
             break;
         case 'ArrowUp':
@@ -1004,8 +998,8 @@ const handleVaccineKeydown = (event: KeyboardEvent, stageIndex: number) => {
         case 'ArrowDown':
             event.preventDefault();
             highlightedVaccineIndex.value[stageIndex] = Math.min(
-                highlightedVaccineIndex.value[stageIndex] + 1, 
-                searchableVaccines.value(stageIndex).length - 1
+                highlightedVaccineIndex.value[stageIndex] + 1,
+                searchableVaccines.value(stageIndex).length - 1,
             );
             break;
         case 'ArrowUp':
@@ -1033,8 +1027,8 @@ const handleEditDiseaseKeydown = (event: KeyboardEvent, stageIndex: number) => {
         case 'ArrowDown':
             event.preventDefault();
             highlightedEditDiseaseIndex.value[stageIndex] = Math.min(
-                highlightedEditDiseaseIndex.value[stageIndex] + 1, 
-                searchableEditDiseases.value(stageIndex).length - 1
+                highlightedEditDiseaseIndex.value[stageIndex] + 1,
+                searchableEditDiseases.value(stageIndex).length - 1,
             );
             break;
         case 'ArrowUp':
@@ -1043,7 +1037,10 @@ const handleEditDiseaseKeydown = (event: KeyboardEvent, stageIndex: number) => {
             break;
         case 'Enter':
             event.preventDefault();
-            if (highlightedEditDiseaseIndex.value[stageIndex] >= 0 && searchableEditDiseases.value(stageIndex)[highlightedEditDiseaseIndex.value[stageIndex]]) {
+            if (
+                highlightedEditDiseaseIndex.value[stageIndex] >= 0 &&
+                searchableEditDiseases.value(stageIndex)[highlightedEditDiseaseIndex.value[stageIndex]]
+            ) {
                 selectEditDisease(stageIndex, searchableEditDiseases.value(stageIndex)[highlightedEditDiseaseIndex.value[stageIndex]]);
             }
             break;
@@ -1062,8 +1059,8 @@ const handleEditVaccineKeydown = (event: KeyboardEvent, stageIndex: number) => {
         case 'ArrowDown':
             event.preventDefault();
             highlightedEditVaccineIndex.value[stageIndex] = Math.min(
-                highlightedEditVaccineIndex.value[stageIndex] + 1, 
-                searchableEditVaccines.value(stageIndex).length - 1
+                highlightedEditVaccineIndex.value[stageIndex] + 1,
+                searchableEditVaccines.value(stageIndex).length - 1,
             );
             break;
         case 'ArrowUp':
@@ -1072,7 +1069,10 @@ const handleEditVaccineKeydown = (event: KeyboardEvent, stageIndex: number) => {
             break;
         case 'Enter':
             event.preventDefault();
-            if (highlightedEditVaccineIndex.value[stageIndex] >= 0 && searchableEditVaccines.value(stageIndex)[highlightedEditVaccineIndex.value[stageIndex]]) {
+            if (
+                highlightedEditVaccineIndex.value[stageIndex] >= 0 &&
+                searchableEditVaccines.value(stageIndex)[highlightedEditVaccineIndex.value[stageIndex]]
+            ) {
                 selectEditVaccine(stageIndex, searchableEditVaccines.value(stageIndex)[highlightedEditVaccineIndex.value[stageIndex]]);
             }
             break;
@@ -1286,28 +1286,14 @@ const saveVaccine = () => {
                     <table class="w-full border-collapse text-left">
                         <thead>
                             <tr>
-                                <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">S/N</th>
-                                <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">
-                                    Company
-                                </th>
-                                <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">
-                                    Project
-                                </th>
-                                <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">
-                                    Flock Details
-                                </th>
-                                <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">
-                                    Breed Type
-                                </th>
-                                <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">
-                                    Status
-                                </th>
-                                <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">
-                                    Created
-                                </th>
-                                <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">
-                                    Actions
-                                </th>
+                                <th class="border-b bg-blue-500 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white">S/N</th>
+                                <th class="border-b bg-green-500 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white">Company</th>
+                                <th class="border-b bg-purple-500 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white">Project</th>
+                                <th class="border-b bg-orange-500 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white">Flock Details</th>
+                                <th class="border-b bg-pink-500 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white">Breed Type</th>
+                                <th class="border-b bg-indigo-500 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white">Status</th>
+                                <th class="border-b bg-red-500 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white">Created</th>
+                                <th class="border-b bg-gray-600 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1344,7 +1330,8 @@ const saveVaccine = () => {
                                     <td class="border-b px-4 py-2 whitespace-nowrap">
                                         <div class="text-sm text-gray-900 dark:text-gray-100">{{ schedule.flock_name }}</div>
                                         <div class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ schedule.flock_code }}{{ schedule.batch_name && schedule.batch_name !== 'N/A' ? ` | Batch: ${schedule.batch_name}` : '' }}
+                                            {{ schedule.flock_code
+                                            }}{{ schedule.batch_name && schedule.batch_name !== 'N/A' ? ` | Batch: ${schedule.batch_name}` : '' }}
                                         </div>
                                         <div class="text-sm text-gray-500 dark:text-gray-400">Shed: {{ schedule.shed_name }}</div>
                                     </td>
@@ -1814,21 +1801,24 @@ const saveVaccine = () => {
                                             <input
                                                 v-model="flockSearchQuery"
                                                 @focus="showFlockDropdown = true"
-                                                @input="showFlockDropdown = true; highlightedFlockIndex = -1"
+                                                @input="
+                                                    showFlockDropdown = true;
+                                                    highlightedFlockIndex = -1;
+                                                "
                                                 @keydown="handleFlockKeydown"
                                                 type="text"
                                                 placeholder="Search flocks..."
                                                 class="w-full rounded-xl border px-4 py-3 pr-12 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                        :class="{
-                                            'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': scheduleForm.errors.flock_id,
-                                            'border-gray-300 dark:border-gray-600': !scheduleForm.errors.flock_id,
-                                        }"
-                                        required
+                                                :class="{
+                                                    'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': scheduleForm.errors.flock_id,
+                                                    'border-gray-300 dark:border-gray-600': !scheduleForm.errors.flock_id,
+                                                }"
+                                                required
                                             />
                                             <button
                                                 type="button"
                                                 @click="toggleFlockDropdown"
-                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                                class="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
                                             >
                                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -1842,10 +1832,7 @@ const saveVaccine = () => {
                                             class="absolute z-20 mt-2 w-full overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-gray-200 dark:bg-gray-700 dark:ring-gray-600"
                                         >
                                             <div class="max-h-60 overflow-y-auto">
-                                                <div
-                                                    v-if="searchableFlocks.length === 0"
-                                                    class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400"
-                                                >
+                                                <div v-if="searchableFlocks.length === 0" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                                                     No flocks found
                                                 </div>
                                                 <button
@@ -1855,12 +1842,12 @@ const saveVaccine = () => {
                                                     @click="selectFlock(flock)"
                                                     :class="[
                                                         'w-full px-4 py-3 text-left text-sm transition-colors focus:outline-none',
-                                                        index === highlightedFlockIndex 
-                                                            ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' 
-                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-600'
+                                                        index === highlightedFlockIndex
+                                                            ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100'
+                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-600',
                                                     ]"
                                                 >
-                                            {{ flock.name }} ({{ flock.code }})
+                                                    {{ flock.name }} ({{ flock.code }})
                                                 </button>
                                             </div>
                                         </div>
@@ -1870,7 +1857,7 @@ const saveVaccine = () => {
                                             v-if="selectedFlock"
                                             type="button"
                                             @click="clearFlockSelection"
-                                            class="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                            class="absolute top-1/2 right-10 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
                                         >
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -2094,26 +2081,36 @@ const saveVaccine = () => {
                                                 <input
                                                     v-model="diseaseSearchQueries[index]"
                                                     @focus="showDiseaseDropdowns[index] = true"
-                                                    @input="showDiseaseDropdowns[index] = true; highlightedDiseaseIndex[index] = -1"
+                                                    @input="
+                                                        showDiseaseDropdowns[index] = true;
+                                                        highlightedDiseaseIndex[index] = -1;
+                                                    "
                                                     @keydown="handleDiseaseKeydown($event, index)"
                                                     type="text"
                                                     placeholder="Search diseases..."
                                                     class="w-full rounded-lg border px-3 py-2 pr-10 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
-                                            :class="{
-                                                'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (scheduleForm.errors as any)[
-                                                    `stages.${index}.disease_id`
-                                                ],
-                                                'border-gray-300 dark:border-gray-500': !(scheduleForm.errors as any)[`stages.${index}.disease_id`],
-                                            }"
-                                            required
+                                                    :class="{
+                                                        'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (
+                                                            scheduleForm.errors as any
+                                                        )[`stages.${index}.disease_id`],
+                                                        'border-gray-300 dark:border-gray-500': !(scheduleForm.errors as any)[
+                                                            `stages.${index}.disease_id`
+                                                        ],
+                                                    }"
+                                                    required
                                                 />
                                                 <button
                                                     type="button"
                                                     @click="toggleDiseaseDropdown(index)"
-                                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                                    class="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
                                                 >
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 9l-7 7-7-7"
+                                                        ></path>
                                                     </svg>
                                                 </button>
                                             </div>
@@ -2137,12 +2134,12 @@ const saveVaccine = () => {
                                                         @click="selectDisease(index, disease)"
                                                         :class="[
                                                             'w-full px-3 py-2 text-left text-sm transition-colors focus:outline-none',
-                                                            diseaseIndex === highlightedDiseaseIndex[index] 
-                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100' 
-                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500'
+                                                            diseaseIndex === highlightedDiseaseIndex[index]
+                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100'
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500',
                                                         ]"
                                                     >
-                                                {{ disease.name }}
+                                                        {{ disease.name }}
                                                     </button>
                                                 </div>
                                             </div>
@@ -2152,10 +2149,15 @@ const saveVaccine = () => {
                                                 v-if="selectedDiseases[index]"
                                                 type="button"
                                                 @click="clearDiseaseSelection(index)"
-                                                class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                                class="absolute top-1/2 right-8 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
                                             >
                                                 <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M6 18L18 6M6 6l12 12"
+                                                    ></path>
                                                 </svg>
                                             </button>
                                         </div>
@@ -2175,26 +2177,36 @@ const saveVaccine = () => {
                                                 <input
                                                     v-model="vaccineSearchQueries[index]"
                                                     @focus="showVaccineDropdowns[index] = true"
-                                                    @input="showVaccineDropdowns[index] = true; highlightedVaccineIndex[index] = -1"
+                                                    @input="
+                                                        showVaccineDropdowns[index] = true;
+                                                        highlightedVaccineIndex[index] = -1;
+                                                    "
                                                     @keydown="handleVaccineKeydown($event, index)"
                                                     type="text"
                                                     placeholder="Search vaccines..."
                                                     class="w-full rounded-lg border px-3 py-2 pr-10 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
-                                            :class="{
-                                                'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (scheduleForm.errors as any)[
-                                                    `stages.${index}.vaccine_id`
-                                                ],
-                                                'border-gray-300 dark:border-gray-500': !(scheduleForm.errors as any)[`stages.${index}.vaccine_id`],
-                                            }"
-                                            required
+                                                    :class="{
+                                                        'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (
+                                                            scheduleForm.errors as any
+                                                        )[`stages.${index}.vaccine_id`],
+                                                        'border-gray-300 dark:border-gray-500': !(scheduleForm.errors as any)[
+                                                            `stages.${index}.vaccine_id`
+                                                        ],
+                                                    }"
+                                                    required
                                                 />
                                                 <button
                                                     type="button"
                                                     @click="toggleVaccineDropdown(index)"
-                                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                                    class="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
                                                 >
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 9l-7 7-7-7"
+                                                        ></path>
                                                     </svg>
                                                 </button>
                                             </div>
@@ -2218,12 +2230,12 @@ const saveVaccine = () => {
                                                         @click="selectVaccine(index, vaccine)"
                                                         :class="[
                                                             'w-full px-3 py-2 text-left text-sm transition-colors focus:outline-none',
-                                                            vaccineIndex === highlightedVaccineIndex[index] 
-                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100' 
-                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500'
+                                                            vaccineIndex === highlightedVaccineIndex[index]
+                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100'
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500',
                                                         ]"
                                                     >
-                                                {{ vaccine.name }}
+                                                        {{ vaccine.name }}
                                                     </button>
                                                 </div>
                                             </div>
@@ -2233,10 +2245,15 @@ const saveVaccine = () => {
                                                 v-if="selectedVaccines[index]"
                                                 type="button"
                                                 @click="clearVaccineSelection(index)"
-                                                class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                                class="absolute top-1/2 right-8 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
                                             >
                                                 <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M6 18L18 6M6 6l12 12"
+                                                    ></path>
                                                 </svg>
                                             </button>
                                         </div>
@@ -2271,8 +2288,19 @@ const saveVaccine = () => {
                                     <!-- Vaccination Date -->
                                     <div class="space-y-2">
                                         <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                class="h-4 w-4 text-green-600"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                />
                                             </svg>
                                             Vaccination Date <span class="font-bold text-red-500">*</span>
                                         </label>
@@ -2280,7 +2308,7 @@ const saveVaccine = () => {
                                             <input
                                                 v-model="stage.vaccination_date"
                                                 type="date"
-                                                class="w-full rounded-xl border px-4 py-3 pl-12 pr-4 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
+                                                class="w-full rounded-xl border px-4 py-3 pr-4 pl-12 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
                                                 :class="{
                                                     'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (scheduleForm.errors as any)[
                                                         `stages.${index}.vaccination_date`
@@ -2291,15 +2319,40 @@ const saveVaccine = () => {
                                                 }"
                                                 required
                                             />
-                                            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    class="h-5 w-5 text-gray-400"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                    />
                                                 </svg>
                                             </div>
                                         </div>
-                                        <div v-if="(scheduleForm.errors as any)[`stages.${index}.vaccination_date`]" class="flex items-center gap-1 text-sm text-red-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <div
+                                            v-if="(scheduleForm.errors as any)[`stages.${index}.vaccination_date`]"
+                                            class="flex items-center gap-1 text-sm text-red-500"
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                class="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                />
                                             </svg>
                                             {{ (scheduleForm.errors as any)[`stages.${index}.vaccination_date`] }}
                                         </div>
@@ -2308,8 +2361,19 @@ const saveVaccine = () => {
                                     <!-- Next Vaccination Date -->
                                     <div class="space-y-2">
                                         <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                class="h-4 w-4 text-blue-600"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                />
                                             </svg>
                                             Next Vaccination Date
                                             <span class="text-xs text-gray-500 dark:text-gray-400">(Optional)</span>
@@ -2318,7 +2382,7 @@ const saveVaccine = () => {
                                             <input
                                                 v-model="stage.next_vaccination_date"
                                                 type="date"
-                                                class="w-full rounded-xl border px-4 py-3 pl-12 pr-4 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
+                                                class="w-full rounded-xl border px-4 py-3 pr-4 pl-12 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
                                                 :class="{
                                                     'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (scheduleForm.errors as any)[
                                                         `stages.${index}.next_vaccination_date`
@@ -2328,9 +2392,20 @@ const saveVaccine = () => {
                                                     ],
                                                 }"
                                             />
-                                            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    class="h-5 w-5 text-gray-400"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                    />
                                                 </svg>
                                             </div>
                                         </div>
@@ -2338,8 +2413,19 @@ const saveVaccine = () => {
                                             v-if="(scheduleForm.errors as any)[`stages.${index}.next_vaccination_date`]"
                                             class="flex items-center gap-1 text-sm text-red-500"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                class="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                />
                                             </svg>
                                             {{ (scheduleForm.errors as any)[`stages.${index}.next_vaccination_date`] }}
                                         </div>
@@ -3044,7 +3130,7 @@ const saveVaccine = () => {
                                     >
                                         <option value="">Select Project</option>
                                         <option v-for="project in filteredEditProjects" :key="project.id" :value="project.id">
-                                            {{ project.name }} ({{ project.code }})
+                                            {{ project.name }}
                                         </option>
                                     </select>
                                     <div v-if="editScheduleForm.errors.project_id" class="flex items-center gap-1 text-sm text-red-500">
@@ -3089,21 +3175,25 @@ const saveVaccine = () => {
                                             <input
                                                 v-model="editFlockSearchQuery"
                                                 @focus="showEditFlockDropdown = true"
-                                                @input="showEditFlockDropdown = true; highlightedEditFlockIndex = -1"
+                                                @input="
+                                                    showEditFlockDropdown = true;
+                                                    highlightedEditFlockIndex = -1;
+                                                "
                                                 @keydown="handleEditFlockKeydown"
                                                 type="text"
                                                 placeholder="Search flocks..."
                                                 class="w-full rounded-xl border px-4 py-3 pr-12 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                        :class="{
-                                            'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': editScheduleForm.errors.flock_id,
-                                            'border-gray-300 dark:border-gray-600': !editScheduleForm.errors.flock_id,
-                                        }"
-                                        required
+                                                :class="{
+                                                    'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20':
+                                                        editScheduleForm.errors.flock_id,
+                                                    'border-gray-300 dark:border-gray-600': !editScheduleForm.errors.flock_id,
+                                                }"
+                                                required
                                             />
                                             <button
                                                 type="button"
                                                 @click="toggleEditFlockDropdown"
-                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                                class="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
                                             >
                                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -3130,12 +3220,12 @@ const saveVaccine = () => {
                                                     @click="selectEditFlock(flock)"
                                                     :class="[
                                                         'w-full px-4 py-3 text-left text-sm transition-colors focus:outline-none',
-                                                        index === highlightedEditFlockIndex 
-                                                            ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100' 
-                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-600'
+                                                        index === highlightedEditFlockIndex
+                                                            ? 'bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100'
+                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-600',
                                                     ]"
                                                 >
-                                            {{ flock.name }} ({{ flock.code }})
+                                                    {{ flock.name }} ({{ flock.code }})
                                                 </button>
                                             </div>
                                         </div>
@@ -3145,7 +3235,7 @@ const saveVaccine = () => {
                                             v-if="selectedEditFlock"
                                             type="button"
                                             @click="clearEditFlockSelection"
-                                            class="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                            class="absolute top-1/2 right-10 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
                                         >
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -3372,28 +3462,36 @@ const saveVaccine = () => {
                                                 <input
                                                     v-model="editDiseaseSearchQueries[index]"
                                                     @focus="showEditDiseaseDropdowns[index] = true"
-                                                    @input="showEditDiseaseDropdowns[index] = true; highlightedEditDiseaseIndex[index] = -1"
+                                                    @input="
+                                                        showEditDiseaseDropdowns[index] = true;
+                                                        highlightedEditDiseaseIndex[index] = -1;
+                                                    "
                                                     @keydown="handleEditDiseaseKeydown($event, index)"
                                                     type="text"
                                                     placeholder="Search diseases..."
                                                     class="w-full rounded-lg border px-3 py-2 pr-10 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
-                                            :class="{
-                                                'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (editScheduleForm.errors as any)[
-                                                    `stages.${index}.disease_id`
-                                                ],
-                                                'border-gray-300 dark:border-gray-500': !(editScheduleForm.errors as any)[
-                                                    `stages.${index}.disease_id`
-                                                ],
-                                            }"
-                                            required
+                                                    :class="{
+                                                        'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (
+                                                            editScheduleForm.errors as any
+                                                        )[`stages.${index}.disease_id`],
+                                                        'border-gray-300 dark:border-gray-500': !(editScheduleForm.errors as any)[
+                                                            `stages.${index}.disease_id`
+                                                        ],
+                                                    }"
+                                                    required
                                                 />
                                                 <button
                                                     type="button"
                                                     @click="toggleEditDiseaseDropdown(index)"
-                                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                                    class="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
                                                 >
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 9l-7 7-7-7"
+                                                        ></path>
                                                     </svg>
                                                 </button>
                                             </div>
@@ -3417,12 +3515,12 @@ const saveVaccine = () => {
                                                         @click="selectEditDisease(index, disease)"
                                                         :class="[
                                                             'w-full px-3 py-2 text-left text-sm transition-colors focus:outline-none',
-                                                            diseaseIndex === highlightedEditDiseaseIndex[index] 
-                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100' 
-                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500'
+                                                            diseaseIndex === highlightedEditDiseaseIndex[index]
+                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100'
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500',
                                                         ]"
                                                     >
-                                                {{ disease.name }}
+                                                        {{ disease.name }}
                                                     </button>
                                                 </div>
                                             </div>
@@ -3432,10 +3530,15 @@ const saveVaccine = () => {
                                                 v-if="selectedEditDiseases[index]"
                                                 type="button"
                                                 @click="clearEditDiseaseSelection(index)"
-                                                class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                                class="absolute top-1/2 right-8 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
                                             >
                                                 <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M6 18L18 6M6 6l12 12"
+                                                    ></path>
                                                 </svg>
                                             </button>
                                         </div>
@@ -3455,15 +3558,18 @@ const saveVaccine = () => {
                                                 <input
                                                     v-model="editVaccineSearchQueries[index]"
                                                     @focus="showEditVaccineDropdowns[index] = true"
-                                                    @input="showEditVaccineDropdowns[index] = true; highlightedEditVaccineIndex[index] = -1"
+                                                    @input="
+                                                        showEditVaccineDropdowns[index] = true;
+                                                        highlightedEditVaccineIndex[index] = -1;
+                                                    "
                                                     @keydown="handleEditVaccineKeydown($event, index)"
                                                     type="text"
                                                     placeholder="Search vaccines..."
                                                     class="w-full rounded-lg border px-3 py-2 pr-10 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
                                                     :class="{
-                                                        'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (editScheduleForm.errors as any)[
-                                                            `stages.${index}.vaccine_id`
-                                                        ],
+                                                        'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (
+                                                            editScheduleForm.errors as any
+                                                        )[`stages.${index}.vaccine_id`],
                                                         'border-gray-300 dark:border-gray-500': !(editScheduleForm.errors as any)[
                                                             `stages.${index}.vaccine_id`
                                                         ],
@@ -3473,10 +3579,15 @@ const saveVaccine = () => {
                                                 <button
                                                     type="button"
                                                     @click="toggleEditVaccineDropdown(index)"
-                                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                                                    class="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
                                                 >
                                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 9l-7 7-7-7"
+                                                        ></path>
                                                     </svg>
                                                 </button>
                                             </div>
@@ -3500,9 +3611,9 @@ const saveVaccine = () => {
                                                         @click="selectEditVaccine(index, vaccine)"
                                                         :class="[
                                                             'w-full px-3 py-2 text-left text-sm transition-colors focus:outline-none',
-                                                            vaccineIndex === highlightedEditVaccineIndex[index] 
-                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100' 
-                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500'
+                                                            vaccineIndex === highlightedEditVaccineIndex[index]
+                                                                ? 'bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-100'
+                                                                : 'hover:bg-gray-50 dark:hover:bg-gray-500',
                                                         ]"
                                                     >
                                                         {{ vaccine.name }}
@@ -3515,10 +3626,15 @@ const saveVaccine = () => {
                                                 v-if="selectedEditVaccines[index]"
                                                 type="button"
                                                 @click="clearEditVaccineSelection(index)"
-                                                class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
+                                                class="absolute top-1/2 right-8 -translate-y-1/2 text-gray-400 transition-colors hover:text-red-500"
                                             >
                                                 <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M6 18L18 6M6 6l12 12"
+                                                    ></path>
                                                 </svg>
                                             </button>
                                         </div>
@@ -3553,8 +3669,19 @@ const saveVaccine = () => {
                                     <!-- Vaccination Date -->
                                     <div class="space-y-2">
                                         <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                class="h-4 w-4 text-green-600"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                />
                                             </svg>
                                             Vaccination Date <span class="font-bold text-red-500">*</span>
                                         </label>
@@ -3562,26 +3689,51 @@ const saveVaccine = () => {
                                             <input
                                                 v-model="stage.vaccination_date"
                                                 type="date"
-                                                class="w-full rounded-xl border px-4 py-3 pl-12 pr-4 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
+                                                class="w-full rounded-xl border px-4 py-3 pr-4 pl-12 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
                                                 :class="{
-                                                    'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (editScheduleForm.errors as any)[
-                                                        `stages.${index}.vaccination_date`
-                                                    ],
+                                                    'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (
+                                                        editScheduleForm.errors as any
+                                                    )[`stages.${index}.vaccination_date`],
                                                     'border-gray-300 dark:border-gray-500': !(editScheduleForm.errors as any)[
                                                         `stages.${index}.vaccination_date`
                                                     ],
                                                 }"
                                                 required
                                             />
-                                            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    class="h-5 w-5 text-gray-400"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M8 7V3m8 4V3m-9 8h10m-6 4h6M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                    />
                                                 </svg>
                                             </div>
                                         </div>
-                                        <div v-if="(editScheduleForm.errors as any)[`stages.${index}.vaccination_date`]" class="flex items-center gap-1 text-sm text-red-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <div
+                                            v-if="(editScheduleForm.errors as any)[`stages.${index}.vaccination_date`]"
+                                            class="flex items-center gap-1 text-sm text-red-500"
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                class="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                />
                                             </svg>
                                             {{ (editScheduleForm.errors as any)[`stages.${index}.vaccination_date`] }}
                                         </div>
@@ -3590,8 +3742,19 @@ const saveVaccine = () => {
                                     <!-- Next Vaccination Date -->
                                     <div class="space-y-2">
                                         <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                class="h-4 w-4 text-blue-600"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                />
                                             </svg>
                                             Next Vaccination Date
                                             <span class="text-xs text-gray-500 dark:text-gray-400">(Optional)</span>
@@ -3600,19 +3763,30 @@ const saveVaccine = () => {
                                             <input
                                                 v-model="stage.next_vaccination_date"
                                                 type="date"
-                                                class="w-full rounded-xl border px-4 py-3 pl-12 pr-4 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
+                                                class="w-full rounded-xl border px-4 py-3 pr-4 pl-12 text-gray-900 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
                                                 :class="{
-                                                    'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (editScheduleForm.errors as any)[
-                                                        `stages.${index}.next_vaccination_date`
-                                                    ],
+                                                    'border-red-500 bg-red-50 focus:ring-red-500 dark:bg-red-900/20': (
+                                                        editScheduleForm.errors as any
+                                                    )[`stages.${index}.next_vaccination_date`],
                                                     'border-gray-300 dark:border-gray-500': !(editScheduleForm.errors as any)[
                                                         `stages.${index}.next_vaccination_date`
                                                     ],
                                                 }"
                                             />
-                                            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    class="h-5 w-5 text-gray-400"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                    />
                                                 </svg>
                                             </div>
                                         </div>
@@ -3620,8 +3794,19 @@ const saveVaccine = () => {
                                             v-if="(editScheduleForm.errors as any)[`stages.${index}.next_vaccination_date`]"
                                             class="flex items-center gap-1 text-sm text-red-500"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                class="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                />
                                             </svg>
                                             {{ (editScheduleForm.errors as any)[`stages.${index}.next_vaccination_date`] }}
                                         </div>

@@ -8,8 +8,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import Datepicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
 import { useNotifier } from '@/composables/useNotifier'
 import { useDropdownOptions } from '@/composables/dropdownOptions'
+import dayjs from 'dayjs'
 import { 
   ArrowRightIcon, 
   BuildingOfficeIcon, 
@@ -86,7 +89,7 @@ const form = useForm({
   transfer_male_qty: 0,
   transfer_female_qty: 0,
   transfer_total_qty: 0,
-  transfer_date: '', 
+  transfer_date: dayjs().format('YYYY-MM-DD'), 
 
   medical_male_qty: 0,
   medical_female_qty: 0,
@@ -314,16 +317,16 @@ watch(
                   </div>
 
                   <div class="space-y-1">
-                    <Label class="text-xs font-medium text-slate-600">Transfer Date</Label>
-                    <div class="relative">
-                      <CalendarIcon class="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <Input 
-                        v-model="form.transfer_date" 
-                        type="date" 
-                        class="pl-8 h-9 text-sm" 
+                      <Label class="text-xs font-medium text-slate-600">Transfer Date</Label>
+                      <Datepicker
+                          v-model="form.transfer_date"
+                          format="yyyy-MM-dd"
+                                  :input-class="'w-full rounded-lg border-0 bg-gray-50 px-4 py-3 text-gray-900 ring-1 ring-gray-200 transition-all focus:bg-white focus:ring-2 focus:ring-blue-500'"
+                          placeholder="Select Transfer Date"
+                          :auto-apply="true"
                       />
+                        <InputError :message="form.errors.transfer_date" class="text-sm text-red-600" />
                     </div>
-                  </div>
 
                   <div class="space-y-1">
                     <Label class="text-xs font-medium text-slate-600">Destination Company</Label>

@@ -141,7 +141,7 @@ const totalExcess = computed(() => {
           <div class="space-y-2">
             <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Created By</Label>
             <div class="rounded-xl bg-gray-50 px-4 py-3 text-gray-900 dark:bg-gray-700 dark:text-white">
-              {{ shedReceive?.created_by || 'System' }}
+              {{ shedReceive.user?.name || 'System' }}
             </div>
           </div>
         </div>

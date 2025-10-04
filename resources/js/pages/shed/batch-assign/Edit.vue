@@ -226,7 +226,11 @@ watch(
     form.batch_total_qty = (form.batch_female_qty || 0) + (form.batch_male_qty || 0)
 
     if (form.batch_received_female_qty > 0) {
-      form.percentage = (form.batch_excess_female / form.batch_received_female_qty) * 100
+      const percent = (form.batch_excess_female / form.batch_received_female_qty) * 100
+      form.percentage = Math.round(percent * 100) / 100   // ✅ number with 2 decimals
+      // Or, if you want a string: form.percentage = percent.toFixed(2)
+    } else {
+      form.percentage = 0
     }
   },
   { immediate: true }
