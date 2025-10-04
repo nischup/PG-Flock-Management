@@ -825,4 +825,81 @@ class PsReceiveController extends Controller
 
         return response()->json($pendingApprovals);
     }
+
+    /**
+     * Get approval details for a PS Receive
+     */
+    public function getApprovalDetails(PsReceive $psReceive)
+    {
+        try {
+            $approvalService = app(ApprovalMatrixService::class);
+            $approvalData = $approvalService->getApprovalDetails('ps-receive', $psReceive->id);
+            
+            return response()->json($approvalData);
+        } catch (\Exception $e) {
+            Log::error('Error fetching approval details: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch approval details'], 500);
+        }
+    }
+
+    /**
+     * Handle approval action (approve/reject)
+     */
+    public function handleApprovalAction(Request $request, PsReceive $psReceive)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'comments' => 'nullable|string|max:1000'
+        ]);
+
+        try {
+            $approvalService = app(ApprovalMatrixService::class);
+            
+            $result = $approvalService->processApprovalAction(
+                'ps-receive',
+                $psReceive->id,
+                $request->action,
+                Auth::id(),
+                $request->comments
+            );
+
+            if ($result['success']) {
+                // Log the action
+                AuditLogService::log(
+                    'ps-receive',
+                    $psReceive->id,
+                    'approval_action',
+                    "PS Receive {$request->action}d",
+                    Auth::id()
+                );
+
+                // Send notification if needed
+                if ($result['status'] === 'approved' || $result['status'] === 'rejected') {
+                    NotificationService::sendApprovalNotification(
+                        'ps-receive',
+                        $psReceive->id,
+                        $result['status'],
+                        Auth::user()
+                    );
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => "PS Receive {$request->action}d successfully",
+                    'status' => $result['status']
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Failed to process approval action'
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error processing approval action: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process approval action'
+            ], 500);
+        }
+    }
 }

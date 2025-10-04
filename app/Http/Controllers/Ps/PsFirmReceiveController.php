@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Ps;
 
 use App\Exports\ArrayExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePsFirmReceiveRequest;
 use App\Models\Master\BreedType;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
@@ -24,13 +25,14 @@ class PsFirmReceiveController extends Controller
      */
     public function index(Request $request)
     {
-        $psFirmReceives = PsFirmReceive::with(['flock:id,name,code', 'company:id,name', 'psReceive:id,pi_no'])
+        $psFirmReceives = PsFirmReceive::with(['flock:id,name,code', 'company:id,name', 'project:id,name', 'psReceive:id,pi_no'])
             ->visibleFor('receiving_company_id')
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('job_no', 'like', "%{$search}%")
                         ->orWhereHas('flock', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
                         ->orWhereHas('company', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('project', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
                         ->orWhereHas('psReceive', fn ($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
                 });
             })
@@ -54,6 +56,8 @@ class PsFirmReceiveController extends Controller
                 'flock_name' => $item->flock->name ?? '-',
                 'receiving_company_id' => $item->receiving_company_id,
                 'company_name' => $item->company->name ?? '-',
+                'project_id' => $item->project_id,
+                'project_name' => $item->project->name ?? '-',
                 'firm_female_qty' => $item->firm_female_qty,
                 'firm_male_qty' => $item->firm_male_qty,
                 'firm_total_qty' => $item->firm_total_qty,
@@ -63,6 +67,7 @@ class PsFirmReceiveController extends Controller
                 'receive_date' => $item->created_at,
                 'psReceive' => $item->psReceive ? ['id' => $item->psReceive->id, 'pi_no' => $item->psReceive->pi_no, 'supplier' => $item->psReceive->supplier] : null,
                 'company' => $item->company ? ['id' => $item->company->id, 'name' => $item->company->name] : null,
+                'project' => $item->project ? ['id' => $item->project->id, 'name' => $item->project->name] : null,
                 'flock' => $item->flock ? ['id' => $item->flock->id, 'name' => $item->flock->name, 'code' => $item->flock->code] : null,
             ]),
             'filters' => $request->only(['search', 'per_page', 'company_id', 'flock_id', 'date_from', 'date_to']),
@@ -81,6 +86,8 @@ class PsFirmReceiveController extends Controller
 
         // Fetch all PS Receives (you may filter by status if needed)
         $psReceives = PsReceive::with('chickCounts', 'labTransfers')
+            ->where('receiving_status', '0')
+            ->orderBy('id', 'desc')
             ->get()
             ->map(function ($ps, $suppliers) {
                 return [
@@ -132,7 +139,7 @@ class PsFirmReceiveController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StorePsFirmReceiveRequest $request)
     {
 
         $companyInfo = Company::findOrFail($request->receiving_company_id);
@@ -144,7 +151,7 @@ class PsFirmReceiveController extends Controller
             'source_type' => 'psreceive',
             'source_id' => $request->ps_receive_id,
             'flock_id' => $request->flock_id,
-            'project_id' => $request->receiving_project_id,
+            'project_id' => $request->receiving_project_id ?: null,
             'flock_no' => $flockInfo->name,
             'receiving_company_id' => $request->receiving_company_id,
             'firm_female_qty' => $request->firm_female_box_qty,
@@ -154,6 +161,10 @@ class PsFirmReceiveController extends Controller
             'created_by' => Auth::id(),
             'status' => $request->status ?? 1,
         ]);
+
+        // Update receiving_status to 1 (Receive) on ps_receives table
+        PsReceive::where('id', $request->ps_receive_id)
+            ->update(['receiving_status' => 1]);
 
         $insertId = $firmReceive->id;
         $timestamp = now()->format('YmdHis'); // YearMonthDayHourMinuteSecond
@@ -176,7 +187,7 @@ class PsFirmReceiveController extends Controller
                 'female_qty' => $request->firm_sortage_female_box ?? 0,
                 'total_qty' => $request->firm_sortage_box_qty ?? 0,
                 'date' => date('Y-m-d'),
-                'remarks' => 'Sortage when firm receive',
+                'remarks' => 'Sortage when farm receive',
             ]);
         }
 
@@ -193,7 +204,7 @@ class PsFirmReceiveController extends Controller
                 'female_qty' => $request->firm_excess_female_box ?? 0,
                 'total_qty' => $request->firm_excess_box_qty ?? 0,
                 'date' => date('Y-m-d'),
-                'remarks' => 'Excess when firm receive',
+                'remarks' => 'Excess when farm receive',
             ]);
         }
 
@@ -216,7 +227,7 @@ class PsFirmReceiveController extends Controller
 
         return redirect()
             ->route('ps-firm-receive.index')
-            ->with('success', 'Firm Receive created successfully!');
+            ->with('success', 'Farm Received Successfully!');
     }
 
     /**
@@ -257,7 +268,7 @@ class PsFirmReceiveController extends Controller
      */
     public function edit(string $id)
     {
-        $psFirmReceive = PsFirmReceive::with(['flock', 'company', 'psReceive'])
+        $psFirmReceive = PsFirmReceive::with(['flock', 'company', 'project', 'psReceive'])
             ->findOrFail($id);
 
         // Fetch all PS Receives for dropdown
@@ -298,6 +309,7 @@ class PsFirmReceiveController extends Controller
 
         $flocks = Flock::select('id', 'code', 'name', 'status')->orderBy('id', 'desc')->get();
         $companies = Company::select('id', 'name')->get();
+        $projects = Project::select('id', 'name', 'company_id')->get();
         $breeds = BreedType::pluck('name', 'id')->toArray();
 
         return Inertia::render('ps/ps-firm-receive/Edit', [
@@ -309,6 +321,8 @@ class PsFirmReceiveController extends Controller
                 'flock_name' => $psFirmReceive->flock->name ?? '-',
                 'receiving_company_id' => $psFirmReceive->receiving_company_id,
                 'company_name' => $psFirmReceive->company->name ?? '-',
+                'project_id' => $psFirmReceive->project_id,
+                'project_name' => $psFirmReceive->project->name ?? '-',
                 'ps_receive_id' => $psFirmReceive->ps_receive_id,
                 'pi_no' => $psFirmReceive->psReceive->pi_no ?? '-',
                 'firm_male_qty' => $psFirmReceive->firm_male_qty,
@@ -322,6 +336,7 @@ class PsFirmReceiveController extends Controller
             ],
             'psReceives' => $psReceives,
             'companies' => $companies,
+            'projects' => $projects,
             'flocks' => $flocks,
             'breeds' => $breeds,
         ]);

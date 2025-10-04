@@ -4,7 +4,11 @@
     </div>
     
     <div v-else-if="approvalData" class="flex items-center space-x-2">
-        <div :class="statusBadgeClass" class="px-2 py-1 rounded-full text-xs font-medium">
+        <div 
+            :class="[statusBadgeClass, isClickable ? 'cursor-pointer hover:opacity-80' : '']" 
+            class="px-2 py-1 rounded-full text-xs font-medium transition-opacity duration-200"
+            @click="handleClick"
+        >
             {{ statusText }}
         </div>
         <div v-if="approvalData.current_layer && approvalData.total_layers" class="text-xs text-gray-500">
@@ -26,6 +30,8 @@ const props = defineProps({
         required: true
     }
 })
+
+const emit = defineEmits(['click'])
 
 // Reactive data
 const loading = ref(false)
@@ -65,6 +71,16 @@ const statusBadgeClass = computed(() => {
             return 'bg-gray-100 text-gray-800'
     }
 })
+
+const isClickable = computed(() => {
+    return approvalData.value?.status === 'pending' && approvalData.value?.can_approve
+})
+
+const handleClick = () => {
+    if (isClickable.value) {
+        emit('click', props.psReceiveId)
+    }
+}
 
 // Methods
 const fetchApprovalStatus = async () => {
