@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -16,6 +16,39 @@ const props = defineProps<{
 
 const page = usePage()
 const openMenus = ref<string[]>([])
+
+// Function to find parent menu titles that contain the current active route
+function findActiveParentMenus(items: NavItem[], currentUrl: string): string[] {
+  const activeParents: string[] = []
+  
+  for (const item of items) {
+    if (item.children) {
+      // Check if any child matches the current URL
+      const hasActiveChild = item.children.some(child => child.href === currentUrl)
+      if (hasActiveChild) {
+        activeParents.push(item.title)
+      }
+      // Recursively check nested children
+      const nestedParents = findActiveParentMenus(item.children, currentUrl)
+      activeParents.push(...nestedParents)
+    }
+  }
+  
+  return activeParents
+}
+
+// Computed property to get active parent menus based on current URL
+const activeParentMenus = computed(() => {
+  return findActiveParentMenus(props.items, page.url)
+})
+
+// Watch for URL changes and update open menus
+watch(() => page.url, () => {
+  const activeParents = findActiveParentMenus(props.items, page.url)
+  // Merge with existing open menus, avoiding duplicates
+  const newOpenMenus = [...new Set([...openMenus.value, ...activeParents])]
+  openMenus.value = newOpenMenus
+}, { immediate: true })
 
 function toggleMenu(title: string) {
   if (openMenus.value.includes(title)) {
