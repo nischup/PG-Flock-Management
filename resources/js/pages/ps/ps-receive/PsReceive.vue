@@ -2,7 +2,6 @@
 import listInfocard from '@/components/ListinfoCard.vue';
 import Pagination from '@/components/Pagination.vue';
 import ApprovalStatusBadge from '@/components/ApprovalStatusBadge.vue';
-import ApprovalModal from '@/components/ApprovalModal.vue';
 import { Button } from '@/components/ui/button';
 import { useListFilters } from '@/composables/useListFilters';
 import { useNotifier } from '@/composables/useNotifier';
@@ -264,25 +263,6 @@ const getProvitaLabTotalQty = (item: any) => {
 
 const openExportDropdown = ref(false);
 
-// Approval modal state
-const showApprovalModal = ref(false);
-const selectedPsReceiveId = ref(null);
-
-// Approval modal handlers
-const handleApprovalClick = (psReceiveId: number) => {
-    selectedPsReceiveId.value = psReceiveId;
-    showApprovalModal.value = true;
-};
-
-const closeApprovalModal = () => {
-    showApprovalModal.value = false;
-    selectedPsReceiveId.value = null;
-};
-
-const handleApprovalSuccess = () => {
-    // Refresh the page or update the specific item
-    window.location.reload();
-};
 
 const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
     const url = route('reports.ps-receive.pdf', { ...filters.value, orientation });
@@ -799,7 +779,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <td class="border-b px-3 py-1.5 text-xs">
                                 <ApprovalStatusBadge 
                                     :ps-receive-id="item.id" 
-                                    @click="handleApprovalClick"
                                 />
                             </td>
                             <td class="border-b px-3 py-1.5 text-xs">
@@ -925,14 +904,6 @@ const breadcrumbs: BreadcrumbItem[] = [
             />
         </div>
 
-        <!-- Approval Modal -->
-        <ApprovalModal
-            :is-open="showApprovalModal"
-            :ps-receive-id="selectedPsReceiveId"
-            @close="closeApprovalModal"
-            @approved="handleApprovalSuccess"
-            @rejected="handleApprovalSuccess"
-        />
     </AppLayout>
 </template>
 
