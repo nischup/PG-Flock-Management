@@ -51,7 +51,8 @@
         .signatures {
             display: flex;
             justify-content: space-evenly;
-            margin-top: 100px;
+            /* evenly distribute space between items */
+            margin-top: 90px;
             font-size: 10px;
         }
 
@@ -59,14 +60,25 @@
             text-align: center;
             display: flex;
             flex-direction: column;
+            /* stack line above name */
             align-items: center;
             min-width: 80px;
+            /* optional: ensures minimum line width */
         }
 
         .signature-line {
             border-top: 1px solid #000;
             margin-bottom: 4px;
             width: 100%;
+            /* full width of signature block */
+        }
+
+        .sin {
+            display: inline-flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-right: 38px;
+            padding-left: 60px;
         }
     </style>
 </head>
@@ -161,13 +173,15 @@
                 <td><strong>Excess</strong></td>
                 <td>{{ $batchAssign->batch_excess_female ?? 0 }}</td>
                 <td>{{ $batchAssign->batch_excess_male ?? 0 }}</td>
-                <td><strong>{{ ($batchAssign->batch_excess_female ?? 0) + ($batchAssign->batch_excess_male ?? 0) }}</strong></td>
+                <td><strong>{{ ($batchAssign->batch_excess_female ?? 0) + ($batchAssign->batch_excess_male ?? 0) }}</strong>
+                </td>
             </tr>
             <tr>
                 <td><strong>Shortage</strong></td>
                 <td>{{ $batchAssign->batch_sortage_female ?? 0 }}</td>
                 <td>{{ $batchAssign->batch_sortage_male ?? 0 }}</td>
-                <td><strong>{{ ($batchAssign->batch_sortage_female ?? 0) + ($batchAssign->batch_sortage_male ?? 0) }}</strong></td>
+                <td><strong>{{ ($batchAssign->batch_sortage_female ?? 0) + ($batchAssign->batch_sortage_male ?? 0) }}</strong>
+                </td>
             </tr>
         </table>
     </div>
@@ -186,11 +200,13 @@
             </tr>
             <tr>
                 <th>Growing Start Date</th>
-                <td>{{ $batchAssign->growing_start_date ? \Carbon\Carbon::parse($batchAssign->growing_start_date)->format('d-M-Y') : 'N/A' }}</td>
+                <td>{{ $batchAssign->growing_start_date ? \Carbon\Carbon::parse($batchAssign->growing_start_date)->format('d-M-Y') : 'N/A' }}
+                </td>
             </tr>
             <tr>
                 <th>Transfer Date</th>
-                <td>{{ $batchAssign->transfer_date ? \Carbon\Carbon::parse($batchAssign->transfer_date)->format('d-M-Y') : 'N/A' }}</td>
+                <td>{{ $batchAssign->transfer_date ? \Carbon\Carbon::parse($batchAssign->transfer_date)->format('d-M-Y') : 'N/A' }}
+                </td>
             </tr>
             <tr>
                 <th>Created Date</th>
@@ -198,20 +214,19 @@
             </tr>
         </table>
     </div>
-
-    {{-- Signature Matrix --}}
-    <div class="signatures">
-        <div class="signature">
+    <!-- Signatures -->
+    <div class="signatures sin">
+        <div class="signature sin">
             <div class="signature-line"></div>
-            <span>Prepared By</span>
+            Prepared By
         </div>
-        <div class="signature">
+        <div class="signature sin">
             <div class="signature-line"></div>
-            <span>Checked By</span>
+            Checked By
         </div>
-        <div class="signature">
+        <div class="signature sin">
             <div class="signature-line"></div>
-            <span>Approved By</span>
+            Approved By
         </div>
     </div>
 </body>
