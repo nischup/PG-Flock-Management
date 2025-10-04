@@ -2,16 +2,16 @@
 
 namespace App\Models\Ps;
 
-use App\Models\Master\Flock;
 use App\Models\Master\Company;
+use App\Models\Master\Flock;
 use App\Models\Master\Project;
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\CompanyShedFilter;
+use Illuminate\Database\Eloquent\Model;
+
 class PsFirmReceive extends Model
 {
-    
     use CompanyShedFilter;
-    
+
     protected $fillable = [
         'ps_receive_id',
         'job_no',
@@ -29,12 +29,12 @@ class PsFirmReceive extends Model
         'remarks',
         'created_by',
         'status',
+        'shed_receiving_status',
     ];
 
     protected $casts = [
         'created_at' => 'date',
     ];
-
 
     // Flock relationship
     public function flock()
@@ -53,6 +53,7 @@ class PsFirmReceive extends Model
     {
         return $this->belongsTo(Project::class, 'project_id');
     }
+
     public function psReceive()
     {
         return $this->belongsTo(PsReceive::class, 'ps_receive_id');
