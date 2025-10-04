@@ -234,7 +234,7 @@ function submit() {
           </div>
           <div>
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">Farm Receive & Production Shed</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Select firm receive code and production shed destination</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Select farm receive and production shed destination</p>
           </div>
         </div>
 
@@ -244,7 +244,7 @@ function submit() {
           <div class="space-y-2">
             <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
               <Package class="h-4 w-4" />
-              Farm Receive Transaction No
+              Select Farm Receive 
             </Label>
             <div class="firm-receive-dropdown relative">
               <button
@@ -259,7 +259,7 @@ function submit() {
                       Rcv-{{ String(selectedFirmReceive.id).padStart(6, '0') }}-{{ selectedFirmReceive.company_short_name }}-{{ selectedFirmReceive.project_name }}-{{ selectedFirmReceive.flock_code || props.flocks.find(f => f.id === selectedFirmReceive.flock_id)?.code || selectedFirmReceive.flock_name }}
                     </span>
                   </span>
-                  <span v-else>Select Farm Receive Transaction No</span>
+                  <span v-else>Select Farm Receive</span>
                 </span>
                 <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFirmReceiveDropdown }" />
               </button>

@@ -310,12 +310,31 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 }
 
+// Keyboard event handler
+const handleKeydown = (event: KeyboardEvent) => {
+  // Only handle arrow keys when not in input fields or textareas
+  const target = event.target as HTMLElement
+  const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT'
+  
+  if (isInputField) return
+  
+  if (event.key === 'ArrowRight') {
+    event.preventDefault()
+    nextTab()
+  } else if (event.key === 'ArrowLeft') {
+    event.preventDefault()
+    prevTab()
+  }
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', handleKeydown)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('keydown', handleKeydown)
 })
 
 const counts = ref<Record<string, number | string>>({})
