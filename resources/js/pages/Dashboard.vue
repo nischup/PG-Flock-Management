@@ -1119,73 +1119,253 @@ const progressChartData = props.progressBars.map((pb, index) => ({
           </div>
         </div>
 
-        <!-- Flock Details Table -->
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Flock Details</h3>
-            <p class="text-sm text-gray-600">Detailed information for each active flock</p>
+        <!-- Flock Details in Tabular Format by Lifecycle -->
+        <div class="space-y-6">
+          <!-- Stage Progression Overview -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-800">Flock Lifecycle Stages</h3>
+                <p class="text-sm text-gray-600">Detailed information organized by Brooding, Growing, and Production stages</p>
+              </div>
+              <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                <span class="text-sm text-gray-600">Brooding</span>
+                <div class="w-3 h-3 bg-blue-400 rounded-full ml-4"></div>
+                <span class="text-sm text-gray-600">Growing</span>
+                <div class="w-3 h-3 bg-green-400 rounded-full ml-4"></div>
+                <span class="text-sm text-gray-600">Production</span>
+              </div>
+            </div>
           </div>
-          
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assign Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Rejections</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Birds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batches</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Companies</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="flock in modalData.flockData.flocks" :key="flock.id" class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div class="text-sm font-medium text-gray-900">{{ flock.name }}</div>
-                      <div class="text-sm text-gray-500">{{ flock.code }}</div>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ flock.total_assign_bird.toLocaleString() }}</div>
-                    <div class="text-xs text-gray-500">
-                      M: {{ flock.assign_male_birds.toLocaleString() }} | F: {{ flock.assign_female_birds.toLocaleString() }}
-                    </div>
-                  </td>
-                  
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ flock.total_mortality.toLocaleString() }}</div>
-                    <div class="text-xs text-gray-500">{{ flock.mortality_percentage }}%</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ flock.others_rejection.toLocaleString() }}</div>
-                    <div class="text-xs text-gray-500">{{ flock.rejection_precentage }}%</div>
-                  </td>
 
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ flock.total_birds.toLocaleString() }}</div>
-                    <div class="text-xs text-gray-500">
-                      M: {{ flock.male_birds.toLocaleString() }} | F: {{ flock.female_birds.toLocaleString() }}
+          <!-- Tabular Flock Details -->
+          <div v-for="flock in modalData.flockData.flocks" :key="flock.id" class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <!-- Flock Header -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-lg font-semibold text-gray-900">{{ flock.name }}</h4>
+                  <p class="text-sm text-gray-600">{{ flock.code }} • {{ flock.companies.map(c => c.name).join(', ') }}</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                  <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                    Active
+                  </span>
+                  <div class="text-right">
+                    <div class="text-sm text-gray-600">Total Birds</div>
+                    <div class="text-lg font-bold text-gray-900">{{ flock.total_birds.toLocaleString() }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lifecycle Stages Table -->
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Metrics</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-yellow-600 uppercase tracking-wider bg-yellow-50">
+                      <div class="flex items-center justify-center space-x-2">
+                        <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                        <span>Brooding Stage</span>
+                      </div>
+                    </th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-blue-600 uppercase tracking-wider bg-blue-50">
+                      <div class="flex items-center justify-center space-x-2">
+                        <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
+                        <span>Growing Stage</span>
+                      </div>
+                    </th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-green-600 uppercase tracking-wider bg-green-50">
+                      <div class="flex items-center justify-center space-x-2">
+                        <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                        <span>Production Stage</span>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <!-- Opening Birds Row -->
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Opening Birds
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-yellow-50">
+                      {{ flock.total_assign_bird.toLocaleString() }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-blue-50">
+                      {{ flock.total_birds.toLocaleString() }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-green-50">
+                      {{ flock.total_birds.toLocaleString() }}
+                    </td>
+                  </tr>
+
+                  <!-- Assign Birds Row -->
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Assign Birds
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-yellow-50">
+                      {{ flock.total_assign_bird.toLocaleString() }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-blue-50">
+                      {{ flock.total_assign_bird.toLocaleString() }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 bg-green-50">
+                      N/A
+                    </td>
+                  </tr>
+
+                  <!-- Current Housing Birds Row -->
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Current Housing Birds
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-yellow-50">
+                      {{ flock.total_birds.toLocaleString() }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-blue-50">
+                      {{ flock.total_birds.toLocaleString() }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-green-50">
+                      {{ flock.total_birds.toLocaleString() }}
+                    </td>
+                  </tr>
+
+                  <!-- Mortality Row -->
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Mortality
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center bg-yellow-50">
+                      <div class="text-sm font-semibold text-red-600">{{ flock.total_mortality.toLocaleString() }}</div>
+                      <div class="text-xs text-gray-500">{{ flock.mortality_percentage }}%</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center bg-blue-50">
+                      <div class="text-sm font-semibold text-red-600">{{ flock.total_mortality.toLocaleString() }}</div>
+                      <div class="text-xs text-gray-500">{{ flock.mortality_percentage }}%</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center bg-green-50">
+                      <div class="text-sm font-semibold text-red-600">{{ flock.total_mortality.toLocaleString() }}</div>
+                      <div class="text-xs text-gray-500">{{ flock.mortality_percentage }}%</div>
+                    </td>
+                  </tr>
+
+                  <!-- Other Rejections Row -->
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Other Rejections
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center bg-yellow-50">
+                      <div class="text-sm font-semibold text-orange-600">{{ flock.others_rejection.toLocaleString() }}</div>
+                      <div class="text-xs text-gray-500">{{ flock.rejection_precentage }}%</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center bg-blue-50">
+                      <div class="text-sm font-semibold text-orange-600">{{ flock.others_rejection.toLocaleString() }}</div>
+                      <div class="text-xs text-gray-500">{{ flock.rejection_precentage }}%</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center bg-green-50">
+                      <div class="text-sm font-semibold text-orange-600">{{ flock.others_rejection.toLocaleString() }}</div>
+                      <div class="text-xs text-gray-500">{{ flock.rejection_precentage }}%</div>
+                    </td>
+                  </tr>
+
+                  <!-- Growth Rate Row (Growing Stage only) -->
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Growth Rate
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 bg-yellow-50">
+                      N/A
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center bg-blue-50">
+                      <div class="text-sm font-semibold text-green-600">+2.3%</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 bg-green-50">
+                      N/A
+                    </td>
+                  </tr>
+
+                  <!-- Daily Eggs Row (Production Stage only) -->
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Daily Eggs
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 bg-yellow-50">
+                      N/A
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 bg-blue-50">
+                      N/A
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center bg-green-50">
+                      <div class="text-sm font-semibold text-green-600">1,250</div>
+                    </td>
+                  </tr>
+
+                  <!-- Sale Row (Production Stage only) -->
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Sale
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 bg-yellow-50">
+                      N/A
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 bg-blue-50">
+                      N/A
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center bg-green-50">
+                      <div class="text-sm font-semibold text-blue-600">0</div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Gender Distribution -->
+                <div>
+                  <h6 class="font-medium text-gray-800 mb-3">Gender Distribution</h6>
+                  <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm text-gray-600">Male Birds</span>
+                      <div class="text-right">
+                        <div class="font-semibold text-blue-600">{{ flock.male_birds.toLocaleString() }}</div>
+                        <div class="text-xs text-gray-500">{{ ((flock.male_birds / flock.total_birds) * 100).toFixed(1) }}%</div>
+                      </div>
                     </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ flock.batch_assignments.map(d => d.batch_name).join(', ') }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-xs text-gray-500">
-                      {{ flock.companies.map(c => c.name).join(', ') }}
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm text-gray-600">Female Birds</span>
+                      <div class="text-right">
+                        <div class="font-semibold text-pink-600">{{ flock.female_birds.toLocaleString() }}</div>
+                        <div class="text-xs text-gray-500">{{ ((flock.female_birds / flock.total_birds) * 100).toFixed(1) }}%</div>
+                      </div>
                     </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                      Active
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </div>
+                </div>
+
+                <!-- Batch Information -->
+                <div>
+                  <h6 class="font-medium text-gray-800 mb-3">Batch Information</h6>
+                  <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm text-gray-600">Active Batches</span>
+                      <span class="font-semibold text-gray-900">{{ flock.batch_assignments.length }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm text-gray-600">Batch Names</span>
+                      <span class="text-xs text-gray-500 text-right max-w-32 truncate">
+                        {{ flock.batch_assignments.map(d => d.batch_name).join(', ') }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
