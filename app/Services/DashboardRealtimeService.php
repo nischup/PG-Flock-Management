@@ -297,7 +297,7 @@ class DashboardRealtimeService
             $query->whereBetween('created_at', [$filters['date_from'], $filters['date_to']]);
         } else {
             // Default: last 7 days
-            $query->where('created_at', '>=', now()->subDays(7));
+            $query->where('created_at', '=', now()->subDays(7));
         }
 
         // Get DailyOperation IDs linked to these egg collections
