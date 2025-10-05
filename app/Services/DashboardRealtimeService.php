@@ -997,6 +997,15 @@ class DashboardRealtimeService
                 $mortalityPercentage       = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
                 $otherRejectionPercentage  = $totalBirds > 0 ? ($othersRejection / $totalBirds) * 100 : 0;
 
+
+
+
+                $fullflockmortality = $totalMortality+$totalImmediateMortality;
+                $fullflockrejection = $othersRejection+$totalImmediateRejection;
+                $fullflockmortalitypercentage = $totalOpeningBirds > 0 ? ($fullflockmortality / $totalOpeningBirds) * 100 : 0;
+                $fullflockrejectionpercentage = $totalOpeningBirds > 0 ? ($fullflockrejection / $totalOpeningBirds) * 100 : 0;
+
+
                 $companies = $batchAssigns->pluck('company')->unique('id')->filter()->values();
                 $projects  = $batchAssigns->pluck('project')->unique('id')->filter()->values();
                 $sheds     = $batchAssigns->pluck('shed')->unique('id')->filter()->values();
@@ -1019,6 +1028,10 @@ class DashboardRealtimeService
                     'others_rejection' => $othersRejection,
                     'totalImmediateMortality' => $totalImmediateMortality,
                     'totalImmediateRejection' => $totalImmediateRejection,
+                    'fullflockrejectionpercentage'=>round($fullflockrejectionpercentage,2),
+                    'fullflockmortalitypercentage'=>round($fullflockmortalitypercentage,2),
+                    'fullflockrejection'=>$fullflockrejection,
+                    'fullflockmortality'=>$fullflockmortality,
                     
                     'immediateMortalityPercent' => $totalOpeningBirds > 0 
                         ? round(($totalImmediateMortality / $totalOpeningBirds) * 100, 2) 
