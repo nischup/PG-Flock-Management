@@ -1171,19 +1171,19 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                     <th class="px-6 py-3 text-center text-xs font-medium text-yellow-600 uppercase tracking-wider bg-yellow-50">
                       <div class="flex items-center justify-center space-x-2">
                         <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                        <span>Brooding Stage</span>
+                        <span>Previous Status</span>
                       </div>
                     </th>
-                    <th class="px-6 py-3 text-center text-xs font-medium text-blue-600 uppercase tracking-wider bg-blue-50">
+                    <!-- <th class="px-6 py-3 text-center text-xs font-medium text-blue-600 uppercase tracking-wider bg-blue-50">
                       <div class="flex items-center justify-center space-x-2">
                         <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
                         <span>Growing Stage</span>
                       </div>
-                    </th>
+                    </th> -->
                     <th class="px-6 py-3 text-center text-xs font-medium text-green-600 uppercase tracking-wider bg-green-50">
                       <div class="flex items-center justify-center space-x-2">
                         <div class="w-3 h-3 bg-green-400 rounded-full"></div>
-                        <span>Production Stage</span>
+                        <span>Current Status</span>
                       </div>
                     </th>
                   </tr>
@@ -1197,9 +1197,9 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-yellow-50">
                       {{ flock.opening_birds.toLocaleString() }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-blue-50">
+                    <!-- <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-blue-50">
                       {{ flock.total_birds.toLocaleString() }}
-                    </td>
+                    </td> -->
                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-green-50">
                       {{ flock.total_birds.toLocaleString() }}
                     </td>
@@ -1213,9 +1213,9 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-yellow-50">
                       {{ flock.total_assign_bird.toLocaleString() }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-blue-50">
+                    <!-- <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-blue-50">
                       {{ flock.total_assign_bird.toLocaleString() }}
-                    </td>
+                    </td> -->
                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 bg-green-50">
                       N/A
                     </td>
@@ -1228,18 +1228,19 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       Mortality
                     </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center bg-blue-50">
+                      <div class="text-sm font-semibold text-red-600">{{ flock.totalImmediateMortality.toLocaleString() }}</div>
+                      <div class="text-xs text-gray-500">{{ flock.immediateMortalityPercent }}%</div>
+                    </td>
+                    <!-- <td class="px-6 py-4 whitespace-nowrap text-center bg-green-50">
+                      <div class="text-sm font-semibold text-red-600">{{ flock.totalImmediateRejection.toLocaleString() }}</div>
+                      <div class="text-xs text-gray-500">{{ flock.mortality_percentage }}%</div>
+                    </td> -->
                     <td class="px-6 py-4 whitespace-nowrap text-center bg-yellow-50">
                       <div class="text-sm font-semibold text-red-600">{{ flock.total_mortality.toLocaleString() }}</div>
                       <div class="text-xs text-gray-500">{{ flock.mortality_percentage }}%</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center bg-blue-50">
-                      <div class="text-sm font-semibold text-red-600">{{ flock.total_mortality.toLocaleString() }}</div>
-                      <div class="text-xs text-gray-500">{{ flock.mortality_percentage }}%</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center bg-green-50">
-                      <div class="text-sm font-semibold text-red-600">{{ flock.total_mortality.toLocaleString() }}</div>
-                      <div class="text-xs text-gray-500">{{ flock.mortality_percentage }}%</div>
-                    </td>
+                    
                   </tr>
 
                   <!-- Other Rejections Row -->
@@ -1247,22 +1248,23 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       Other Rejections
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center bg-yellow-50">
-                      <div class="text-sm font-semibold text-orange-600">{{ flock.others_rejection.toLocaleString() }}</div>
-                      <div class="text-xs text-gray-500">{{ flock.rejection_precentage }}%</div>
-                    </td>
+                    
                     <td class="px-6 py-4 whitespace-nowrap text-center bg-blue-50">
-                      <div class="text-sm font-semibold text-orange-600">{{ flock.others_rejection.toLocaleString() }}</div>
-                      <div class="text-xs text-gray-500">{{ flock.rejection_precentage }}%</div>
+                      <div class="text-sm font-semibold text-orange-600">{{ flock.totalImmediateRejection.toLocaleString() }}</div>
+                      <div class="text-xs text-gray-500">{{ flock.immediateRejectionPercent }}%</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center bg-green-50">
+                    <!-- <td class="px-6 py-4 whitespace-nowrap text-center bg-green-50">
+                      <div class="text-sm font-semibold text-orange-600">{{ flock.totalImmediateRejection.toLocaleString() }}</div>
+                      <div class="text-xs text-gray-500">{{ flock.totalImmediateRejection }}%</div>
+                    </td> -->
+                    <td class="px-6 py-4 whitespace-nowrap text-center bg-yellow-50">
                       <div class="text-sm font-semibold text-orange-600">{{ flock.others_rejection.toLocaleString() }}</div>
                       <div class="text-xs text-gray-500">{{ flock.rejection_precentage }}%</div>
                     </td>
                   </tr>
 
                   <!-- Daily Eggs Row (Production Stage only) -->
-                  <tr class="hover:bg-gray-50">
+                  <!-- <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       Daily Eggs
                     </td>
@@ -1275,10 +1277,10 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                     <td class="px-6 py-4 whitespace-nowrap text-center bg-green-50">
                       <div class="text-sm font-semibold text-green-600">1,250</div>
                     </td>
-                  </tr>
+                  </tr> -->
 
                   <!-- Sale Row (Production Stage only) -->
-                  <tr class="hover:bg-gray-50">
+                  <!-- <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       Sale
                     </td>
@@ -1291,7 +1293,7 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                     <td class="px-6 py-4 whitespace-nowrap text-center bg-green-50">
                       <div class="text-sm font-semibold text-blue-600">0</div>
                     </td>
-                  </tr>
+                  </tr> -->
                 </tbody>
               </table>
             </div>
