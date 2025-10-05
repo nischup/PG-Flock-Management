@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import HeadingSmall from '@/components/HeadingSmall.vue';
+import Pagination from '@/components/Pagination.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useListFilters } from '@/composables/useListFilters';
 import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 // Interface
 interface Unit {
@@ -21,27 +23,66 @@ interface Unit {
 
 // Props
 const props = defineProps<{
-    units: Unit[];
-    filters: { search?: string; per_page?: number; page?: number };
+    units: {
+        data: Unit[];
+        meta: { current_page: number; last_page: number; per_page: number; total: number };
+    };
+    filters: { 
+        search?: string; 
+        per_page?: number; 
+        page?: number;
+        status?: string;
+        date_from?: string;
+        date_to?: string;
+    };
 }>();
 
-useNotifier();
+const { search, perPage, page, status, dateFrom, dateTo } = useListFilters({ routeName: '/unit', filters: props.filters });
 const { can } = usePermissions();
-const units = ref<Unit[]>([...props.units]);
 
-// Filters for export
-const filters = ref({ ...props.filters, sort: 'name', direction: 'asc' });
 
 // Export dropdown
 const openExportDropdown = ref(false);
 const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
-    const url = route('reports.unit.pdf', { ...filters.value, orientation });
+    const exportFilters = {
+        search: search.value,
+        per_page: perPage.value,
+        status: status.value,
+        date_from: dateFrom.value,
+        date_to: dateTo.value,
+        orientation
+    };
+    const url = route('reports.unit.pdf', exportFilters);
     window.open(url, '_blank');
 };
 const exportExcel = () => {
-    const url = route('reports.unit.excel', { ...filters.value });
+    const exportFilters = {
+        search: search.value,
+        per_page: perPage.value,
+        status: status.value,
+        date_from: dateFrom.value,
+        date_to: dateTo.value
+    };
+    const url = route('reports.unit.excel', exportFilters);
     window.open(url, '_blank');
 };
+
+// ✅ Filter methods
+const clearFilters = () => {
+    search.value = '';
+    perPage.value = 10;
+    status.value = '';
+    dateFrom.value = '';
+    dateTo.value = '';
+    page.value = 1;
+};
+
+// ✅ Computed properties for filter summary
+const hasActiveFilters = computed(() => {
+    return status.value || 
+           dateFrom.value || 
+           dateTo.value;
+});
 
 // Modal state
 const showModal = ref(false);
@@ -124,32 +165,22 @@ const submit = () => {
     if (!form.name.trim()) return;
 
     if (editingUnit.value) {
-        form.put(route('unit.update', editingUnit.value.id), {
+        form.put(route('unit.update', editingUnit.value.id),         {
             preserveScroll: true,
             onSuccess: () => {
-                const i = units.value.findIndex((u) => u.id === editingUnit.value!.id);
-                if (i !== -1) {
-                    units.value[i] = { ...units.value[i], name: form.name, status: form.status };
-                }
                 resetForm();
+                // Refresh the page to show updated data
+                window.location.reload();
             },
             onError: () => Swal.fire('Error!', 'Could not update unit.', 'error'),
         });
     } else {
         form.post(route('unit.store'), {
             preserveScroll: true,
-            onSuccess: (page) => {
-                if ((page as any).props?.units) {
-                    units.value = (page as any).props.units;
-                } else {
-                    units.value.unshift({
-                        id: Date.now(),
-                        name: form.name,
-                        status: form.status,
-                        created_at: new Date().toISOString(),
-                    });
-                }
+            onSuccess: () => {
                 resetForm();
+                // Refresh the page to show updated data
+                window.location.reload();
             },
             onError: () => Swal.fire('Error!', 'Could not create unit.', 'error'),
         });
@@ -165,8 +196,8 @@ const toggleStatus = (unit: Unit) => {
         {
             preserveScroll: true,
             onSuccess: () => {
-                const i = units.value.findIndex((u) => u.id === unit.id);
-                if (i !== -1) units.value[i].status = newStatus;
+                // Refresh the page to show updated data
+                window.location.reload();
             },
             onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
             onFinish: () => {
@@ -192,7 +223,7 @@ const breadcrumbs = [
                 <HeadingSmall title="Unit List" />
                 <div class="relative flex items-center gap-2">
                     <!-- Add New Button -->
-                    <Button v-if="can('unit.create')" class="bg-chicken text-white hover:bg-yellow-600" @click="openModal()"> + Add New </Button>
+                    <Button v-if="can('unit.create')" class="bg-blue-600 text-white hover:bg-blue-700" @click="openModal()"> + Add New </Button>
 
                     <!-- Export Dropdown -->
                     <div class="relative">
@@ -223,8 +254,79 @@ const breadcrumbs = [
                 </div>
             </div>
 
+            <!-- Filter Section -->
+            <div class="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-800">Filters</h3>
+                    <button
+                        @click="clearFilters"
+                        class="text-sm text-gray-600 hover:text-gray-800"
+                    >
+                        Clear All
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <!-- Search -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                        <input
+                            v-model="search"
+                            type="text"
+                            placeholder="Unit name..."
+                            class="block w-full px-3 py-2 text-sm text-gray-900 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select
+                            v-model="status"
+                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                    <!-- Per Page -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Per Page</label>
+                        <select
+                            v-model="perPage"
+                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="10">10 per page</option>
+                            <option value="25">25 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="100">100 per page</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input
+                                v-model="dateFrom"
+                                type="date"
+                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                            />
+                            <input
+                                v-model="dateTo"
+                                type="date"
+                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
             <!-- Unit Table -->
-            <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
+            <div class="mt-4 overflow-x-auto rounded-lg bg-white shadow">
                 <table class="w-full border-collapse text-left">
                     <thead>
                         <tr>
@@ -237,11 +339,11 @@ const breadcrumbs = [
                     </thead>
                     <tbody>
                         <tr
-                            v-for="(unit, index) in units"
+                            v-for="(unit, index) in (props.units?.data ?? [])"
                             :key="unit.id"
-                            class="hover:bg-gray-50 dark:hover:bg-gray-700"
+                            class="hover:bg-gray-50"
                         >
-                            <td class="border-b px-4 py-2">{{ index + 1 }}</td>
+                            <td class="border-b px-4 py-2">{{ ((props.units?.meta?.current_page || 1) - 1) * (props.units?.meta?.per_page || 10) + index + 1 }}</td>
                             <td class="border-b px-4 py-2">{{ unit.name }}</td>
                             <td class="border-b px-4 py-2">
                                 <span :class="unit.status === 'Active' ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
@@ -270,12 +372,15 @@ const breadcrumbs = [
                             </td>
                         </tr>
 
-                        <tr v-if="units.length === 0">
+                        <tr v-if="(props.units?.data ?? []).length === 0">
                             <td colspan="5" class="border-b px-4 py-6 text-center text-gray-500">No units found.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            <Pagination v-if="props.units?.meta" :meta="props.units.meta" class="mt-6" />
         </div>
 
         <!-- Modal -->
@@ -310,7 +415,7 @@ const breadcrumbs = [
 
                 <div class="flex justify-end border-t border-gray-200 p-4">
                     <Button class="mr-2 bg-gray-300 text-black" @click="resetForm">Cancel</Button>
-                    <Button class="bg-chicken text-white" @click="submit">{{ editingUnit ? 'Update' : 'Save' }}</Button>
+                    <Button class="bg-blue-600 text-white" @click="submit">{{ editingUnit ? 'Update' : 'Save' }}</Button>
                 </div>
             </div>
         </div>

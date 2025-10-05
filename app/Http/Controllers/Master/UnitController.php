@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Master;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use App\Models\Master\Unit;
-use Illuminate\Support\Facades\Log;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ArrayExport;
+use App\Http\Controllers\Controller;
+use App\Models\Master\Unit;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UnitController extends Controller
 {
@@ -18,25 +18,46 @@ class UnitController extends Controller
         try {
             $query = Unit::query();
 
+            // Search filter
             if ($search = $request->get('search')) {
                 $query->where('name', 'like', "%{$search}%");
             }
 
-            $units = $query->latest()->get()->map(function ($unit) {
+            // Status filter
+            if ($status = $request->get('status')) {
+                $statusValue = $status === 'Active' ? 1 : 0;
+                $query->where('status', $statusValue);
+            }
+
+            // Date range filters
+            if ($dateFrom = $request->get('date_from')) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            }
+
+            if ($dateTo = $request->get('date_to')) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
+
+            // Per page
+            $perPage = $request->get('per_page', 10);
+
+            // Get paginated results
+            $units = $query->latest()->paginate($perPage)->withQueryString()->through(function ($unit) {
                 return [
                     'id' => $unit->id,
                     'name' => $unit->name,
-                    'status' => $unit->status ? 'Active' : 'Inactive', // FIXED
+                    'status' => $unit->status ? 'Active' : 'Inactive',
                     'created_at' => $unit->created_at ? $unit->created_at->format('Y-m-d H:i') : null,
                 ];
             });
 
             return Inertia::render('library/unit/List', [
                 'units' => $units,
-                'filters' => $request->only(['search']),
+                'filters' => $request->only(['search', 'status', 'date_from', 'date_to', 'per_page']),
             ]);
         } catch (\Exception $e) {
-            Log::error('Unit Index Error: ' . $e->getMessage());
+            Log::error('Unit Index Error: '.$e->getMessage());
+
             return Inertia::render('library/unit/List', [
                 'units' => [],
                 'error' => 'Failed to load units.',
@@ -59,7 +80,8 @@ class UnitController extends Controller
 
             return redirect()->route('unit.index')->with('success', 'Unit created successfully.');
         } catch (\Exception $e) {
-            Log::error('Unit Store Error: ' . $e->getMessage());
+            Log::error('Unit Store Error: '.$e->getMessage());
+
             return redirect()->route('unit.index')->with('error', 'Failed to create unit.');
         }
     }
@@ -80,7 +102,8 @@ class UnitController extends Controller
 
             return redirect()->route('unit.index')->with('success', 'Unit updated successfully.');
         } catch (\Exception $e) {
-            Log::error('Unit Update Error: ' . $e->getMessage());
+            Log::error('Unit Update Error: '.$e->getMessage());
+
             return redirect()->route('unit.index')->with('error', 'Failed to update unit.');
         }
     }
@@ -89,9 +112,11 @@ class UnitController extends Controller
     {
         try {
             Unit::findOrFail($id)->delete();
+
             return redirect()->route('unit.index')->with('success', 'Unit deleted successfully.');
         } catch (\Exception $e) {
-            Log::error('Unit Delete Error: ' . $e->getMessage());
+            Log::error('Unit Delete Error: '.$e->getMessage());
+
             return redirect()->route('unit.index')->with('error', 'Failed to delete unit.');
         }
     }
@@ -102,20 +127,38 @@ class UnitController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $units = Unit::latest()
-            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
-            ->get()
-            ->map(fn($u) => [
+        $query = Unit::latest();
+
+        // Apply filters
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $units = $query->get()
+            ->map(fn ($u) => [
                 'name' => $u->name,
-                'status' => $u->status ? 'Active' : 'Inactive', // FIXED
+                'status' => $u->status ? 'Active' : 'Inactive',
                 'created_at' => $u->created_at ? $u->created_at->format('Y-m-d H:i') : '',
             ])->toArray();
 
         $columns = [
-            ['label'=>'#', 'key'=>'index', 'callback'=>fn($r,$i)=> $i+1],
-            ['label'=>'Name', 'key'=>'name'],
-            ['label'=>'Status', 'key'=>'status'],
-            ['label'=>'Created At', 'key'=>'created_at'],
+            ['label' => '#', 'key' => 'index', 'callback' => fn ($r, $i) => $i + 1],
+            ['label' => 'Name', 'key' => 'name'],
+            ['label' => 'Status', 'key' => 'status'],
+            ['label' => 'Created At', 'key' => 'created_at'],
         ];
 
         $data = [
@@ -127,9 +170,9 @@ class UnitController extends Controller
             'orientation' => $request->get('orientation', 'portrait'),
         ];
 
-        Pdf::setOptions(['isHtml5ParserEnabled'=>true, 'isRemoteEnabled'=>true, 'defaultFont'=>'DejaVu Sans']);
+        Pdf::setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
         $pdf = Pdf::loadView('reports.common.list', $data)
-                  ->setPaper('a4', $data['orientation']);
+            ->setPaper('a4', $data['orientation']);
 
         return $pdf->stream('unit-list.pdf');
     }
@@ -140,23 +183,41 @@ class UnitController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $rows = Unit::latest()
-            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
-            ->get()
-            ->map(fn($u) => [
+        $query = Unit::latest();
+
+        // Apply filters
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $rows = $query->get()
+            ->map(fn ($u) => [
                 'name' => $u->name,
-                'status' => $u->status ? 'Active' : 'Inactive', // FIXED
+                'status' => $u->status ? 'Active' : 'Inactive',
                 'created_at' => $u->created_at ? $u->created_at->format('Y-m-d H:i') : '',
             ])->toArray();
 
         $columns = [
-            ['label'=>'#', 'key'=>'index', 'callback'=>fn($r,$i)=> $i+1],
-            ['label'=>'Name', 'key'=>'name'],
-            ['label'=>'Status', 'key'=>'status'],
-            ['label'=>'Created At', 'key'=>'created_at'],
+            ['label' => '#', 'key' => 'index', 'callback' => fn ($r, $i) => $i + 1],
+            ['label' => 'Name', 'key' => 'name'],
+            ['label' => 'Status', 'key' => 'status'],
+            ['label' => 'Created At', 'key' => 'created_at'],
         ];
 
-        $headings = array_map(fn($c) => $c['label'], $columns);
+        $headings = array_map(fn ($c) => $c['label'], $columns);
 
         $body = [];
         foreach ($rows as $i => $row) {

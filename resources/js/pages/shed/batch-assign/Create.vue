@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { type BreadcrumbItem } from '@/types'
+import { useNotifier } from '@/composables/useNotifier'
 import { 
     ArrowLeft, 
     Package, 
@@ -39,6 +40,9 @@ const props = defineProps<{
   batches: Array<any>
   breeds: Array<any>
 }>()
+
+// Notifier composable
+const { showError } = useNotifier()
 
 // Form state
 const selectedShedReceiveId = ref<number | string>('')
@@ -204,9 +208,62 @@ const removeBatch = (index: number) => {
   form.batches.splice(index, 1)
 }
 
+
+// Validation for duplicates
+const validateDuplicates = () => {
+  const duplicates = []
+  const seen = new Set()
+  
+  form.batches.forEach((batch, index) => {
+    if (!batch.level || !batch.batch_no) return
+    
+    const key = `${form.company_id}-${form.project_id}-${form.flock_id}-${batch.level}-${batch.batch_no}`
+    
+    if (seen.has(key)) {
+      duplicates.push({
+        index,
+        message: `Row ${index + 1}: You have selected the same batch multiple times. Please choose different batches for each row.`
+      })
+    } else {
+      seen.add(key)
+    }
+  })
+  
+  return duplicates
+}
+
 const submit = () => {
+  const duplicates = validateDuplicates()
+  
+  if (duplicates.length > 0) {
+    // Show error modal with detailed messages
+    const errorDetails = duplicates.map(d => d.message).join('\n\n')
+    showError(
+      `Duplicate Batch Assignments Detected\n\n${errorDetails}\n\nPlease select different batches and try again.`,
+      'Validation Error'
+    )
+    return
+  }
+  
   form.post('/batch-assign', {
-    onSuccess: () => form.reset()
+    onSuccess: () => form.reset(),
+    onError: (errors) => {
+      // Handle server-side validation errors
+      if (errors.error) {
+        showError(errors.error, 'Batch Assignment Error')
+        return
+      }
+      
+      // Handle specific batch duplicate errors
+      const duplicateErrors = Object.keys(errors).filter(key => key.includes('duplicate'))
+      if (duplicateErrors.length > 0) {
+        const errorDetails = duplicateErrors.map(key => errors[key]).join('\n\n')
+        showError(
+          `Already Assigned this Batch.\n\n${errorDetails}\n\n Please select different batches and try again.`,
+          'Duplicate Batch Assignment'
+        )
+      }
+    }
   })
 }
 
@@ -215,11 +272,13 @@ const isSubmitDisabled = computed(() => {
   return !selectedShedReceiveId.value || form.batches.length <= 0 || form.batches.some(b => !b.level)
 })
 
-// Auto-calculate total quantities for each batch
+// Auto-calculate total quantities for each batch and check for duplicates
 watch(
   () => form.batches,
   () => {
-    form.batches.forEach(batch => {
+    const seen = new Set()
+    
+    form.batches.forEach((batch, index) => {
       // Auto-calculate totals
       batch.batch_received_total_qty = (batch.batch_received_female_qty || 0) + (batch.batch_received_male_qty || 0)
       batch.batch_total_mortality = (batch.batch_female_mortality || 0) + (batch.batch_male_mortality || 0)
@@ -229,15 +288,27 @@ watch(
       batch.batch_female_qty = (batch.batch_received_female_qty || 0) + (batch.batch_excess_female || 0) -  (batch.batch_female_mortality || 0)-(batch.batch_sortage_female || 0)
       batch.batch_male_qty = (batch.batch_received_male_qty || 0) + (batch.batch_excess_male || 0) -  (batch.batch_male_mortality || 0)-(batch.batch_sortage_male || 0)
       
-      
       batch.batch_total_qty = (batch.batch_female_qty || 0) + (batch.batch_male_qty || 0)
 
       if (batch.batch_received_female_qty > 0) {
         const percent = (batch.batch_excess_female / batch.batch_received_female_qty) * 100
         batch.percentage = Math.round(percent * 100) / 100  // number like 12.34
-        // Or if you want string: batch.percentage = percent.toFixed(2)
       } else {
         batch.percentage = 0
+      }
+      
+      // Check for duplicates
+      if (batch.level && batch.batch_no) {
+        const key = `${form.company_id}-${form.project_id}-${form.flock_id}-${batch.level}-${batch.batch_no}`
+        const duplicateCount = form.batches.filter(b => 
+          b.level === batch.level && 
+          b.batch_no === batch.batch_no
+        ).length
+        
+        // Add visual indicator for duplicates
+        batch.isDuplicate = duplicateCount > 1
+      } else {
+        batch.isDuplicate = false
       }
     })
   },
@@ -456,15 +527,23 @@ watch(
         <div
           v-for="(batch, index) in form.batches"
           :key="index"
-          class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700"
+          class="rounded-lg border p-4 transition-all duration-200"
+          :class="batch.isDuplicate 
+            ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20' 
+            : 'border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-700'"
         >
           <!-- Batch Header -->
           <div class="mb-4 flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <div class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">
+              <div class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
+                   :class="batch.isDuplicate ? 'bg-red-500' : 'bg-blue-500'">
                 {{ index + 1 }}
               </div>
               <h3 class="text-sm font-medium text-gray-900 dark:text-white">Batch {{ index + 1 }}</h3>
+              <div v-if="batch.isDuplicate" class="flex items-center gap-1 rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-200">
+                <AlertCircle class="h-3 w-3" />
+                Duplicate Batch
+              </div>
             </div>
             <button
               v-if="form.batches.length > 1"

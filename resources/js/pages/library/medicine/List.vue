@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import HeadingSmall from '@/components/HeadingSmall.vue';
+import Pagination from '@/components/Pagination.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,48 +11,78 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 // Medicine interface
 interface Medicine {
     id: number;
     name: string;
-    status: number; // 0 or 1
+    status: string; // 'Active' | 'Inactive'
     created_at: string;
 }
 
 // Props
 const props = defineProps<{
-    medicines: Medicine[];
-    filters: { search?: string; per_page?: number; page?: number };
+    medicines: {
+        data: Medicine[];
+        meta: { current_page: number; last_page: number; per_page: number; total: number };
+    };
+    filters: { 
+        search?: string; 
+        per_page?: number; 
+        page?: number;
+        status?: string;
+        date_from?: string;
+        date_to?: string;
+    };
 }>();
 
-// Filters for export
-const filters = ref({
-    search: '',
-    sort: 'name',
-    direction: 'asc',
-});
+const { search, perPage, page, status, dateFrom, dateTo } = useListFilters({ routeName: '/medicine', filters: props.filters });
+const { can } = usePermissions();
 
+// Export dropdown
 const openDropdown = ref(false);
-
 const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
-    const url = route('reports.medicine.pdf', { ...filters.value, orientation });
+    const exportFilters = {
+        search: search.value,
+        per_page: perPage.value,
+        status: status.value,
+        date_from: dateFrom.value,
+        date_to: dateTo.value,
+        orientation
+    };
+    const url = route('reports.medicine.pdf', exportFilters);
     window.open(url, '_blank');
 };
 
 const exportExcel = () => {
-    const url = route('reports.medicine.excel', { ...filters.value });
+    const exportFilters = {
+        search: search.value,
+        per_page: perPage.value,
+        status: status.value,
+        date_from: dateFrom.value,
+        date_to: dateTo.value
+    };
+    const url = route('reports.medicine.excel', exportFilters);
     window.open(url, '_blank');
 };
 
-useListFilters({
-    routeName: '/medicine',
-    filters: props.filters,
-});
+// ✅ Filter methods
+const clearFilters = () => {
+    search.value = '';
+    perPage.value = 10;
+    status.value = '';
+    dateFrom.value = '';
+    dateTo.value = '';
+    page.value = 1;
+};
 
-const { can } = usePermissions();
-const medicines = ref<Medicine[]>([...props.medicines]);
+// ✅ Computed properties for filter summary
+const hasActiveFilters = computed(() => {
+    return status.value || 
+           dateFrom.value || 
+           dateTo.value;
+});
 
 // Modal state
 const showModal = ref(false);
@@ -122,7 +153,7 @@ const openModal = (medicine: Medicine | null = null) => {
     if (medicine) {
         editingMedicine.value = medicine;
         form.name = medicine.name;
-        form.status = medicine.status;
+        form.status = medicine.status === 'Active' ? 1 : 0;
     } else {
         editingMedicine.value = null;
         form.reset();
@@ -147,24 +178,19 @@ const submit = () => {
         form.put(route('medicine.update', editingMedicine.value.id), {
             preserveScroll: true,
             onSuccess: () => {
-                const i = medicines.value.findIndex((m) => m.id === editingMedicine.value!.id);
-                if (i !== -1) {
-                    medicines.value[i] = { ...medicines.value[i], ...form };
-                }
                 resetForm();
+                // Refresh the page to show updated data
+                window.location.reload();
             },
             onError: () => Swal.fire('Error!', 'Could not update medicine.', 'error'),
         });
     } else {
         form.post(route('medicine.store'), {
             preserveScroll: true,
-            onSuccess: (page) => {
-                if ((page as any).props?.medicines) {
-                    medicines.value = (page as any).props.medicines;
-                } else {
-                    medicines.value.unshift({ id: Date.now(), ...form, created_at: new Date().toISOString() });
-                }
+            onSuccess: () => {
                 resetForm();
+                // Refresh the page to show updated data
+                window.location.reload();
             },
             onError: () => Swal.fire('Error!', 'Could not create medicine.', 'error'),
         });
@@ -173,15 +199,15 @@ const submit = () => {
 
 // Toggle status
 const toggleStatus = (medicine: Medicine) => {
-    const newStatus = medicine.status === 1 ? 0 : 1;
+    const newStatus = medicine.status === 'Active' ? 0 : 1;
     router.put(
         route('medicine.update', medicine.id),
         { name: medicine.name, status: newStatus },
         {
             preserveScroll: true,
             onSuccess: () => {
-                const i = medicines.value.findIndex((m) => m.id === medicine.id);
-                if (i !== -1) medicines.value[i].status = newStatus;
+                // Refresh the page to show updated data
+                window.location.reload();
             },
             onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
             onFinish: () => (openDropdownId.value = null),
@@ -199,9 +225,6 @@ const breadcrumbs = [
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head title="Medicines" />
-
-        <!-- Filters -->
-        <FilterControls :filters="props.filters" routeName="/medicine" />
 
         <div class="px-4 py-6">
             <div class="mb-4 flex items-center justify-between">
@@ -237,6 +260,76 @@ const breadcrumbs = [
                 </div>
             </div>
 
+            <!-- Filter Section -->
+            <div class="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-800">Filters</h3>
+                    <button
+                        @click="clearFilters"
+                        class="text-sm text-gray-600 hover:text-gray-800"
+                    >
+                        Clear All
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <!-- Search -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                        <input
+                            v-model="search"
+                            type="text"
+                            placeholder="Medicine name..."
+                            class="block w-full px-3 py-2 text-sm text-gray-900 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select
+                            v-model="status"
+                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                    <!-- Per Page -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Per Page</label>
+                        <select
+                            v-model="perPage"
+                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="10">10 per page</option>
+                            <option value="25">25 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="100">100 per page</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input
+                                v-model="dateFrom"
+                                type="date"
+                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                            />
+                            <input
+                                v-model="dateTo"
+                                type="date"
+                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Medicine Table -->
             <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
                 <table class="w-full border-collapse text-left">
@@ -251,15 +344,15 @@ const breadcrumbs = [
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
                         <tr
-                            v-for="(medicine, index) in medicines"
+                            v-for="(medicine, index) in (props.medicines?.data ?? [])"
                             :key="medicine.id"
                             class="odd:bg-white even:bg-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
                         >
-                            <td class="px-6 py-4">{{ index + 1 }}</td>
+                            <td class="px-6 py-4">{{ ((props.medicines?.meta?.current_page || 1) - 1) * (props.medicines?.meta?.per_page || 10) + index + 1 }}</td>
                             <td class="px-6 py-4">{{ medicine.name }}</td>
                             <td class="px-6 py-4">
-                                <span :class="medicine.status == 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
-                                    {{ medicine.status == 1 ? 'Active' : 'Inactive' }}
+                                <span :class="medicine.status === 'Active' ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
+                                    {{ medicine.status }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">{{ dayjs(medicine.created_at).format('YYYY-MM-DD') }}</td>
@@ -274,18 +367,21 @@ const breadcrumbs = [
                                 >
                                     <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="openModal(medicine)">✏ Edit</button>
                                     <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="toggleStatus(medicine)">
-                                        {{ medicine.status === 1 ? 'Inactive' : 'Activate' }}
+                                        {{ medicine.status === 'Active' ? 'Inactive' : 'Activate' }}
                                     </button>
                                 </div>
                             </td>
                         </tr>
 
-                        <tr v-if="medicines.length === 0">
+                        <tr v-if="(props.medicines?.data ?? []).length === 0">
                             <td colspan="5" class="px-6 py-6 text-center text-gray-500">No medicines found.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            <Pagination v-if="props.medicines?.meta" :meta="props.medicines.meta" class="mt-6" />
         </div>
 
         <!-- Modal -->

@@ -16,27 +16,53 @@ class MedicineController extends Controller
     /**
      * Display a listing of the resource.
      */
-   public function index()
+    public function index(Request $request)
     {
         try {
-            $medicines = Medicine::latest()
-            ->get()
-            ->map(fn($m) => [
-                'id' => $m->id,
-                'name' => $m->name,
-                'status' => (int) $m->status, // 0 or 1
-                'created_at' => $m->created_at ? $m->created_at->format('Y-m-d H:i:s') : '',
-            ])->toArray();
+            $query = Medicine::query();
+
+            // Search filter
+            if ($search = $request->get('search')) {
+                $query->where('name', 'like', "%{$search}%");
+            }
+
+            // Status filter
+            if ($status = $request->get('status')) {
+                $statusValue = $status === 'Active' ? 1 : 0;
+                $query->where('status', $statusValue);
+            }
+
+            // Date range filters
+            if ($dateFrom = $request->get('date_from')) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            }
+            
+            if ($dateTo = $request->get('date_to')) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
+
+            // Per page
+            $perPage = $request->get('per_page', 10);
+            
+            // Get paginated results
+            $medicines = $query->orderBy('id', 'desc')->paginate($perPage)->withQueryString()->through(function ($medicine) {
+                return [
+                    'id' => $medicine->id,
+                    'name' => $medicine->name,
+                    'status' => $medicine->status ? 'Active' : 'Inactive',
+                    'created_at' => $medicine->created_at ? $medicine->created_at->format('Y-m-d H:i') : null,
+                ];
+            });
 
             return Inertia::render('library/medicine/List', [
                 'medicines' => $medicines,
-                'filters' => request()->all(),
+                'filters' => $request->only(['search', 'status', 'date_from', 'date_to', 'per_page']),
             ]);
         } catch (\Exception $e) {
             Log::error('Medicine index error: ' . $e->getMessage());
             return Inertia::render('library/medicine/List', [
                 'medicines' => [],
-                'filters' => request()->all(),
+                'filters' => $request->only(['search', 'status', 'date_from', 'date_to', 'per_page']),
                 'error' => 'Failed to fetch medicines.',
             ]);
         }
@@ -114,14 +140,31 @@ class MedicineController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $rows = Medicine::latest()
-            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
-            ->get()
-            ->map(fn($m) => [
-                'name' => $m->name,
-                'status' => $m->status ? 'Active' : 'Inactive',
-                'created_at' => $m->created_at ? $m->created_at->format('Y-m-d H:i') : '',
-            ])->toArray();
+        $query = Medicine::query();
+        
+        // Apply filters
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+        
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+        
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $rows = $query->orderBy('id', 'desc')->get()->map(fn($m) => [
+            'name' => $m->name,
+            'status' => $m->status ? 'Active' : 'Inactive',
+            'created_at' => $m->created_at ? $m->created_at->format('Y-m-d H:i') : '',
+        ])->toArray();
 
         $columns = [
             ['label'=>'#', 'key'=>'index', 'callback'=>fn($r,$i)=> $i+1],
@@ -152,14 +195,31 @@ class MedicineController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $rows = Medicine::latest()
-            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
-            ->get()
-            ->map(fn($m) => [
-                'name' => $m->name,
-                'status' => $m->status ? 'Active' : 'Inactive',
-                'created_at' => $m->created_at ? $m->created_at->format('Y-m-d H:i') : '',
-            ])->toArray();
+        $query = Medicine::query();
+        
+        // Apply filters
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+        
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+        
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $rows = $query->orderBy('id', 'desc')->get()->map(fn($m) => [
+            'name' => $m->name,
+            'status' => $m->status ? 'Active' : 'Inactive',
+            'created_at' => $m->created_at ? $m->created_at->format('Y-m-d H:i') : '',
+        ])->toArray();
 
         $columns = [
             ['label'=>'#', 'key'=>'index', 'callback'=>fn($r,$i)=> $i+1],

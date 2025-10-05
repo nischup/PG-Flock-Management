@@ -12,26 +12,69 @@ use App\Exports\ArrayExport;
 
 class SupplierController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $suppliers = Supplier::orderBy('id', 'desc')->get()->map(function ($supplier) {
-            return [
-                'id' => $supplier->id,
-                'name' => $supplier->name,
-                'supplier_type' => $supplier->supplier_type,
-                'address' => $supplier->address,
-                'origin' => $supplier->origin,
-                'contact_person' => $supplier->contact_person,
-                'contact_person_email' => $supplier->contact_person_email,
-                'contact_person_mobile' => $supplier->contact_person_mobile,
-                'status' => $supplier->status,
-                'created_at' => $supplier->created_at->format('d M Y'),
-            ];
-        });
+        try {
+            $query = Supplier::query();
 
-        return Inertia::render('library/supplier/List', [
-            'suppliers' => $suppliers,
-        ]);
+            // Search filter
+            if ($search = $request->get('search')) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhere('contact_person', 'like', "%{$search}%")
+                      ->orWhere('contact_person_email', 'like', "%{$search}%");
+            }
+
+            // Status filter
+            if ($status = $request->get('status')) {
+                $statusValue = $status === 'Active' ? 1 : 0;
+                $query->where('status', $statusValue);
+            }
+
+            // Supplier Type filter
+            if ($supplierType = $request->get('supplier_type')) {
+                $query->where('supplier_type', $supplierType);
+            }
+
+            // Date range filters
+            if ($dateFrom = $request->get('date_from')) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            }
+            
+            if ($dateTo = $request->get('date_to')) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
+
+            // Per page
+            $perPage = $request->get('per_page', 10);
+            
+            // Get paginated results
+            $suppliers = $query->orderBy('id', 'desc')->paginate($perPage)->withQueryString()->through(function ($supplier) {
+                return [
+                    'id' => $supplier->id,
+                    'name' => $supplier->name,
+                    'supplier_type' => $supplier->supplier_type,
+                    'address' => $supplier->address,
+                    'origin' => $supplier->origin,
+                    'contact_person' => $supplier->contact_person,
+                    'contact_person_email' => $supplier->contact_person_email,
+                    'contact_person_mobile' => $supplier->contact_person_mobile,
+                    'status' => $supplier->status ? 'Active' : 'Inactive',
+                    'created_at' => $supplier->created_at ? $supplier->created_at->format('Y-m-d H:i') : null,
+                ];
+            });
+
+            return Inertia::render('library/supplier/List', [
+                'suppliers' => $suppliers,
+                'filters' => $request->only(['search', 'status', 'supplier_type', 'date_from', 'date_to', 'per_page']),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Supplier Index Error: ' . $e->getMessage());
+            return Inertia::render('library/supplier/List', [
+                'suppliers' => [],
+                'filters' => $request->only(['search', 'status', 'supplier_type', 'date_from', 'date_to', 'per_page']),
+                'error' => 'Failed to load suppliers.',
+            ]);
+        }
     }
 
     public function store(Request $request)
@@ -84,17 +127,40 @@ class SupplierController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $suppliers = Supplier::latest()
-            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
-            ->get()
-            ->map(fn($s) => [
-                'name' => $s->name,
-                'type' => $s->supplier_type,
-                'address' => $s->address,
-                'contact' => $s->contact_person,
-                'status' => $s->status ? 'Active' : 'Inactive',
-                'created_at' => $s->created_at?->format('Y-m-d H:i'),
-            ])->toArray();
+        $query = Supplier::query();
+        
+        // Apply filters
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('contact_person', 'like', "%{$request->search}%")
+                  ->orWhere('contact_person_email', 'like', "%{$request->search}%");
+        }
+        
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+        
+        if ($request->supplier_type) {
+            $query->where('supplier_type', $request->supplier_type);
+        }
+        
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $suppliers = $query->orderBy('id', 'desc')->get()->map(fn($s) => [
+            'name' => $s->name,
+            'type' => $s->supplier_type,
+            'address' => $s->address,
+            'contact' => $s->contact_person,
+            'status' => $s->status ? 'Active' : 'Inactive',
+            'created_at' => $s->created_at?->format('Y-m-d H:i'),
+        ])->toArray();
 
         $columns = [
             ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
@@ -130,17 +196,40 @@ class SupplierController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $rows = Supplier::latest()
-            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
-            ->get()
-            ->map(fn($s) => [
-                'name' => $s->name,
-                'type' => $s->supplier_type,
-                'address' => $s->address,
-                'contact' => $s->contact_person,
-                'status' => $s->status ? 'Active' : 'Inactive',
-                'created_at' => $s->created_at?->format('Y-m-d H:i'),
-            ])->toArray();
+        $query = Supplier::query();
+        
+        // Apply filters
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('contact_person', 'like', "%{$request->search}%")
+                  ->orWhere('contact_person_email', 'like', "%{$request->search}%");
+        }
+        
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+        
+        if ($request->supplier_type) {
+            $query->where('supplier_type', $request->supplier_type);
+        }
+        
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $rows = $query->orderBy('id', 'desc')->get()->map(fn($s) => [
+            'name' => $s->name,
+            'type' => $s->supplier_type,
+            'address' => $s->address,
+            'contact' => $s->contact_person,
+            'status' => $s->status ? 'Active' : 'Inactive',
+            'created_at' => $s->created_at?->format('Y-m-d H:i'),
+        ])->toArray();
 
         $columns = [
             ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],

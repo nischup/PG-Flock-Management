@@ -31,28 +31,48 @@ class DiseaseController extends Controller
         try {
             $query = Disease::query();
 
-            if ($request->filled('search')) {
-                $query->where('name', 'like', '%' . $request->search . '%');
+            // Search filter
+            if ($search = $request->get('search')) {
+                $query->where('name', 'like', "%{$search}%");
             }
 
-            $diseases = $query->latest()->get()->map(function ($disease) {
+            // Status filter
+            if ($status = $request->get('status')) {
+                $statusValue = $status === 'Active' ? 1 : 0;
+                $query->where('status', $statusValue);
+            }
+
+            // Date range filters
+            if ($dateFrom = $request->get('date_from')) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            }
+            
+            if ($dateTo = $request->get('date_to')) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
+
+            // Per page
+            $perPage = $request->get('per_page', 10);
+            
+            // Get paginated results
+            $diseases = $query->orderBy('id', 'desc')->paginate($perPage)->withQueryString()->through(function ($disease) {
                 return [
                     'id' => $disease->id,
                     'name' => $disease->name,
                     'status' => $disease->status ? 'Active' : 'Inactive',
-                    'created_at' => $disease->created_at ? $disease->created_at->format('d M Y') : null,
+                    'created_at' => $disease->created_at ? $disease->created_at->format('Y-m-d H:i') : null,
                 ];
             });
 
             return Inertia::render('library/disease/List', [
-                'diseases' => $diseases->toArray(),
-                'filters' => $request->only(['search', 'per_page', 'page']),
+                'diseases' => $diseases,
+                'filters' => $request->only(['search', 'status', 'date_from', 'date_to', 'per_page']),
             ]);
         } catch (\Exception $e) {
             Log::error('Disease Index Error: ' . $e->getMessage());
             return Inertia::render('library/disease/List', [
                 'diseases' => [],
-                'filters' => $request->only(['search', 'per_page', 'page']),
+                'filters' => $request->only(['search', 'status', 'date_from', 'date_to', 'per_page']),
                 'error' => 'Failed to load diseases.',
             ]);
         }
@@ -142,11 +162,26 @@ class DiseaseController extends Controller
     public function exportPdf(Request $request)
     {
         $query = Disease::query();
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+        
+        // Apply filters
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+        
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+        
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        $diseases = $query->latest()->get()->map(function ($disease) {
+        $diseases = $query->orderBy('id', 'desc')->get()->map(function ($disease) {
             return [
                 'name' => $disease->name,
                 'status' => $disease->status ? 'Active' : 'Inactive',
@@ -179,8 +214,27 @@ class DiseaseController extends Controller
      */
     public function exportExcel(Request $request)
     {
-        $rows = Disease::latest()
-            ->when($request->filled('search'), fn($q) => $q->where('name', 'like', '%' . $request->search . '%'))
+        $query = Disease::query();
+        
+        // Apply filters
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+        
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+        
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $rows = $query->orderBy('id', 'desc')
             ->get()
             ->map(fn($disease) => [
                 'name' => $disease->name,
