@@ -10,6 +10,8 @@ use App\Models\DailyOperation\DailySexingError;
 use App\Models\DailyOperation\DailyOperation;
 use App\Models\Production\EggClassification;
 use App\Models\FirmLabTest;
+use App\Models\Ps\PsFirmReceive;
+use App\Models\BirdTransfer\BirdTransfer;
 use App\Models\Master\Flock;
 use App\Models\MovementAdjustment;
 use App\Models\Shed\BatchAssign;
@@ -907,11 +909,56 @@ class DashboardRealtimeService
                 },
             ])->get();
 
+            
+            $flockIds = $flocks->pluck('id')->toArray(); // flat array of IDs
+            $allTransfers = BirdTransfer::whereIn('flock_id', $flockIds)->get()->keyBy('id');
+
+
+            // Preload firm receives for all transaction_nos from these flocks
+            $allTransactionNos = $flocks->flatMap(function ($flock) {
+                return $flock->batchAssigns->pluck('transaction_no')->toArray();
+            })->filter()->unique()->values()->toArray(); // flat array
+
+            $allFirmReceives = PsFirmReceive::whereIn('transaction_no', $allTransactionNos)
+                ->get()
+                ->keyBy('transaction_no');
+
             // Transform data for detailed view
-            $flockDetails = $flocks->map(function ($flock) use ($filters) {
+            $flockDetails = $flocks->map(function ($flock) use ($allTransfers, $allFirmReceives,$filters) {
                 // Get all batch assignments for this flock
                 $batchAssigns = $flock->batchAssigns;
 
+                $totalOpeningBirds  = 0;
+                $totalOpeningMale   = 0;
+                $totalOpeningFemale = 0;
+
+                // Loop through all active batches to calculate opening birds
+                foreach ($batchAssigns as $activeBatch) {
+                    $firmReceive = $allFirmReceives[$activeBatch->transaction_no] ?? null;
+
+                    if ($firmReceive) {
+                        $transfer = $allTransfers[$firmReceive->source_id] ?? null;
+
+                        if ($transfer) {
+                            $openingBatch = $batchAssigns->where('id', $transfer->batch_assign_id)->first();
+                            if (!$openingBatch) {
+                                $openingBatch = BatchAssign::find($transfer->batch_assign_id);
+                            }
+                        } else {
+                            $openingBatch = $activeBatch;
+                        }
+
+                    } else {
+                        $openingBatch = $activeBatch;
+                    }
+
+                    $totalOpeningBirds  += $openingBatch?->batch_total_qty ?? 0;
+                    $totalOpeningMale   += $openingBatch?->batch_male_qty ?? 0;
+                    $totalOpeningFemale += $openingBatch?->batch_female_qty ?? 0;
+                }
+                
+                  
+                
                 // Calculate statistics
                 $totalAssignBirds = $batchAssigns->sum('batch_total_qty');
                 $totalBatchMale = $totalAssignMale = $batchAssigns->sum('batch_male_qty');
@@ -1008,6 +1055,7 @@ class DashboardRealtimeService
                     'assign_male_birds'=>$totalAssignMale,
                     'assign_female_birds'=>$totalAssignFemale,
                     // Statistics
+                    'opening_birds'=>$totalOpeningBirds,
                     'total_birds' => $totalBirds,
                     'male_birds' => $totalMale,
                     'female_birds' => $totalFemale,
@@ -1079,6 +1127,7 @@ class DashboardRealtimeService
                 'flocks' => $flockDetails,
                 'total_flocks' => $flockDetails->count(),
                 'summary' => [
+                    'opening_birds' => $flockDetails->sum('opening_birds'),
                     'total_birds' => $flockDetails->sum('total_birds'),
                     'total_male' => $flockDetails->sum('male_birds'),
                     'total_female' => $flockDetails->sum('female_birds'),

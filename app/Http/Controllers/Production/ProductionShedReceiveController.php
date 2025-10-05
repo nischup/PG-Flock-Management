@@ -104,7 +104,7 @@ class ProductionShedReceiveController extends Controller
             'company_id'       => $firmReceive->receiving_company_id,
             'project_id'       => $firmReceive->project_id,
             'flock_id'         => $flock->id,
-            'flock_no'         => $flock->code,
+            'flock_no'         => $flock->name,
             'shed_id'          => $request->shed_id,
             'shed_female_qty'  => $request->shed_female_qty,
             'shed_male_qty'    => $request->shed_male_qty,
