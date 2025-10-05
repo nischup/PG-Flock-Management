@@ -1193,7 +1193,7 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                       Opening Birds
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-yellow-50">
-                      {{ flock.total_assign_bird.toLocaleString() }}
+                      {{ flock.opening_birds.toLocaleString() }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-blue-50">
                       {{ flock.total_birds.toLocaleString() }}
@@ -1219,21 +1219,7 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                     </td>
                   </tr>
 
-                  <!-- Current Housing Birds Row -->
-                  <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      Current Housing Birds
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-yellow-50">
-                      {{ flock.total_birds.toLocaleString() }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-blue-50">
-                      {{ flock.total_birds.toLocaleString() }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 bg-green-50">
-                      {{ flock.total_birds.toLocaleString() }}
-                    </td>
-                  </tr>
+                  
 
                   <!-- Mortality Row -->
                   <tr class="hover:bg-gray-50">
@@ -1270,22 +1256,6 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                     <td class="px-6 py-4 whitespace-nowrap text-center bg-green-50">
                       <div class="text-sm font-semibold text-orange-600">{{ flock.others_rejection.toLocaleString() }}</div>
                       <div class="text-xs text-gray-500">{{ flock.rejection_precentage }}%</div>
-                    </td>
-                  </tr>
-
-                  <!-- Growth Rate Row (Growing Stage only) -->
-                  <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      Growth Rate
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 bg-yellow-50">
-                      N/A
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center bg-blue-50">
-                      <div class="text-sm font-semibold text-green-600">+2.3%</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 bg-green-50">
-                      N/A
                     </td>
                   </tr>
 

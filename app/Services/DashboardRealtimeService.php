@@ -866,300 +866,224 @@ class DashboardRealtimeService
      * Get detailed flock information for modal
      */
     public function getFlockDetails(array $filters = []): array
-    {
-        try {
-            // Get base query for active flocks
-            $flockQuery = Flock::where('status', 1);
+{
+    try {
+        // Base query for active flocks
+        $flockQuery = Flock::where('status', 1);
 
-            // If filters are applied, only get flocks that have active batch assignments
-            if (! empty($filters['company']) || ! empty($filters['project']) ||
-                ! empty($filters['flock']) || ! empty($filters['shed']) ||
-                ! empty($filters['batch'])) {
+        // Apply filters to batch assignments if provided
+        if (! empty($filters['company']) || ! empty($filters['project']) ||
+            ! empty($filters['flock']) || ! empty($filters['shed']) ||
+            ! empty($filters['batch'])) {
 
-                $batchQuery = BatchAssign::where('status', 1);
+            $batchQuery = BatchAssign::where('status', 1);
 
-                if (! empty($filters['company'])) {
-                    $batchQuery->where('company_id', $filters['company']);
-                }
-                if (! empty($filters['project'])) {
-                    $batchQuery->where('project_id', $filters['project']);
-                }
-                if (! empty($filters['flock'])) {
-                    $batchQuery->where('flock_id', $filters['flock']);
-                }
-                if (! empty($filters['shed'])) {
-                    $batchQuery->where('shed_id', $filters['shed']);
-                }
-                if (! empty($filters['batch'])) {
-                    $batchQuery->where('batch_no', $filters['batch']);
-                }
+            if (! empty($filters['company'])) $batchQuery->where('company_id', $filters['company']);
+            if (! empty($filters['project'])) $batchQuery->where('project_id', $filters['project']);
+            if (! empty($filters['flock'])) $batchQuery->where('flock_id', $filters['flock']);
+            if (! empty($filters['shed'])) $batchQuery->where('shed_id', $filters['shed']);
+            if (! empty($filters['batch'])) $batchQuery->where('batch_no', $filters['batch']);
 
-                // Get unique flock IDs from active batch assignments
-                $activeFlockIds = $batchQuery->distinct()->pluck('flock_id');
+            $activeFlockIds = $batchQuery->distinct()->pluck('flock_id');
+            $flockQuery->whereIn('id', $activeFlockIds);
+        }
 
-                // Get flocks that have active batch assignments
-                $flockQuery->whereIn('id', $activeFlockIds);
+        // Load flocks with related batch assignments
+        $flocks = $flockQuery->with([
+            'batchAssigns' => function ($query) {
+                $query->where('status', 1)->with(['company', 'shed', 'batch', 'project']);
+            },
+        ])->get();
+
+        $flockIds = $flocks->pluck('id')->toArray();
+
+        // Preload transfers and firm receives
+        $allTransfers = BirdTransfer::whereIn('flock_id', $flockIds)->get()->keyBy('id');
+
+        $allTransactionNos = $flocks->flatMap(fn($flock) => $flock->batchAssigns->pluck('transaction_no')->toArray())
+            ->filter()->unique()->values()->toArray();
+
+        $allFirmReceives = PsFirmReceive::whereIn('transaction_no', $allTransactionNos)
+            ->where('source_type', 'transfer')
+            ->get()->keyBy('transaction_no');
+
+        $allBatchAssigns = BatchAssign::whereIn('flock_id', $flockIds)->get()->keyBy('id');
+
+        // Transform flock data
+        $flockDetails = $flocks->map(function ($flock) use ($allTransfers, $allBatchAssigns, $allFirmReceives, $filters) {
+            $batchAssigns = $flock->batchAssigns;
+
+            $totalOpeningBirds  = 0;
+            $totalOpeningMale   = 0;
+            $totalOpeningFemale = 0;
+
+            foreach ($batchAssigns as $batch) {
+                $firmReceive = $allFirmReceives[$batch->transaction_no] ?? null;
+                $transfer = $firmReceive ? ($allTransfers[$firmReceive->source_id] ?? null) : null;
+
+                if ($transfer) {
+                    // Safe access previous batch
+                    $previousBatch = $allBatchAssigns[$transfer->batch_assign_id] 
+                        ?? $batchAssigns->where('id', $transfer->batch_assign_id)->first();
+
+                    if ($previousBatch) {
+                        $totalOpeningBirds  += $previousBatch->batch_total_qty ?? 0;
+                        $totalOpeningMale   += $previousBatch->batch_male_qty ?? 0;
+                        $totalOpeningFemale += $previousBatch->batch_female_qty ?? 0;
+                    } else {
+                        // Fallback to current batch if previous not found
+                        $totalOpeningBirds  += $batch->batch_total_qty ?? 0;
+                        $totalOpeningMale   += $batch->batch_male_qty ?? 0;
+                        $totalOpeningFemale += $batch->batch_female_qty ?? 0;
+                    }
+                } else {
+                    $totalOpeningBirds  += $batch->batch_total_qty ?? 0;
+                    $totalOpeningMale   += $batch->batch_male_qty ?? 0;
+                    $totalOpeningFemale += $batch->batch_female_qty ?? 0;
+                }
             }
 
-            // Get flocks with their related data
-            $flocks = $flockQuery->with([
-                'batchAssigns' => function ($query) {
-                    $query->where('status', 1)
-                        ->with(['company', 'shed', 'batch', 'project']);
-                },
-            ])->get();
+            // Calculate statistics
+            $totalAssignBirds = $batchAssigns->sum('batch_total_qty');
+            $totalBatchMale = $totalAssignMale = $batchAssigns->sum('batch_male_qty');
+            $totalBatchFemale = $totalAssignFemale = $batchAssigns->sum('batch_female_qty');
 
-            
-            $flockIds = $flocks->pluck('id')->toArray(); // flat array of IDs
-            $allTransfers = BirdTransfer::whereIn('flock_id', $flockIds)->get()->keyBy('id');
+            $batchFemaleMortality = $batchAssigns->sum('batch_female_mortality');
+            $batchMaleMortality   = $batchAssigns->sum('batch_male_mortality');
 
+            // Daily operation IDs
+            $operationIds = DailyOperation::whereIn('batchassign_id', $batchAssigns->pluck('id'))->pluck('id');
 
-            // Preload firm receives for all transaction_nos from these flocks
-            $allTransactionNos = $flocks->flatMap(function ($flock) {
-                return $flock->batchAssigns->pluck('transaction_no')->toArray();
-            })->filter()->unique()->values()->toArray(); // flat array
+            // Calculate losses
+            $totaldailyMortalityMale   = DailyMortality::whereIn('daily_operation_id', $operationIds)->sum('male_qty');
+            $totaldailyMortalityFemale = DailyMortality::whereIn('daily_operation_id', $operationIds)->sum('female_qty');
 
-            $allFirmReceives = PsFirmReceive::whereIn('transaction_no', $allTransactionNos)
-                ->get()
-                ->keyBy('transaction_no');
+            $totalLabSendMale   = FirmLabTest::whereIn('batch_assign_id', $batchAssigns->pluck('id'))->sum('firm_lab_send_male_qty');
+            $totalLabSendFemale = FirmLabTest::whereIn('batch_assign_id', $batchAssigns->pluck('id'))->sum('firm_lab_send_female_qty');
 
-            // Transform data for detailed view
-            $flockDetails = $flocks->map(function ($flock) use ($allTransfers, $allFirmReceives,$filters) {
-                // Get all batch assignments for this flock
-                $batchAssigns = $flock->batchAssigns;
+            $totalCullingMale   = DailyCulling::whereIn('daily_operation_id', $operationIds)->sum('male_qty');
+            $totalCullingFemale = DailyCulling::whereIn('daily_operation_id', $operationIds)->sum('female_qty');
 
-                $totalOpeningBirds  = 0;
-                $totalOpeningMale   = 0;
-                $totalOpeningFemale = 0;
+            $totalDestroyedMale   = DailyDestroy::whereIn('daily_operation_id', $operationIds)->sum('male_qty');
+            $totalDestroyedFemale = DailyDestroy::whereIn('daily_operation_id', $operationIds)->sum('female_qty');
 
-                // Loop through all active batches to calculate opening birds
-                foreach ($batchAssigns as $activeBatch) {
-                    $firmReceive = $allFirmReceives[$activeBatch->transaction_no] ?? null;
+            $totalSexingErrorMale   = DailySexingError::whereIn('daily_operation_id', $operationIds)->sum('male_qty');
+            $totalSexingErrorFemale = DailySexingError::whereIn('daily_operation_id', $operationIds)->sum('female_qty');
 
-                    if ($firmReceive) {
-                        $transfer = $allTransfers[$firmReceive->source_id] ?? null;
+            // Current mortality (swapped if needed)
+            $totalMortalityMale   = $totaldailyMortalityMale;
+            $totalMortalityFemale = $totaldailyMortalityFemale;
 
-                        if ($transfer) {
-                            $openingBatch = $batchAssigns->where('id', $transfer->batch_assign_id)->first();
-                            if (!$openingBatch) {
-                                $openingBatch = BatchAssign::find($transfer->batch_assign_id);
-                            }
-                        } else {
-                            $openingBatch = $activeBatch;
-                        }
+            // Final current birds
+            $totalMale   = $totalBatchMale - ($totalMortalityMale + $totalLabSendMale + $totalCullingMale + $totalDestroyedMale + $totalSexingErrorMale);
+            $totalFemale = $totalBatchFemale - ($totalMortalityFemale + $totalLabSendFemale + $totalCullingFemale + $totalDestroyedFemale + $totalSexingErrorFemale);
 
-                    } else {
-                        $openingBatch = $activeBatch;
-                    }
+            $othersRejection = $totalLabSendFemale + $totalCullingFemale + $totalDestroyedFemale + $totalSexingErrorFemale +
+                               $totalLabSendMale + $totalCullingMale + $totalDestroyedMale + $totalSexingErrorMale;
 
-                    $totalOpeningBirds  += $openingBatch?->batch_total_qty ?? 0;
-                    $totalOpeningMale   += $openingBatch?->batch_male_qty ?? 0;
-                    $totalOpeningFemale += $openingBatch?->batch_female_qty ?? 0;
-                }
-                
-                  
-                
-                // Calculate statistics
-                $totalAssignBirds = $batchAssigns->sum('batch_total_qty');
-                $totalBatchMale = $totalAssignMale = $batchAssigns->sum('batch_male_qty');
-                $totalBatchFemale = $totalAssignFemale= $batchAssigns->sum('batch_female_qty');
-                
-                $batchFemaleMortality = $batchAssigns->sum('batch_female_mortality');
-                $batchMaleMortality = $batchAssigns->sum('batch_male_mortality');
-                
+            $totalBirds     = $totalMale + $totalFemale;
+            $totalMortality = $totalMortalityMale + $totalMortalityFemale;
 
-                // Get all daily_operation IDs linked to those batch assigns
-                $operationIds = DailyOperation::whereIn('batchassign_id', $batchAssigns->pluck('id'))
-                    ->pluck('id');
+            $mortalityPercentage       = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
+            $otherRejectionPercentage  = $totalBirds > 0 ? ($othersRejection / $totalBirds) * 100 : 0;
 
-                // 4. Calculate losses from daily_* tables (male/female separately)
-                $totaldailyMortalityMale   = DailyMortality::whereIn('daily_operation_id', $operationIds)->sum('male_qty');
-                $totaldailyMortalityFemale = DailyMortality::whereIn('daily_operation_id', $operationIds)->sum('female_qty');
-
-                $totalLabSendMale     = FirmLabTest::whereIn('batch_assign_id', $batchAssigns->pluck('id'))->sum('firm_lab_send_male_qty');
-                $totalLabSendFemale   = FirmLabTest::whereIn('batch_assign_id', $batchAssigns->pluck('id'))->sum('firm_lab_send_female_qty');
-
-                $totalCullingMale     = DailyCulling::whereIn('daily_operation_id', $operationIds)->sum('male_qty');
-                $totalCullingFemale   = DailyCulling::whereIn('daily_operation_id', $operationIds)->sum('female_qty');
-
-                $totalDestroyedMale   = DailyDestroy::whereIn('daily_operation_id', $operationIds)->sum('male_qty');
-                $totalDestroyedFemale = DailyDestroy::whereIn('daily_operation_id', $operationIds)->sum('female_qty');
-
-                $totalSexingErrorMale   = DailySexingError::whereIn('daily_operation_id', $operationIds)->sum('male_qty');
-                $totalSexingErrorFemale = DailySexingError::whereIn('daily_operation_id', $operationIds)->sum('female_qty');
-
-
-
-
-                 $totalMortalityMale =   $totaldailyMortalityFemale ;
-                 $totalMortalityFemale =  $totaldailyMortalityMale;
-                // 5. Final current birds
-                $totalMale = $totalBatchMale - (
-                    $totaldailyMortalityMale+
-                    $totalLabSendMale +
-                    $totalCullingMale +
-                    $totalDestroyedMale +
-                    $totalSexingErrorMale
-                );
-
-                $totalFemale = $totalBatchFemale - (
-                    $totaldailyMortalityFemale+
-                    $totalLabSendFemale +
-                    $totalCullingFemale +
-                    $totalDestroyedFemale +
-                    $totalSexingErrorFemale
-                );
-
-                $othersRejection = $totalLabSendFemale +
-                    $totalCullingFemale +
-                    $totalDestroyedFemale +
-                    $totalSexingErrorFemale + $totalLabSendMale +
-                    $totalCullingMale +
-                    $totalDestroyedMale +
-                    $totalSexingErrorMale;
-                
-
-                $totalBirds = $totalMale + $totalFemale;
-
-
-                $totalMortality = $totalMortalityMale + $totalMortalityFemale;
-
-                // Get recent daily operations for this flock
-                $recentOperations = $this->getRecentOperationsForFlock($flock->id, $filters);
-
-                // Get egg collection data for this flock
-                $eggData = $this->getEggDataForFlock($flock->id, $filters);
-
-                // Get mortality data for this flock
-                $mortalityData = $this->getMortalityDataForFlock($flock->id, $filters);
-
-                // Calculate mortality percentage
-                $mortalityPercentage = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
-
-                // Calculate mortality percentage
-                $otherRejectionPercentage = $totalBirds > 0 ? ($othersRejection / $totalBirds) * 100 : 0;
-
-                // Get unique companies, projects, and sheds for this flock
-                $companies = $batchAssigns->pluck('company')->unique('id')->filter()->values();
-                $projects = $batchAssigns->pluck('project')->unique('id')->filter()->values();
-                $sheds = $batchAssigns->pluck('shed')->unique('id')->filter()->values();
-
-                return [
-                    'id' => $flock->id,
-                    'code' => $flock->code,
-                    'name' => $flock->name,
-                    'status' => $flock->status,
-                    'created_at' => $flock->created_at,
-                    'updated_at' => $flock->updated_at,
-                    'total_assign_bird'=>$totalAssignBirds,
-                    'assign_male_birds'=>$totalAssignMale,
-                    'assign_female_birds'=>$totalAssignFemale,
-                    // Statistics
-                    'opening_birds'=>$totalOpeningBirds,
-                    'total_birds' => $totalBirds,
-                    'male_birds' => $totalMale,
-                    'female_birds' => $totalFemale,
-                    'total_mortality' => $totalMortality,
-                    'others_rejection'=>$othersRejection,
-                    'rejection_precentage'=> round($otherRejectionPercentage, 2),
-                    'male_mortality' => $totalMortalityMale,
-                    'female_mortality' => $totalMortalityFemale,
-                    'mortality_percentage' => round($mortalityPercentage, 2),
-
-                    // Related entities
-                    'companies' => $companies->map(function ($company) {
-                        return [
-                            'name' => $company->name,
-                        ];
-                    }),
-                    'projects' => $projects->map(function ($project) {
-                        return [
-                            'name' => $project->name,
-                        ];
-                    }),
-                    'sheds' => $sheds->map(function ($shed) {
-                        return [
-                            'name' => $shed->name,
-                        ];
-                    }),
-
-                    // Batch assignments
-                    'batch_assignments' => $batchAssigns->map(function ($batch) {
-                        return [
-                            'id' => $batch->id,
-                            'batch_no' => $batch->batch_no,
-                            'batch_name' => $batch->batch?->name ?? 'N/A',
-                            'transaction_no' => $batch->transaction_no,
-                            'job_no' => $batch->job_no,
-                            'stage' => $this->getStageName($batch->stage),
-                            'stage_number' => $batch->stage,
-                            'level' => $batch->level,
-                            'percentage' => $batch->percentage ?? 0,
-                            'total_qty' => $batch->batch_total_qty,
-                            'male_qty' => $batch->batch_male_qty,
-                            'female_qty' => $batch->batch_female_qty,
-                            'total_mortality' => $batch->batch_total_mortality,
-                            'male_mortality' => $batch->batch_male_mortality,
-                            'female_mortality' => $batch->batch_female_mortality,
-                            'excess_male' => $batch->batch_excess_male,
-                            'excess_female' => $batch->batch_excess_female,
-                            'shortage_male' => $batch->batch_sortage_male,
-                            'shortage_female' => $batch->batch_sortage_female,
-                            'company' => $batch->company?->name ?? 'N/A',
-                            'project' => $batch->project?->name ?? 'N/A',
-                            'shed' => $batch->shed?->name ?? 'N/A',
-                            'created_at' => $batch->created_at,
-                            'updated_at' => $batch->updated_at,
-                        ];
-                    }),
-
-                    // Recent activity
-                    'recent_operations' => $recentOperations,
-                    'egg_data' => $eggData,
-                    'mortality_data' => $mortalityData,
-
-                    // PS Receive information (not available in current schema)
-                    'ps_receive' => null,
-                ];
-            });
+            $companies = $batchAssigns->pluck('company')->unique('id')->filter()->values();
+            $projects  = $batchAssigns->pluck('project')->unique('id')->filter()->values();
+            $sheds     = $batchAssigns->pluck('shed')->unique('id')->filter()->values();
 
             return [
-                'flocks' => $flockDetails,
-                'total_flocks' => $flockDetails->count(),
-                'summary' => [
-                    'opening_birds' => $flockDetails->sum('opening_birds'),
-                    'total_birds' => $flockDetails->sum('total_birds'),
-                    'total_male' => $flockDetails->sum('male_birds'),
-                    'total_female' => $flockDetails->sum('female_birds'),
-                    'total_mortality' => $flockDetails->sum('total_mortality'),
-                    'average_mortality_percentage' => $flockDetails->avg('mortality_percentage'),
-                    'total_batch_assignments' => $flockDetails->sum(function ($flock) {
-                        return count($flock['batch_assignments']);
-                    }),
-                ],
-                'last_updated' => now()->format('Y-m-d H:i:s'),
-                'timestamp' => now()->timestamp,
+                'id' => $flock->id,
+                'code' => $flock->code,
+                'name' => $flock->name,
+                'status' => $flock->status,
+                'created_at' => $flock->created_at,
+                'updated_at' => $flock->updated_at,
+                'total_assign_bird' => $totalAssignBirds,
+                'assign_male_birds' => $totalAssignMale,
+                'assign_female_birds' => $totalAssignFemale,
+                'opening_birds' => $totalOpeningBirds,
+                'total_birds' => $totalBirds,
+                'male_birds' => $totalMale,
+                'female_birds' => $totalFemale,
+                'total_mortality' => $totalMortality,
+                'others_rejection' => $othersRejection,
+                'rejection_precentage' => round($otherRejectionPercentage, 2),
+                'male_mortality' => $totalMortalityMale,
+                'female_mortality' => $totalMortalityFemale,
+                'mortality_percentage' => round($mortalityPercentage, 2),
+                'companies' => $companies->map(fn($c) => ['name' => $c->name]),
+                'projects' => $projects->map(fn($p) => ['name' => $p->name]),
+                'sheds' => $sheds->map(fn($s) => ['name' => $s->name]),
+                'batch_assignments' => $batchAssigns->map(fn($batch) => [
+                    'id' => $batch->id,
+                    'batch_no' => $batch->batch_no,
+                    'batch_name' => $batch->batch?->name ?? 'N/A',
+                    'transaction_no' => $batch->transaction_no,
+                    'job_no' => $batch->job_no,
+                    'stage' => $this->getStageName($batch->stage),
+                    'stage_number' => $batch->stage,
+                    'level' => $batch->level,
+                    'percentage' => $batch->percentage ?? 0,
+                    'total_qty' => $batch->batch_total_qty,
+                    'male_qty' => $batch->batch_male_qty,
+                    'female_qty' => $batch->batch_female_qty,
+                    'total_mortality' => $batch->batch_total_mortality,
+                    'male_mortality' => $batch->batch_male_mortality,
+                    'female_mortality' => $batch->batch_female_mortality,
+                    'excess_male' => $batch->batch_excess_male,
+                    'excess_female' => $batch->batch_excess_female,
+                    'shortage_male' => $batch->batch_sortage_male,
+                    'shortage_female' => $batch->batch_sortage_female,
+                    'company' => $batch->company?->name ?? 'N/A',
+                    'project' => $batch->project?->name ?? 'N/A',
+                    'shed' => $batch->shed?->name ?? 'N/A',
+                    'created_at' => $batch->created_at,
+                    'updated_at' => $batch->updated_at,
+                ]),
+                'recent_operations' => $this->getRecentOperationsForFlock($flock->id, $filters),
+                'egg_data' => $this->getEggDataForFlock($flock->id, $filters),
+                'mortality_data' => $this->getMortalityDataForFlock($flock->id, $filters),
+                'ps_receive' => null,
             ];
+        });
 
-        } catch (\Exception $e) {
-            Log::error('Error getting flock details: '.$e->getMessage());
+        return [
+            'flocks' => $flockDetails,
+            'total_flocks' => $flockDetails->count(),
+            'summary' => [
+                'opening_birds' => $flockDetails->sum('opening_birds'),
+                'total_birds' => $flockDetails->sum('total_birds'),
+                'total_male' => $flockDetails->sum('male_birds'),
+                'total_female' => $flockDetails->sum('female_birds'),
+                'total_mortality' => $flockDetails->sum('total_mortality'),
+                'average_mortality_percentage' => $flockDetails->avg('mortality_percentage'),
+                'total_batch_assignments' => $flockDetails->sum(fn($flock) => count($flock['batch_assignments'])),
+            ],
+            'last_updated' => now()->format('Y-m-d H:i:s'),
+            'timestamp' => now()->timestamp,
+        ];
 
-            return [
-                'flocks' => [],
-                'total_flocks' => 0,
-                'summary' => [
-                    'total_birds' => 0,
-                    'total_male' => 0,
-                    'total_female' => 0,
-                    'total_mortality' => 0,
-                    'average_mortality_percentage' => 0,
-                    'total_batch_assignments' => 0,
-                ],
-                'last_updated' => now()->format('Y-m-d H:i:s'),
-                'timestamp' => now()->timestamp,
-            ];
-        }
+    } catch (\Exception $e) {
+        Log::error('Error getting flock details: '.$e->getMessage());
+
+        return [
+            'flocks' => [],
+            'total_flocks' => 0,
+            'summary' => [
+                'total_birds' => 0,
+                'total_male' => 0,
+                'total_female' => 0,
+                'total_mortality' => 0,
+                'average_mortality_percentage' => 0,
+                'total_batch_assignments' => 0,
+            ],
+            'last_updated' => now()->format('Y-m-d H:i:s'),
+            'timestamp' => now()->timestamp,
+        ];
     }
+}
+
+
 
     /**
      * Get recent operations for a specific flock
