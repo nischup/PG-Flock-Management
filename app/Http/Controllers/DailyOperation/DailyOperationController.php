@@ -411,12 +411,20 @@ class DailyOperationController extends Controller
      */
     public function store(Request $request)
     {
-
-       
-        
-        
-        
         $batch = BatchAssign::findOrFail($request->batchassign_id);
+
+        // Check if daily operation already exists for this batch and date
+        $existingOperation = DailyOperation::where('batchassign_id', $request->batchassign_id)
+            ->where('operation_date', $request->operation_date)
+            ->first();
+
+        if ($existingOperation) {
+            return back()->withErrors([
+                'duplicate_entry' => 'A daily operation record already exists for this batch on ' . 
+                    \Carbon\Carbon::parse($request->operation_date)->format('M d, Y') . 
+                    '. Please select a different date or edit the existing record.'
+            ]);
+        }
 
         $dailyOperation = DailyOperation::create([
             'batchassign_id' => $request->batchassign_id,
