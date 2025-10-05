@@ -199,29 +199,28 @@ class BatchAssignController extends Controller
         $duplicateBatches = [];
 
         foreach ($batches as $index => $batch) {
-            // Check for existing batch assignment with same combination
+            // Check for existing batch assignment with same level (only one batch per level allowed)
             $existingBatch = BatchAssign::where([
                 'company_id' => $companyId,
                 'project_id' => $projectId,
                 'flock_id' => $flockId,
                 'level' => $batch['level'] ?? null,
-                'batch_no' => $batch['batch_no'] ?? 1,
             ])->first();
 
             if ($existingBatch) {
                 $duplicateErrors["batches.{$index}.duplicate"] = 
-                    "This batch has already been assigned for the same Company, Project, and Level. Please try a different batch.";
+                    "Level {$batch['level']} already has a batch assigned. Each level can only have one batch.";
                 $duplicateBatches[] = $index + 1;
             }
         }
 
-        // Check for duplicates within the same form submission
+        // Check for duplicates within the same form submission (based on level only)
         $seen = [];
         foreach ($batches as $index => $batch) {
-            $key = "{$companyId}-{$projectId}-{$flockId}-{$batch['level']}-{$batch['batch_no']}";
+            $key = "{$companyId}-{$projectId}-{$flockId}-{$batch['level']}";
             if (isset($seen[$key])) {
                 $duplicateErrors["batches.{$index}.duplicate_form"] = 
-                    "You have selected the same batch multiple times in this form. Please choose different batches for each row.";
+                    "Level {$batch['level']} is selected multiple times in this form. Each level can only have one batch.";
                 $duplicateBatches[] = $index + 1;
             } else {
                 $seen[$key] = true;
@@ -233,7 +232,7 @@ class BatchAssignController extends Controller
             return back()
                 ->withErrors($duplicateErrors)
                 ->withInput()
-                ->with('error', 'Some batches have already been assigned. Please select different batches and try again.');
+                ->with('error', 'Some levels already have batches assigned. Each level can only have one batch.');
         }
 
         // check once using the Transaction model
@@ -521,6 +520,26 @@ class BatchAssignController extends Controller
     public function update(Request $request, BatchAssign $batchAssign)
     {
         $shedReceive = ShedReceive::findOrFail($request->shed_receive_id);
+
+        // Get company, project, flock from shed receive
+        $companyId = $shedReceive->company_id;
+        $projectId = $shedReceive->project_id;
+        $flockId = $shedReceive->flock_id;
+
+        // Validate for duplicate batch assignments (check if another batch already exists for this level)
+        $existingBatch = BatchAssign::where([
+            'company_id' => $companyId,
+            'project_id' => $projectId,
+            'flock_id' => $flockId,
+            'level' => $request->level ?? null,
+        ])->where('id', '!=', $batchAssign->id) // Exclude current batch being updated
+        ->first();
+
+        if ($existingBatch) {
+            return back()
+                ->withInput()
+                ->with('error', "Level {$request->level} already has a batch assigned. Each level can only have one batch.");
+        }
 
         // Delete existing movement adjustments for this batch assign
         MovementAdjustment::where('stage_id', $batchAssign->id)

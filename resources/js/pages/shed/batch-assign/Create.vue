@@ -215,14 +215,16 @@ const validateDuplicates = () => {
   const seen = new Set()
   
   form.batches.forEach((batch, index) => {
-    if (!batch.level || !batch.batch_no) return
+    if (!batch.level) return
     
-    const key = `${form.company_id}-${form.project_id}-${form.flock_id}-${batch.level}-${batch.batch_no}`
+    // Check for duplicates based on company + project + flock + level only
+    // Each level should only have ONE batch assigned
+    const key = `${form.company_id}-${form.project_id}-${form.flock_id}-${batch.level}`
     
     if (seen.has(key)) {
       duplicates.push({
         index,
-        message: `Row ${index + 1}: You have selected the same batch multiple times. Please choose different batches for each row.`
+        message: `Row ${index + 1}: Level ${batch.level} already has a batch assigned. Each level can only have one batch.`
       })
     } else {
       seen.add(key)
@@ -297,19 +299,17 @@ watch(
         batch.percentage = 0
       }
       
-      // Check for duplicates
-      if (batch.level && batch.batch_no) {
-        const key = `${form.company_id}-${form.project_id}-${form.flock_id}-${batch.level}-${batch.batch_no}`
-        const duplicateCount = form.batches.filter(b => 
-          b.level === batch.level && 
-          b.batch_no === batch.batch_no
-        ).length
-        
-        // Add visual indicator for duplicates
-        batch.isDuplicate = duplicateCount > 1
-      } else {
-        batch.isDuplicate = false
-      }
+        // Check for duplicates based on level only
+        if (batch.level) {
+          const duplicateCount = form.batches.filter(b =>
+            b.level === batch.level
+          ).length
+
+          // Add visual indicator for duplicates
+          batch.isDuplicate = duplicateCount > 1
+        } else {
+          batch.isDuplicate = false
+        }
     })
   },
   { deep: true, immediate: true }

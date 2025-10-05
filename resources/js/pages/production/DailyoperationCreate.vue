@@ -23,7 +23,7 @@ const props = defineProps<{
   feeds?: Array<any>
 }>()
 
-const { showInfo } = useNotifier(); // auto-shows flash messages
+const { showInfo, showError } = useNotifier(); // auto-shows flash messages
 
 // Tabs (keys must match below validations)
 const tabs = [
@@ -305,8 +305,14 @@ function submit() {
   // Optionally, validate all tabs before post:
   // for (const t of tabs) { if (!validateTab(t.key)) { activeTabIndex.value = tabs.findIndex(x => x.key === t.key); return } }
 
-  form.post(route('daily-operations.store'), {
+  form.post(route('daily-operation.store'), {
     onSuccess: () => form.reset(),
+    onError: (errors) => {
+      // Handle duplicate entry error
+      if (errors.duplicate_entry) {
+        showError(errors.duplicate_entry, 'Duplicate Entry')
+      }
+    }
   })
 }
 </script>
