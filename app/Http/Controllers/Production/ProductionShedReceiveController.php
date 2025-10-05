@@ -176,9 +176,23 @@ class ProductionShedReceiveController extends Controller
             $firmReceive = PsFirmReceive::findOrFail($request->job_id);
             $flock = Flock::findOrFail($request->flock_id);
 
-            // Calculate current assigned boxes for this firm receive
-            $currentAssigned = ShedReceive::where('receive_id', $request->job_id)
-                ->sum('shed_total_qty');
+        $shedReceive = ShedReceive::create([
+            'receive_id'       => $request->job_id,   // firm receive reference
+            'job_no'           => $firmReceive->job_no,
+            'transaction_no'   => $firmReceive->transaction_no,
+            'company_id'       => $firmReceive->receiving_company_id,
+            'project_id'       => $firmReceive->project_id,
+            'flock_id'         => $flock->id,
+            'flock_no'         => $flock->name,
+            'shed_id'          => $request->shed_id,
+            'shed_female_qty'  => $request->shed_female_qty,
+            'shed_male_qty'    => $request->shed_male_qty,
+            'shed_total_qty'   => $request->shed_total_qty,
+            'receive_type'     => "pcs",
+            'remarks'          => $request->remarks,
+            'created_by'       => Auth::id(),
+            'status'           => $request->status ?? 1,
+        ]);
 
             $remainingBoxes = $firmReceive->firm_total_qty - $currentAssigned;
             $requestedTotal = $request->shed_total_qty;

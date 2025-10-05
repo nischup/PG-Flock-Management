@@ -30,22 +30,22 @@ class PsFirmReceiveController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('job_no', 'like', "%{$search}%")
-                        ->orWhereHas('flock', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('company', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('project', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('psReceive', fn ($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
+                        ->orWhereHas('flock', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('company', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('project', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('psReceive', fn($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
                 });
             })
-            ->when($request->company_id, fn ($q) => $q->where('receiving_company_id', $request->company_id))
-            ->when($request->flock_id, fn ($q) => $q->where('flock_id', $request->flock_id))
-            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->company_id, fn($q) => $q->where('receiving_company_id', $request->company_id))
+            ->when($request->flock_id, fn($q) => $q->where('flock_id', $request->flock_id))
+            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->orderBy('id', 'desc')
             ->paginate($request->per_page ?? 10)
             ->withQueryString();
 
         return Inertia::render('ps/ps-firm-receive/List', [
-            'psFirmReceives' => $psFirmReceives->through(fn ($item) => [
+            'psFirmReceives' => $psFirmReceives->through(fn($item) => [
                 'id' => $item->id,
                 'ps_receive_id' => $item->ps_receive_id,
                 'job_no' => $item->job_no,
@@ -251,7 +251,7 @@ class PsFirmReceiveController extends Controller
                 'firm_total_qty' => $psFirmReceive->firm_total_qty,
                 'remarks' => $psFirmReceive->remarks,
                 'receive_date' => $psFirmReceive->created_at,
-                'created_by' => $psFirmReceive->created_by,
+                'created_by' => $psFirmReceive->creator->name ?? 'Unknown',
                 'status' => $psFirmReceive->status,
                 'receive_type' => $psFirmReceive->receive_type,
                 'source_type' => $psFirmReceive->source_type,
@@ -396,15 +396,15 @@ class PsFirmReceiveController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('job_no', 'like', "%{$search}%")
-                        ->orWhereHas('flock', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('company', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('psReceive', fn ($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
+                        ->orWhereHas('flock', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('company', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('psReceive', fn($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
                 });
             })
-            ->when($request->company_id, fn ($q) => $q->where('receiving_company_id', $request->company_id))
-            ->when($request->flock_id, fn ($q) => $q->where('flock_id', $request->flock_id))
-            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->company_id, fn($q) => $q->where('receiving_company_id', $request->company_id))
+            ->when($request->flock_id, fn($q) => $q->where('flock_id', $request->flock_id))
+            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->latest()
             ->get()
             ->map(function ($r) {
@@ -422,7 +422,7 @@ class PsFirmReceiveController extends Controller
             ->toArray();
 
         $columns = [
-            ['label' => '#', 'key' => 'index', 'callback' => fn ($r, $i) => $i + 1],
+            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
             ['label' => 'PI No', 'key' => 'pi_no'],
             ['label' => 'Flock Name', 'key' => 'flock_name'],
             ['label' => 'Company', 'key' => 'company_name'],
@@ -461,18 +461,18 @@ class PsFirmReceiveController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('job_no', 'like', "%{$search}%")
-                        ->orWhereHas('flock', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('company', fn ($q2) => $q2->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('psReceive', fn ($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
+                        ->orWhereHas('flock', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('company', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('psReceive', fn($q2) => $q2->where('pi_no', 'like', "%{$search}%"));
                 });
             })
-            ->when($request->company_id, fn ($q) => $q->where('receiving_company_id', $request->company_id))
-            ->when($request->flock_id, fn ($q) => $q->where('flock_id', $request->flock_id))
-            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->company_id, fn($q) => $q->where('receiving_company_id', $request->company_id))
+            ->when($request->flock_id, fn($q) => $q->where('flock_id', $request->flock_id))
+            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->latest()
             ->get()
-            ->map(fn ($r) => [
+            ->map(fn($r) => [
                 'pi_no' => $r->psReceive->pi_no ?? '-',
                 'flock_name' => $r->flock->name ?? '-',
                 'company_name' => $r->company->name ?? '-',
@@ -485,7 +485,7 @@ class PsFirmReceiveController extends Controller
             ->toArray();
 
         $columns = [
-            ['label' => '#', 'key' => 'index', 'callback' => fn ($r, $i) => $i + 1],
+            ['label' => '#', 'key' => 'index', 'callback' => fn($r, $i) => $i + 1],
             ['label' => 'PI No', 'key' => 'pi_no'],
             ['label' => 'Flock Name', 'key' => 'flock_name'],
             ['label' => 'Company', 'key' => 'company_name'],
@@ -496,7 +496,7 @@ class PsFirmReceiveController extends Controller
             ['label' => 'Receive Date', 'key' => 'receive_date'],
         ];
 
-        $headings = array_map(fn ($c) => $c['label'], $columns);
+        $headings = array_map(fn($c) => $c['label'], $columns);
         $body = [];
         foreach ($rows as $i => $row) {
             $line = [];
@@ -532,7 +532,7 @@ class PsFirmReceiveController extends Controller
         $breeds = BreedType::pluck('name', 'id')->toArray(); // [1 => 'Rhode Island', 2 => 'Leghorn', ...]
         $breedtype = $item->psReceive?->breed_type ?? [];
         // Map IDs to names
-        $breedAll = array_map(fn ($id) => $breeds[$id] ?? null, $breedtype);
+        $breedAll = array_map(fn($id) => $breeds[$id] ?? null, $breedtype);
 
         // Remove nulls (optional)
         $breedNames = array_filter($breedAll);
