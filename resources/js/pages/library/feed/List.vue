@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import HeadingSmall from '@/components/HeadingSmall.vue';
+import Pagination from '@/components/Pagination.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useListFilters } from '@/composables/useListFilters';
 import { useNotifier } from '@/composables/useNotifier';
 import { usePermissions } from '@/composables/usePermissions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 // Feed interface
 interface Feed {
@@ -17,34 +19,77 @@ interface Feed {
     feed_type_id: number;
     feed_type_name: string;
     feed_name: string;
-    status: number; // 0 or 1
+    status: string; // 'Active' | 'Inactive'
     created_at: string;
 }
 
 // Props
 const props = defineProps<{
-    feeds: Feed[];
+    feeds: {
+        data: Feed[];
+        meta: { current_page: number; last_page: number; per_page: number; total: number };
+    };
     feedTypes: Array<{ id: number; name: string }>;
-    filters: { search?: string; per_page?: number; page?: number };
+    filters: { 
+        search?: string; 
+        per_page?: number; 
+        page?: number;
+        status?: string;
+        feed_type?: string;
+        date_from?: string;
+        date_to?: string;
+    };
 }>();
 
-useNotifier();
+const { search, perPage, page, status, feedType, dateFrom, dateTo } = useListFilters({ routeName: '/feed', filters: props.filters });
 const { can } = usePermissions();
-const feeds = ref<Feed[]>([...props.feeds]);
-
-// Filters for export
-const filters = ref({ ...props.filters, sort: 'feed_name', direction: 'asc' });
 
 // Export dropdown state
 const openExportDropdown = ref(false);
 const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
-    const url = route('reports.feed.pdf', { ...filters.value, orientation });
+    const exportFilters = {
+        search: search.value,
+        per_page: perPage.value,
+        status: status.value,
+        feed_type: feedType.value,
+        date_from: dateFrom.value,
+        date_to: dateTo.value,
+        orientation
+    };
+    const url = route('reports.feed.pdf', exportFilters);
     window.open(url, '_blank');
 };
 const exportExcel = () => {
-    const url = route('reports.feed.excel', { ...filters.value });
+    const exportFilters = {
+        search: search.value,
+        per_page: perPage.value,
+        status: status.value,
+        feed_type: feedType.value,
+        date_from: dateFrom.value,
+        date_to: dateTo.value
+    };
+    const url = route('reports.feed.excel', exportFilters);
     window.open(url, '_blank');
 };
+
+// ✅ Filter methods
+const clearFilters = () => {
+    search.value = '';
+    perPage.value = 10;
+    status.value = '';
+    feedType.value = '';
+    dateFrom.value = '';
+    dateTo.value = '';
+    page.value = 1;
+};
+
+// ✅ Computed properties for filter summary
+const hasActiveFilters = computed(() => {
+    return status.value || 
+           feedType.value ||
+           dateFrom.value || 
+           dateTo.value;
+});
 
 // Modal state
 const showModal = ref(false);
@@ -140,37 +185,19 @@ const submit = () => {
         form.put(route('feed.update', editingFeed.value.id), {
             preserveScroll: true,
             onSuccess: () => {
-                const i = feeds.value.findIndex((f) => f.id === editingFeed.value!.id);
-                if (i !== -1) {
-                    feeds.value[i] = {
-                        ...feeds.value[i],
-                        feed_type_id: form.feed_type_id,
-                        feed_type_name: props.feedTypes.find((ft) => ft.id === form.feed_type_id!)?.name || '',
-                        feed_name: form.feed_name,
-                        status: form.status,
-                    };
-                }
                 resetForm();
+                // Refresh the page to show updated data
+                window.location.reload();
             },
             onError: () => Swal.fire('Error!', 'Could not update feed.', 'error'),
         });
     } else {
         form.post(route('feed.store'), {
             preserveScroll: true,
-            onSuccess: (page) => {
-                if ((page as any).props?.feeds) {
-                    feeds.value = (page as any).props.feeds;
-                } else {
-                    feeds.value.unshift({
-                        id: Date.now(),
-                        feed_type_id: form.feed_type_id!,
-                        feed_type_name: props.feedTypes.find((ft) => ft.id === form.feed_type_id!)?.name || '',
-                        feed_name: form.feed_name,
-                        status: form.status,
-                        created_at: new Date().toISOString(),
-                    });
-                }
+            onSuccess: () => {
                 resetForm();
+                // Refresh the page to show updated data
+                window.location.reload();
             },
             onError: () => Swal.fire('Error!', 'Could not create feed.', 'error'),
         });
@@ -186,8 +213,8 @@ const toggleStatus = (feed: Feed) => {
         {
             preserveScroll: true,
             onSuccess: () => {
-                const i = feeds.value.findIndex((f) => f.id === feed.id);
-                if (i !== -1) feeds.value[i].status = newStatus;
+                // Refresh the page to show updated data
+                window.location.reload();
             },
             onError: () => Swal.fire('Error!', 'Could not update status.', 'error'),
             onFinish: () => {
@@ -244,6 +271,88 @@ const breadcrumbs = [
                 </div>
             </div>
 
+            <!-- Filter Section -->
+            <div class="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-800">Filters</h3>
+                    <button
+                        @click="clearFilters"
+                        class="text-sm text-gray-600 hover:text-gray-800"
+                    >
+                        Clear All
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                    <!-- Search -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                        <input
+                            v-model="search"
+                            type="text"
+                            placeholder="Feed name or type..."
+                            class="block w-full px-3 py-2 text-sm text-gray-900 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select
+                            v-model="status"
+                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                    <!-- Feed Type Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Feed Type</label>
+                        <select
+                            v-model="feedType"
+                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">All Feed Types</option>
+                            <option v-for="ft in props.feedTypes" :key="ft.id" :value="ft.id">{{ ft.name }}</option>
+                        </select>
+                    </div>
+
+                    <!-- Per Page -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Per Page</label>
+                        <select
+                            v-model="perPage"
+                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="10">10 per page</option>
+                            <option value="25">25 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="100">100 per page</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input
+                                v-model="dateFrom"
+                                type="date"
+                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                            />
+                            <input
+                                v-model="dateTo"
+                                type="date"
+                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Feed Table -->
             <div class="mt-4 overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">
                 <table class="w-full border-collapse text-left">
@@ -259,16 +368,16 @@ const breadcrumbs = [
                     </thead>
                     <tbody>
                         <tr
-                            v-for="(feed, index) in feeds"
+                            v-for="(feed, index) in (props.feeds?.data ?? [])"
                             :key="feed.id"
                             class="hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
-                            <td class="border-b px-4 py-2">{{ index + 1 }}</td>
+                            <td class="border-b px-4 py-2">{{ ((props.feeds?.meta?.current_page || 1) - 1) * (props.feeds?.meta?.per_page || 10) + index + 1 }}</td>
                             <td class="border-b px-4 py-2">{{ feed.feed_type_name }}</td>
                             <td class="border-b px-4 py-2">{{ feed.feed_name }}</td>
                             <td class="border-b px-4 py-2">
-                                <span :class="feed.status === 1 ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
-                                    {{ feed.status === 1 ? 'Active' : 'Inactive' }}
+                                <span :class="feed.status === 'Active' ? 'font-semibold text-green-600' : 'font-semibold text-red-600'">
+                                    {{ feed.status }}
                                 </span>
                             </td>
                             <td class="border-b px-4 py-2">{{ dayjs(feed.created_at).format('YYYY-MM-DD') }}</td>
@@ -287,18 +396,21 @@ const breadcrumbs = [
                                 >
                                     <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="openModal(feed)">✏ Edit</button>
                                     <button class="w-full px-4 py-2 text-left hover:bg-gray-100" @click="toggleStatus(feed)">
-                                        {{ feed.status === 1 ? 'Inactive' : 'Activate' }}
+                                        {{ feed.status === 'Active' ? 'Inactive' : 'Activate' }}
                                     </button>
                                 </div>
                             </td>
                         </tr>
 
-                        <tr v-if="feeds.length === 0">
+                        <tr v-if="(props.feeds?.data ?? []).length === 0">
                             <td colspan="6" class="border-b px-4 py-6 text-center text-gray-500">No feeds found.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            <Pagination v-if="props.feeds?.meta" :meta="props.feeds.meta" class="mt-6" />
         </div>
 
         <!-- Modal -->

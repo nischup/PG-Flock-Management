@@ -18,29 +18,49 @@ class FeedTypeController extends Controller
         try {
             $query = FeedType::query();
 
-            if ($request->filled('search')) {
-                $query->where('name', 'like', '%' . $request->search . '%');
+            // Search filter
+            if ($search = $request->get('search')) {
+                $query->where('name', 'like', "%{$search}%");
             }
 
-            $feedTypes = $query->orderBy('id', 'desc')->get()->map(function ($ft) {
+            // Status filter
+            if ($status = $request->get('status')) {
+                $statusValue = $status === 'Active' ? 1 : 0;
+                $query->where('status', $statusValue);
+            }
+
+            // Date range filters
+            if ($dateFrom = $request->get('date_from')) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            }
+            
+            if ($dateTo = $request->get('date_to')) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
+
+            // Per page
+            $perPage = $request->get('per_page', 10);
+            
+            // Get paginated results
+            $feedTypes = $query->orderBy('id', 'desc')->paginate($perPage)->withQueryString()->through(function ($ft) {
                 return [
                     'id' => $ft->id,
                     'name' => $ft->name,
-                    'status' => $ft->status,
-                    'created_at' => $ft->created_at->format('d M Y'),
-                    'updated_at' => $ft->updated_at->format('d M Y'),
+                    'status' => $ft->status ? 'Active' : 'Inactive',
+                    'created_at' => $ft->created_at ? $ft->created_at->format('Y-m-d H:i') : null,
+                    'updated_at' => $ft->updated_at ? $ft->updated_at->format('Y-m-d H:i') : null,
                 ];
             });
 
             return Inertia::render('library/feedType/List', [
                 'feedTypes' => $feedTypes,
-                'filters' => $request->only(['search', 'per_page', 'page']),
+                'filters' => $request->only(['search', 'status', 'date_from', 'date_to', 'per_page']),
             ]);
         } catch (\Exception $e) {
             Log::error('FeedType Index Error: ' . $e->getMessage());
             return Inertia::render('library/feedType/List', [
                 'feedTypes' => [],
-                'filters' => $request->only(['search', 'per_page', 'page']),
+                'filters' => $request->only(['search', 'status', 'date_from', 'date_to', 'per_page']),
                 'error' => 'Failed to load feed types.',
             ]);
         }
@@ -100,11 +120,31 @@ class FeedTypeController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $rows = FeedType::orderBy('id', 'desc')
+        $query = FeedType::query();
+        
+        // Apply filters
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+        
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+        
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $rows = $query->orderBy('id', 'desc')
             ->get()
             ->map(fn($ft) => [
                 'name' => $ft->name,
-                'status' => $ft->status,
+                'status' => $ft->status ? 'Active' : 'Inactive',
                 'created_at' => $ft->created_at?->format('d-m-Y') ?? '',
             ])->toArray();
 
@@ -137,11 +177,31 @@ class FeedTypeController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $rows = FeedType::orderBy('id', 'desc')
+        $query = FeedType::query();
+        
+        // Apply filters
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+        
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+        
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $rows = $query->orderBy('id', 'desc')
             ->get()
             ->map(fn($ft) => [
                 'name' => $ft->name,
-                'status' => $ft->status,
+                'status' => $ft->status ? 'Active' : 'Inactive',
                 'created_at' => $ft->created_at?->format('d-m-Y') ?? '',
             ])->toArray();
 

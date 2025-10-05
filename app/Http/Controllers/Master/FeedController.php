@@ -13,29 +13,74 @@ use App\Exports\ArrayExport;
 
 class FeedController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $feeds = Feed::orderBy('id', 'desc')->get();
-        $feedTypes = FeedType::where('status', 1)->orderBy('name')->get();
+        try {
+            $query = Feed::with('feedType');
 
-        return Inertia::render('library/feed/List', [
-            'feeds' => $feeds->map(function ($feed) {
+            // Search filter
+            if ($search = $request->get('search')) {
+                $query->where('feed_name', 'like', "%{$search}%")
+                      ->orWhereHas('feedType', function($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+            }
+
+            // Status filter
+            if ($status = $request->get('status')) {
+                $statusValue = $status === 'Active' ? 1 : 0;
+                $query->where('status', $statusValue);
+            }
+
+            // Feed Type filter
+            if ($feedType = $request->get('feed_type')) {
+                $query->where('feed_type_id', $feedType);
+            }
+
+            // Date range filters
+            if ($dateFrom = $request->get('date_from')) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            }
+            
+            if ($dateTo = $request->get('date_to')) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
+
+            // Per page
+            $perPage = $request->get('per_page', 10);
+            
+            // Get paginated results
+            $feeds = $query->orderBy('id', 'desc')->paginate($perPage)->withQueryString()->through(function ($feed) {
                 return [
                     'id' => $feed->id,
                     'feed_type_id' => $feed->feed_type_id,
                     'feed_type_name' => $feed->feedType->name ?? '',
                     'feed_name' => $feed->feed_name,
-                    'status' => $feed->status,
-                    'created_at' => $feed->created_at->format('d M Y'),
+                    'status' => $feed->status ? 'Active' : 'Inactive',
+                    'created_at' => $feed->created_at ? $feed->created_at->format('Y-m-d H:i') : null,
                 ];
-            })->toArray(),
-            'feedTypes' => $feedTypes->map(function ($ft) {
+            });
+
+            $feedTypes = FeedType::where('status', 1)->orderBy('name')->get()->map(function ($ft) {
                 return [
                     'id' => $ft->id,
                     'name' => $ft->name,
                 ];
-            })->toArray(),
-        ]);
+            })->toArray();
+
+            return Inertia::render('library/feed/List', [
+                'feeds' => $feeds,
+                'feedTypes' => $feedTypes,
+                'filters' => $request->only(['search', 'status', 'feed_type', 'date_from', 'date_to', 'per_page']),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Feed Index Error: ' . $e->getMessage());
+            return Inertia::render('library/feed/List', [
+                'feeds' => [],
+                'feedTypes' => [],
+                'error' => 'Failed to load feeds.',
+            ]);
+        }
     }
 
     public function store(Request $request)
@@ -111,12 +156,39 @@ class FeedController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $feeds = Feed::with('feedType')->orderBy('id', 'desc')
+        $query = Feed::with('feedType');
+        
+        // Apply filters
+        if ($request->search) {
+            $query->where('feed_name', 'like', "%{$request->search}%")
+                  ->orWhereHas('feedType', function($q) use ($request) {
+                      $q->where('name', 'like', "%{$request->search}%");
+                  });
+        }
+        
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+        
+        if ($request->feed_type) {
+            $query->where('feed_type_id', $request->feed_type);
+        }
+        
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $feeds = $query->orderBy('id', 'desc')
             ->get()
             ->map(fn($f) => [
                 'feed_type' => $f->feedType->name ?? '',
                 'feed_name' => $f->feed_name,
-                'status' => $f->status,
+                'status' => $f->status ? 'Active' : 'Inactive',
                 'created_at' => $f->created_at ? $f->created_at->format('d-m-Y') : '',
             ])->toArray();
 
@@ -150,12 +222,39 @@ class FeedController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $rows = Feed::with('feedType')->orderBy('id', 'desc')
+        $query = Feed::with('feedType');
+        
+        // Apply filters
+        if ($request->search) {
+            $query->where('feed_name', 'like', "%{$request->search}%")
+                  ->orWhereHas('feedType', function($q) use ($request) {
+                      $q->where('name', 'like', "%{$request->search}%");
+                  });
+        }
+        
+        if ($request->status) {
+            $statusValue = $request->status === 'Active' ? 1 : 0;
+            $query->where('status', $statusValue);
+        }
+        
+        if ($request->feed_type) {
+            $query->where('feed_type_id', $request->feed_type);
+        }
+        
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $rows = $query->orderBy('id', 'desc')
             ->get()
             ->map(fn($f) => [
                 'feed_type' => $f->feedType->name ?? '',
                 'feed_name' => $f->feed_name,
-                'status' => $f->status,
+                'status' => $f->status ? 'Active' : 'Inactive',
                 'created_at' => $f->created_at ? $f->created_at->format('d-m-Y') : '',
             ])->toArray();
 
