@@ -4,17 +4,17 @@ namespace App\Models\Shed;
 
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
+use App\Models\Master\Project;
 use App\Models\Master\Shed;
-use App\Models\User;
 use App\Models\Ps\PsFirmReceive;
 use App\Models\Traits\CompanyShedFilter;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class ShedReceive extends Model
 {
-    
     use CompanyShedFilter;
-    
+
     protected $fillable = [
         'receive_id',
         'job_no',
@@ -38,17 +38,28 @@ class ShedReceive extends Model
         'created_at' => 'date',
     ];
 
-
-    public function flock() {
+    public function flock()
+    {
         return $this->belongsTo(Flock::class);
     }
-    public function shed() {
+
+    public function shed()
+    {
         return $this->belongsTo(Shed::class);
     }
-    public function company() {
+
+    public function company()
+    {
         return $this->belongsTo(Company::class);
     }
-    public function firmReceive() {
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
+    }
+
+    public function firmReceive()
+    {
         return $this->belongsTo(PsFirmReceive::class, 'receive_id');
     }
 

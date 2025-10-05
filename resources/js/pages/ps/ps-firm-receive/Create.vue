@@ -168,8 +168,58 @@ watch(() => [form.send_female_qty, form.send_male_qty], () => {
 watch(selectedFlockId, (val) => {
     form.flock_id = val;
 });
+// Form validation
+function validateForm() {
+  const errors = {}
+  
+  if (!form.ps_receive_id) {
+    errors.ps_receive_id = 'PS Receive selection is required'
+  }
+  
+  if (!form.flock_id || form.flock_id === 0) {
+    errors.flock_id = 'Flock selection is required'
+  }
+  
+  if (!form.receiving_company_id || form.receiving_company_id === 0) {
+    errors.receiving_company_id = 'Receiving company selection is required'
+  }
+  
+  if (!form.receiving_project_id || form.receiving_project_id === 0) {
+    errors.receiving_project_id = 'Project selection is required'
+  }
+  
+  if (form.firm_female_box_qty < 0) {
+    errors.firm_female_box_qty = 'Female box quantity cannot be negative'
+  }
+  
+  if (form.firm_male_box_qty < 0) {
+    errors.firm_male_box_qty = 'Male box quantity cannot be negative'
+  }
+  
+  if (form.firm_total_box_qty < 0) {
+    errors.firm_total_box_qty = 'Total box quantity cannot be negative'
+  }
+  
+  // Check if total equals male + female
+  if (form.firm_male_box_qty + form.firm_female_box_qty !== form.firm_total_box_qty) {
+    errors.firm_total_box_qty = 'Total box quantity must equal male + female box quantity'
+  }
+  
+  return errors
+}
+
 // Submit PS Firm Receive
 function submit() {
+  const validationErrors = validateForm()
+  
+  if (Object.keys(validationErrors).length > 0) {
+    // Set form errors
+    Object.keys(validationErrors).forEach(key => {
+      form.setError(key, validationErrors[key])
+    })
+    return
+  }
+  
   form.post(route('ps-firm-receive.store'), {
     onSuccess: () => form.reset(),
     onError: () => {}
@@ -718,6 +768,7 @@ function addNewFlock() {
               {{ company.name }}
             </option>
           </select>
+          <InputError :message="form.errors.receiving_company_id" class="mt-1" />
         </div>
 
         <!-- Receiving Project -->
@@ -728,8 +779,10 @@ function addNewFlock() {
             </Label>
             <select 
               v-model="form.receiving_project_id" 
-              class="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-600 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
-              
+              class="w-full rounded-xl border px-4 py-3 text-gray-600 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 dark:text-gray-300"
+              :class="form.errors.receiving_project_id 
+                ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20' 
+                : 'border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-700'"
             >
             <option value="0">Select Project</option>
             <option 
@@ -740,6 +793,7 @@ function addNewFlock() {
               {{ project.name }}
             </option>
           </select>
+          <InputError :message="form.errors.receiving_project_id" class="mt-1" />
         </div>
       </div>
 
@@ -895,7 +949,7 @@ function addNewFlock() {
         </div>
 
         <!-- Mortality Section -->
-        <div class="rounded-lg border border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 p-4 dark:border-orange-800 dark:from-orange-900/20 dark:to-yellow-900/20">
+        <div v-show="false" class="rounded-lg border border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 p-4 dark:border-orange-800 dark:from-orange-900/20 dark:to-yellow-900/20">
           <!-- <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-orange-800 dark:text-orange-200">
             <AlertCircle class="h-5 w-5" />
             Mortality

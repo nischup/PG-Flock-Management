@@ -9,6 +9,7 @@ import { BabyChickMultiple } from '@/icons/BabyChickMultiple';
 import { type NavItem } from '@/types';
 import AppLogo from './AppLogo.vue';
 import { Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import {
     Building,
     Building2,
@@ -351,6 +352,9 @@ function filterNavItems(items: NavItem[]): NavItem[] {
 }
 
 const filteredMainNavItems = filterNavItems(mainNavItems);
+
+// Footer navigation items
+const footerNavItems = ref([]);
 
 </script>
 

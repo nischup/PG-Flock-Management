@@ -2,23 +2,28 @@
     <AppLayout title="PS Firm Receive Details">
         <div class="space-y-6">
             <!-- Breadcrumb -->
-            <nav class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                <Link :href="route('dashboard')" class="hover:text-gray-900 dark:hover:text-white transition-colors">
+            <nav class="mb-4 flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                <Link :href="route('dashboard')" class="transition-colors hover:text-gray-900 dark:hover:text-white">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+                        ></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
                     </svg>
                 </Link>
                 <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
-                <Link :href="route('ps-firm-receive.index')" class="hover:text-gray-900 dark:hover:text-white transition-colors">
+                <Link :href="route('ps-firm-receive.index')" class="transition-colors hover:text-gray-900 dark:hover:text-white">
                     PS Firm Receive
                 </Link>
                 <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
-                <span class="text-gray-900 dark:text-white font-medium">
+                <span class="font-medium text-gray-900 dark:text-white">
                     {{ psFirmReceive.job_no }}
                 </span>
             </nav>
@@ -26,19 +31,15 @@
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                        PS Firm Receive Details
-                    </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        Job No: {{ psFirmReceive.job_no }}
-                    </p>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">PS Firm Receive Details</h1>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Job No: {{ psFirmReceive.job_no }}</p>
                 </div>
                 <div class="flex items-center space-x-3">
                     <Link
                         :href="route('ps-firm-receive.index')"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                        class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                     >
-                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
                         Back to List
@@ -46,10 +47,15 @@
                     <Link
                         v-if="can('ps-receive.edit')"
                         :href="route('ps-firm-receive.edit', psFirmReceive.id)"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        class="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
                     >
-                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            ></path>
                         </svg>
                         Edit
                     </Link>
@@ -59,16 +65,18 @@
             <!-- Main Content -->
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <!-- Left Column - Main Details -->
-                <div class="lg:col-span-2 space-y-6">
+                <div class="space-y-6 lg:col-span-2">
                     <!-- Basic Information Card -->
                     <div class="rounded-xl bg-white p-6 shadow-md dark:bg-gray-900">
                         <div class="mb-4 flex items-center justify-between">
                             <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Basic Information</h2>
-                            <span 
+                            <span
                                 class="inline-flex rounded-full px-3 py-1 text-xs font-medium"
-                                :class="psFirmReceive.status === 1 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
+                                :class="
+                                    psFirmReceive.status === 1
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                "
                             >
                                 {{ psFirmReceive.status === 1 ? 'Active' : 'Inactive' }}
                             </span>
@@ -151,7 +159,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">Created By</label>
-                                <p class="text-sm text-gray-900 dark:text-white">User ID: {{ psFirmReceive.created_by }}</p>
+                                <p class="text-sm text-gray-900 dark:text-white">{{ psFirmReceive.created_by }}</p>
                             </div>
                         </div>
                     </div>
@@ -161,15 +169,20 @@
                 <div class="space-y-6">
                     <!-- Quick Actions -->
                     <div class="rounded-xl bg-white p-6 shadow-md dark:bg-gray-900">
-                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Quick Actions</h3>
+                        <h3 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white">Quick Actions</h3>
                         <div class="space-y-3">
                             <button
                                 v-if="can('ps-receive.view')"
                                 @click="exportRowPdf(psFirmReceive.id)"
-                                class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                class="flex w-full items-center justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
                             >
-                                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                    ></path>
                                 </svg>
                                 Download Report
                             </button>
@@ -182,9 +195,9 @@
 </template>
 
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { usePermissions } from '@/composables/usePermissions';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Link } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 
 interface Props {
@@ -200,7 +213,7 @@ interface Props {
         firm_total_qty: number;
         remarks?: string;
         receive_date: string;
-        created_by: number;
+        created_by: string;
         status: number;
         receive_type: string;
         source_type: string;

@@ -180,6 +180,10 @@ Route::get('/ps-receive/{id}/pdf', [PsReceiveController::class, 'downloadRowPdf'
 // PS Receive Approval Routes
 Route::get('/ps-receive/{id}/approval-status', [PsReceiveController::class, 'getApprovalStatus'])
     ->name('ps-receive.approval-status');
+Route::get('/ps-receive/{id}/approval-details', [PsReceiveController::class, 'getApprovalDetails'])
+    ->name('ps-receive.approval-details');
+Route::post('/ps-receive/{id}/approval-action', [PsReceiveController::class, 'handleApprovalAction'])
+    ->name('ps-receive.approval-action');
 Route::post('/ps-receive/{id}/approve', [PsReceiveController::class, 'approve'])
     ->name('ps-receive.approve');
 Route::post('/ps-receive/{id}/reject', [PsReceiveController::class, 'reject'])

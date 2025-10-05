@@ -1,11 +1,11 @@
 <?php
 
 namespace App\Models\Ps;
+
+use App\Models\Country;
+use App\Models\Master\Company;
 use App\Models\Master\Supplier;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Master\Company;
-use App\Models\Country;
 
 class PsReceive extends Model
 {
@@ -28,26 +28,29 @@ class PsReceive extends Model
         'created_by',
         'updated_by',
         'status',
+        'receiving_status',
         'created_at',
     ];
-
 
     protected $casts = [
         'pi_date' => 'date',
         'order_date' => 'date',
         'lc_date' => 'date',
-        'created_at'=> 'date',
+        'created_at' => 'date',
         'breed_type' => 'array',
+        'receiving_status' => 'integer',
     ];
 
     public function attachments()
     {
         return $this->hasMany(PsReceiveAttachment::class);
     }
+
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
     }
+
     public function chickCounts()
     {
         return $this->hasOne(PsChickCount::class);
@@ -57,10 +60,12 @@ class PsReceive extends Model
     {
         return $this->hasMany(PsLabTest::class);
     }
-     public function company()
+
+    public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
+
     public function country()
     {
         return $this->belongsTo(Country::class, 'country_of_origin');

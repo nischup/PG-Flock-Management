@@ -234,7 +234,7 @@ function submit() {
           </div>
           <div>
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">Farm Receive & Production Shed</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Select firm receive code and production shed destination</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Select farm receive and production shed destination</p>
           </div>
         </div>
 
@@ -244,7 +244,7 @@ function submit() {
           <div class="space-y-2">
             <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
               <Package class="h-4 w-4" />
-              Farm Receive Transaction No
+              Select Farm Receive 
             </Label>
             <div class="firm-receive-dropdown relative">
               <button
@@ -259,7 +259,7 @@ function submit() {
                       Rcv-{{ String(selectedFirmReceive.id).padStart(6, '0') }}-{{ selectedFirmReceive.company_short_name }}-{{ selectedFirmReceive.project_name }}-{{ selectedFirmReceive.flock_code || props.flocks.find(f => f.id === selectedFirmReceive.flock_id)?.code || selectedFirmReceive.flock_name }}
                     </span>
                   </span>
-                  <span v-else>Select Farm Receive Transaction No</span>
+                  <span v-else>Select Farm Receive</span>
                 </span>
                 <ChevronDown class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': showFirmReceiveDropdown }" />
               </button>
@@ -314,6 +314,16 @@ function submit() {
 
                         <div class="text-xs text-gray-400 dark:text-gray-500">
                           <span class="font-medium">Total Qty:</span> {{ fr.firm_total_qty }} Pcs
+                          <span v-if="fr.assigned_qty > 0" class="ml-2 text-amber-600 dark:text-amber-400">
+                            ({{ fr.assigned_qty }} assigned)
+                          </span>
+                        </div>
+                        <div class="text-xs font-medium text-green-600 dark:text-green-400">
+                          <span class="font-semibold">Available:</span> {{ fr.remaining_qty || fr.firm_total_qty }} Pcs
+                          <span v-if="fr.status_text" class="ml-2 text-xs px-2 py-0.5 rounded-full" 
+                                :class="fr.status_text === 'Pending' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'">
+                            {{ fr.status_text }}
+                          </span>
                         </div>
                       </div>
                       <CheckCircle2 v-if="selectedJobId == fr.id" class="h-4 w-4 text-purple-500 flex-shrink-0" />
@@ -517,8 +527,23 @@ function submit() {
                 v-model.number="form.shed_female_qty" 
                 type="number" 
                 min="0"
+                :max="selectedFirmReceive?.remaining_female_qty || selectedFirmReceive?.firm_female_qty || 0"
                 class="rounded-xl border-pink-300 bg-pink-50 px-3 py-2 text-sm shadow-sm focus:border-pink-500 focus:ring-pink-500/20 dark:border-pink-600 dark:bg-pink-900/20" 
               />
+              <!-- Available Box Information - Positioned directly under input -->
+              <div v-if="selectedFirmReceive" class="mt-2 p-2 bg-pink-50 dark:bg-pink-900/20 rounded-md border border-pink-200 dark:border-pink-800 relative">
+                <!-- Connecting line to input field -->
+                <div class="absolute -top-2 left-4 w-0.5 h-2 bg-pink-300 dark:bg-pink-600"></div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-medium text-pink-700 dark:text-pink-300">Available Female Chicks:</span>
+                    <span class="text-sm font-bold text-pink-600 dark:text-pink-400">{{ selectedFirmReceive.remaining_female_qty || selectedFirmReceive.firm_female_qty || 0 }}</span>
+                  </div>
+                  <div v-if="selectedFirmReceive.assigned_female_qty > 0" class="text-xs text-amber-600 dark:text-amber-400">
+                    ({{ selectedFirmReceive.assigned_female_qty }} assigned)
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="space-y-2">
               <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Male Chick Qty</Label>
@@ -526,8 +551,23 @@ function submit() {
                 v-model.number="form.shed_male_qty" 
                 type="number" 
                 min="0"
+                :max="selectedFirmReceive?.remaining_male_qty || selectedFirmReceive?.firm_male_qty || 0"
                 class="rounded-xl border-blue-300 bg-blue-50 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500/20 dark:border-blue-600 dark:bg-blue-900/20" 
               />
+              <!-- Available Box Information - Positioned directly under input -->
+              <div v-if="selectedFirmReceive" class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800 relative">
+                <!-- Connecting line to input field -->
+                <div class="absolute -top-2 left-4 w-0.5 h-2 bg-blue-300 dark:bg-blue-600"></div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-medium text-blue-700 dark:text-blue-300">Available Male Chicks:</span>
+                    <span class="text-sm font-bold text-blue-600 dark:text-blue-400">{{ selectedFirmReceive.remaining_male_qty || selectedFirmReceive.firm_male_qty || 0 }}</span>
+                  </div>
+                  <div v-if="selectedFirmReceive.assigned_male_qty > 0" class="text-xs text-amber-600 dark:text-amber-400">
+                    ({{ selectedFirmReceive.assigned_male_qty }} assigned)
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="space-y-2">
               <Label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Chick Qty</Label>

@@ -24,6 +24,8 @@ const props = defineProps<{
             shed_name: string;
             company_id: number;
             company_name: string;
+            project_id: number;
+            project_name: string;
             shed_female_qty: number;
             shed_male_qty: number;
             shed_total_qty: number;
@@ -33,6 +35,7 @@ const props = defineProps<{
             flock?: { id: number; name: string; code: string } | null;
             shed?: { id: number; name: string } | null;
             company?: { id: number; name: string } | null;
+            project?: { id: number; name: string } | null;
         }>;
         meta: { current_page: number; last_page: number; per_page: number; total: number };
     };
@@ -296,6 +299,14 @@ const cardData = computed(() => {
             value2: '',
         },
         {
+            title: 'Project',
+            value: selectedItem.project?.name || selectedItem.project_name || 'N/A',
+            title1: '',
+            value1: '',
+            title2: '',
+            value2: '',
+        },
+        {
             title: 'Flock',
             value: selectedItem.flock?.code || selectedItem.flock_name || 'N/A',
             title1: '',
@@ -348,7 +359,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             >
                 <option :value="null" disabled>Select Shed Receive Record</option>
                 <option v-for="item in props.shedReceives?.data ?? []" :key="item.id" :value="item.id">
-                    {{ item.flock?.code || item.flock_name }} - {{ item.shed_name }} : {{ dayjs(item.created_at).format('YYYY-MM-DD') }}
+                    {{ item.company?.name || item.company_name }} - {{ item.project?.name || item.project_name || 'N/A' }} - {{ item.flock?.code || item.flock_name }} - {{ item.shed_name }} : {{ dayjs(item.created_at).format('YYYY-MM-DD') }}
                 </option>
             </select>
         </div>
@@ -845,28 +856,30 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <thead>
                             <tr>
                                 <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">S/N</th>
-                                <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Flock No</th>
-                                <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Shed</th>
                                 <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Company</th>
-                                <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Male Box Qty</th>
-                                <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Female Box Qty</th>
-                                <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Total Box Qty</th>
-                                <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Receive Date</th>
-                                <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
+                                <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Project</th>
+                                <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Flock No</th>
+                                <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Shed</th>
+                                <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Male Box Qty</th>
+                                <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Female Box Qty</th>
+                                <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Total Box Qty</th>
+                                <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Receive Date</th>
+                                <th class="border-b px-4 py-2 bg-gray-700 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="(item, index) in props.shedReceives?.data ?? []" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <td class="border-b px-4 py-2">{{ ((props.shedReceives?.meta?.current_page || 1) - 1) * (props.shedReceives?.meta?.per_page || 10) + index + 1 }}</td>
+                                <td class="border-b px-4 py-2">{{ item.company?.name || item.company_name }}</td>
+                                <td class="border-b px-4 py-2">{{ item.project?.name || item.project_name || 'N/A' }}</td>
                                 <td class="border-b px-4 py-2">{{ item.flock?.code || item.flock_name }}</td>
                                 <td class="border-b px-4 py-2">
                                     <span
-                                        class="inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                                        class="inline-flex rounded-full bg-pink-100 px-2 py-1 text-xs font-medium text-pink-800 dark:bg-pink-900 dark:text-pink-200"
                                     >
                                         {{ item.shed?.name || item.shed_name }}
                                     </span>
                                 </td>
-                                <td class="border-b px-4 py-2">{{ item.company?.name || item.company_name }}</td>
                                 <td class="border-b px-4 py-2">{{ item.shed_male_qty }}</td>
                                 <td class="border-b px-4 py-2">{{ item.shed_female_qty }}</td>
                                 <td class="border-b px-4 py-2">{{ item.shed_total_qty }}</td>
@@ -982,7 +995,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             </tr>
 
                             <tr v-if="(props.shedReceives?.data ?? []).length === 0">
-                                <td colspan="9" class="border-b px-4 py-6 text-center text-gray-500 dark:text-gray-400">No Shed Receives found.</td>
+                                <td colspan="10" class="border-b px-4 py-6 text-center text-gray-500 dark:text-gray-400">No Shed Receives found.</td>
                             </tr>
                         </tbody>
                     </table>

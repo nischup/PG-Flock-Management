@@ -263,6 +263,7 @@ const getProvitaLabTotalQty = (item: any) => {
 
 const openExportDropdown = ref(false);
 
+
 const exportPdf = (orientation: 'portrait' | 'landscape' = 'portrait') => {
     const url = route('reports.ps-receive.pdf', { ...filters.value, orientation });
     window.open(url, '_blank');
@@ -739,29 +740,29 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <table class="w-full border-collapse text-left">
                     <thead>
                         <tr>
-                            <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">S/N</th>
-                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Company</th>
-                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Shipment Type</th>
-                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">PI No</th>
-                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">PI Date</th>
-                            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">LC No</th>
-                            <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Order No</th>
-                            <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Supplier</th>
-                            <th class="border-b px-4 py-2 bg-yellow-500 text-black font-semibold text-sm whitespace-nowrap">Total Rcv Box</th>
-                            <th class="border-b px-4 py-2 bg-cyan-500 text-white font-semibold text-sm whitespace-nowrap">Weight (kg)</th>
-                            <th class="border-b px-4 py-2 bg-emerald-500 text-white font-semibold text-sm whitespace-nowrap">Gov Lab Total</th>
-                            <th class="border-b px-4 py-2 bg-lime-500 text-white font-semibold text-sm whitespace-nowrap">Provita Lab Total</th>
-                            <th class="border-b px-4 py-2 bg-amber-500 text-white font-semibold text-sm whitespace-nowrap">Approval Status</th>
-                            <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
+                            <th class="border-b px-3 py-1.5 bg-blue-500 text-white font-semibold text-xs whitespace-nowrap">S/N</th>
+                            <th class="border-b px-3 py-1.5 bg-green-500 text-white font-semibold text-xs whitespace-nowrap w-48 min-w-48">Company</th>
+                            <th class="border-b px-3 py-1.5 bg-purple-500 text-white font-semibold text-xs whitespace-nowrap">Shipment Type</th>
+                            <th class="border-b px-3 py-1.5 bg-orange-500 text-white font-semibold text-xs whitespace-nowrap">PI No</th>
+                            <th class="border-b px-3 py-1.5 bg-pink-500 text-white font-semibold text-xs whitespace-nowrap">PI Date</th>
+                            <th class="border-b px-3 py-1.5 bg-indigo-500 text-white font-semibold text-xs whitespace-nowrap">LC No</th>
+                            <th class="border-b px-3 py-1.5 bg-red-500 text-white font-semibold text-xs whitespace-nowrap">Order No</th>
+                            <th class="border-b px-3 py-1.5 bg-teal-500 text-white font-semibold text-xs whitespace-nowrap w-48 min-w-48">Supplier</th>
+                            <th class="border-b px-3 py-1.5 bg-yellow-500 text-black font-semibold text-xs whitespace-nowrap">Total Rcv Box</th>
+                            <th class="border-b px-3 py-1.5 bg-amber-500 text-white font-semibold text-xs whitespace-nowrap">Approval Status</th>
+                            <th class="border-b px-3 py-1.5 bg-cyan-500 text-white font-semibold text-xs whitespace-nowrap">Weight (kg)</th>
+                            <th class="border-b px-3 py-1.5 bg-emerald-500 text-white font-semibold text-xs whitespace-nowrap">Gov Lab Total</th>
+                            <th class="border-b px-3 py-1.5 bg-lime-500 text-white font-semibold text-xs whitespace-nowrap">Provita Lab Total</th>
+                            <th class="border-b px-3 py-1.5 bg-gray-600 text-white font-semibold text-xs whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="(item, index) in props.psReceives?.data ?? []" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td class="border-b px-4 py-2">{{ ((props.psReceives?.meta?.current_page || 1) - 1) * (props.psReceives?.meta?.per_page || 10) + index + 1 }}</td>
-                            <td class="border-b px-4 py-2">{{ item.company?.name ?? 'N/A' }}</td>
-                            <td class="border-b px-4 py-2">
+                            <td class="border-b px-3 py-1.5 text-xs">{{ ((props.psReceives?.meta?.current_page || 1) - 1) * (props.psReceives?.meta?.per_page || 10) + index + 1 }}</td>
+                            <td class="border-b px-3 py-1.5 text-xs w-48 min-w-48 whitespace-nowrap">{{ item.company?.name ?? 'N/A' }}</td>
+                            <td class="border-b px-3 py-1.5 text-xs">
                                 <span 
-                                    class="inline-flex rounded-full px-2 py-1 text-xs font-medium"
+                                    class="inline-flex rounded-full px-1.5 py-0.5 text-xs font-medium"
                                     :class="item.shipment_type_id === 1 
                                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
                                         : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'"
@@ -769,37 +770,39 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     {{ item.shipment_type_id === 1 ? 'Local' : 'Foreign' }}
                                 </span>
                             </td>
-                            <td class="border-b px-4 py-2">{{ item.pi_no }}</td>
-                            <td class="border-b px-4 py-2">{{ item.pi_date ? dayjs(item.pi_date).format('YYYY-MM-DD') : '-' }}</td>
-                            <td class="border-b px-4 py-2">{{ item.lc_no ?? '-' }}</td>
-                            <td class="border-b px-4 py-2">{{ item.order_no ?? '-' }}</td>
-                            <td class="border-b px-4 py-2">{{ item.supplier?.name ?? 'N/A' }}</td>
-                            <td class="border-b px-4 py-2">{{ item.chick_counts?.ps_total_re_box_qty ?? '-' }}</td>
-                            <td class="border-b px-4 py-2">
-                                <div class="text-sm">
+                            <td class="border-b px-3 py-1.5 text-xs">{{ item.pi_no }}</td>
+                            <td class="border-b px-3 py-1.5 text-xs">{{ item.pi_date ? dayjs(item.pi_date).format('YYYY-MM-DD') : '-' }}</td>
+                            <td class="border-b px-3 py-1.5 text-xs">{{ item.lc_no ?? '-' }}</td>
+                            <td class="border-b px-3 py-1.5 text-xs">{{ item.order_no ?? '-' }}</td>
+                            <td class="border-b px-3 py-1.5 text-xs w-48 min-w-48 whitespace-nowrap">{{ item.supplier?.name ?? 'N/A' }}</td>
+                            <td class="border-b px-3 py-1.5 text-xs">{{ item.chick_counts?.ps_total_re_box_qty ?? '-' }}</td>
+                            <td class="border-b px-3 py-1.5 text-xs">
+                                <ApprovalStatusBadge 
+                                    :ps-receive-id="item.id" 
+                                />
+                            </td>
+                            <td class="border-b px-3 py-1.5 text-xs">
+                                <div class="text-xs">
                                     <div>Gross: {{ item.chick_counts?.ps_gross_weight ?? '-' }} kg</div>
                                     <div>Net: {{ item.chick_counts?.ps_net_weight ?? '-' }} kg</div>
                                 </div>
                             </td>
-                            <td class="border-b px-4 py-2">
-                                <div class="text-sm">
+                            <td class="border-b px-3 py-1.5 text-xs">
+                                <div class="text-xs">
                                     <div>Male: {{ getGovLabMaleQty(item) }}</div>
                                     <div>Female: {{ getGovLabFemaleQty(item) }}</div>
                                     <div class="font-medium">Total: {{ getGovLabTotalQty(item) }}</div>
                                 </div>
                             </td>
-                            <td class="border-b px-4 py-2">
-                                <div class="text-sm">
+                            <td class="border-b px-3 py-1.5 text-xs">
+                                <div class="text-xs">
                                     <div>Male: {{ getProvitaLabMaleQty(item) }}</div>
                                     <div>Female: {{ getProvitaLabFemaleQty(item) }}</div>
                                     <div class="font-medium">Total: {{ getProvitaLabTotalQty(item) }}</div>
                                 </div>
                             </td>
-                            <td class="border-b px-4 py-2">
-                                <ApprovalStatusBadge :ps-receive-id="item.id" />
-                            </td>
-                            <td class="relative border-b px-4 py-2">
-                                <Button size="sm" class="action-btn bg-gray-500 text-white hover:bg-gray-600" @click.stop="toggleDropdown(item.id)">
+                            <td class="relative border-b px-3 py-1.5 text-xs">
+                                <Button size="sm" class="action-btn bg-gray-500 text-white hover:bg-gray-600 text-xs px-2 py-1" @click.stop="toggleDropdown(item.id)">
                                     Actions ▼
                                 </Button>
 
@@ -887,7 +890,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </tr>
 
                         <tr v-if="(props.psReceives?.data ?? []).length === 0">
-                            <td colspan="14" class="border-b px-4 py-6 text-center text-gray-500 dark:text-gray-400">No PS Receives found.</td>
+                            <td colspan="14" class="border-b px-3 py-4 text-center text-xs text-gray-500 dark:text-gray-400">No PS Receives found.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -900,6 +903,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 class="mt-6" 
             />
         </div>
+
     </AppLayout>
 </template>
 
