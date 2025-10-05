@@ -2,11 +2,12 @@
 
 namespace App\Models\Ps;
 
-use App\Models\Master\Company;
 use App\Models\Master\Flock;
+use App\Models\Master\Company;
 use App\Models\Master\Project;
-use App\Models\Traits\CompanyShedFilter;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\CompanyShedFilter;
 
 class PsFirmReceive extends Model
 {
@@ -58,5 +59,9 @@ class PsFirmReceive extends Model
     {
         return $this->belongsTo(PsReceive::class, 'ps_receive_id');
         // adjust 'ps_receive_id' with your foreign key column name
+    }
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }
