@@ -1,4 +1,6 @@
 <script setup lang="ts">
+
+// Hello
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head, router } from '@inertiajs/vue3'
 import { ref, computed, watch, onMounted } from 'vue'
