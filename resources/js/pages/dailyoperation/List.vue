@@ -21,7 +21,11 @@ const props = defineProps<{
             flock_name: string;
             shed_name: string;
             company_name: string;
+            project_name: string;
             batch_name: string;
+            level: number | string;
+            stage_name: string;
+            age: string;
             job_no: string;
             transaction_no: string;
             male_mortality: number;
@@ -298,20 +302,22 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
 
             <!-- Info Cards -->
             <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-                <listInfocard title="Total Operations" :value="props.dailyOperations?.meta?.total || 0" icon="Calendar" color="blue" />
-                <listInfocard title="This Month" :value="props.dailyOperations?.data?.length || 0" icon="FileText" color="green" />
-                <listInfocard
-                    title="Total Mortality"
-                    :value="props.dailyOperations?.data?.reduce((sum, op) => sum + (op.total_mortality || 0), 0) || 0"
-                    icon="Trash2"
-                    color="red"
-                />
-                <listInfocard
-                    title="Total Eggs"
-                    :value="props.dailyOperations?.data?.reduce((sum, op) => sum + (op.egg_collection || 0), 0) || 0"
-                    icon="Eye"
-                    color="purple"
-                />
+                <div class="bg-blue-100 dark:bg-blue-900 rounded-lg p-4 text-center">
+                    <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Total Operations</h3>
+                    <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">{{ props.dailyOperations?.meta?.total || 0 }}</p>
+                </div>
+                <div class="bg-green-100 dark:bg-green-900 rounded-lg p-4 text-center">
+                    <h3 class="text-sm font-medium text-green-800 dark:text-green-200">This Month</h3>
+                    <p class="text-2xl font-bold text-green-900 dark:text-green-100">{{ props.dailyOperations?.data?.length || 0 }}</p>
+                </div>
+                <div class="bg-red-100 dark:bg-red-900 rounded-lg p-4 text-center">
+                    <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Total Mortality</h3>
+                    <p class="text-2xl font-bold text-red-900 dark:text-red-100">{{ props.dailyOperations?.data?.reduce((sum, op) => sum + (op.total_mortality || 0), 0) || 0 }}</p>
+                </div>
+                <div class="bg-purple-100 dark:bg-purple-900 rounded-lg p-4 text-center">
+                    <h3 class="text-sm font-medium text-purple-800 dark:text-purple-200">Total Eggs</h3>
+                    <p class="text-2xl font-bold text-purple-900 dark:text-purple-100">{{ props.dailyOperations?.data?.reduce((sum, op) => sum + (op.egg_collection || 0), 0) || 0 }}</p>
+                </div>
             </div>
 
             <!-- Custom Filter Section -->
@@ -723,6 +729,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
                             <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Project</th>
                             <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Flock</th>
                             <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Shed</th>
+                            <th class="border-b px-4 py-2 bg-rose-500 text-white font-semibold text-sm whitespace-nowrap">Level</th>
                             <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Batch</th>
                             <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Stage</th>
                             <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Age</th>
@@ -769,6 +776,13 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClick));
                                     class="inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800 dark:bg-orange-900 dark:text-orange-200"
                                 >
                                     {{ item.shed_name }}
+                                </span>
+                            </td>
+                            <td class="border-b px-4 py-2 whitespace-nowrap">
+                                <span
+                                    class="inline-flex rounded-full bg-rose-100 px-2 py-1 text-xs font-medium text-rose-800 dark:bg-rose-900 dark:text-rose-200"
+                                >
+                                    {{ item.level || 'N/A' }}
                                 </span>
                             </td>
                             <td class="border-b px-4 py-2 whitespace-nowrap">{{ item.batch_name }}</td>

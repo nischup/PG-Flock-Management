@@ -39,6 +39,7 @@ class DailyOperationController extends Controller
             'batchAssign.company',
             'batchAssign.batch',
             'batchAssign.project',
+            'batchAssign.levelInfo',
             'batchAssign.shedReceive',
             'mortalities',
             'feeds.feedType',
@@ -145,6 +146,7 @@ class DailyOperationController extends Controller
                     'company_name' => $item->batchAssign->company->name ?? 'N/A',
                     'project_name' => $item->batchAssign->project->name ?? 'N/A',
                     'batch_name' => $item->batchAssign->batch->name ?? 'N/A',
+                    'level' => $item->batchAssign->levelInfo?->name ?? 'N/A',
                     'stage_name' => $stageName,
                     'stage' => $item->batchAssign->stage,
                     'age' => $ageString,
@@ -153,8 +155,8 @@ class DailyOperationController extends Controller
                     'male_mortality' => $item->mortalities->sum('male_qty'),
                     'female_mortality' => $item->mortalities->sum('female_qty'),
                     'total_mortality' => $totalMortality,
-                    'feed_consumption' => $totalFeed > 0 
-    ? $totalFeed.' '.($item->feeds->first()->unit->name ?? 'Kg') 
+                    'feed_consumption' => $totalFeed > 0
+    ? $totalFeed.' '.($item->feeds->first()->unit->name ?? 'Kg')
     : '0 Kg',
                     'water_consumption' => $totalWater > 0 ? $totalWater.' L' : '0 L',
                     'light_hour' => $item->lights->first()->hour ?? 0,
@@ -420,9 +422,9 @@ class DailyOperationController extends Controller
 
         if ($existingOperation) {
             return back()->withErrors([
-                'duplicate_entry' => 'A daily operation record already exists for this batch on ' . 
-                    \Carbon\Carbon::parse($request->operation_date)->format('M d, Y') . 
-                    '. Please select a different date or edit the existing record.'
+                'duplicate_entry' => 'A daily operation record already exists for this batch on '.
+                    \Carbon\Carbon::parse($request->operation_date)->format('M d, Y').
+                    '. Please select a different date or edit the existing record.',
             ]);
         }
 
@@ -898,8 +900,6 @@ class DailyOperationController extends Controller
             ]);
         }
 
-
-          
         // Update egg collections (only for non-brooding stages)
         if ($request->egg_collection > 0 && $dailyOperation->batchAssign->stage != 1) {
             $dailyOperation->eggCollections()->delete(); // Remove existing

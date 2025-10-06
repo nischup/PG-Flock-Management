@@ -7,15 +7,15 @@ use App\Models\DailyOperation\DailyDestroy;
 use App\Models\DailyOperation\DailyMortality;
 use App\Models\DailyOperation\DailyOperation;
 use App\Models\DailyOperation\DailySexingError;
+use App\Models\FirmLabTest;
 use App\Models\Master\Batch;
+use App\Models\Master\BreedType;
 use App\Models\Master\Company;
 use App\Models\Master\Flock;
 use App\Models\Master\Project;
 use App\Models\Master\Shed;
-use App\Models\FirmLabTest;
-use App\Models\Master\BreedType;
-use App\Models\Production\EggClassification;
 use App\Models\MovementAdjustment;
+use App\Models\Production\EggClassification;
 use App\Models\Traits\CompanyShedFilter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -93,10 +93,14 @@ class BatchAssign extends Model
         return $this->belongsTo(BreedType::class, 'breed_type', 'id');
     }
 
-
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function levelInfo()
+    {
+        return $this->belongsTo(\App\Models\Master\Level::class, 'level', 'id');
     }
 
     public function dailyOperations()
@@ -188,6 +192,7 @@ class BatchAssign extends Model
     {
         return $this->hasMany(FirmLabTest::class, 'batch_assign_id');
     }
+
     public function scopeApplyFilters($query, $filters)
     {
         return $query
