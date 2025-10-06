@@ -7,6 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from '@/components/ui/sidebar'
+import { useSidebar } from '@/components/ui/sidebar/utils'
 import { type NavItem } from '@/types'
 import { Link, usePage } from '@inertiajs/vue3'
 
@@ -15,7 +16,20 @@ const props = defineProps<{
 }>()
 
 const page = usePage()
+const { state } = useSidebar()
 const openMenus = ref<string[]>([])
+
+// Function to check if a URL matches a menu item (handles route patterns)
+function isUrlActive(menuHref: string, currentUrl: string): boolean {
+  // Exact match
+  if (menuHref === currentUrl) return true
+  
+  // Check if current URL starts with menu href (for nested routes)
+  // e.g., /shed-receive/create should match /shed-receive
+  if (currentUrl.startsWith(menuHref + '/')) return true
+  
+  return false
+}
 
 // Function to find parent menu titles that contain the current active route
 function findActiveParentMenus(items: NavItem[], currentUrl: string): string[] {
@@ -24,7 +38,7 @@ function findActiveParentMenus(items: NavItem[], currentUrl: string): string[] {
   for (const item of items) {
     if (item.children) {
       // Check if any child matches the current URL
-      const hasActiveChild = item.children.some(child => child.href === currentUrl)
+      const hasActiveChild = item.children.some(child => isUrlActive(child.href, currentUrl))
       if (hasActiveChild) {
         activeParents.push(item.title)
       }
@@ -73,7 +87,7 @@ function getIconColor(iconClass?: string) {
 
 <template>
   <SidebarGroup class="px-2 py-0">
-    <SidebarGroupLabel>Application V-1.0.0</SidebarGroupLabel>
+    <SidebarGroupLabel v-if="state === 'expanded'">Application V-1.0.0</SidebarGroupLabel>
     <SidebarMenu>
       <template v-for="item in props.items" :key="item.title">
         <SidebarMenuItem>
@@ -81,8 +95,9 @@ function getIconColor(iconClass?: string) {
           <SidebarMenuButton
             v-if="!item.children"
             as-child
-            :is-active="item.href === page.url"
-            :tooltip="item.title" class="hover:yellow-300"
+            :is-active="isUrlActive(item.href, page.url)"
+            :tooltip="state === 'collapsed' ? item.title : undefined"
+            class="hover:yellow-300"
           >
             <Link :href="item.href">
               <component 
@@ -90,23 +105,26 @@ function getIconColor(iconClass?: string) {
                 class="w-5 h-5" 
                 :stroke="getIconColor(item.iconClass)" 
               />
-              <span>{{ item.title }}</span>
+              <span v-if="state === 'expanded'">{{ item.title }}</span>
             </Link>
           </SidebarMenuButton>
 
           <!-- Parent item with children -->
-          <div
+          <SidebarMenuButton
             v-else
-            class="flex items-center cursor-pointer px-3 py-2 rounded"
+            :is-active="activeParentMenus.includes(item.title)"
+            :tooltip="state === 'collapsed' ? item.title : undefined"
+            class="hover:yellow-300"
             @click="toggleMenu(item.title)"
           >
             <component 
               :is="item.icon" 
-              class="w-5 h-5 mr-2" 
+              class="w-5 h-5" 
               :stroke="getIconColor(item.iconClass)" 
             />
-            <span class="flex-1">{{ item.title }}</span>
+            <span v-if="state === 'expanded'" class="flex-1">{{ item.title }}</span>
             <svg
+              v-if="state === 'expanded'"
               class="w-4 h-4 transition-transform"
               :class="{ 'rotate-90': openMenus.includes(item.title) }"
               fill="none"
@@ -116,11 +134,11 @@ function getIconColor(iconClass?: string) {
             >
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
             </svg>
-          </div>
+          </SidebarMenuButton>
 
           <!-- Child links -->
           <div
-            v-if="item.children"
+            v-if="item.children && state === 'expanded'"
             v-show="openMenus.includes(item.title)"
             class="ml-6 mt-1 space-y-1"
           >
@@ -130,8 +148,8 @@ function getIconColor(iconClass?: string) {
             >
               <SidebarMenuButton
                 as-child
-                :is-active="child.href === page.url"
-                :tooltip="child.title"
+                :is-active="isUrlActive(child.href, page.url)"
+                :tooltip="state === 'collapsed' ? child.title : undefined"
               >
                 <Link :href="child.href">
                   <component 
@@ -139,7 +157,7 @@ function getIconColor(iconClass?: string) {
                     class="w-5 h-5" 
                     :stroke="getIconColor(child.iconClass)" 
                   />
-                  <span>{{ child.title }}</span>
+                  <span v-if="state === 'expanded'">{{ child.title }}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

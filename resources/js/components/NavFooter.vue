@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { useSidebar } from '@/components/ui/sidebar/utils';
 import { type NavItem } from '@/types';
 
 interface Props {
@@ -8,6 +9,8 @@ interface Props {
 }
 
 defineProps<Props>();
+
+const { state } = useSidebar();
 </script>
 
 <template>
@@ -15,10 +18,14 @@ defineProps<Props>();
         <SidebarGroupContent>
             <SidebarMenu>
                 <SidebarMenuItem v-for="item in items" :key="item.title">
-                    <SidebarMenuButton class="text-neutral-600 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100" as-child>
+                    <SidebarMenuButton 
+                        class="text-neutral-600 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100" 
+                        :tooltip="state === 'collapsed' ? item.title : undefined"
+                        as-child
+                    >
                         <a :href="item.href" target="_blank" rel="noopener noreferrer">
                             <component :is="item.icon" />
-                            <span>{{ item.title }}</span>
+                            <span v-if="state === 'expanded'">{{ item.title }}</span>
                         </a>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

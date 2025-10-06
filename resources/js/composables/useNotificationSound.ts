@@ -21,13 +21,23 @@ export function useNotificationSound(options: NotificationSoundOptions = {}) {
   const initAudio = () => {
     if (audio.value) return
 
-    const audioPath = '/Audio/notification-sound.mp3'
-    console.log('Initializing notification sound with path:', audioPath)
+    // Try multiple audio formats for better browser compatibility
+    const audioFormats = [
+      '/Audio/notification-sound.wav',  // WAV is more universally supported
+      '/Audio/notification-sound.mp3',
+      '/Audio/notification-sound.ogg'
+    ]
     
-    audio.value = new Audio(audioPath)
+    console.log('Initializing notification sound with fallback formats:', audioFormats)
+    
+    // Create audio element with the first format
+    audio.value = new Audio(audioFormats[0])
     audio.value.volume = volume
     audio.value.loop = loop
     audio.value.preload = preload ? 'auto' : 'none'
+    
+    // Add crossOrigin attribute for better compatibility
+    audio.value.crossOrigin = 'anonymous'
     
     // Handle audio events
     audio.value.addEventListener('loadstart', () => {
@@ -56,6 +66,20 @@ export function useNotificationSound(options: NotificationSoundOptions = {}) {
         readyState: audio.value?.readyState,
         src: audio.value?.src
       })
+      
+      // Try fallback formats if the first one fails
+      const currentSrc = audio.value?.src
+      const currentIndex = audioFormats.findIndex(format => currentSrc?.includes(format))
+      
+      if (currentIndex < audioFormats.length - 1) {
+        console.log('Trying fallback audio format:', audioFormats[currentIndex + 1])
+        audio.value!.src = audioFormats[currentIndex + 1]
+        audio.value!.load()
+      } else {
+        console.warn('All audio formats failed to load. Notification sound disabled.')
+        isEnabled.value = false
+      }
+      
       isPlaying.value = false
     })
   }
@@ -85,6 +109,35 @@ export function useNotificationSound(options: NotificationSoundOptions = {}) {
     } catch (error) {
       console.warn('Failed to play notification sound:', error)
       console.warn('This might be due to browser autoplay policies. User interaction may be required.')
+      
+      // Fallback: Use Web Audio API to generate a simple beep sound
+      playFallbackSound()
+    }
+  }
+
+  // Fallback sound using Web Audio API
+  const playFallbackSound = (): void => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime) // 800Hz frequency
+      oscillator.type = 'sine'
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime)
+      gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+      
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.3)
+      
+      console.log('Played fallback notification sound')
+    } catch (error) {
+      console.warn('Fallback sound also failed:', error)
     }
   }
 
@@ -126,6 +179,33 @@ export function useNotificationSound(options: NotificationSoundOptions = {}) {
     playSound()
   }
 
+  // Test fallback sound
+  const testFallbackSound = (): void => {
+    console.log('Testing fallback notification sound...')
+    playFallbackSound()
+  }
+
+  // Check if audio is supported
+  const isAudioSupported = (): boolean => {
+    try {
+      const audio = new Audio()
+      return !!(audio.canPlayType && audio.canPlayType('audio/wav') !== '')
+    } catch (e) {
+      return false
+    }
+  }
+
+  // Get audio support info
+  const getAudioSupportInfo = (): object => {
+    const audio = new Audio()
+    return {
+      canPlayWAV: audio.canPlayType('audio/wav'),
+      canPlayMP3: audio.canPlayType('audio/mpeg'),
+      canPlayOGG: audio.canPlayType('audio/ogg'),
+      hasWebAudio: !!(window.AudioContext || (window as any).webkitAudioContext)
+    }
+  }
+
   // Enable audio after user interaction (for autoplay policies)
   const enableAudioAfterInteraction = (): void => {
     if (audio.value) {
@@ -147,7 +227,10 @@ export function useNotificationSound(options: NotificationSoundOptions = {}) {
     setVolume,
     preloadAudio,
     testSound,
+    testFallbackSound,
     enableAudioAfterInteraction,
+    isAudioSupported,
+    getAudioSupportInfo,
     isEnabled: readonly(isEnabled),
     isPlaying: readonly(isPlaying)
   }

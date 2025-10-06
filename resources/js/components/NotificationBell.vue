@@ -26,9 +26,23 @@ const unreadCount = ref(0)
 const previousNotificationCount = ref(0)
 
 // Initialize notification sound
-const { playSound, preloadAudio, testSound, enableAudioAfterInteraction } = useNotificationSound({
+const { 
+  playSound, 
+  preloadAudio, 
+  testSound, 
+  testFallbackSound,
+  enableAudioAfterInteraction,
+  isAudioSupported,
+  getAudioSupportInfo
+} = useNotificationSound({
   volume: 0.5,
   preload: true
+})
+
+// Debug audio support on mount
+onMounted(() => {
+  console.log('Audio support info:', getAudioSupportInfo())
+  console.log('Audio supported:', isAudioSupported())
 })
 
 // Update unread count when notifications change

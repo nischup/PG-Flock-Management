@@ -45,7 +45,10 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome');
+    return Inertia::render('Welcome', [
+        'canResetPassword' => Route::has('password.request'),
+        'status' => session('status'),
+    ]);
 })->name('home');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -242,19 +245,26 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/api/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::get('/api/notifications/stats', [NotificationController::class, 'stats'])->name('notifications.stats');
 
-    // Test route for notifications
-    Route::get('/test-notifications', function () {
-        $user = \App\Models\User::find(2);
-        if (! $user) {
-            return 'User not found';
+    // Test route for audio files (for debugging)
+    Route::get('/test-audio', function () {
+        $audioFiles = [
+            'mp3' => public_path('Audio/notification-sound.mp3'),
+            'wav' => public_path('Audio/notification-sound.wav')
+        ];
+        
+        $results = [];
+        foreach ($audioFiles as $format => $path) {
+            $results[$format] = [
+                'exists' => file_exists($path),
+                'size' => file_exists($path) ? filesize($path) : 0,
+                'readable' => file_exists($path) ? is_readable($path) : false
+            ];
         }
-
-        $notifications = $user->notifications()->notExpired()->orderBy('created_at', 'desc')->limit(10)->get();
-
+        
         return response()->json([
-            'user' => $user->name,
-            'notifications_count' => $notifications->count(),
-            'notifications' => $notifications,
+            'audio_files' => $results,
+            'public_path' => public_path('Audio/'),
+            'url_path' => '/Audio/'
         ]);
     });
 });
