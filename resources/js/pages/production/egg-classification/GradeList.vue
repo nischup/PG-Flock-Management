@@ -433,18 +433,23 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
                                 <div class="space-y-1">
                                     <div v-for="g in item.grades" :key="g.id" class="flex justify-between items-center">
-                                        <span class="text-sm">{{ g.grade?.name ?? '-' }}</span>
-                                        <span 
-                                            class="inline-flex rounded-full px-2 py-1 text-xs font-medium"
-                                            :class="g.grade?.type === '1' 
-                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
-                                                : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'"
-                                        >
-                                            {{ g.quantity }}
+                                    <span class="text-sm">
+                                        {{ g.grade?.name ?? '-' }} 
+                                        <span class="text-xs font-medium text-gray-500 ml-1">
+                                        ({{ g.grade?.type === 1 ? 'Commercial' : 'Hatching' }})
                                         </span>
+                                    </span>
+                                    <span 
+                                        class="inline-flex rounded-full px-2 py-1 text-xs font-medium"
+                                        :class="g.grade?.type === 1 
+                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
+                                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'"
+                                    >
+                                        {{ g.quantity }}
+                                    </span>
                                     </div>
                                 </div>
-                            </td>
+                                </td>
                             <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 font-medium">
                                 {{ item.classification?.total_eggs ?? 0 }}
                             </td>
