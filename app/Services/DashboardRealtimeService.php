@@ -997,9 +997,6 @@ class DashboardRealtimeService
                 $mortalityPercentage       = $totalBirds > 0 ? ($totalMortality / $totalBirds) * 100 : 0;
                 $otherRejectionPercentage  = $totalBirds > 0 ? ($othersRejection / $totalBirds) * 100 : 0;
 
-
-
-
                 $fullflockmortality = $totalMortality+$totalImmediateMortality;
                 $fullflockrejection = $othersRejection+$totalImmediateRejection;
                 $fullflockmortalitypercentage = $totalOpeningBirds > 0 ? ($fullflockmortality / $totalOpeningBirds) * 100 : 0;
@@ -1403,20 +1400,192 @@ class DashboardRealtimeService
      */
     public function getBirdsDetails(array $filters = []): array
     {
-    try {
-        // 1. Get all active batch assignments with relationships
-        $batchQuery = BatchAssign::where('status', 1)
-            ->with(['flock', 'company', 'shed', 'batch', 'project']);
+        try {
+            $batchQuery = BatchAssign::where('status', 1)
+                ->with(['flock', 'company', 'shed', 'batch', 'project', 'shedReceive.firmReceive.psReceive']);
 
-        // Apply filters
-        if (!empty($filters['company'])) $batchQuery->where('company_id', $filters['company']);
-        if (!empty($filters['project'])) $batchQuery->where('project_id', $filters['project']);
-        if (!empty($filters['flock'])) $batchQuery->where('flock_id', $filters['flock']);
-        if (!empty($filters['shed'])) $batchQuery->where('shed_id', $filters['shed']);
-        if (!empty($filters['batch'])) $batchQuery->where('batch_no', $filters['batch']);
+            if (!empty($filters['company'])) $batchQuery->where('company_id', $filters['company']);
+            if (!empty($filters['project'])) $batchQuery->where('project_id', $filters['project']);
+            if (!empty($filters['flock'])) $batchQuery->where('flock_id', $filters['flock']);
+            if (!empty($filters['shed'])) $batchQuery->where('shed_id', $filters['shed']);
+            if (!empty($filters['batch'])) $batchQuery->where('batch_no', $filters['batch']);
 
-        $batchAssigns = $batchQuery->get();
-        if ($batchAssigns->isEmpty()) {
+            $batchAssigns = $batchQuery->get();
+            if ($batchAssigns->isEmpty()) {
+                return [
+                    'summary' => [],
+                    'flock_details' => [],
+                    'batch_details' => [],
+                    'timestamp' => time(),
+                ];
+            }
+
+            $batchIds = $batchAssigns->pluck('id');
+            $transactionNos = $batchAssigns->pluck('transaction_no')->filter();
+
+            $allFirmReceives = PsFirmReceive::whereIn('transaction_no', $transactionNos)->get()->keyBy('transaction_no');
+            $allTransfers = BirdTransfer::whereIn('id', $allFirmReceives->pluck('source_id'))->get()->keyBy('source_id');
+            $allBatchAssigns = BatchAssign::whereIn('id', $batchIds)->get()->keyBy('id');
+
+            $batchDetails = $batchAssigns->map(function ($batch) use ($allFirmReceives, $allTransfers, $allBatchAssigns) {
+
+                $currentLosses = $this->calculateBatchLosses(collect([$batch]));
+
+                $firmReceive = $allFirmReceives[$batch->transaction_no] ?? null;
+                $transfer = $firmReceive ? ($allTransfers[$firmReceive->source_id] ?? null) : null;
+                $previousBatch = $transfer ? ($allBatchAssigns[$transfer->batch_assign_id] ?? BatchAssign::find($transfer->batch_assign_id)) : null;
+
+                $openingMale = $previousBatch ? ($previousBatch->batch_male_qty ?? 0) : ($batch->batch_male_qty ?? 0);
+                $openingFemale = $previousBatch ? ($previousBatch->batch_female_qty ?? 0) : ($batch->batch_female_qty ?? 0);
+                $openingTotal = $openingMale + $openingFemale;
+
+                $previousLosses = $previousBatch ? $this->calculateBatchLosses(collect([$previousBatch])) : [
+                    'totalMortalityMale' => 0,
+                    'totalMortalityFemale' => 0,
+                    'otherRejectionMale' => 0,
+                    'otherRejectionFemale' => 0,
+                ];
+
+                $currentMaleMortality = $currentLosses['totalMortalityMale'] ?? 0;
+                $currentFemaleMortality = $currentLosses['totalMortalityFemale'] ?? 0;
+                $currentMaleRejection = $currentLosses['otherRejectionMale'] ?? 0;
+                $currentFemaleRejection = $currentLosses['otherRejectionFemale'] ?? 0;
+
+                $immediateMaleMortality = $previousLosses['totalMortalityMale'] ?? 0;
+                $immediateFemaleMortality = $previousLosses['totalMortalityFemale'] ?? 0;
+                $immediateMaleRejection = $previousLosses['otherRejectionMale'] ?? 0;
+                $immediateFemaleRejection = $previousLosses['otherRejectionFemale'] ?? 0;
+
+
+                $totalMaleRejection = $currentMaleRejection + $immediateMaleRejection;
+                $totalFemaleRejection = $currentFemaleRejection + $immediateFemaleRejection;
+                $totalOtherRejection = $totalMaleRejection + $totalFemaleRejection;
+
+
+                // 🔹 Total mortality and rejection combining current + previous
+                $totalMaleMortality = $currentMaleMortality + $immediateMaleMortality;
+                $totalFemaleMortality = $currentFemaleMortality + $immediateFemaleMortality;
+                $totalMortality = $totalMaleMortality + $totalFemaleMortality;
+                // Percentages based on opening birds
+                $totalMortalityPercent = $openingTotal > 0 ? round(($totalMortality / $openingTotal) * 100, 2) : 0;
+                $totalOtherRejectionPercent = $openingTotal > 0 ? round(($totalOtherRejection / $openingTotal) * 100, 2) : 0;
+
+                // 🔹 Current birds remaining
+                $currentMale = max(0, $openingMale - $immediateMaleMortality - $immediateMaleRejection - $currentMaleMortality - $currentMaleRejection);
+                $currentFemale = max(0, $openingFemale - $immediateFemaleMortality - $immediateFemaleRejection - $currentFemaleMortality - $currentFemaleRejection);
+                $currentTotal = $currentMale + $currentFemale;
+
+                $currentMalePercent = $openingMale > 0 ? round(($currentMale / $openingMale) * 100, 2) : 0;
+                $currentFemalePercent = $openingFemale > 0 ? round(($currentFemale / $openingFemale) * 100, 2) : 0;
+
+                $startDate = $batch->shedReceive?->created_at ?? $batch->created_at;
+                $age = '0 weeks 0 days';
+                if ($startDate) {
+                    $days = $startDate->diffInDays(now());
+                    $weeks = floor($days / 7);
+                    $remainingDays = $days % 7;
+                    $age = "{$weeks} weeks {$remainingDays} days";
+                }
+
+                return [
+                    'batch_no' => $batch->batch_no,
+                    'flock_name' => $batch->flock?->name ?? 'Unknown Flock',
+                    'company_name' => $batch->company?->name ?? 'Unknown Company',
+                    'shed_name' => $batch->shed?->name ?? 'Unknown Shed',
+                    'project_name' => $batch->project?->name ?? 'Unknown Project',
+                    'batch_name' => $batch->batch?->name ?? 'Unknown Batch',
+
+                    'opening_male' => $openingMale,
+                    'opening_female' => $openingFemale,
+                    'opening_total' => $openingTotal,
+
+                    'current_male' => $currentMale,
+                    'current_female' => $currentFemale,
+                    'current_total' => $currentTotal,
+                    'current_male_percent' => $currentMalePercent,
+                    'current_female_percent' => $currentFemalePercent,
+
+                    'current_male_mortality' => $currentMaleMortality,
+                    'current_female_mortality' => $currentFemaleMortality,
+                    'current_male_rejection' => $currentMaleRejection,
+                    'current_female_rejection' => $currentFemaleRejection,
+                    'totalOtherRejectionPercent'=>$totalOtherRejectionPercent,
+                    'totalMortalityPercent'=>$totalMortalityPercent,
+                    'totalOtherRejection'=>$totalOtherRejection,
+                    'totalMortality'=>$totalMortality,
+                    'immediate_male_mortality' => $immediateMaleMortality,
+                    'immediate_female_mortality' => $immediateFemaleMortality,
+                    'immediate_male_rejection' => $immediateMaleRejection,
+                    'immediate_female_rejection' => $immediateFemaleRejection,
+
+                    'age' => $age,
+                    'status' => $batch->status == 1 ? 'Active' : 'Inactive',
+                ];
+            });
+
+            // 4️⃣ Flock-level aggregation
+            $flockDetails = $batchDetails->groupBy('flock_name')->map(function ($batches, $flockName) {
+                $totalOpeningMale = $batches->sum('opening_male');
+                $totalOpeningFemale = $batches->sum('opening_female');
+                $totalOpening = $totalOpeningMale + $totalOpeningFemale;
+
+                $totalCurrentMale = $batches->sum('current_male');
+                $totalCurrentFemale = $batches->sum('current_female');
+                $totalCurrent = $totalCurrentMale + $totalCurrentFemale;
+
+                $currentMalePercent = $totalOpeningMale > 0 ? round(($totalCurrentMale / $totalOpeningMale) * 100, 2) : 0;
+                $currentFemalePercent = $totalOpeningFemale > 0 ? round(($totalCurrentFemale / $totalOpeningFemale) * 100, 2) : 0;
+
+                return [
+                    'flock_name' => $flockName,
+                    'total_opening_male' => $totalOpeningMale,
+                    'total_opening_female' => $totalOpeningFemale,
+                    'total_opening_birds' => $totalOpening,
+                    'total_current_male' => $totalCurrentMale,
+                    'total_current_female' => $totalCurrentFemale,
+                    'total_current_birds' => $totalCurrent,
+                    'current_male_percent' => $currentMalePercent,
+                    'current_female_percent' => $currentFemalePercent,
+                    'batches_count' => $batches->count(),
+                ];
+            })->values();
+
+            // 5️⃣ Summary
+            $totalOpeningMale = $batchDetails->sum('opening_male');
+            $totalOpeningFemale = $batchDetails->sum('opening_female');
+            $totalOpeningBirds = $batchDetails->sum('opening_total');
+
+            $totalCurrentMale = $batchDetails->sum('current_male');
+            $totalCurrentFemale = $batchDetails->sum('current_female');
+            $totalCurrentBirds = $batchDetails->sum('current_total');
+
+            $summary = [
+                'total_batches' => $batchDetails->count(),
+                'total_flocks' => $flockDetails->count(),
+
+                'total_opening_male' => $totalOpeningMale,
+                'total_opening_female' => $totalOpeningFemale,
+                'total_opening_birds' => $totalOpeningBirds,
+                'opening_male_percent' => $totalOpeningBirds > 0 ? round(($totalOpeningMale / $totalOpeningBirds) * 100, 2) : 0,
+                'opening_female_percent' => $totalOpeningBirds > 0 ? round(($totalOpeningFemale / $totalOpeningBirds) * 100, 2) : 0,
+
+                'total_current_male' => $totalCurrentMale,
+                'total_current_female' => $totalCurrentFemale,
+                'total_current_birds' => $totalCurrentBirds,
+                'current_male_percent' => $totalCurrentBirds > 0 ? round(($totalCurrentMale / $totalOpeningBirds) * 100, 2) : 0,
+                'current_female_percent' => $totalCurrentBirds > 0 ? round(($totalCurrentFemale / $totalOpeningBirds) * 100, 2) : 0,
+            ];
+
+
+            return [
+                'summary' => $summary,
+                'flock_details' => $flockDetails,
+                'batch_details' => $batchDetails,
+                'timestamp' => time(),
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error getting birds details: '.$e->getMessage());
             return [
                 'summary' => [],
                 'flock_details' => [],
@@ -1424,237 +1593,11 @@ class DashboardRealtimeService
                 'timestamp' => time(),
             ];
         }
-
-        $batchIds = $batchAssigns->pluck('id');
-
-        // 2. Collect operation IDs once
-        $operationIds = DailyOperation::whereIn('batchassign_id', $batchIds)
-            ->pluck('id', 'batchassign_id');
-
-        // 3. Preload aggregates for each operation type
-        $mortality = DailyMortality::whereIn('daily_operation_id', $operationIds->values())
-            ->selectRaw('daily_operation_id, SUM(male_qty) as male, SUM(female_qty) as female')
-            ->groupBy('daily_operation_id')
-            ->get()
-            ->keyBy('daily_operation_id');
-
-        $labSend = FirmLabTest::whereIn('batch_assign_id', $batchIds)
-            ->selectRaw('batch_assign_id, SUM(firm_lab_send_male_qty) as male, SUM(firm_lab_send_female_qty) as female')
-            ->groupBy('batch_assign_id')
-            ->get()
-            ->keyBy('batch_assign_id');
-
-        $culling = DailyCulling::whereIn('daily_operation_id', $operationIds->values())
-            ->selectRaw('daily_operation_id, SUM(male_qty) as male, SUM(female_qty) as female')
-            ->groupBy('daily_operation_id')
-            ->get()
-            ->keyBy('daily_operation_id');
-
-        $destroy = DailyDestroy::whereIn('daily_operation_id', $operationIds->values())
-            ->selectRaw('daily_operation_id, SUM(male_qty) as male, SUM(female_qty) as female')
-            ->groupBy('daily_operation_id')
-            ->get()
-            ->keyBy('daily_operation_id');
-
-        $sexingError = DailySexingError::whereIn('daily_operation_id', $operationIds->values())
-            ->selectRaw('daily_operation_id, SUM(male_qty) as male, SUM(female_qty) as female')
-            ->groupBy('daily_operation_id')
-            ->get()
-            ->keyBy('daily_operation_id');
-
-        // Helper: resolve aggregates for one batch
-        $resolveOps = function ($batchId, $opIds) use ($mortality, $labSend, $culling, $destroy, $sexingError) {
-            $mMale = $mFemale = $lMale = $lFemale = $cMale = $cFemale = $dMale = $dFemale = $sMale = $sFemale = 0;
-
-            foreach ($opIds as $opId) {
-                if (isset($mortality[$opId])) {
-                    $mMale += $mortality[$opId]->male;
-                    $mFemale += $mortality[$opId]->female;
-                }
-                if (isset($culling[$opId])) {
-                    $cMale += $culling[$opId]->male;
-                    $cFemale += $culling[$opId]->female;
-                }
-                if (isset($destroy[$opId])) {
-                    $dMale += $destroy[$opId]->male;
-                    $dFemale += $destroy[$opId]->female;
-                }
-                if (isset($sexingError[$opId])) {
-                    $sMale += $sexingError[$opId]->male;
-                    $sFemale += $sexingError[$opId]->female;
-                }
-            }
-
-            if (isset($labSend[$batchId])) {
-                $lMale = $labSend[$batchId]->male;
-                $lFemale = $labSend[$batchId]->female;
-            }
-
-            return [
-                'mortality_male'   => $mMale,
-                'mortality_female' => $mFemale,
-                'lab_male'         => $lMale,
-                'lab_female'       => $lFemale,
-                'culling_male'     => $cMale,
-                'culling_female'   => $cFemale,
-                'destroyed_male'   => $dMale,
-                'destroyed_female' => $dFemale,
-                'sexing_male'      => $sMale,
-                'sexing_female'    => $sFemale,
-                'total_male_mortality' => $mMale,
-            ];
-        };
-
-        // 4. Batch-level details
-        $batchDetails = $batchAssigns->map(function ($batch) use ($operationIds, $resolveOps) {
-            $opIds = $operationIds->filter(fn($_, $id) => $id === $batch->id)->values();
-            $ops = $resolveOps($batch->id, $opIds);
-
-            $totalMale   = $batch->batch_male_qty;
-            $totalFemale = $batch->batch_female_qty;
-            $totalBirds  = $batch->batch_total_qty;
-
-            $deductedMale   = $ops['mortality_male'] + $ops['lab_male'] + $ops['culling_male'] + $ops['destroyed_male'] + $ops['sexing_male'];
-            $deductedFemale = $ops['mortality_female'] + $ops['lab_female'] + $ops['culling_female'] + $ops['destroyed_female'] + $ops['sexing_female'];
-            
-            $currentMale   = $totalMale - $deductedMale;
-            $currentFemale = $totalFemale - $deductedFemale;
-            $currentTotal  = $currentMale + $currentFemale;
-            // Age calculation
-            $startDate = $batch->shedReceive?->created_at ?? $batch->created_at;
-            $age = '0 weeks 0 days';
-            if ($startDate) {
-                $days = $startDate->diffInDays(now());
-                $weeks = floor($days / 7);
-                $remainingDays = $days % 7;
-                $age = "{$weeks} weeks {$remainingDays} days";
-            }
-
-            return [
-                'batch_no' => $batch->batch_no,
-                'batch_name' => $batch->batch?->name ?? 'Unknown Batch',
-                'flock_name' => $batch->flock?->name ?? 'Unknown Flock',
-                'company_name' => $batch->company?->name ?? 'Unknown Company',
-                'project_name' => $batch->project?->name ?? 'Unknown Project',
-                'shed_name' => $batch->shed?->name ?? 'Unknown Shed',
-
-                // Assigned birds
-                'total_male_birds' => $totalMale,
-                'total_female_birds' => $totalFemale,
-                'total_birds' => $totalBirds,
-                'assign_male_percentage' => $totalBirds > 0 ? round(($totalMale / $totalBirds) * 100, 2) : 0,
-                'assign_female_percentage' => $totalBirds > 0 ? round(($totalFemale / $totalBirds) * 100, 2) : 0,
-
-                // Current birds
-                'current_male_birds' => $currentMale,
-                'current_female_birds' => $currentFemale,
-                'current_total_birds' => $currentTotal,
-                'current_male_percentage' => $currentTotal > 0 ? round(($currentMale / $currentTotal) * 100, 2) : 0,
-                'current_female_percentage' => $currentTotal > 0 ? round(($currentFemale / $currentTotal) * 100, 2) : 0,
-
-                // Mortality & rejection
-                'male_mortality' => $ops['mortality_male'],
-                'female_mortality' => $ops['mortality_female'],
-                'male_mortality_percentage' => $totalMale > 0 ? round(($ops['mortality_male'] / $totalMale) * 100, 2) : 0,
-                'female_mortality_percentage' => $totalFemale > 0 ? round(($ops['mortality_female'] / $totalFemale) * 100, 2) : 0,
-                'total_mortality' => $ops['mortality_male'] + $ops['mortality_female'],
-                'total_mortality_percentage' => $totalBirds > 0 
-                    ? round((($ops['mortality_male'] + $ops['mortality_female']) / $totalBirds) * 100, 2) 
-                    : 0,
-                'total_other_rejection' => ($ops['lab_male'] + $ops['culling_male'] + $ops['destroyed_male'] + $ops['sexing_male'])
-                          + ($ops['lab_female'] + $ops['culling_female'] + $ops['destroyed_female'] + $ops['sexing_female']),
-                'total_other_rejection_percentage' => $totalBirds > 0
-                ? round((($ops['lab_male'] + $ops['culling_male'] + $ops['destroyed_male'] + $ops['sexing_male'])
-                        + ($ops['lab_female'] + $ops['culling_female'] + $ops['destroyed_female'] + $ops['sexing_female'])) / $totalBirds * 100, 2)
-                : 0,
-                'age' => $age,
-                'status' => $batch->status == 1 ? 'Active' : 'Inactive',
-            ];
-        });
-
-        // 5. Flock-level aggregation
-        $flockDetails = $batchDetails->groupBy('flock_name')->map(function ($batches, $flockName) {
-            $totalMale   = $batches->sum('total_male_birds');
-            $totalFemale = $batches->sum('total_female_birds');
-            $totalBirds  = $batches->sum('total_birds');
-
-            $currentMale   = $batches->sum('current_male_birds');
-            $currentFemale = $batches->sum('current_female_birds');
-            $currentTotal  = $batches->sum('current_total_birds');
-
-            $mortalityMale  = $batches->sum('male_mortality');
-            $mortalityFemale = $batches->sum('female_mortality');
-            $otherRejMale   = $batches->sum('other_rejection_male');
-            $otherRejFemale = $batches->sum('other_rejection_female');
-
-            return [
-                'flock_name' => $flockName,
-                'total_male_birds' => $totalMale,
-                'total_female_birds' => $totalFemale,
-                'total_birds' => $totalBirds,
-                'current_male_birds' => $currentMale,
-                'current_female_birds' => $currentFemale,
-                'current_total_birds' => $currentTotal,
-                'assign_male_percentage' => $totalBirds > 0 ? round(($totalMale / $totalBirds) * 100, 2) : 0,
-                'assign_female_percentage' => $totalBirds > 0 ? round(($totalFemale / $totalBirds) * 100, 2) : 0,
-                'current_male_percentage' => $currentTotal > 0 ? round(($currentMale / $currentTotal) * 100, 2) : 0,
-                'current_female_percentage' => $currentTotal > 0 ? round(($currentFemale / $currentTotal) * 100, 2) : 0,
-                'male_mortality' => $mortalityMale,
-                'female_mortality' => $mortalityFemale,
-                'other_rejection_male' => $otherRejMale,
-                'other_rejection_female' => $otherRejFemale,
-                'batches_count' => $batches->count(),
-            ];
-        })->values();
-
-        // 6. Summary
-        $summary = [
-            'total_male_birds' => $batchDetails->sum('total_male_birds'),
-            'total_female_birds' => $batchDetails->sum('total_female_birds'),
-            'total_birds' => $batchDetails->sum('total_birds'),
-
-            'current_male_birds' => $batchDetails->sum('current_male_birds'),
-            'current_female_birds' => $batchDetails->sum('current_female_birds'),
-            'current_total_birds' => $batchDetails->sum('current_total_birds'),
-
-            'total_male_mortality' => $batchDetails->sum('male_mortality'),
-            'total_female_mortality' => $batchDetails->sum('female_mortality'),
-            'total_other_rejection_male' => $batchDetails->sum('other_rejection_male'),
-            'total_other_rejection_female' => $batchDetails->sum('other_rejection_female'),
-
-            'assign_male_percentage' => $batchDetails->sum('total_birds') > 0
-                ? round(($batchDetails->sum('total_male_birds') / $batchDetails->sum('total_birds')) * 100, 2) : 0,
-            'assign_female_percentage' => $batchDetails->sum('total_birds') > 0
-                ? round(($batchDetails->sum('total_female_birds') / $batchDetails->sum('total_birds')) * 100, 2) : 0,
-            'current_male_percentage' => $batchDetails->sum('current_total_birds') > 0
-                ? round(($batchDetails->sum('current_male_birds') / $batchDetails->sum('current_total_birds')) * 100, 2) : 0,
-            'current_female_percentage' => $batchDetails->sum('current_total_birds') > 0
-                ? round(($batchDetails->sum('current_female_birds') / $batchDetails->sum('total_birds')) * 100, 2) : 0,
-
-            'total_batches' => $batchDetails->count(),
-            'total_flocks' => $flockDetails->count(),
-            'total_assignments' => $batchAssigns->count(),
-            'active_batches' => $batchAssigns->where('status',1)->count(),
-        ];
-
-        return [
-            'summary' => $summary,
-            'flock_details' => $flockDetails,
-            'batch_details' => $batchDetails,
-            'timestamp' => time(),
-        ];
-    } catch (\Exception $e) {
-        Log::error('Error getting male birds details: '.$e->getMessage());
-        Log::error('Stack trace: '.$e->getTraceAsString());
-
-        return [
-            'summary' => [],
-            'flock_details' => [],
-            'batch_details' => [],
-            'timestamp' => time(),
-        ];
     }
-}
+
+
+
+
 
 
     /**

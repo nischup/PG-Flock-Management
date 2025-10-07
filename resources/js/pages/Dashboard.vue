@@ -1220,10 +1220,6 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                      
                     </td>
                   </tr>
-
-                  
-                  
-
                   
 
                   <!-- Daily Eggs Row (Production Stage only) -->
@@ -1339,39 +1335,39 @@ const progressChartData = props.progressBars.map((pb, index) => ({
         <!-- Summary Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="bg-blue-50 p-4 rounded-lg">
-            <div class="text-sm text-blue-600 font-medium">Assign Total Birds</div>
-            <div class="text-2xl font-bold text-blue-800">{{ modalData.birdsData.summary.total_birds?.toLocaleString() }}</div>
+            <div class="text-sm text-blue-600 font-medium">Opening Total Birds</div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.birdsData.summary.total_opening_birds?.toLocaleString() }}</div>
           </div>
           <div class="bg-orange-50 p-4 rounded-lg">
             <div class="text-sm text-orange-600 font-medium">Male Birds</div>
-            <div class="text-2xl font-bold text-orange-800">{{ modalData.birdsData.summary.total_male_birds?.toLocaleString() }}</div>
+            <div class="text-2xl font-bold text-orange-800">{{ modalData.birdsData.summary.total_opening_male?.toLocaleString() }}</div>
           </div>
           <div class="bg-pink-50 p-4 rounded-lg">
             <div class="text-sm text-pink-600 font-medium">Female Birds</div>
-            <div class="text-2xl font-bold text-pink-800">{{ modalData.birdsData.summary.total_female_birds?.toLocaleString() }} </div>
+            <div class="text-2xl font-bold text-pink-800">{{ modalData.birdsData.summary.total_opening_female?.toLocaleString() }} </div>
           </div>
           <div class="bg-red-50 p-4 rounded-lg">
-            <div class="text-sm text-red-600 font-medium">Assign F/M Percentage</div>
-            <div class="text-xl font-bold text-red-800"> F-{{ modalData.birdsData.summary?.assign_female_percentage }}%, M-{{ modalData.birdsData.summary?.assign_male_percentage }} %</div>
+            <div class="text-sm text-red-600 font-medium">Opening F/M Percentage</div>
+            <div class="text-xl font-bold text-red-800"> F-{{ modalData.birdsData.summary?.opening_female_percent }}%, M-{{ modalData.birdsData.summary?.opening_male_percent }} %</div>
           </div>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="bg-blue-50 p-4 rounded-lg">
             <div class="text-sm text-blue-600 font-medium">Current Total Birds</div>
-            <div class="text-2xl font-bold text-blue-800">{{ modalData.birdsData.summary.current_total_birds?.toLocaleString() }}</div>
+            <div class="text-2xl font-bold text-blue-800">{{ modalData.birdsData.summary.total_current_birds?.toLocaleString() }}</div>
           </div>
           <div class="bg-orange-50 p-4 rounded-lg">
             <div class="text-sm text-orange-600 font-medium">Current Male Birds</div>
-            <div class="text-2xl font-bold text-orange-800">{{ modalData.birdsData.summary.current_male_birds?.toLocaleString() }}</div>
+            <div class="text-2xl font-bold text-orange-800">{{ modalData.birdsData.summary.total_current_male?.toLocaleString() }}</div>
           </div>
           <div class="bg-pink-50 p-4 rounded-lg">
             <div class="text-sm text-pink-600 font-medium">Current Female Birds</div>
-            <div class="text-2xl font-bold text-pink-800">{{ modalData.birdsData.summary.current_female_birds?.toLocaleString() }}</div>
+            <div class="text-2xl font-bold text-pink-800">{{ modalData.birdsData.summary.total_current_female?.toLocaleString() }}</div>
           </div>
           <div class="bg-red-50 p-4 rounded-lg">
             <div class="text-sm text-red-600 font-medium">Current F/M Percentage</div>
-            <div class="text-xl font-bold text-red-800">F-{{ modalData.birdsData.summary?.current_female_percentage }}%, M-{{ modalData.birdsData.summary?.current_male_percentage }} %</div>
+            <div class="text-xl font-bold text-red-800">F-{{ modalData.birdsData.summary?.current_female_percent }}%, M-{{ modalData.birdsData.summary?.current_male_percent }} %</div>
           </div>
         </div>
 
@@ -1405,10 +1401,12 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CurrentTotal Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opening Total Birds</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Male/Female</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortality</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Rejectios</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Total Birds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Male/Female</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shed</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -1427,21 +1425,30 @@ const progressChartData = props.progressBars.map((pb, index) => ({
                     <div class="text-sm text-gray-900">{{ batch.flock_name }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ batch.current_total_birds?.toLocaleString() }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ batch.opening_total?.toLocaleString() }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">
-                      <div>M: {{ batch.current_male_birds?.toLocaleString() }}</div>
-                      <div>F: {{ batch.current_female_birds?.toLocaleString() }}</div>
+                      <div>M: {{ batch.opening_male?.toLocaleString() }}</div>
+                      <div>F: {{ batch.opening_female?.toLocaleString() }}</div>
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ batch.total_mortality?.toLocaleString() }}</div>
-                    <div class="text-xs text-gray-500">{{ batch.total_mortality_percentage }}%</div>
+                    <div class="text-sm text-gray-900">{{ batch.totalMortality?.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.totalMortalityPercent }}%</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ batch.total_other_rejection?.toLocaleString() }}</div>
-                    <div class="text-xs text-gray-500">{{ batch.total_other_rejection_percentage }}%</div>
+                    <div class="text-sm text-gray-900">{{ batch.totalOtherRejection?.toLocaleString() }}</div>
+                    <div class="text-xs text-gray-500">{{ batch.totalOtherRejectionPercent }}%</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ batch.current_total?.toLocaleString() }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">
+                      <div>M: {{ batch.current_male?.toLocaleString() }}</div>
+                      <div>F: {{ batch.current_female?.toLocaleString() }}</div>
+                    </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ batch.company_name }}</div>
