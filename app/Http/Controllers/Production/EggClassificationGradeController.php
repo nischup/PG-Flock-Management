@@ -146,33 +146,24 @@ class EggClassificationGradeController extends Controller
 
     public function store(Request $request)
     {
-        // // Check if this is a batch assign (not an existing classification)
-        // $batchAssign = \App\Models\Shed\BatchAssign::find($request->classification_id);
-
-        // if ($batchAssign) {
-        //     // Create a new egg classification first
-        //     $classification = EggClassification::create([
-        //         'batchassign_id' => $request->classification_id,
-        //         'classification_date' => now()->format('Y-m-d'),
-        //         'total_eggs' => array_sum(array_column($request->grades, 'quantity')),
-        //         'hatching_eggs' => 0, // Will be calculated based on type
-        //         'commercial_eggs' => 0, // Will be calculated based on type
-        //         'rejected_eggs' => 0,
-        //         'technical_eggs' => 0,
-        //         'created_by' => Auth::id(),
-        //     ]);
-
-        //     $classificationId = $classification->id;
-        // } else {
-        //     $classificationId = $request->classification_id;
-        // }
-
         // Save the grades
         foreach ($request->grades as $grade) {
+            
+            $eggClassifiction = EggClassification::find($request->classification_id);
+            
             EggClassificationGrade::updateOrCreate(
                 [
                     'classification_id' => $request->classification_id,
                     'egg_grade_id' => $grade['egg_grade_id'],
+                    'batchassign_id' => $eggClassifiction->batchassign_id,
+                    'flock_no' => $eggClassifiction->flock_no,
+                    'flock_id' => $eggClassifiction->flock_id,
+                    'batch_no' => $eggClassifiction->batch_no,
+                    'shed_id' => $eggClassifiction->shed_id,
+                    'company_id' => $eggClassifiction->company_id,
+                    'project_id' => $eggClassifiction->project_id,
+                    'job_no' => $eggClassifiction->job_no,
+                    'transaction_no' => $eggClassifiction->transaction_no,
                 ],
                 [
                     'quantity' => $grade['quantity'],

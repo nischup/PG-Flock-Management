@@ -168,6 +168,7 @@ class EggClassificationController extends Controller
             'rejected_eggs' => $rejected_total,
             'technical_eggs' => $technical_total,
             'flock_id' => $batch->flock_id,
+            'flock_no' => $batch->flock_no,
             'batch_no' => $batch->batch_no,
             'job_no' => $batch->job_no,
             'transaction_no' => $batch->transaction_no,

@@ -19,6 +19,8 @@ return new class extends Migration
             $table->unsignedBigInteger('shed_id')->nullable()->after('project_id');
             $table->string('batch_no')->nullable()->after('shed_id');
             $table->string('flock_no')->nullable()->after('batch_no');
+
+            
             $table->string('job_no')->nullable()->after('flock_id');
             $table->string('transaction_no')->nullable()->after('job_no');
         });
@@ -28,6 +30,7 @@ return new class extends Migration
             $table->unsignedBigInteger('flock_id')->nullable()->after('id');
             $table->unsignedBigInteger('company_id')->nullable()->after('flock_id');
             $table->unsignedBigInteger('project_id')->nullable()->after('company_id');
+            $table->unsignedBigInteger('batchassign_id');
             $table->unsignedBigInteger('shed_id')->nullable()->after('project_id');
             $table->string('batch_no')->nullable()->after('shed_id');
             $table->string('flock_no')->nullable()->after('batch_no');
@@ -46,7 +49,7 @@ return new class extends Migration
         });
 
         Schema::table('egg_classification_grades', function (Blueprint $table) {
-            $table->dropColumn(['flock_id','company_id','project_id','shed_id','batch_no','flock_no','job_no','transaction_no']);
+            $table->dropColumn(['flock_id','company_id','project_id','shed_id','batch_no','flock_no','job_no','transaction_no','batchassign_id']);
         });
     }
 };

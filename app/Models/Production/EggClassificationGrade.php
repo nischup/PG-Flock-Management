@@ -9,7 +9,16 @@ class EggClassificationGrade extends Model
     protected $fillable = [
         'classification_id',
         'egg_grade_id',
+        'flock_id',
+        'job_no',
+        'transaction_no',
+        'company_id',
+        'project_id',
+        'shed_id',
+        'batch_no',
+        'flock_no',
         'quantity',
+        'batchassign_id',
     ];
 
     public function classification()

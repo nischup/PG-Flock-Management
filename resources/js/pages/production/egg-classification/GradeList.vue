@@ -410,72 +410,106 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(item, index) in groupedArray" :key="item.classification.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
-                                {{ ((props.grades?.meta?.current_page || 1) - 1) * (props.grades?.meta?.per_page || 10) + index + 1 }}
+                        <tr
+                            v-for="(item, index) in groupedArray"
+                            :key="item.classification.id"
+                            class="hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                            <td
+                            class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top"
+                            rowspan="2"
+                            >
+                            {{ ((props.grades?.meta?.current_page || 1) - 1) * (props.grades?.meta?.per_page || 10) + index + 1 }}
                             </td>
-                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">{{ item.classification?.id ?? '-' }}</td>
-                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
-                                <div class="flex flex-col">
-                                    <span class="font-medium">{{ item.classification?.batch_assign?.transaction_no ?? '-' }}</span>
-                                    <span class="text-xs text-gray-500">{{ item.classification?.batch_assign?.batch?.name ?? '-' }}</span>
-                                </div>
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
+                            {{ item.classification?.id ?? '-' }}
                             </td>
-                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
-                                {{ item.classification?.classification_date ? dayjs(item.classification.classification_date).format('YYYY-MM-DD') : '-' }}
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
+                            <div class="flex flex-col">
+                                <span class="font-medium">{{ item.classification?.batch_assign?.transaction_no ?? '-' }}</span>
+                                <span class="text-xs text-gray-500">{{ item.classification?.batch_assign?.batch?.name ?? '-' }}</span>
+                            </div>
                             </td>
-                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
-                                <div class="flex flex-col">
-                                    <span class="font-medium">{{ item.classification?.batch_assign?.flock?.name ?? '-' }}</span>
-                                    <span class="text-xs text-gray-500">{{ item.classification?.batch_assign?.shed?.name ?? '-' }}</span>
-                                </div>
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
+                            {{ item.classification?.classification_date ? dayjs(item.classification.classification_date).format('YYYY-MM-DD') : '-' }}
                             </td>
-                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
-                                <div class="space-y-1">
-                                    <div v-for="g in item.grades" :key="g.id" class="flex justify-between items-center">
-                                    <span class="text-sm">
-                                        {{ g.grade?.name ?? '-' }} 
-                                        <span class="text-xs font-medium text-gray-500 ml-1">
-                                        ({{ g.grade?.type === 1 ? 'Commercial' : 'Hatching' }})
-                                        </span>
-                                    </span>
-                                    <span 
-                                        class="inline-flex rounded-full px-2 py-1 text-xs font-medium"
-                                        :class="g.grade?.type === 1 
-                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
-                                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'"
-                                    >
-                                        {{ g.quantity }}
-                                    </span>
-                                    </div>
-                                </div>
-                                </td>
-                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 font-medium">
-                                {{ item.classification?.total_eggs ?? 0 }}
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
+                            <div class="flex flex-col">
+                                <span class="font-medium">{{ item.classification?.batch_assign?.flock?.name ?? '-' }}</span>
+                                <span class="text-xs text-gray-500">{{ item.classification?.batch_assign?.shed?.name ?? '-' }}</span>
+                            </div>
                             </td>
-                            <td class="border-b px-4 py-2 flex gap-4">
-                                <Link
-                                    v-if="can('egg-classification-grades.edit')"
-                                    :href="`/egg-classification-grades/${item.classification.id}/edit`"
-                                    class="text-indigo-600 hover:underline font-medium"
+
+                            <!-- First row: Commercial eggs -->
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
+                            <div class="space-y-1">
+                                <div
+                                v-for="g in item.grades.filter(gr => gr.grade?.type === 1)"
+                                :key="g.id"
+                                class="flex justify-between items-center"
                                 >
-                                    Edit
-                                </Link>
-                                <button
-                                    v-if="can('egg-classification-grades.view')"
-                                    @click="exportRowPdf(item.classification.id)"
-                                    class="text-green-600 hover:underline font-medium"
-                                >
-                                    Report
-                                </button>
+                                <span class="text-sm font-medium">
+                                    {{ g.grade?.name ?? '-' }} <span class="text-xs text-gray-500">(Commercial)</span>
+                                </span>
+                                <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    {{ g.quantity }}
+                                </span>
+                                </div>
+                            </div>
+                            </td>
+
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 font-medium" rowspan="2">
+                            {{ item.classification?.total_eggs ?? 0 }}
+                            </td>
+                            <td class="border-b px-4 py-2 flex gap-4" rowspan="2">
+                            <Link
+                                v-if="can('egg-classification-grades.edit')"
+                                :href="`/egg-classification-grades/${item.id}/edit`"
+                                class="text-indigo-600 hover:underline font-medium"
+                            >
+                                Edit
+                            </Link>
+                            <button
+                                v-if="can('egg-classification-grades.view')"
+                                @click="exportRowPdf(item.classification.id)"
+                                class="text-green-600 hover:underline font-medium"
+                            >
+                                Report
+                            </button>
                             </td>
                         </tr>
+
+                        <!-- Second row: Hatching eggs -->
+                        <tr
+                            v-for="(item, index) in groupedArray"
+                            :key="'hatch-' + item.classification.id"
+                            class="hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
+                            <div class="space-y-1">
+                                <div
+                                v-for="g in item.grades.filter(gr => gr.grade?.type === 2)"
+                                :key="g.id"
+                                class="flex justify-between items-center"
+                                >
+                                <span class="text-sm font-medium">
+                                    {{ g.grade?.name ?? '-' }} <span class="text-xs text-gray-500">(Hatching)</span>
+                                </span>
+                                <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    {{ g.quantity }}
+                                </span>
+                                </div>
+                            </div>
+                            </td>
+                        </tr>
+
                         <tr v-if="groupedArray.length === 0">
                             <td colspan="8" class="border-b px-4 py-6 text-center text-gray-500 dark:text-gray-400">
-                                No egg classification grades found.
+                            No egg classification grades found.
                             </td>
                         </tr>
-                    </tbody>
+                        </tbody>
+
                 </table>
             </div>
 

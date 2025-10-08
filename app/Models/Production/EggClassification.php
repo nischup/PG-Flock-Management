@@ -10,6 +10,14 @@ class EggClassification extends Model
     protected $fillable = [
         'batchassign_id',    // foreign key to batch_assigns
         'classification_date',
+        'flock_id',
+        'job_no',
+        'transaction_no',
+        'company_id',
+        'project_id',
+        'shed_id',
+        'batch_no',
+        'flock_no',
         'total_eggs',
         'rejected_eggs',
         'technical_eggs',
