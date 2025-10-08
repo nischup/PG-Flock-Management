@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EggGrade;
 use App\Models\Production\EggClassification;
 use App\Models\Production\EggClassificationGrade;
+use App\Models\Shed\BatchAssign;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -185,54 +186,48 @@ class EggClassificationGradeController extends Controller
     /**
      * Get batch egg data for grading
      */
-    public function getBatchEggData($batchId)
+    public function getBatchEggData($classificationId)
     {
-        $batch = \App\Models\Shed\BatchAssign::with(['flock', 'shed', 'batch'])
-            ->find($batchId);
-
-        if (! $batch) {
-            return response()->json(['error' => 'Batch not found'], 404);
-        }
-
-        // Get latest daily operation data for this batch
-        $latestOperation = \App\Models\DailyOperation\DailyOperation::where('batchassign_id', $batchId)
-            ->with(['eggCollections'])
-            ->latest('operation_date')
-            ->first();
-
-        $totalEggs = 0;
-        $hatchingEggs = 0;
-        $commercialEggs = 0;
-
-        if ($latestOperation && $latestOperation->eggCollections->isNotEmpty()) {
-            $eggCollection = $latestOperation->eggCollections->first();
-            $totalEggs = $eggCollection->quantity ?? 0;
-
-            // Calculate hatching and commercial eggs based on classification
-            // For now, we'll use a simple calculation - you can adjust this based on your business logic
-            $hatchingEggs = round($totalEggs * 0.6); // 60% hatching eggs
-            $commercialEggs = round($totalEggs * 0.4); // 40% commercial eggs
-        }
-
-        // Get existing egg classification if any
-        $existingClassification = \App\Models\Production\EggClassification::where('batchassign_id', $batchId)
+        // Get the latest egg classification for the given ID
+        $existingClassification = EggClassification::where('id', $classificationId)
             ->latest('classification_date')
             ->first();
 
+        // Initialize default values
+        $totalEggs = 0;
+        $hatchingEggs = 0;
+        $commercialEggs = 0;
+        $batchData = [
+            'id' => null,
+            'transaction_no' => 'N/A',
+            'batch_name' => 'N/A',
+            'flock_name' => 'N/A',
+            'shed_name' => 'N/A',
+        ];
+
         if ($existingClassification) {
-            $totalEggs = $existingClassification->total_eggs;
-            $hatchingEggs = $existingClassification->hatching_eggs;
-            $commercialEggs = $existingClassification->commercial_eggs;
+            $totalEggs = $existingClassification->total_eggs ?? 0;
+            $hatchingEggs = $existingClassification->hatching_eggs ?? 0;
+            $commercialEggs = $existingClassification->commercial_eggs ?? 0;
+
+            // Get related batch info
+            if ($existingClassification->batchassing_id) {
+                $batch = BatchAssign::with(['flock', 'shed', 'batch'])->find($existingClassification->batchassing_id);
+
+                if ($batch) {
+                    $batchData = [
+                        'id' => $batch->id,
+                        'transaction_no' => $batch->transaction_no ?? 'N/A',
+                        'batch_name' => $batch->batch->name ?? 'N/A',
+                        'flock_name' => $batch->flock->name ?? 'N/A',
+                        'shed_name' => $batch->shed->name ?? 'N/A',
+                    ];
+                }
+            }
         }
 
         return response()->json([
-            'batch' => [
-                'id' => $batch->id,
-                'transaction_no' => $batch->transaction_no,
-                'batch_name' => $batch->batch->name ?? 'N/A',
-                'flock_name' => $batch->flock->name ?? 'N/A',
-                'shed_name' => $batch->shed->name ?? 'N/A',
-            ],
+            'batch' => $batchData,
             'egg_data' => [
                 'total_eggs' => $totalEggs,
                 'hatching_eggs' => $hatchingEggs,

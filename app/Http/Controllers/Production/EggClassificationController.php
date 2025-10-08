@@ -155,6 +155,9 @@ class EggClassificationController extends Controller
             return back()->withErrors(['rejected_total' => 'Rejected eggs cannot exceed total eggs.']);
         }
 
+        // 1️⃣ Get the batchassign record first
+        $batch = BatchAssign::find($request->batchassign_id);
+
         // 1️⃣ Create main classification record
         $classification = EggClassification::create([
             'batchassign_id' => $request->batchassign_id,
@@ -164,6 +167,13 @@ class EggClassificationController extends Controller
             'commercial_eggs' => $commercial_total,
             'rejected_eggs' => $rejected_total,
             'technical_eggs' => $technical_total,
+            'flock_id' => $batch->flock_id,
+            'batch_no' => $batch->batch_no,
+            'job_no' => $batch->job_no,
+            'transaction_no' => $batch->transaction_no,
+            'shed_id' => $batch->shed_id,
+            'company_id' => $batch->company_id,
+            'project_id' => $batch->project_id,
             'created_by' => Auth::id(),
         ]);
 
