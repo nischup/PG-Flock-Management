@@ -173,6 +173,8 @@ class EggClassificationGradeController extends Controller
                 [
                     'egg_classification_grade_id' => $gradeRecord->id,
                     'egg_grade_id' => $grade['egg_grade_id'],
+                    'egg_grade_type_id' => $grade['type'],
+                    
                 ],
                 [
                     'quantity' => $grade['quantity'],

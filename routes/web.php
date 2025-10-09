@@ -41,6 +41,8 @@ use App\Http\Controllers\VaccineSchedule\UpcomingVaccineController;
 use App\Http\Controllers\VaccineSchedule\VaccineRoutingController;
 use App\Http\Controllers\VaccineSchedule\VaccineScheduleController;
 use App\Http\Controllers\WeatherController;
+use App\Http\Controllers\StoreReceiveController;
+use App\Http\Controllers\HatcheryReceiveController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -291,3 +293,7 @@ Route::get('/daily-flock-report/excel', [DailyFlockReportController::class, 'exp
 
 Route::get('/egg-receive-and-grading-report', [EggReceiveAndGradingReportController::class, 'index'])
     ->name('egg-receive-and-grading-report.index');
+
+
+Route::resource('store-receives', StoreReceiveController::class);
+Route::resource('hatchery-receives', HatcheryReceiveController::class);
