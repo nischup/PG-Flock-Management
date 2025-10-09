@@ -156,9 +156,9 @@ class DailyOperationController extends Controller
                     'female_mortality' => $item->mortalities->sum('female_qty'),
                     'total_mortality' => $totalMortality,
                     'feed_consumption' => $totalFeed > 0
-    ? $totalFeed.' '.($item->feeds->first()->unit->name ?? 'Kg')
-    : '0 Kg',
-                    'water_consumption' => $totalWater > 0 ? $totalWater.' L' : '0 L',
+                        ? $totalFeed . ' ' . ($item->feeds->first()->unit->name ?? 'Kg')
+                        : '0 Kg',
+                    'water_consumption' => $totalWater > 0 ? $totalWater . ' L' : '0 L',
                     'light_hour' => $item->lights->first()->hour ?? 0,
                     'egg_collection' => $totalEggs,
                     'created_by_name' => $item->creator->name ?? 'N/A',
@@ -226,7 +226,7 @@ class DailyOperationController extends Controller
                         $batch->project?->name ?? 'Proj',
                         $batch->flock?->code ?? 'Flock',
                         $batch->shed?->name ?? 'Shed',
-                        'Level '.$batch->level,
+                        'Level ' . $batch->level,
                         $batch->batch?->name ?? 'Batch'
                     ),
                     // Statistics data
@@ -270,13 +270,13 @@ class DailyOperationController extends Controller
                     'shed_name' => $detail->vaccineSchedule->shed->name ?? 'N/A',
                     'batch_name' => $detail->vaccineSchedule->batch->name ?? 'N/A',
                     'company_name' => $detail->vaccineSchedule->company->name ?? 'N/A',
-                    'display_name' => $detail->vaccine->name.' - '.($detail->disease->name ?? 'General').' ('.$detail->age.')',
+                    'display_name' => $detail->vaccine->name . ' - ' . ($detail->disease->name ?? 'General') . ' (' . $detail->age . ')',
                 ];
             });
         $waters = [
-            ['id' => 1, 'name' => 'Normal Water'],
+            // ['id' => 1, 'name' => 'Normal Water'],
             ['id' => 2, 'name' => 'Mineral Water'],
-            ['id' => 3, 'name' => 'Vitamin Mixed Water'],
+            // ['id' => 3, 'name' => 'Vitamin Mixed Water'],
         ];
 
         return Inertia::render('dailyoperation/Create', [
@@ -350,25 +350,25 @@ class DailyOperationController extends Controller
             if ($feed) {
                 $unit = Unit::find($feed->unit_id);
                 $unitName = $unit ? $unit->name : 'Kg';
-                $tabData['feed_consumption'] = $feed->quantity.' '.$unitName;
+                $tabData['feed_consumption'] = $feed->quantity . ' ' . $unitName;
             }
 
             // Get water data
             $water = $latestOperation->waters()->first();
             if ($water) {
-                $tabData['water_consumption'] = $water->quantity.' L';
+                $tabData['water_consumption'] = $water->quantity . ' L';
             }
 
             // Get light data
             $light = $latestOperation->lights()->first();
             if ($light) {
-                $tabData['light_hour'] = $light->hour.' H';
+                $tabData['light_hour'] = $light->hour . ' H';
             }
 
             // Get weight data
             $weight = $latestOperation->weights()->first();
             if ($weight) {
-                $tabData['weight'] = ($weight->male_weight + $weight->female_weight) / 2 .' gm';
+                $tabData['weight'] = ($weight->male_weight + $weight->female_weight) / 2 . ' gm';
             }
 
             // Get temperature data
@@ -422,8 +422,8 @@ class DailyOperationController extends Controller
 
         if ($existingOperation) {
             return back()->withErrors([
-                'duplicate_entry' => 'A daily operation record already exists for this batch on '.
-                    \Carbon\Carbon::parse($request->operation_date)->format('M d, Y').
+                'duplicate_entry' => 'A daily operation record already exists for this batch on ' .
+                    \Carbon\Carbon::parse($request->operation_date)->format('M d, Y') .
                     '. Please select a different date or edit the existing record.',
             ]);
         }
@@ -615,7 +615,7 @@ class DailyOperationController extends Controller
 
         return redirect()
             ->route('daily-operation.stage', ['stage' => strtolower($stageName)])
-            ->with('success', ucfirst($stageName).'data saved successfully.');
+            ->with('success', ucfirst($stageName) . 'data saved successfully.');
     }
 
     /**
@@ -718,7 +718,7 @@ class DailyOperationController extends Controller
                         $batch->project?->name ?? 'Proj',
                         $batch->flock?->code ?? 'Flock',
                         $batch->shed?->name ?? 'Shed',
-                        'Level '.$batch->level,
+                        'Level ' . $batch->level,
                         $batch->batch?->name ?? 'Batch'
                     ),
                     'total_birds' => $totalBirds,
@@ -789,7 +789,7 @@ class DailyOperationController extends Controller
 
         return redirect()
             ->route('daily-operation.stage', ['stage' => $stageName])
-            ->with('success', ucfirst($stageName).' operation updated successfully.');
+            ->with('success', ucfirst($stageName) . ' operation updated successfully.');
     }
 
     /**
