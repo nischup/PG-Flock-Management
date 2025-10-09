@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
 
             // Foreign key to egg_classification_grades
-            $table->unsignedInteger('egg_classification_grade_id'); // ✅ OK (better: use unsignedBigInteger for consistency)
-            
+            $table->unsignedBigInteger('egg_classification_grade_id');
+
             // Foreign key to egg_grades
             $table->foreignId('egg_grade_id')
                 ->constrained('egg_grades')
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Foreign key definition
-            $table->foreign('egg_classification_grade_id')
+            $table->foreign('egg_classification_grade_id', 'ecgd_ecg_id_foreign')
                 ->references('id')
                 ->on('egg_classification_grades')
                 ->onDelete('cascade');

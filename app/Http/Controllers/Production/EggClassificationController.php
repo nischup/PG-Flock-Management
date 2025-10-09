@@ -26,6 +26,10 @@ class EggClassificationController extends Controller
         $query = EggClassification::with([
             'batchAssign.shed',
             'batchAssign.batch',
+            'batchAssign.company',
+            'batchAssign.project',
+            'batchAssign.flock',
+            'batchAssign.levelInfo',
             'technicalEggs.eggType',
             'rejectedEggs.eggType',
         ])->whereHas('batchAssign', function ($q) {

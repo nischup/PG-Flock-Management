@@ -31,10 +31,14 @@ const props = defineProps<{
       id: number;
       classification_date: string;
       total_eggs: number;
-      batchAssign: { 
+      batch_assign: { 
         name?: string; 
         transaction_no?: string;
+        company?: { name?: string; short_name?: string };
+        project?: { name?: string };
+        flock?: { name?: string; code?: string };
         shed?: { name?: string };
+        level_info?: { name?: string };
         batch?: { name?: string };
       } | null;
       technicalEggs: Array<{ id: number; quantity: number; eggType: { name?: string } | null }>;
@@ -367,19 +371,34 @@ function getStatusColor(item: any) {
         <thead>
           <tr>
             <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">
-              Date & Batch
+              Company
             </th>
             <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">
-              Total Eggs
+              Project
             </th>
             <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">
-              Hatching
+              Flock
             </th>
             <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">
-              Commercial
+              Shed
             </th>
             <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">
-              Status
+              Level
+            </th>
+            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">
+              Batch
+            </th>
+            <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">
+              Date
+            </th>
+            <th class="border-b px-4 py-2 bg-yellow-500 text-white font-semibold text-sm whitespace-nowrap">
+              Total Eggs
+            </th>
+            <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">
+              Hatching
+            </th>
+            <th class="border-b px-4 py-2 bg-cyan-500 text-white font-semibold text-sm whitespace-nowrap">
+              Commercial
             </th>
             <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">
               Actions
@@ -388,13 +407,48 @@ function getStatusColor(item: any) {
         </thead>
         <tbody>
             <tr v-for="item in (props.classifications?.data || [])" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-              <!-- Date & Batch -->
-             <td class="border-b px-4 py-2">
+              <!-- Company -->
+              <td class="border-b px-4 py-2">
                 <div class="flex flex-col">
-                  <div class="text-sm font-medium text-gray-900">{{ formatDate(item.classification_date) }}</div>
-                  <div class="text-xs text-gray-500">{{ item.batch_assign?.transaction_no || 'N/A' }}</div>
-                  <div class="text-xs text-gray-400">{{ item.batch_assign?.batch?.name || 'No Shed' }}</div>
+                  <div class="text-sm font-medium text-gray-900">{{ item.batch_assign?.company?.name || 'N/A' }}</div>
+                  <div class="text-xs text-gray-500">{{ item.batch_assign?.company?.short_name || '' }}</div>
                 </div>
+              </td>
+
+              <!-- Project -->
+              <td class="border-b px-4 py-2">
+                <div class="text-sm font-medium text-gray-900">{{ item.batch_assign?.project?.name || 'N/A' }}</div>
+              </td>
+
+              <!-- Flock -->
+              <td class="border-b px-4 py-2">
+                <div class="flex flex-col">
+                  <div class="text-sm font-medium text-gray-900">{{ item.batch_assign?.flock?.name || 'N/A' }}</div>
+                  <div class="text-xs text-gray-500">{{ item.batch_assign?.flock?.code || '' }}</div>
+                </div>
+              </td>
+
+              <!-- Shed -->
+              <td class="border-b px-4 py-2">
+                <div class="text-sm font-medium text-gray-900">{{ item.batch_assign?.shed?.name || 'N/A' }}</div>
+              </td>
+
+              <!-- Level -->
+              <td class="border-b px-4 py-2">
+                <div class="text-sm font-medium text-gray-900">{{ item.batch_assign?.level_info?.name || 'N/A' }}</div>
+              </td>
+
+              <!-- Batch -->
+              <td class="border-b px-4 py-2">
+                <div class="flex flex-col">
+                  <div class="text-sm font-medium text-gray-900">{{ item.batch_assign?.batch?.name || 'N/A' }}</div>
+                  <div class="text-xs text-gray-500">{{ item.batch_assign?.transaction_no || '' }}</div>
+                </div>
+              </td>
+
+              <!-- Date -->
+              <td class="border-b px-4 py-2">
+                <div class="text-sm font-medium text-gray-900">{{ formatDate(item.classification_date) }}</div>
               </td>
 
               <!-- Total Eggs -->
@@ -416,39 +470,6 @@ function getStatusColor(item: any) {
                   <div class="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
                   <span class="text-sm font-medium text-red-700">{{ item.commercial_eggs?.toLocaleString() || 0 }}</span>
                 </div>
-              </td>
-
-              <!-- Rejected Eggs 
-              <td class="border-b px-4 py-2">
-                <div class="flex items-center">
-                  <div class="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                  <span class="text-sm font-medium text-orange-700">{{ item.rejected_eggs?.toLocaleString() || 0 }}</span>
-                </div>
-              </td>
-              -->
-              <!-- Technical Eggs 
-              <td class="border-b px-4 py-2">
-                <div class="flex items-center">
-                  <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                  <span class="text-sm font-medium text-blue-700">{{ item.technical_eggs?.toLocaleString() || 0 }}</span>
-                </div>
-              </td>
-              -->
-              <!-- Status -->
-              <td class="border-b px-4 py-2">
-                <span 
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                  :class="getStatusColor(item)"
-                >
-                  <div class="w-1.5 h-1.5 rounded-full mr-1.5"
-                    :class="getStatusColor(item).includes('green') ? 'bg-green-500' : 
-                           getStatusColor(item).includes('red') ? 'bg-red-500' : 
-                           getStatusColor(item).includes('yellow') ? 'bg-yellow-500' : 'bg-blue-500'">
-                  </div>
-                  {{ getStatusColor(item).includes('green') ? 'Excellent' : 
-                     getStatusColor(item).includes('red') ? 'High Rejection' : 
-                     getStatusColor(item).includes('yellow') ? 'Technical Issues' : 'Normal' }}
-                </span>
               </td>
 
               <!-- Actions -->
@@ -491,7 +512,7 @@ function getStatusColor(item: any) {
 
             <!-- Empty State -->
             <tr v-if="(props.classifications?.data || []).length === 0">
-              <td colspan="6" class="border-b px-4 py-12 text-center">
+              <td colspan="10" class="border-b px-4 py-12 text-center">
                 <div class="flex flex-col items-center">
                   <AlertCircle class="w-12 h-12 text-gray-400 mb-4" />
                   <h3 class="text-lg font-medium text-gray-900 mb-2">No classification records found</h3>

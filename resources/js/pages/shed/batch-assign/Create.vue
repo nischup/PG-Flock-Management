@@ -217,14 +217,14 @@ const validateDuplicates = () => {
   form.batches.forEach((batch, index) => {
     if (!batch.level) return
     
-    // Check for duplicates based on company + project + flock + level only
-    // Each level should only have ONE batch assigned
-    const key = `${form.company_id}-${form.project_id}-${form.flock_id}-${batch.level}`
+    // Check for duplicates based on company + project + flock + shed + level
+    // Each shed should only have ONE batch assigned per level
+    const key = `${form.company_id}-${form.project_id}-${form.flock_id}-${form.shed_id}-${batch.level}`
     
     if (seen.has(key)) {
       duplicates.push({
         index,
-        message: `Row ${index + 1}: Level ${batch.level} already has a batch assigned. Each level can only have one batch.`
+        message: `Row ${index + 1}: Level ${batch.level} already has a batch assigned for this shed. Each shed can only have one batch per level.`
       })
     } else {
       seen.add(key)
@@ -241,7 +241,7 @@ const submit = () => {
     // Show error modal with detailed messages
     const errorDetails = duplicates.map(d => d.message).join('\n\n')
     showError(
-      `Duplicate Batch Assignments Detected\n\n${errorDetails}\n\nPlease select different batches and try again.`,
+      `Duplicate Batch Assignments Detected\n\n${errorDetails}\n\nPlease select different levels for this shed and try again.`,
       'Validation Error'
     )
     return
@@ -261,7 +261,7 @@ const submit = () => {
       if (duplicateErrors.length > 0) {
         const errorDetails = duplicateErrors.map(key => errors[key]).join('\n\n')
         showError(
-          `Already Assigned this Batch.\n\n${errorDetails}\n\n Please select different batches and try again.`,
+          `Already Assigned this Batch.\n\n${errorDetails}\n\n Please select different levels for this shed and try again.`,
           'Duplicate Batch Assignment'
         )
       }

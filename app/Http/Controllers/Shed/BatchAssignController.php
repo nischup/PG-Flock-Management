@@ -131,7 +131,7 @@ class BatchAssignController extends Controller
         // Get all Shed Receives with relations
         $shedReceives = ShedReceive::with(['flock:id,code,name', 'shed:id,name', 'company:id,name,short_name', 'firmReceive.flock:id,code,name', 'firmReceive.psReceive.chickCounts:id,ps_receive_id,ps_total_qty', 'firmReceive.company:id,name,short_name', 'firmReceive.project:id,name'])
             ->orderBy('id', 'desc')
-            ->get() 
+            ->get()
             ->map(function ($shed) {
                 return [
                     'id' => $shed->id,
@@ -199,28 +199,29 @@ class BatchAssignController extends Controller
         $duplicateBatches = [];
 
         foreach ($batches as $index => $batch) {
-            // Check for existing batch assignment with same level (only one batch per level allowed)
+            // Check for existing batch assignment with same shed and level (only one batch per shed per level allowed)
             $existingBatch = BatchAssign::where([
                 'company_id' => $companyId,
                 'project_id' => $projectId,
                 'flock_id' => $flockId,
+                'shed_id' => $shedReceive->shed_id,
                 'level' => $batch['level'] ?? null,
             ])->first();
 
             if ($existingBatch) {
-                $duplicateErrors["batches.{$index}.duplicate"] = 
-                    "Level {$batch['level']} already has a batch assigned. Each level can only have one batch.";
+                $duplicateErrors["batches.{$index}.duplicate"] =
+                    "Shed already has a batch assigned at Level {$batch['level']}. Each shed can only have one batch per level.";
                 $duplicateBatches[] = $index + 1;
             }
         }
 
-        // Check for duplicates within the same form submission (based on level only)
+        // Check for duplicates within the same form submission (based on shed and level)
         $seen = [];
         foreach ($batches as $index => $batch) {
-            $key = "{$companyId}-{$projectId}-{$flockId}-{$batch['level']}";
+            $key = "{$companyId}-{$projectId}-{$flockId}-{$shedReceive->shed_id}-{$batch['level']}";
             if (isset($seen[$key])) {
-                $duplicateErrors["batches.{$index}.duplicate_form"] = 
-                    "Level {$batch['level']} is selected multiple times in this form. Each level can only have one batch.";
+                $duplicateErrors["batches.{$index}.duplicate_form"] =
+                    "Level {$batch['level']} is selected multiple times in this form for the same shed. Each shed can only have one batch per level.";
                 $duplicateBatches[] = $index + 1;
             } else {
                 $seen[$key] = true;
@@ -228,11 +229,11 @@ class BatchAssignController extends Controller
         }
 
         // Return validation errors if duplicates found
-        if (!empty($duplicateErrors)) {
+        if (! empty($duplicateErrors)) {
             return back()
                 ->withErrors($duplicateErrors)
                 ->withInput()
-                ->with('error', 'Some levels already have batches assigned. Each level can only have one batch.');
+                ->with('error', 'Some sheds already have batches assigned at the same level. Each shed can only have one batch per level.');
         }
 
         // check once using the Transaction model
@@ -246,7 +247,7 @@ class BatchAssignController extends Controller
             } elseif (is_string($flockNo)) {
                 $flockNo = (int) $flockNo;
             }
-            
+
             $batchReceive = BatchAssign::create([
                 'shed_receive_id' => $shedReceive->id ?? null,
                 'job_no' => $shedReceive->job_no ?? null,
@@ -533,7 +534,7 @@ class BatchAssignController extends Controller
             'flock_id' => $flockId,
             'level' => $request->level ?? null,
         ])->where('id', '!=', $batchAssign->id) // Exclude current batch being updated
-        ->first();
+            ->first();
 
         if ($existingBatch) {
             return back()

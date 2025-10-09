@@ -55,6 +55,10 @@ const props = defineProps<{
                         id: number;
                         name: string;
                     };
+                    level_info?: {
+                        id: number;
+                        name: string;
+                    };
                     level: number;
                 };
             };
@@ -400,12 +404,15 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <thead>
                         <tr>
                             <th class="border-b px-4 py-2 bg-blue-500 text-white font-semibold text-sm whitespace-nowrap">S/N</th>
-                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Classification ID</th>
-                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Batch / Transaction</th>
-                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Classification Date</th>
-                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Flock / Shed</th>
-                            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Grades / Quantity</th>
-                            <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Total Eggs</th>
+                            <th class="border-b px-4 py-2 bg-green-500 text-white font-semibold text-sm whitespace-nowrap">Company</th>
+                            <th class="border-b px-4 py-2 bg-purple-500 text-white font-semibold text-sm whitespace-nowrap">Project</th>
+                            <th class="border-b px-4 py-2 bg-orange-500 text-white font-semibold text-sm whitespace-nowrap">Flock</th>
+                            <th class="border-b px-4 py-2 bg-pink-500 text-white font-semibold text-sm whitespace-nowrap">Shed</th>
+                            <th class="border-b px-4 py-2 bg-indigo-500 text-white font-semibold text-sm whitespace-nowrap">Level</th>
+                            <th class="border-b px-4 py-2 bg-red-500 text-white font-semibold text-sm whitespace-nowrap">Batch</th>
+                            <th class="border-b px-4 py-2 bg-teal-500 text-white font-semibold text-sm whitespace-nowrap">Date</th>
+                            <th class="border-b px-4 py-2 bg-yellow-500 text-white font-semibold text-sm whitespace-nowrap">Grades / Quantity</th>
+                            <th class="border-b px-4 py-2 bg-cyan-500 text-white font-semibold text-sm whitespace-nowrap">Total Eggs</th>
                             <th class="border-b px-4 py-2 bg-gray-600 text-white font-semibold text-sm whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
@@ -415,67 +422,94 @@ const breadcrumbs: BreadcrumbItem[] = [
                             :key="item.classification.id"
                             class="hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
-                            <td
-                            class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top"
-                            rowspan="2"
-                            >
-                            {{ ((props.grades?.meta?.current_page || 1) - 1) * (props.grades?.meta?.per_page || 10) + index + 1 }}
-                            </td>
+                            <!-- S/N -->
                             <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
-                            {{ item.classification?.id ?? '-' }}
+                                {{ ((props.grades?.meta?.current_page || 1) - 1) * (props.grades?.meta?.per_page || 10) + index + 1 }}
                             </td>
+
+                            <!-- Company -->
                             <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
-                            <div class="flex flex-col">
-                                <span class="font-medium">{{ item.classification?.batch_assign?.transaction_no ?? '-' }}</span>
-                                <span class="text-xs text-gray-500">{{ item.classification?.batch_assign?.batch?.name ?? '-' }}</span>
-                            </div>
+                                <div class="flex flex-col">
+                                    <span class="font-medium">{{ item.classification?.batch_assign?.company?.name ?? 'N/A' }}</span>
+                                    <span class="text-xs text-gray-500">{{ item.classification?.batch_assign?.company?.short_name ?? '' }}</span>
+                                </div>
                             </td>
+
+                            <!-- Project -->
                             <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
-                            {{ item.classification?.classification_date ? dayjs(item.classification.classification_date).format('YYYY-MM-DD') : '-' }}
+                                <span class="font-medium">{{ item.classification?.batch_assign?.project?.name ?? 'N/A' }}</span>
                             </td>
+
+                            <!-- Flock -->
                             <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
-                            <div class="flex flex-col">
-                                <span class="font-medium">{{ item.classification?.batch_assign?.flock?.name ?? '-' }}</span>
-                                <span class="text-xs text-gray-500">{{ item.classification?.batch_assign?.shed?.name ?? '-' }}</span>
-                            </div>
+                                <div class="flex flex-col">
+                                    <span class="font-medium">{{ item.classification?.batch_assign?.flock?.name ?? 'N/A' }}</span>
+                                    <span class="text-xs text-gray-500">{{ item.classification?.batch_assign?.flock?.code ?? '' }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Shed -->
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
+                                <span class="font-medium">{{ item.classification?.batch_assign?.shed?.name ?? 'N/A' }}</span>
+                            </td>
+
+                            <!-- Level -->
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
+                                <span class="font-medium">{{ item.classification?.batch_assign?.level_info?.name ?? 'N/A' }}</span>
+                            </td>
+
+                            <!-- Batch -->
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
+                                <div class="flex flex-col">
+                                    <span class="font-medium">{{ item.classification?.batch_assign?.batch?.name ?? 'N/A' }}</span>
+                                    <span class="text-xs text-gray-500">{{ item.classification?.batch_assign?.transaction_no ?? '' }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Date -->
+                            <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 align-top" rowspan="2">
+                                <span class="font-medium">{{ item.classification?.classification_date ? dayjs(item.classification.classification_date).format('YYYY-MM-DD') : '-' }}</span>
                             </td>
 
                             <!-- First row: Commercial eggs -->
                             <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
-                            <div class="space-y-1">
-                                <div
-                                v-for="g in item.grades.filter(gr => gr.grade?.type === 1)"
-                                :key="g.id"
-                                class="flex justify-between items-center"
-                                >
-                                <span class="text-sm font-medium">
-                                    {{ g.grade?.name ?? '-' }} <span class="text-xs text-gray-500">(Commercial)</span>
-                                </span>
-                                <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                    {{ g.quantity }}
-                                </span>
+                                <div class="space-y-1">
+                                    <div
+                                        v-for="g in item.grades.filter(gr => gr.grade?.type === 1)"
+                                        :key="g.id"
+                                        class="flex justify-between items-center"
+                                    >
+                                        <span class="text-sm font-medium">
+                                            {{ g.grade?.name ?? '-' }} <span class="text-xs text-gray-500">(Commercial)</span>
+                                        </span>
+                                        <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                            {{ g.quantity }}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
                             </td>
 
+                            <!-- Total Eggs -->
                             <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100 font-medium" rowspan="2">
-                            {{ item.classification?.total_eggs ?? 0 }}
+                                {{ item.classification?.total_eggs ?? 0 }}
                             </td>
+
+                            <!-- Actions -->
                             <td class="border-b px-4 py-2 flex gap-4" rowspan="2">
-                            <Link
-                                v-if="can('egg-classification-grades.edit')"
-                                :href="`/egg-classification-grades/${item.id}/edit`"
-                                class="text-indigo-600 hover:underline font-medium"
-                            >
-                                Edit
-                            </Link>
-                            <button
-                                v-if="can('egg-classification-grades.view')"
-                                @click="exportRowPdf(item.classification.id)"
-                                class="text-green-600 hover:underline font-medium"
-                            >
-                                Report
-                            </button>
+                                <Link
+                                    v-if="can('egg-classification-grades.edit')"
+                                    :href="`/egg-classification-grades/${item.id}/edit`"
+                                    class="text-indigo-600 hover:underline font-medium"
+                                >
+                                    Edit
+                                </Link>
+                                <button
+                                    v-if="can('egg-classification-grades.view')"
+                                    @click="exportRowPdf(item.classification.id)"
+                                    class="text-green-600 hover:underline font-medium"
+                                >
+                                    Report
+                                </button>
                             </td>
                         </tr>
 
@@ -486,29 +520,29 @@ const breadcrumbs: BreadcrumbItem[] = [
                             class="hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                             <td class="border-b px-4 py-2 text-gray-800 dark:text-gray-100">
-                            <div class="space-y-1">
-                                <div
-                                v-for="g in item.grades.filter(gr => gr.grade?.type === 2)"
-                                :key="g.id"
-                                class="flex justify-between items-center"
-                                >
-                                <span class="text-sm font-medium">
-                                    {{ g.grade?.name ?? '-' }} <span class="text-xs text-gray-500">(Hatching)</span>
-                                </span>
-                                <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    {{ g.quantity }}
-                                </span>
+                                <div class="space-y-1">
+                                    <div
+                                        v-for="g in item.grades.filter(gr => gr.grade?.type === 2)"
+                                        :key="g.id"
+                                        class="flex justify-between items-center"
+                                    >
+                                        <span class="text-sm font-medium">
+                                            {{ g.grade?.name ?? '-' }} <span class="text-xs text-gray-500">(Hatching)</span>
+                                        </span>
+                                        <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            {{ g.quantity }}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
                             </td>
                         </tr>
 
                         <tr v-if="groupedArray.length === 0">
-                            <td colspan="8" class="border-b px-4 py-6 text-center text-gray-500 dark:text-gray-400">
-                            No egg classification grades found.
+                            <td colspan="11" class="border-b px-4 py-6 text-center text-gray-500 dark:text-gray-400">
+                                No egg classification grades found.
                             </td>
                         </tr>
-                        </tbody>
+                    </tbody>
 
                 </table>
             </div>

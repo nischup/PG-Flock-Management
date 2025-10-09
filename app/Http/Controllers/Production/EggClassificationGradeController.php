@@ -9,7 +9,6 @@ use App\Models\Production\EggClassificationGrade;
 use App\Models\Production\EggClassificationGradeDetail;
 use App\Models\Shed\BatchAssign;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class EggClassificationGradeController extends Controller
 {
@@ -19,6 +18,11 @@ class EggClassificationGradeController extends Controller
             'grade',                           // Egg grade info
             'classification.batchAssign',
             'classification.batchAssign.batch',       // Classification + Batch info
+            'classification.batchAssign.company',     // Company info
+            'classification.batchAssign.project',     // Project info
+            'classification.batchAssign.flock',       // Flock info
+            'classification.batchAssign.shed',        // Shed info
+            'classification.batchAssign.levelInfo',   // Level info
         ])->whereHas('classification.batchAssign', function ($q) {
             $q->visibleFor(); // Scope from BatchAssign
         });
@@ -147,7 +151,7 @@ class EggClassificationGradeController extends Controller
 
     public function store(Request $request)
     {
-        
+
         $eggClassification = EggClassification::find($request->classification_id);
         $gradeRecord = EggClassificationGrade::updateOrCreate(
             [
