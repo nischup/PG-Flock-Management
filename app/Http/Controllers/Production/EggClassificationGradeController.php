@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EggGrade;
 use App\Models\Production\EggClassification;
 use App\Models\Production\EggClassificationGrade;
+use App\Models\Production\EggClassificationGradeDetail;
 use App\Models\Shed\BatchAssign;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -146,24 +147,28 @@ class EggClassificationGradeController extends Controller
 
     public function store(Request $request)
     {
-        // Save the grades
+        
+        $eggClassification = EggClassification::find($request->classification_id);
+        $gradeRecord = EggClassificationGrade::updateOrCreate(
+            [
+                'classification_id' => $request->classification_id,
+                'batchassign_id' => $eggClassification->batchassign_id,
+                'flock_no' => $eggClassification->flock_no,
+                'flock_id' => $eggClassification->flock_id,
+                'batch_no' => $eggClassification->batch_no,
+                'shed_id' => $eggClassification->shed_id,
+                'company_id' => $eggClassification->company_id,
+                'project_id' => $eggClassification->project_id,
+                'job_no' => $eggClassification->job_no,
+                'transaction_no' => $eggClassification->transaction_no,
+            ],
+        );
         foreach ($request->grades as $grade) {
-            
-            $eggClassifiction = EggClassification::find($request->classification_id);
-            
-            EggClassificationGrade::updateOrCreate(
+            // 3️⃣ Insert or update corresponding grade detail
+            EggClassificationGradeDetail::updateOrCreate(
                 [
-                    'classification_id' => $request->classification_id,
+                    'egg_classification_grade_id' => $gradeRecord->id,
                     'egg_grade_id' => $grade['egg_grade_id'],
-                    'batchassign_id' => $eggClassifiction->batchassign_id,
-                    'flock_no' => $eggClassifiction->flock_no,
-                    'flock_id' => $eggClassifiction->flock_id,
-                    'batch_no' => $eggClassifiction->batch_no,
-                    'shed_id' => $eggClassifiction->shed_id,
-                    'company_id' => $eggClassifiction->company_id,
-                    'project_id' => $eggClassifiction->project_id,
-                    'job_no' => $eggClassifiction->job_no,
-                    'transaction_no' => $eggClassifiction->transaction_no,
                 ],
                 [
                     'quantity' => $grade['quantity'],

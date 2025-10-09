@@ -16,10 +16,6 @@ return new class extends Migration
             $table->foreignId('classification_id')
                 ->constrained('egg_classifications')
                 ->cascadeOnDelete();
-            $table->foreignId('egg_grade_id')
-                ->constrained('egg_grades')
-                ->cascadeOnDelete();
-            $table->unsignedInteger('quantity')->default(0);
             $table->timestamps();
         });
     }
