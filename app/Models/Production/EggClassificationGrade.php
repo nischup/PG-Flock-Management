@@ -28,4 +28,9 @@ class EggClassificationGrade extends Model
     {
         return $this->belongsTo(EggGrade::class, 'egg_grade_id');
     }
+
+    public function gradeDetails()
+    {
+        return $this->hasMany(EggClassificationGradeDetail::class, 'egg_classification_grade_id');
+    }
 }

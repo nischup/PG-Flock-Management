@@ -16,6 +16,7 @@ class EggClassificationGradeController extends Controller
     {
         $query = EggClassificationGrade::with([
             'grade',                           // Egg grade info
+            'gradeDetails.eggGrade',           // Grade details with egg grade info
             'classification.batchAssign',
             'classification.batchAssign.batch',       // Classification + Batch info
             'classification.batchAssign.company',     // Company info
@@ -167,16 +168,33 @@ class EggClassificationGradeController extends Controller
                 'transaction_no' => $eggClassification->transaction_no,
             ],
         );
+        // Validate that grades array exists and is not empty
+        if (!$request->has('grades') || !is_array($request->grades) || empty($request->grades)) {
+            return redirect()->back()->withErrors(['grades' => 'No grades provided.']);
+        }
+
         foreach ($request->grades as $grade) {
+            // Validate grade data structure
+            if (!isset($grade['egg_grade_id']) || !isset($grade['quantity'])) {
+                continue; // Skip invalid grade entries
+            }
+
+            // Get the egg grade to get its type
+            $eggGrade = \App\Models\EggGrade::find($grade['egg_grade_id']);
+            
+            // Skip if egg grade not found
+            if (!$eggGrade) {
+                continue;
+            }
+            
             // 3️⃣ Insert or update corresponding grade detail
             EggClassificationGradeDetail::updateOrCreate(
                 [
                     'egg_classification_grade_id' => $gradeRecord->id,
                     'egg_grade_id' => $grade['egg_grade_id'],
-                    'egg_grade_type_id' => $grade['type'],
-                    
                 ],
                 [
+                    'egg_grade_type_id' => $eggGrade->type,
                     'quantity' => $grade['quantity'],
                 ]
             );
