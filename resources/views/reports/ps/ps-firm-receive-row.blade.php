@@ -252,13 +252,13 @@
         <div class="sheet">
             <!-- Header -->
             <div class="header">
-                <div class="brand">
+                {{-- <div class="brand">
                     <span class="logo" aria-hidden="true"></span>
-                </div>
+                </div> --}}
                 <div class="header-titles">
                     <div class="title-head">{{ $company_name ?? '-' }}</div>
                     <div class="title">{{ $flock_name ?? '-' }}</div>
-                    <div class="title">Pullet Birds Receive Details</div>
+                    <div class="title">PS Farm Receive Details</div>
                 </div>
             </div>
 
