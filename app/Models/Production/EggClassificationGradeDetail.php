@@ -17,6 +17,7 @@ class EggClassificationGradeDetail extends Model
     protected $fillable = [
         'egg_classification_grade_id',
         'egg_grade_id',
+        'egg_grade_type_id',
         'quantity',
     ];
 
