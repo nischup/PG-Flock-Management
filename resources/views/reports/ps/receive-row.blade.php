@@ -232,7 +232,7 @@
                 </tr>
                 @foreach ($lab_transfers as $lab)
                     <tr>
-                        <td>{{ $lab->lab_type == 1 ? 'Gov Lab' : 'Provita Lab' }}</td>
+                        <td>{{ $lab->lab_type == 1 ? 'Customs' : 'Bio Research Lab' }}</td>
                         <td>{{ $lab->lab_send_male_qty ?? 0 }}</td>
                         <td>{{ $lab->lab_send_female_qty ?? 0 }}</td>
                         <td>{{ $lab->lab_send_total_qty ?? 0 }}</td>
